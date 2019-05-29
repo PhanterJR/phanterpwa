@@ -17,7 +17,7 @@ setuptools.setup(
     description='Tools for the phanterpwadeveloper framework',
     long_description=long_description,
     long_description_content_type="text/markdown",
-    packages=['phanterpwa'],
+    packages=['phanterpwa', 'phanterpwa/components'],
     install_requires=[
         'psutil', 'libsass', 'transcrypt', 'livereload', 'flask',
         'pillow', 'flask_restful', 'flask_mail', 'flask_cors', 'itsdangerous'
