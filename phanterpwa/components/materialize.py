@@ -30,8 +30,8 @@ class MaterializeInputText(XmlConstructor):
             error = str(error)
         if not id_input:
             id_input = "input-%s" % inputname
-        attributes["_phanterwebformvalidator_inputname"] = inputname
-        attributes["_phanterweb-input"] = id_input
+        attributes["_phanterpwaformvalidator_inputname"] = inputname
+        attributes["_phanterpwa-input"] = id_input
         if "_class" in attributes:
             new_class = " ".join([attributes["_class"].strip(), "materialize-input-text-xmlconstroi"])
             attributes["_class"] = new_class
@@ -46,8 +46,8 @@ class MaterializeInputText(XmlConstructor):
         )
         new_content = [
             DIV(I("check", _class="material-icons"),
-                _id="phanterwebformvalidator-input-check-%s" % inputname,
-                _class="phanterwebformvalidator-input-check"),
+                _id="phanterpwaformvalidator-input-check-%s" % inputname,
+                _class="phanterpwaformvalidator-input-check"),
             DIV(
                 self.input,
                 LABEL(
@@ -56,8 +56,8 @@ class MaterializeInputText(XmlConstructor):
                 _class="input-field"),
             DIV(error,
                 _title=error,
-                _id="phanterwebformvalidator-input-error-%s" % inputname,
-                _class="phanterwebformvalidator-input-error%s" % (" actived" if error != "" else " deactived")),
+                _id="phanterpwaformvalidator-input-error-%s" % inputname,
+                _class="phanterpwaformvalidator-input-error%s" % (" actived" if error != "" else " deactived")),
         ]
         XmlConstructor.__init__(self, 'div', False, *new_content, **attributes)
 
@@ -77,10 +77,10 @@ class MaterializeChips(XmlConstructor):
             error = str(error)
         if not id_input:
             id_input = "input-%s" % inputname
-        attributes["_phanterwebformvalidator_inputname"] = inputname
-        attributes["_phanterweb-input"] = id_input
+        attributes["_phanterpwaformvalidator_inputname"] = inputname
+        attributes["_phanterpwa-input"] = id_input
         if "_id" not in attributes:
-            attributes['_id'] = "phanterwebchips-jquery_plugin-%s" % inputname
+            attributes['_id'] = "phanterpwachips-jquery_plugin-%s" % inputname
         if "_class" in attributes:
             new_class = " ".join([attributes["_class"].strip(), "materialize-input-chips-xmlconstroi"])
             attributes["_class"] = new_class
@@ -89,12 +89,12 @@ class MaterializeChips(XmlConstructor):
 
         new_content = [
             DIV(I("check", _class="material-icons"),
-                _id="phanterwebformvalidator-input-check-%s" % inputname,
-                _class="phanterwebformvalidator-input-check"),
+                _id="phanterpwaformvalidator-input-check-%s" % inputname,
+                _class="phanterpwaformvalidator-input-check"),
             DIV(
                 DIV(
-                    _id="materialize-input-phanterwebformchips_%s" % inputname,
-                    _class="materialize-input-phanterwebformchips"),
+                    _id="materialize-input-phanterpwaformchips_%s" % inputname,
+                    _class="materialize-input-phanterpwaformchips"),
                 INPUT(
                     _name=inputname,
                     _id=id_input,
@@ -107,8 +107,8 @@ class MaterializeChips(XmlConstructor):
                 _class="input-field"),
             DIV(error,
                 _title=error,
-                _id="phanterwebformvalidator-input-error-%s" % inputname,
-                _class="phanterwebformvalidator-input-error%s" % (" actived" if error != "" else " deactived")),
+                _id="phanterpwaformvalidator-input-error-%s" % inputname,
+                _class="phanterpwaformvalidator-input-error%s" % (" actived" if error != "" else " deactived")),
             DIV(_id="materialize-input-chips-options-%s" % inputname, _class="materialize-input-chips-options")
         ]
         XmlConstructor.__init__(self, 'div', False, *new_content, **attributes)
@@ -126,12 +126,12 @@ class MaterializeSelectWithHideInput(XmlConstructor):
             error = str(error)
         if not id_input:
             id_input = "input-%s" % inputname
-        attributes["_phanterwebformvalidator_inputname"] = inputname
+        attributes["_phanterpwaformvalidator_inputname"] = inputname
         self.general_id = id_input
         self.general_name = inputname
         self.id_button_add_new = "button-%s" % id_input
         self.button_add_new = None
-        attributes["_phanterweb-input"] = id_input
+        attributes["_phanterpwa-input"] = id_input
         if "_class" in attributes:
             new_class = " ".join([attributes["_class"].strip(), "materialize-input-text-xmlconstroi"])
             attributes["_class"] = new_class
@@ -154,7 +154,7 @@ class MaterializeSelectWithHideInput(XmlConstructor):
         self._html_select = SELECT(
             *options,
             _id="select-%s" % id_input,
-            _class="phanterwebformselect-withhiddeninput",
+            _class="phanterpwaformselect-withhiddeninput",
             _target_input=id_input)
         self._html_select_label = LABEL(label, _for="select-%s" % id_input)
         self._html_select_concatenate = CONCATENATE(
@@ -163,11 +163,11 @@ class MaterializeSelectWithHideInput(XmlConstructor):
         )
         self._html_check = DIV(
             I("check", _class="material-icons"),
-            _id="phanterwebformvalidator-input-check-%s" % inputname,
-            _class="phanterwebformvalidator-input-check actived-select")
+            _id="phanterpwaformvalidator-input-check-%s" % inputname,
+            _class="phanterpwaformvalidator-input-check actived-select")
         attr_btn_switch = {}
         attr_btn_switch["_target-switch"] = "switch-input-select-container-%s" % self.general_id
-        attr_btn_switch["_target-check"] = "phanterwebformvalidator-input-check-%s" % self.general_name
+        attr_btn_switch["_target-check"] = "phanterpwaformvalidator-input-check-%s" % self.general_name
         new_content = [
             self._html_check,
             DIV(
@@ -195,8 +195,8 @@ class MaterializeSelectWithHideInput(XmlConstructor):
                 _class="switch-input-select-container actived-select"),
             DIV(error,
                 _title=error,
-                _id="phanterwebformvalidator-input-error-%s" % inputname,
-                _class="phanterwebformvalidator-input-error%s" % (" actived" if error != "" else " deactived")),
+                _id="phanterpwaformvalidator-input-error-%s" % inputname,
+                _class="phanterpwaformvalidator-input-error%s" % (" actived" if error != "" else " deactived")),
         ]
         XmlConstructor.__init__(self, 'div', False, *new_content, **attributes)
 
@@ -211,7 +211,7 @@ class MaterializeSelectWithHideInput(XmlConstructor):
             label = I("add", _class="material-icons")
         attributes['_id'] = self.id_button_add_new
         attributes["_target-switch"] = "switch-input-select-container-%s" % self.general_id
-        attributes["_target-check"] = "phanterwebformvalidator-input-check-%s" % self.general_name
+        attributes["_target-check"] = "phanterpwaformvalidator-input-check-%s" % self.general_name
         class_button = "materilize-button-show-hidde-input-new waves-effect waves-teal btn link"
         self._html_check.attributes["_class"] = " ".join(["hasbutton", self._html_check.attributes["_class"]])
         if "_class" in attributes:
@@ -244,8 +244,8 @@ class MaterializeInputTextMultiline(XmlConstructor):
             error = str(error)
         if not id_input:
             id_input = "input-%s" % inputname
-        attributes["_phanterwebformvalidator_inputname"] = inputname
-        attributes["_phanterweb-input"] = id_input
+        attributes["_phanterpwaformvalidator_inputname"] = inputname
+        attributes["_phanterpwa-input"] = id_input
         if "_class" in attributes:
             new_class = " ".join([attributes["_class"].strip(), "materialize-input-text-xmlconstroi"])
             attributes["_class"] = new_class
@@ -254,8 +254,8 @@ class MaterializeInputTextMultiline(XmlConstructor):
 
         new_content = [
             DIV(I("check", _class="material-icons"),
-                _id="phanterwebformvalidator-input-check-%s" % inputname,
-                _class="phanterwebformvalidator-input-check"),
+                _id="phanterpwaformvalidator-input-check-%s" % inputname,
+                _class="phanterpwaformvalidator-input-check"),
             DIV(
                 TEXTAREA(
                     _name=inputname,
@@ -269,8 +269,8 @@ class MaterializeInputTextMultiline(XmlConstructor):
                 _class="input-field"),
             DIV(error,
                 _title=error,
-                _id="phanterwebformvalidator-input-error-%s" % inputname,
-                _class="phanterwebformvalidator-input-error%s" % (" actived" if error != "" else " deactived")),
+                _id="phanterpwaformvalidator-input-error-%s" % inputname,
+                _class="phanterpwaformvalidator-input-error%s" % (" actived" if error != "" else " deactived")),
         ]
         XmlConstructor.__init__(self, 'div', False, *new_content, **attributes)
 
@@ -287,8 +287,8 @@ class MaterializeInputHidden(XmlConstructor):
             error = str(error)
         if not id_input:
             id_input = "input-%s" % inputname
-        attributes["_phanterwebformvalidator_inputname"] = inputname
-        attributes["_phanterweb-input"] = id_input
+        attributes["_phanterpwaformvalidator_inputname"] = inputname
+        attributes["_phanterpwa-input"] = id_input
         if "_class" in attributes:
             new_class = " ".join([attributes["_class"].strip(), "materialize-input-hidden-xmlconstroi"])
             attributes["_class"] = new_class
@@ -297,8 +297,8 @@ class MaterializeInputHidden(XmlConstructor):
 
         new_content = [
             DIV(I("check", _class="material-icons"),
-                _id="phanterwebformvalidator-input-check-%s" % inputname,
-                _class="phanterwebformvalidator-input-check"),
+                _id="phanterpwaformvalidator-input-check-%s" % inputname,
+                _class="phanterpwaformvalidator-input-check"),
             DIV(
                 INPUT(
                     _name=inputname,
@@ -312,8 +312,8 @@ class MaterializeInputHidden(XmlConstructor):
                 _class="input-field"),
             DIV(error,
                 _title=error,
-                _id="phanterwebformvalidator-input-error-%s" % inputname,
-                _class="phanterwebformvalidator-input-error%s" % (" actived" if error != "" else " deactived")),
+                _id="phanterpwaformvalidator-input-error-%s" % inputname,
+                _class="phanterpwaformvalidator-input-error%s" % (" actived" if error != "" else " deactived")),
         ]
         XmlConstructor.__init__(self, 'div', False, *new_content, **attributes)
 
@@ -330,8 +330,8 @@ class MaterializeInputPassword(XmlConstructor):
             error = str(error)
         if not id_input:
             id_input = "input-%s" % inputname
-        attributes["_phanterwebformvalidator_inputname"] = inputname
-        attributes["_phanterweb-input"] = id_input
+        attributes["_phanterpwaformvalidator_inputname"] = inputname
+        attributes["_phanterpwa-input"] = id_input
         if "_class" in attributes:
             new_class = " ".join([attributes["_class"].strip(), "materialize-input-password-xmlconstroi"])
             attributes["_class"] = new_class
@@ -340,8 +340,8 @@ class MaterializeInputPassword(XmlConstructor):
 
         new_content = [
             DIV(I("check", _class="material-icons"),
-                _id="phanterwebformvalidator-input-check-%s" % inputname,
-                _class="phanterwebformvalidator-input-check"),
+                _id="phanterpwaformvalidator-input-check-%s" % inputname,
+                _class="phanterpwaformvalidator-input-check"),
             DIV(
                 INPUT(
                     _name=inputname,
@@ -355,8 +355,8 @@ class MaterializeInputPassword(XmlConstructor):
                 _class="input-field"),
             DIV(error,
                 _title=error,
-                _id="phanterwebformvalidator-input-error-%s" % inputname,
-                _class="phanterwebformvalidator-input-error%s" % (" actived" if error != "" else " deactived")),
+                _id="phanterpwaformvalidator-input-error-%s" % inputname,
+                _class="phanterpwaformvalidator-input-error%s" % (" actived" if error != "" else " deactived")),
         ]
         XmlConstructor.__init__(self, 'div', False, *new_content, **attributes)
 
@@ -365,7 +365,7 @@ class MaterializeInputCheckBox(XmlConstructor):
     def __init__(self, inputname, label, id_input=None, disabled=False, checked=False, filledIn=False, **attributes):
         if not id_input:
             id_input = "input-%s" % inputname
-        attributes["_phanterwebformvalidator_inputname"] = inputname
+        attributes["_phanterpwaformvalidator_inputname"] = inputname
         if "_class" in attributes:
             new_class = " ".join([attributes["_class"].strip(), "materialize-input-checkbox-xmlconstroi"])
             attributes["_class"] = new_class
@@ -391,15 +391,15 @@ class MaterializeInputCheckBox(XmlConstructor):
 class MaterializeButtonForm(XmlConstructor):
     def __init__(self, _id, label, **attributes):
         self.label = label
-        initial_class = "phanterweb-materialize-button-form-container"
+        initial_class = "phanterpwa-materialize-button-form-container"
         attributes["_id"] = _id
         self.button_attributes = attributes
         if "_class" in self.button_attributes:
             self.button_attributes["_class"] = " ".join([
                 self.button_attributes['_class'].strip(),
-                "btn phanterweb-materialize-button-form link"])
+                "btn phanterpwa-materialize-button-form link"])
         else:
-            self.button_attributes["_class"] = "btn phanterweb-materialize-button-form link"
+            self.button_attributes["_class"] = "btn phanterpwa-materialize-button-form link"
         if "_title" not in self.button_attributes:
             self.button_attributes["_title"] = self.label
 

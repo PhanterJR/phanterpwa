@@ -20,10 +20,11 @@ setuptools.setup(
     packages=['phanterpwa', 'phanterpwa/components'],
     install_requires=[
         'psutil', 'libsass', 'transcrypt', 'livereload', 'flask',
-        'pillow', 'flask_restful', 'flask_mail', 'flask_cors', 'itsdangerous'
+        'pillow', 'flask_restful', 'flask_mail', 'flask_cors', 'itsdangerous',
+        'pydal>=19.04'
     ],
     dependency_links=[
-        'https://github.com/web2py/pydal/archive/master.zip',
+        'git+https://github.com/web2py/pydal.git',
     ],
     include_package_data=True,
     zip_safe=False,
