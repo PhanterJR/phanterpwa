@@ -5,11 +5,12 @@ from .xmlconstructor import XmlConstructor
 
 class BuildViews(object):
 
-    def __init__(self, name, view, folder):
+    def __init__(self, name, view, folder, debug=False):
         super(BuildViews, self).__init__()
         self.name = name
         self.view = view
         self.folder = folder
+        self.debug = debug
 
     @property
     def folder(self):
@@ -31,6 +32,9 @@ class BuildViews(object):
                 "wt",
                 encoding="utf-8"
             ) as f:
-                f.write(self.view.xml())
+                if self.debug:
+                    f.write(self.view.humanize())
+                else:
+                    f.write(self.view.xml())
         else:
             raise TypeError("The view must be a XmlConstructor instance")
