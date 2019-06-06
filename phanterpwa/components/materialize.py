@@ -30,8 +30,8 @@ class MaterializeInputText(XmlConstructor):
             error = str(error)
         if not id_input:
             id_input = "input-%s" % inputname
-        attributes["_phanterpwa-materialize_inputname"] = inputname
-        attributes["_phanterpwa-materialize_inputid"] = id_input
+        attributes["_phanterpwa-materialize-input_name"] = inputname
+        attributes["_phanterpwa-materialize-input_id"] = id_input
         if "_class" in attributes:
             new_class = " ".join([attributes["_class"].strip(), "phanterpwa-materialize-input-text"])
             attributes["_class"] = new_class
@@ -77,8 +77,8 @@ class MaterializeChips(XmlConstructor):
             error = str(error)
         if not id_input:
             id_input = "input-%s" % inputname
-        attributes["_phanterpwa-materialize_inputname"] = inputname
-        attributes["_phanterpwa-materialize_inputid"] = id_input
+        attributes["_phanterpwa-materialize-input_name"] = inputname
+        attributes["_phanterpwa-materialize-input_id"] = id_input
         if "_id" not in attributes:
             attributes['_id'] = "phanterpwa-materialize-chips-jquery_plugin-%s" % inputname
         if "_class" in attributes:
@@ -126,12 +126,12 @@ class MaterializeSelectWithHideInput(XmlConstructor):
             error = str(error)
         if not id_input:
             id_input = "input-%s" % inputname
-        attributes["_phanterpwa-materialize_inputname"] = inputname
+        attributes["_phanterpwa-materialize-input_name"] = inputname
         self.general_id = id_input
         self.general_name = inputname
         self.id_button_add_new = "button-%s" % id_input
         self.button_add_new = None
-        attributes["_phanterpwa-materialize_inputid"] = id_input
+        attributes["_phanterpwa-materialize-input_id"] = id_input
         if "_class" in attributes:
             new_class = " ".join([attributes["_class"].strip(), "phanterpwa-materialize-input-text"])
             attributes["_class"] = new_class
@@ -244,8 +244,8 @@ class MaterializeInputTextMultiline(XmlConstructor):
             error = str(error)
         if not id_input:
             id_input = "input-%s" % inputname
-        attributes["_phanterpwa-materialize_inputname"] = inputname
-        attributes["_phanterpwa-materialize_inputid"] = id_input
+        attributes["_phanterpwa-materialize-input_name"] = inputname
+        attributes["_phanterpwa-materialize-input_id"] = id_input
         if "_class" in attributes:
             new_class = " ".join([attributes["_class"].strip(), "phanterpwa-materialize-input-text"])
             attributes["_class"] = new_class
@@ -287,8 +287,8 @@ class MaterializeInputHidden(XmlConstructor):
             error = str(error)
         if not id_input:
             id_input = "input-%s" % inputname
-        attributes["_phanterpwa-materialize_inputname"] = inputname
-        attributes["_phanterpwa-materialize_inputid"] = id_input
+        attributes["_phanterpwa-materialize-input_name"] = inputname
+        attributes["_phanterpwa-materialize-input_id"] = id_input
         if "_class" in attributes:
             new_class = " ".join([attributes["_class"].strip(), "phanterpwa-materialize-input-hidden"])
             attributes["_class"] = new_class
@@ -330,8 +330,8 @@ class MaterializeInputPassword(XmlConstructor):
             error = str(error)
         if not id_input:
             id_input = "input-%s" % inputname
-        attributes["_phanterpwa-materialize_inputname"] = inputname
-        attributes["_phanterpwa-materialize_inputid"] = id_input
+        attributes["_phanterpwa-materialize-input_name"] = inputname
+        attributes["_phanterpwa-materialize-input_id"] = id_input
         if "_class" in attributes:
             new_class = " ".join([attributes["_class"].strip(), "phanterpwa-materialize-input-password"])
             attributes["_class"] = new_class
@@ -365,7 +365,7 @@ class MaterializeInputCheckBox(XmlConstructor):
     def __init__(self, inputname, label, id_input=None, disabled=False, checked=False, filledIn=False, **attributes):
         if not id_input:
             id_input = "input-%s" % inputname
-        attributes["_phanterpwa-materialize_inputname"] = inputname
+        attributes["_phanterpwa-materialize-input_name"] = inputname
         if "_class" in attributes:
             new_class = " ".join([attributes["_class"].strip(), "phanterpwa-materialize-input-checkbox"])
             attributes["_class"] = new_class
@@ -513,13 +513,13 @@ class MaterializeSearchBar(XmlConstructor):
         ):
         self.field_select = field_select_label
         self.inputname = inputname
-        id_input = "phanterpwa-materialize-searchbar-input-%s" % inputname
+        id_input = "phanterpwa-materialize-search_bar-input-%s" % inputname
 
         if "_class" in attributes:
-            new_class = " ".join([attributes["_class"].strip(), "phanterpwa-materialize-searchbar"])
+            new_class = " ".join([attributes["_class"].strip(), "phanterpwa-materialize-search_bar"])
             attributes["_class"] = new_class
         else:
-            attributes["_class"] = "phanterpwa-materialize-searchbar"
+            attributes["_class"] = "phanterpwa-materialize-search_bar"
         self.select_search_container = CONCATENATE()
         self.select_search = None
         self.input_search = DIV(
@@ -537,11 +537,11 @@ class MaterializeSearchBar(XmlConstructor):
                 I("search", _class="material-icons"),
                 _source_search=id_input,
                 _source_select="phanterpwa-materialize-select-search-%s" % inputname,
-                _id="phanterpwa-materialize-searchbar-button-%s" % inputname,
-                _class="waves-effect waves-teal btn link materialize-searchbar-button"),
+                _id="phanterpwa-materialize-search_bar-button-%s" % inputname,
+                _class="waves-effect waves-teal btn link materialize-search_bar-button"),
 
-            _id='materialize-searchbar-input-and-button-%s' % inputname,
-            _class='materialize-searchbar-input-and-button'
+            _id='materialize-search_bar-input-and-button-%s' % inputname,
+            _class='materialize-search_bar-input-and-button'
         )
         new_content = [
             CONCATENATE(
@@ -568,7 +568,7 @@ class MaterializeSearchBar(XmlConstructor):
             self.select_search_container.content = [
                 DIV(
                     select_container,
-                    _class="phanterpwa-materialize-searchbar-select col s12 m4 l4")
+                    _class="phanterpwa-materialize-search_bar-select col s12 m4 l4")
             ]
         self.select_search.append(OPTION(label_value, _value=value, **attributes))
 
@@ -587,7 +587,7 @@ class MaterializeSearchBar(XmlConstructor):
             self.select_search_container.content = [
                 DIV(
                     select_container,
-                    _class="phanterpwa-materialize-searchbar-select col s12 m4 l4")
+                    _class="phanterpwa-materialize-search_bar-select col s12 m4 l4")
             ]
 
 
