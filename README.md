@@ -20,7 +20,7 @@
     Python 3.7 Recommended
 
 ## Browser Compatibility
-    The browser needs compatibility with:
+#### The browser needs compatibility with:
     HTML5
     ES6 (Javascript6)
 
