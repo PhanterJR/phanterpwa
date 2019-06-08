@@ -3,4 +3,4 @@
 # license: MIT
 
 __author__ = "PhanterJR<junior.conex@gmail.com>"
-__version__ = "1.1.7"
+__version__ = "1.2.0"
