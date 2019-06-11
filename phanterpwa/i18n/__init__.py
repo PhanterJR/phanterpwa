@@ -89,6 +89,7 @@ class Translator(object):
                 langs = {}
                 for l in self.languages:
                     for v in verbetes:
+                        self.T(v)
                         if v in self.languages[l]:
                             langs[l] = {v: self.languages[l][v]}
                 return langs
@@ -96,14 +97,16 @@ class Translator(object):
                 langs = {}
                 for l in self.languages:
                     for v in verbetes:
+                        self.T(verbetes[v])
                         if verbetes[v] in self.languages[l]:
                             langs[l] = {v: self.languages[l][v]}
                 return langs
             elif isinstance(verbetes, str):
                 langs = {}
                 for l in self.languages:
+                    self.T(verbetes)
                     if verbetes in self.languages[l]:
-                        langs[l] = {verbetes: self.languages[l][v]}
+                        langs[l] = {verbetes: self.languages[l][verbetes]}
                 return langs
             else:
                 return {}
