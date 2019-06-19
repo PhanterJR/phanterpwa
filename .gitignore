@@ -103,3 +103,4 @@ venv.bak/
 # mypy
 .mypy_cache/
 *.ffs_db
+setup.bat
