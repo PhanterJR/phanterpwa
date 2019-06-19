@@ -3,7 +3,7 @@ from ..helpers import DIV, I, IMG
 from ..xmlconstructor import XmlConstructor
 
 
-class ButtonLeftSubMenu(XmlConstructor):
+class LeftBarSubMenu(XmlConstructor):
     def __init__(self, _id, label, **attributes):
         self._id = _id
         self.label = label
@@ -20,23 +20,22 @@ class ButtonLeftSubMenu(XmlConstructor):
         XmlConstructor.__init__(self, 'div', False, *content, **attributes)
 
 
-class ButtonLeftMenu(XmlConstructor):
+class LeftBarMenu(XmlConstructor):
     def __init__(self, _id, label, icon_class, **attributes):
         self._id = _id
         self.label = label
         self.icon_class = icon_class
         self.submenus = []
-        self.componentSubmenu = ButtonLeftSubMenu
+        self.componentSubmenu = LeftBarSubMenu
         initial_class = "phanterpwa-component-left_bar"
         initial_id = "phanterpwa-component-left_bar-%s" % _id
         self.button_attributes = attributes
-        self.button_attributes["_cmd_left_menu"] = "link"
         if "_class" in self.button_attributes:
             self.button_attributes["_class"] = " ".join([
                 self.button_attributes['_class'].strip(),
-                "phanterpwa-component-left_bar-button link"])
+                "phanterpwa-component-left_bar-menu link"])
         else:
-            self.button_attributes["_class"] = "phanterpwa-component-left_bar-button link"
+            self.button_attributes["_class"] = "phanterpwa-component-left_bar-menu link"
         XmlConstructor.__init__(self, 'div', False, _id=initial_id, _class=initial_class)
         self._update_content()
 
@@ -62,7 +61,33 @@ class ButtonLeftMenu(XmlConstructor):
             html_submenus
         ]
 
-class ButtonLeftUserMenu(XmlConstructor):
+
+class LeftBarButton(XmlConstructor):
+    def __init__(self, _id, label, icon_class, **attributes):
+        self._id = _id
+        self.label = label
+        self.icon_class = icon_class
+        self.submenus = []
+        initial_class = "phanterpwa-component-left_bar"
+        initial_id = "phanterpwa-component-left_bar-%s" % _id
+        self.button_attributes = attributes
+        if "_class" in self.button_attributes:
+            self.button_attributes["_class"] = " ".join([
+                self.button_attributes['_class'].strip(),
+                "phanterpwa-component-left_bar-button link"])
+        else:
+            self.button_attributes["_class"] = "phanterpwa-component-left_bar-button link"
+        XmlConstructor.__init__(self, 'div', False, _id=initial_id, _class=initial_class)
+        self.content = [
+            DIV(
+                DIV(I(_class=self.icon_class),
+                    _class="phanterpwa-component-left_bar-icon-container"),
+                DIV(self.label, _class="phanterpwa-component-left_bar-label"),
+                **self.button_attributes)
+        ]
+
+
+class LeftBarUserMenu(XmlConstructor):
     def __init__(self, _id, name_user="Nome usuário", url_image_user="/static/images/user.png", **attributes):
         self._id = _id
         self.name_user = name_user
@@ -71,17 +96,16 @@ class ButtonLeftUserMenu(XmlConstructor):
         self._image = IMG(_id="phanterpwa-component-left_bar-url-imagem-user",
             _src=url_image_user,
             _alt="user avatar")
-        self.componentSubmenu = ButtonLeftSubMenu
+        self.componentSubmenu = LeftBarSubMenu
         initial_class = "phanterpwa-component-left_bar"
         initial_id = "phanterpwa-component-left_bar-%s" % _id
         self.button_attributes = attributes
-        self.button_attributes["_cmd_left_menu"] = "link"
         if "_class" in self.button_attributes:
             self.button_attributes["_class"] = " ".join([
                 self.button_attributes['_class'].strip(),
                 "phanterpwa-component-left_bar-button-user cmp-bar-user-img link"])
         else:
-            self.button_attributes["_class"] = "phanterpwa-component-left_bar-button link"
+            self.button_attributes["_class"] = "phanterpwa-component-left_bar-menu link"
         XmlConstructor.__init__(self, 'div', False, _id=initial_id, _class=initial_class)
         self._update_content()
 

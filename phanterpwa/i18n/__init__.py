@@ -99,7 +99,12 @@ class Translator(object):
                     for v in verbetes:
                         self.T(verbetes[v])
                         if verbetes[v] in self.languages[l]:
-                            langs[l] = {v: self.languages[l][v]}
+                            if l in langs:
+                                langs[l][v] = self.languages[l][verbetes[v]]
+                            else:
+                                langs[l] = {v: self.languages[l][verbetes[v]]}
+                        else:
+                            langs[l] = {v: verbetes[v]}
                 return langs
             elif isinstance(verbetes, str):
                 langs = {}
