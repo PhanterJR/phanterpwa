@@ -120,7 +120,7 @@ class Captcha(object):
     @property
     def html(self):
         num_opt = self.num_opt
-        choice = self.choice
+        choice = self._choice
         options = []
         random.shuffle(self.keys_lines_cols)
         cont_err = 0

@@ -1,12 +1,24 @@
 # -*- coding: utf-8 -*-
 import random
 import os
+import json
 from glob import glob
-from phanterpwa.helpers import DIV, XML, SVG
+from phanterpwa.helpers import DIV, XML, SVG, SPAN
+from phanterpwa.i18n import Translator
+
+__dirname__ = os.path.dirname(__file__)
 
 
 class Captcha(object):
-    def __init__(self, _id, token="", num_opt=4, question="Which figure below corresponds to: %s.", debug=False):
+    def __init__(self,
+            _id,
+            token="",
+            num_opt=4,
+            question="Which figure below corresponds to: %(option)s.",
+            debug=False,
+            sign_options=None,
+            translator=None
+            ):
         super(Captcha, self).__init__()
         self.debug = debug
         self._background_color = {
@@ -19,38 +31,43 @@ class Captcha(object):
             "white": "white",
             "green": "#009933"
         }
+        self.translator = translator
         self.color_pairs = dict()
-        self.attributes = dict()
+        self.options = dict()
         self.recipes = dict()
         self.classification = set()
         self.vectors = dict()
         self.grafical_forms = dict()
         self.svg_forms = dict()
-        self._combine_colors()
-        self._recipes()
-        self._vectors()
-        self._svgs()
         self.question = question
         self._id = _id
         self.token = token
-        self.keys_attributes = [x for x in self.attributes.keys()] +\
-            [x[1] for x in self.vectors.keys()] +\
-            [x[1] for x in self.vectors.keys()]
-        self.keys_lines_cols = [x for x in self.grafical_forms.keys()]
         self.num_opt = num_opt
-        self._choicer()
+        self.keys_attributes = []
+        self.keys_lines_cols = []
+        self.sign_options = sign_options
+        if self.debug or not os.path.exists(os.path.join(__dirname__, "captchadata.json")):
+            self._combine_colors()
+            self._recipes()
+            self._vectors()
+            self._svgs()
+        else:
+            with open(os.path.join(__dirname__, "captchadata.json"), "r", encoding="utf-8") as f:
+                captchadata = json.load(f)
+                self.options = captchadata[0]
+                self.grafical_forms = captchadata[1]
 
     def _combine_colors(self):
         cont_b = 0
         sass = ""
         for x in self._background_color:
             cont_f = 0
-            self.attributes[x] = x
+            self.options[x] = x
             t_sass = ""
             cont_b += 1
             t_sass_0 = "".join(["    .fil0\n        fill: ", self._background_color[x], "\n"])
             for y in self._foreground_color:
-                self.attributes[y] = y
+                self.options[y] = y
                 cont_f += 1
                 t_sass_1 = "".join([
                     t_sass,
@@ -67,57 +84,49 @@ class Captcha(object):
                 t_sass = ""
                 self.color_pairs["phanterpwa-captchasvg-%s%s" %
                     (str(cont_b).zfill(2), str(cont_f).zfill(2))] = [x, y]
-        with open(os.path.join(os.path.dirname(__file__), "sass", "captcha.sass"), "w", encoding="utf-8") as f:
+        with open(os.path.join(__dirname__, "sass", "captcha.sass"), "w", encoding="utf-8") as f:
             f.write(sass)
 
     def _recipes(self):
-        recs = glob(os.path.join(os.path.dirname(__file__), "recipes", "*.recs"))
+        recs = glob(os.path.join(__dirname__, "recipes", "*.recs"))
         for x in recs:
             with open(x, "r", encoding="utf-8") as f:
                 basename = os.path.basename(x)[:-5]
-                self.attributes[basename] = basename
+                self.options[basename] = basename
                 self.recipes[basename] = str(f.read())
 
     def _vectors(self):
 
-        clas = glob(os.path.join(os.path.dirname(__file__), "vectors", "*"))
+        clas = glob(os.path.join(__dirname__, "vectors", "*"))
         for x in clas:
             if os.path.isdir(x):
                 classification_name = os.path.split(x)[-1]
                 self.classification.add(classification_name)
-                self.attributes[classification_name] = classification_name
+                self.options[classification_name] = classification_name
                 vecs = glob(os.path.join(x, "*.recs"))
                 for v in vecs:
                     with open(v, "r", encoding="utf-8") as f:
                         basename = os.path.basename(v)[:-5]
-                        self.attributes[basename] = basename
+                        self.options[basename] = basename
                         self.vectors[(classification_name, basename)] = str(f.read())
 
     def _svgs(self):
         code = 0
-        attrs = {
-            "_xmlns": "http://www.w3.org/2000/svg",
-            "_xml:space": "preserve",
-            "_width": "50px",
-            "_height": "50px",
-            "_style": "shape-rendering:geometricPrecision; text-rendering:geometricPrecision; " +
-                "image-rendering:optimizeQuality; fill-rule:evenodd; clip-rule:evenodd",
-            "_viewBox": "0 0 50 50",
-            "_xmlns:xlink": "http://www.w3.org/1999/xlink",
-        }
         for c in self.color_pairs.keys():
             for r in self.recipes:
                 for v in self.vectors:
                     code += 1
                     self.grafical_forms[code] = list(self.color_pairs[c])
                     self.grafical_forms[code].append(r)
-                    attrs["_class"] = c
-                    self.svg_forms[code] = SVG(XML(self.recipes[r]), XML(self.vectors[v]), **attrs)
                     self.grafical_forms[code].append(v[0])
                     self.grafical_forms[code].append(v[1])
+                    self.grafical_forms[code].append(c)
+        with open(os.path.join(__dirname__, "captchadata.json"), "w", encoding="utf-8") as f:
+            json.dump([self.options, self.grafical_forms], f, ensure_ascii=True, indent=2)
 
     @property
     def choice(self):
+        self._choicer()
         return self._choice
 
     @property
@@ -129,6 +138,10 @@ class Captcha(object):
         self._token = value
 
     def _choicer(self):
+        self.keys_attributes = [x for x in self.options.keys()] +\
+            [x[1] for x in self.vectors.keys()] +\
+            [x[1] for x in self.vectors.keys()]
+        self.keys_lines_cols = [x for x in self.grafical_forms.keys()]
         count_attr = len(self.keys_attributes)
         choice = self.keys_attributes[random.randint(0, count_attr - 1)]
         self._choice = choice
@@ -138,7 +151,7 @@ class Captcha(object):
             number = int(number)
         except ValueError:
             return False
-        if attribute in self.grafical_forms[number]:
+        if attribute in self.grafical_forms[str(number)][:-1]:
             return True
         else:
             return False
@@ -147,13 +160,13 @@ class Captcha(object):
     def html(self):
         question = self.question
         num_opt = self.num_opt
-        choice = self.choice
+        choice = self._choice
         options = []
         random.shuffle(self.keys_lines_cols)
         cont_err = 0
         cont_ok = 0
         for x in self.keys_lines_cols:
-            t_choice = self.grafical_forms[x]
+            t_choice = self.grafical_forms[x][:-1]
             if choice in t_choice:
                 if cont_ok == 0:
                     options.append(x)
@@ -166,25 +179,62 @@ class Captcha(object):
                     if cont_ok == 1:
                         break
         random.shuffle(options)
-        question = question % self.attributes[choice]
+        new_dict_t = dict()
+        option = self.options[choice]
+        if isinstance(self.translator, Translator):
+            for d in self.translator.languages:
+                t = self.translator.translator(question, d)
+                new_dict_t[d] = {question % {'option': option}: t % {'option': self.translator.translator(option, d)}}
+            question = SPAN(question % {'option': option}, _phanterpwa_languages=new_dict_t)
+        else:
+            question = question % {'option': option}
         content = []
         if self.token:
-            token = self.token
+            token_question = self.token
         else:
-            token = choice
+            token_question = choice
         for x in options:
+            attrs = {
+                "_xmlns": "http://www.w3.org/2000/svg",
+                "_xml:space": "preserve",
+                "_width": "50px",
+                "_height": "50px",
+                "_style": "shape-rendering:geometricPrecision; text-rendering:geometricPrecision; " +
+                    "image-rendering:optimizeQuality; fill-rule:evenodd; clip-rule:evenodd",
+                "_viewBox": "0 0 50 50",
+                "_xmlns:xlink": "http://www.w3.org/1999/xlink",
+            }
+            svg_e = self.grafical_forms[x]
+            recipe = svg_e[2]
+            sub_folder = svg_e[3]
+            vector = svg_e[4]
+            attrs["_class"] = svg_e[5]
+            svg_recipe = ""
+            svg_vector = ""
+            token_option = str(x)
+            if callable(self.sign_options):
+                token_option = self.sign_options(str(x))
+
+            with open(os.path.join(__dirname__, "recipes", "%s.recs" % recipe), 'r', encoding='utf-8') as f:
+                svg_recipe = f.read()
+            with open(os.path.join(__dirname__, "vectors", sub_folder, "%s.recs" % vector), 'r', encoding='utf-8') as f:
+                svg_vector = f.read()
             content.append(
                 DIV(
                     DIV(
                         DIV(
-                            self.svg_forms[x],
+                            SVG(XML(svg_recipe), XML(svg_vector), **attrs),
                             _class='captcha-option-svg'),
-                        _class='captcha-option link', _cmd_option=str(x), _token=token, _id_captcha=self._id),
+                        _class='captcha-option link',
+                        _token_option=token_option,
+                        _token_question=token_question,
+                        _id_captcha=self._id
+                    ),
                     _class='captcha-option-container')
             )
         html = DIV(
             DIV(
-                question,
+                XML(question),
                 _class='captcha-question-container'),
             DIV(
                 *content,
@@ -204,11 +254,10 @@ class Captcha(object):
 
 
 if __name__ == '__main__':
-    for x in range(10):
-        captcha = Captcha("teste")
-        captcha.token = '----------------------------------------------'
-        for x in captcha.svg_forms:
-            with open('%s.svg' %x, 'w', encoding="utf-8") as f:
-                f.write(captcha.svg_forms[x].xml().replace("&#58;",":"))
+    captcha = Captcha("teste")
+    captcha.token = '----------------------------------------------'
+    print(captcha.html)
 
-
+    # for x in captcha.svg_forms:
+    #     with open('%s.svg' %x, 'w', encoding="utf-8") as f:
+    #         f.write(captcha.svg_forms[x].xml().replace("&#58;",":"))
