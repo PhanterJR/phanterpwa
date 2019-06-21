@@ -19,6 +19,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     packages=[
         'phanterpwa',
+        'phanterpwa/scaffolds',
         'phanterpwa/components',
         'phanterpwa/i18n',
         'phanterpwa/captchasvg',
@@ -31,6 +32,11 @@ setuptools.setup(
         'phanterpwa/captchasvg/vectors/letter',
         'phanterpwa/captchasvg/vectors/mean_of_transport',
     ],
+    entry_points={
+        "console_scripts": [
+            "phanterpwa = phanterpwa.__main__:main",
+        ],
+    },
     install_requires=[
         'psutil', 'libsass', 'transcrypt', 'livereload', 'flask',
         'pillow', 'flask_restful', 'flask_mail', 'flask_cors', 'itsdangerous',
