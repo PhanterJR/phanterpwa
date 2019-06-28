@@ -12,7 +12,7 @@ import os
 from PIL import Image as PILImage
 
 
-class PhanterGalleryInput(XmlConstructor):
+class PhanterpwaGalleryInput(XmlConstructor):
 
     def __init__(self, src_img="", cut_size=(300, 300), global_id=None, zindex=None, **attributes):
         """
@@ -24,10 +24,10 @@ class PhanterGalleryInput(XmlConstructor):
             possible to add 2 distinct inputs without conflicts
         """
         if "_class" in attributes:
-            new_class = " ".join([attributes['_class'].strip(), "phantergallery_inert-container"])
+            new_class = " ".join([attributes['_class'].strip(), "phanterpwa-gallery-inert-container"])
             attributes['_class'] = new_class
         else:
-            attributes['_class'] = "phantergallery_inert-container"
+            attributes['_class'] = "phanterpwa-gallery-inert-container"
         self.cut_size = cut_size
         self.title_button = "Upload Image"
         self._image_button = I(_class="phanterwebsvg upload-cloud")
@@ -131,58 +131,58 @@ class PhanterGalleryInput(XmlConstructor):
         image_button = self._image_button
         cut_size = self.cut_size
         ids_elements = {
-            '_data-object': 'phantergallery_object',
+            '_data-object': 'phanterpwa-gallery_object',
             '_data-upload-form-container':
-                'phantergallery_upload-form-container',
-            '_data-upload-input': 'phantergallery_upload-input-file',
+                'phanterpwa-gallery_upload-form-container',
+            '_data-upload-input': 'phanterpwa-gallery_upload-input-file',
             '_data-cutter-pad':
-                'phantergallery_cutter-pad',
+                'phanterpwa-gallery_cutter-pad',
             '_data-cutter-background':
-                'phantergallery_cutter-background',
+                'phanterpwa-gallery_cutter-background',
             '_data-panel-cutter-container':
-                'phantergallery_panel-cutter-container',
+                'phanterpwa-gallery_panel-cutter-container',
             '_data-cutter-shadow':
-                'phantergallery_cutter-shadow',
+                'phanterpwa-gallery_cutter-shadow',
             '_data-cutter-control-close':
-                'phantergallery_cutter-control-close',
+                'phanterpwa-gallery_cutter-control-close',
             '_data-cutter-control-view':
-                'phantergallery_cutter-control-view',
+                'phanterpwa-gallery_cutter-control-view',
             '_data-cutter-control-cut':
-                'phantergallery_cutter-control-cut',
+                'phanterpwa-gallery_cutter-control-cut',
             '_data-panel-cutter-size-container':
-                'phantergallery_panel-cutter-size-container',
+                'phanterpwa-gallery_panel-cutter-size-container',
             '_data-panel-cutter-image':
-                'phantergallery_panel-cutter-image',
+                'phanterpwa-gallery_panel-cutter-image',
             '_data-cutter-zoom-control':
-                'phantergallery_cutter-zoom-control',
+                'phanterpwa-gallery_cutter-zoom-control',
             '_data-target-view':
-                'phantergallery_target-view',
+                'phanterpwa-gallery_target-view',
             '_data-target-view-container':
-                'phantergallery_target-view-container',
+                'phanterpwa-gallery_target-view-container',
             '_data-upload-messages':
-                'phantergallery_upload-messages',
+                'phanterpwa-gallery_upload-messages',
             '_data-upload-area-progress':
-                'phantergallery_upload-area-progress',
+                'phanterpwa-gallery_upload-area-progress',
             '_data-upload-image-button':
-                'phantergallery_upload-image-button',
+                'phanterpwa-gallery_upload-image-button',
             '_data-upload-title-button':
-                'phantergallery_upload-title-button',
+                'phanterpwa-gallery_upload-title-button',
             '_data-imagecuted-control-erase':
-                'phantergallery-imagecuted-control-erase',
+                'phanterpwa-gallery-imagecuted-control-erase',
             '_data-imagecuted-control-change':
-                'phantergallery-imagecuted-control-change',
+                'phanterpwa-gallery-imagecuted-control-change',
             '_data-input-name-cutterSizeX':
-                'phantergallery-input-name-cutterSizeX',
+                'phanterpwa-gallery-input-name-cutterSizeX',
             '_data-input-name-cutterSizeY':
-                'phantergallery-input-name-cutterSizeY',
+                'phanterpwa-gallery-input-name-cutterSizeY',
             '_data-input-name-positionX':
-                'phantergallery-input-name-positionX',
+                'phanterpwa-gallery-input-name-positionX',
             '_data-input-name-positionY':
-                'phantergallery-input-name-positionY',
+                'phanterpwa-gallery-input-name-positionY',
             '_data-input-name-newSizeX':
-                'phantergallery-input-name-newSizeX',
+                'phanterpwa-gallery-input-name-newSizeX',
             '_data-input-name-newSizeY':
-                'phantergallery-input-name-newSizeY',
+                'phanterpwa-gallery-input-name-newSizeY',
         }
         if _id:
             for x in ids_elements:
@@ -193,54 +193,54 @@ class PhanterGalleryInput(XmlConstructor):
         self._just_cutter_panel = DIV(
             DIV(
                 _id=ids_elements["_data-cutter-background"],
-                _class="phantergallery_cutter-background"),
+                _class="phanterpwa-gallery-cutter-background"),
             DIV(
                 _id=ids_elements["_data-cutter-shadow"],
-                _class="phantergallery_cutter-shadow"),
+                _class="phanterpwa-gallery-cutter-shadow"),
             DIV(
                 DIV(
                     DIV(
-                        _class="phantergallery_panel-cutter-image",
+                        _class="phanterpwa-gallery-panel-cutter-image",
                         _id=ids_elements['_data-panel-cutter-image']),
 
                     _style="overflow: hidden; width: %spx; height: %spx;" %
                            (cut_size[0], cut_size[1]),
                     _id=ids_elements['_data-panel-cutter-size-container'],
-                    _class="phantergallery_panel-cutter-size-container"
+                    _class="phanterpwa-gallery-panel-cutter-size-container"
                 ),
-                _class="phantergallery_panel-cutter"
+                _class="phanterpwa-gallery-panel-cutter"
             ),
             DIV(
                 _id=ids_elements['_data-cutter-pad'],
-                _class="phantergallery_cutter-pad"),
+                _class="phanterpwa-gallery-cutter-pad"),
             DIV(
                 DIV(
                     I(_class="phanterwebsvg close-circle"),
                     _id=ids_elements['_data-cutter-control-close'],
-                    _class="phantergallery_cutter-control"),
+                    _class="phanterpwa-gallery-cutter-control"),
                 DIV(
                     I(_class="phanterwebsvg image-view"),
                     _id=ids_elements['_data-cutter-control-view'],
-                    _class="phantergallery_cutter-control"),
+                    _class="phanterpwa-gallery-cutter-control"),
                 DIV(
                     I(_class="phanterwebsvg image-cut"),
                     _id=ids_elements['_data-cutter-control-cut'],
-                    _class="phantergallery_cutter-control"),
-                _class='phantergallery_cutter-controls-container'),
+                    _class="phanterpwa-gallery-cutter-control"),
+                _class='phanterpwa-gallery_cutter-controls-container'),
             DIV(
                 DIV(
                     I(_class="phanterwebsvg image-decrease"),
                     DIV(
                         DIV(_id=ids_elements['_data-cutter-zoom-control'],
-                            _class="phantergallery_cutter-zoom-control"),
-                        _class="phantergallery_cutter-zoom-control" +
+                            _class="phanterpwa-gallery-cutter-zoom-control"),
+                        _class="phanterpwa-gallery-cutter-zoom-control" +
                                "-container"
                     ),
                     I(_class="phanterwebsvg image-increase"),
-                    _class='phantergallery_cutter-zoom-controls'),
-                _class='phantergallery_cutter-zoom-container'),
+                    _class='phanterpwa-gallery_cutter-zoom-controls'),
+                _class='phanterpwa-gallery_cutter-zoom-container'),
             _id=ids_elements['_data-panel-cutter-container'],
-            _class="phantergallery_panel-cutter-container",
+            _class="phanterpwa-gallery-panel-cutter-container",
             _style=style_zindex
         )
         self._just_buttom = CONCATENATE(
@@ -250,25 +250,25 @@ class PhanterGalleryInput(XmlConstructor):
                         DIV(
                             I(_class="phanterwebsvg recycle"),
                             _id=ids_elements["_data-imagecuted-control-erase"],
-                            _class="phantergallery" +
+                            _class="phanterpwa-gallery" +
                                    "_imagecuted-control"
                         ),
                         DIV(
                             I(_class="phanterwebsvg image-reload"),
                             _id=ids_elements["_data-imagecuted" +
                                              "-control-change"],
-                            _class="phantergallery" +
+                            _class="phanterpwa-gallery" +
                                    "_imagecuted-control"
                         ),
-                        _class="phantergallery" +
+                        _class="phanterpwa-gallery" +
                                "_imagecuted-controls"),
                     CANVAS(_id=ids_elements['_data-target-view']),
-                    _class='phantergallery-center-content',
+                    _class='phanterpwa-gallery-center-content',
                 ),
                 _id=ids_elements['_data-target-view-container'],
                 _style="overflow: hidden; width: %spx; height: %spx;" %
                        (cut_size[0], cut_size[1]),
-                _class="phantergallery_target-view-container%s" %
+                _class="phanterpwa-gallery-target-view-container%s" %
                        (" actived" if self._src_img else ""),
             ),
             DIV(
@@ -276,16 +276,16 @@ class PhanterGalleryInput(XmlConstructor):
                     DIV(
                         DIV(image_button,
                             _id=ids_elements["_data-upload-image-button"],
-                            _class="phantergallery_upload-image-button"),
+                            _class="phanterpwa-gallery-upload-image-button"),
                         DIV(title_button,
                             _id=ids_elements["_data-upload-title-button"],
-                            _class="phantergallery_upload-title-button"),
-                        _class="phantergallery_upload-button"
+                            _class="phanterpwa-gallery-upload-title-button"),
+                        _class="phanterpwa-gallery-upload-button"
                     ),
-                    _class="phantergallery_container-upload-button"
+                    _class="phanterpwa-gallery-container-upload-button"
                 ),
                 _id=ids_elements['_data-object'],
-                _class="phantergallery_object%s" %
+                _class="phanterpwa-gallery-object%s" %
                        (" actived" if not self._src_img else ""),
                 **ids_elements
             ),
@@ -294,7 +294,7 @@ class PhanterGalleryInput(XmlConstructor):
                     INPUT(
                         _accept="image/png, image/jpeg, image/gif, image/bmp",
                         _id=ids_elements["_data-upload-input"],
-                        _class="phantergallery_upload-input-file",
+                        _class="phanterpwa-gallery-upload-input-file",
                         _type="file",
                         _name=ids_elements["_data-upload-input"]
                     ),
@@ -324,24 +324,24 @@ class PhanterGalleryInput(XmlConstructor):
                     _value="",
                     _type="text"),
                 _id=ids_elements["_data-upload-form-container"],
-                _class="phantergallery_upload-form-container",
+                _class="phanterpwa-gallery-upload-form-container",
                 _style="display: none;"
             ),
 
             DIV(_id=ids_elements['_data-upload-messages'],
-                _class="phantergallery_upload-messages"),
+                _class="phanterpwa-gallery-upload-messages"),
             DIV(
                 DIV(
                     DIV(
-                        DIV(_class="phantergallery_progressbar-movement"),
-                        _class="phantergallery_progressbar"),
+                        DIV(_class="phanterpwa-gallery-progressbar-movement"),
+                        _class="phanterpwa-gallery-progressbar"),
                     _id=ids_elements['_data-upload-area-progress'],
-                    _class="phantergallery_upload-area-progress"
+                    _class="phanterpwa-gallery-upload-area-progress"
                 ),
-                _class="phantergallery_progressbar-container")
+                _class="phanterpwa-gallery-progressbar-container")
         )
         html = CONCATENATE(self._just_buttom, self._just_cutter_panel)
-        self.content = html
+        self.content = [html]
 
     @property
     def cut_size(self):
@@ -363,7 +363,7 @@ class PhanterGalleryInput(XmlConstructor):
             raise TypeError("The value has to be a tuple or a list")
 
 
-class PhanterGalleryCutter(object):
+class PhanterpwaGalleryCutter(object):
 
     def __init__(self,
                  imageName,
@@ -415,7 +415,7 @@ class PhanterGalleryCutter(object):
         return data
 
 
-class PhanterGalleryImageBytes(object):
+class PhanterpwaGalleryImageBytes(object):
 
     def __init__(self, imageName, imageBytes, force_png=False):
         self.nome_da_imagem = imageName
