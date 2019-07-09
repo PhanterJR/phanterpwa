@@ -9,56 +9,31 @@ class CONCATENATE(XmlConstructor):
     def __init__(self, *content):
         XmlConstructor.__init__(self, "", False, *content)
 
-    @property
-    def xml_content_for_humans(self):
-        temp_xml_content = ""
-        for x in self._content:
-            if isinstance(x, XmlConstructor):
-                x._ident_level = self._ident_level
-                temp_xml_content = "".join([temp_xml_content, x.humanize()])
-            else:
-                space = "".join(["\n", " " * ((self._ident_level) * self._ident_size)])
-                temp_xml_content = "".join([temp_xml_content, space, str(x)])
-
-        self._xml_content_for_humans = temp_xml_content
-        return self._xml_content_for_humans
-
-    def humanize(self):
-        human = ""
-        space = " " * (self._ident_level * self._ident_size)
-        if self.content and not self.singleton:
-            human = "".join([self.tag_begin, self.xml_content_for_humans, space, self.tag_end])
-        elif self.singleton:
-            human = "".join([self.tag_begin])
-        else:
-            human = "".join([self.tag_begin, space, self.tag_end])
-        return space + human
-
 
 class XML(XmlConstructor, XssCleaner):
     def __init__(self,
-        content,
-        sanitize=False,
-        permitted_tags=[
-            'a',
-            'b',
-            'blockquote',
-            'br/',
-            'i',
-            'li',
-            'ol',
-            'ul',
-            'p',
-            'cite',
-            'code',
-            'pre',
-            'img/',
-        ],
-        allowed_attributes={
-            'a': ['href', 'title'],
-            'img': ['src', 'alt'],
-            'blockquote': ['type']
-        }):
+            content,
+            sanitize=False,
+            permitted_tags=[
+                'a',
+                'b',
+                'blockquote',
+                'br/',
+                'i',
+                'li',
+                'ol',
+                'ul',
+                'p',
+                'cite',
+                'code',
+                'pre',
+                'img/',
+            ],
+            allowed_attributes={
+                'a': ['href', 'title'],
+                'img': ['src', 'alt'],
+                'blockquote': ['type']
+            }):
         XmlConstructor.__init__(self, "", False, content)
         XssCleaner.__init__(self)
         self.sanitize = sanitize
@@ -120,6 +95,40 @@ class SCRIPTMINIFY(XmlConstructor):
             new_content = new_content.strip()
         XmlConstructor.__init__(self, "script", False, new_content, **attributes)
 
+
+class VARIABLE(XmlConstructor):
+    def __init__(self, variable_name):
+        self._variable_name = variable_name
+        XmlConstructor.__init__(self, "", False)
+
+    @property
+    def id(self):
+        return self._variable_name
+
+    @property
+    def xml_content_for_humans(self):
+        temp_xml_content = ""
+        for x in self._content:
+            if isinstance(x, XmlConstructor):
+                x._ident_level = self._ident_level
+                temp_xml_content = "".join([temp_xml_content, x.humanize()])
+            else:
+                space = "".join(["\n", " " * ((self._ident_level) * self._ident_size)])
+                temp_xml_content = "".join([temp_xml_content, space, str(x)])
+
+        self._xml_content_for_humans = temp_xml_content
+        return self._xml_content_for_humans
+
+    def humanize(self):
+        human = ""
+        space = " " * (self._ident_level * self._ident_size)
+        if self.content and not self.singleton:
+            human = "".join([self.tag_begin, self.xml_content_for_humans, space, self.tag_end])
+        elif self.singleton:
+            human = "".join([self.tag_begin])
+        else:
+            human = "".join([self.tag_begin, space, self.tag_end])
+        return space + human
 
 # void tags
 
@@ -727,11 +736,11 @@ class HtmlToXmlConstructor(CONCATENATE, HTMLParser):
         if self.opened_el:
             last_el = self.opened_el[-1]
             if not last_el.is_closed:
-                content = last_el.content
+                content = list(last_el.content)
                 content.append(el)
                 last_el.content = content
         else:
-            self.content.append(el)
+            self.append(el)
         if tag not in self.void_tags:
             self.opened_el.append(el)
 
@@ -745,11 +754,11 @@ class HtmlToXmlConstructor(CONCATENATE, HTMLParser):
         if self.opened_el:
             last_el = self.opened_el[-1]
             if not last_el.is_closed:
-                content = last_el.content
+                content = list(last_el.content)
                 content.append(data)
                 last_el.content = content
         else:
-            self.content.append(data)
+            self.append(data)
 
     def handle_comment(self, data):
         print("Comment  :", data)

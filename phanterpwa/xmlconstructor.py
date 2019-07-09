@@ -247,11 +247,17 @@ class XmlConstructor(object):
         temp_xml_content = ""
         for x in self._content:
             if isinstance(x, XmlConstructor):
-                x._ident_level = self._ident_level + 1
+                if self.tag == "":
+                    x._ident_level = self._ident_level
+                else:
+                    x._ident_level = self._ident_level + 1
                 temp_xml_content = "".join([temp_xml_content, x.humanize()])
             else:
                 x = xssescape(x)
-                space = "".join(["\n", " " * ((self._ident_level + 1) * (self._ident_size))])
+                if self.tag == "":
+                    space = "".join(["\n", " " * ((self._ident_level) * (self._ident_size))])
+                else:
+                    space = "".join(["\n", " " * ((self._ident_level + 1) * (self._ident_size))])
                 temp_xml_content = "".join([temp_xml_content, space, x])
 
         self._xml_content_for_humans = temp_xml_content
@@ -352,12 +358,31 @@ class XmlConstructor(object):
         human = ""
         space = " " * (self._ident_level * self._ident_size)
         if self.content and not self.singleton:
-            human = "".join([self.tag_begin, self.xml_content_for_humans, "\n", space, self.tag_end])
+            if self.tag == "":
+                human = "".join([
+                    self.tag_begin,
+                    self.xml_content_for_humans,
+                    self.tag_end
+                ])
+            else:
+                human = "".join([
+                    self.tag_begin,
+                    self.xml_content_for_humans,
+                    "\n",
+                    space,
+                    self.tag_end
+                ])
         elif self.singleton:
             human = "".join([self.tag_begin])
         else:
-            human = "".join([self.tag_begin, "\n", space, self.tag_end])
-        return "".join(["\n", space, human]).replace('&#58;', ':')
+            if self.tag == "":
+                return ""
+            else:
+                human = "".join([self.tag_begin, "\n", space, self.tag_end])
+        if self.tag == "":
+            return human
+        else:
+            return "".join(["\n" if self._ident_level != 0 else "", space, human]).replace('&#58;', ':')
 
     def xml(self):
         """
@@ -446,7 +471,6 @@ class XmlConstructor(object):
             index += 1
         self.content
         return self
-
 
     def __hash__(self):
         return hash(self.xml())

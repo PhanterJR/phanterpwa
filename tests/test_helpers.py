@@ -1,4 +1,13 @@
-from phanterpwa.helpers import DIV, IMG, XML, A, TD, HtmlToXmlConstructor
+from phanterpwa.helpers import (
+    DIV,
+    IMG,
+    XML,
+    A,
+    TD,
+    SPAN,
+    HtmlToXmlConstructor,
+    CONCATENATE
+)
 from phanterpwa.xmlconstructor import XmlConstructor
 import unittest
 
@@ -17,6 +26,31 @@ sample_html_to_xmlconstructor = """<div id="test02" enabled empty="=">
 <div>&lt;main&gt;<b>xsscapedthis</b>&lt;/main&gt;</div>
 &lt;div&gt;&lt;main&gt;<b>xsscapedthis</b>&lt;/main&gt;&lt;/div&gt;
 <div></div>"""
+sample_humanize = """<div>
+  <div class="second">
+    <a href="localhost">
+      string link
+    </a>
+  </div>
+  <img alt="ident equals second">
+</div>"""
+sample_humanize2 = """<div>
+  <div class="second">
+    <a href="localhost">
+      string link
+      <span class="inline">
+        yes
+      </span>
+    </a>
+  </div>
+  <img alt="ident equals second">
+  <div>
+    extra_line1
+  </div>
+  <div>
+    extra_line2
+  </div>
+</div>"""
 
 
 class TestHelpers(unittest.TestCase):
@@ -236,6 +270,66 @@ class TestHelpers(unittest.TestCase):
         self.assertEqual(sample_search.search({"_strange_attr": "yes"}), [element2])
         self.assertEqual(sample_search.search({"_repeat_attr": "repeat"}), repeat_el)
         self.assertEqual([x.xml() for x in sample_search.search("experiment")], [experiment.xml(), experiment.xml()])
+
+    def test_append_insert(self):
+        to_test = DIV()
+        to_test.append(A(_example="gt"))
+        self.assertEqual(DIV(A(_example="gt")).xml(), to_test.xml())
+        to_test.append(SPAN())
+        self.assertEqual(DIV(A(_example="gt"), SPAN()).xml(), to_test.xml())
+        to_test.insert(1, IMG(_alt="is_image"))
+        self.assertEqual(DIV(A(_example="gt"), IMG(_alt="is_image"), SPAN()).xml(), to_test.xml())
+
+    def test_humanize(self):
+        sample = DIV(
+            DIV(
+                A("string link", _href="localhost"),
+                _class="second"
+            ),
+            IMG(_alt="ident equals second"),
+        )
+        self.assertEqual(sample.humanize(), sample_humanize)
+        sample = DIV(
+            CONCATENATE(
+                DIV(
+                    A("string link", _href="localhost"),
+                    _class="second"
+                ),
+                IMG(_alt="ident equals second"),
+            )
+        )
+        sample.append(CONCATENATE())
+        self.assertEqual(sample.humanize(), sample_humanize)
+        sample = CONCATENATE(
+            DIV(
+                DIV(
+                    A("string link", _href="localhost"),
+                    _class="second"
+                ),
+                IMG(_alt="ident equals second"),
+            )
+        )
+        self.assertEqual(sample.humanize(), sample_humanize)
+        sample = CONCATENATE(
+            DIV(
+                DIV(
+                    A(
+                        CONCATENATE(
+                            "string link",
+                            SPAN("yes", _class="inline")
+                        ),
+                        _href="localhost"
+                    ),
+                    _class="second"
+                ),
+                IMG(_alt="ident equals second"),
+                CONCATENATE(
+                    DIV("extra_line1"),
+                    DIV("extra_line2")
+                )
+            )
+        )
+        self.assertEqual(sample.humanize(), sample_humanize2)
 
 
 if __name__ == '__main__':
