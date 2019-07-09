@@ -97,10 +97,14 @@ class XmlConstructor(object):
             raise TypeError("The tag must be string")
 
     def append(self, value):
-        self._content.append(value)
+        t = list(self._content)
+        t.append(value)
+        self.content = t
 
     def insert(self, position, value):
-        self._content.insert(position, value)
+        t = list(self._content)
+        t.insert(position, value)
+        self.content = t
 
     @property
     def tag_begin(self):
@@ -221,9 +225,9 @@ class XmlConstructor(object):
                 else:
                     x = str(x)
                 temp_content.append(x)
-            self._content = temp_content
+            self._content = tuple(temp_content)
         else:
-            self.content = [content]  # recursive
+            self.content = (content, )  # recursive
 
     @property
     def xml_content(self):
@@ -430,6 +434,19 @@ class XmlConstructor(object):
                     if search in str(x):
                         results.append(self)
         return results
+
+    def replace(self, object_id, new_element):
+        index = 0
+        for x in self.content:
+            if isinstance(x, XmlConstructor):
+                if x.id == object_id:
+                    self.content[index] = new_element
+                else:
+                    x.replace(object_id, new_element)
+            index += 1
+        self.content
+        return self
+
 
     def __hash__(self):
         return hash(self.xml())

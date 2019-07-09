@@ -30,7 +30,7 @@ class PhanterpwaGalleryInput(XmlConstructor):
             attributes['_class'] = "phanterpwa-gallery-inert-container"
         self.cut_size = cut_size
         self.title_button = "Upload Image"
-        self._image_button = I(_class="phanterwebsvg upload-cloud")
+        self._image_button = I(_class="fas fa-cloud-upload-alt")
         self.global_id = global_id
         self._src_img = src_img
         self.zindex = zindex
@@ -109,6 +109,19 @@ class PhanterpwaGalleryInput(XmlConstructor):
         else:
             raise TypeError("The image_button must be " +
                             "string or XmlConstructor instance")
+
+    def humanize(self):
+        global_id = self._global_id
+        self._html_input(global_id)
+        human = ""
+        space = " " * (self._ident_level * self._ident_size)
+        if self.content and not self.singleton:
+            human = "".join([self.tag_begin, self.xml_content_for_humans, "\n", space, self.tag_end])
+        elif self.singleton:
+            human = "".join([self.tag_begin])
+        else:
+            human = "".join([self.tag_begin, "\n", space, self.tag_end])
+        return "".join(["\n", space, human]).replace('&#58;', ':')
 
     def xml(self):
         global_id = self._global_id
