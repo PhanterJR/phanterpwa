@@ -60,6 +60,7 @@ class XmlConstructor(object):
             self._add_tag(tag, self)
         self._ident_size = 2
         self._ident_level = 0
+        self._idx = 0
 
     @classmethod
     def ident_size(cls, size):
@@ -104,6 +105,11 @@ class XmlConstructor(object):
     def insert(self, position, value):
         t = list(self._content)
         t.insert(position, value)
+        self.content = t
+
+    def replace(self, position, value):
+        t = list(self._content)
+        t[position] = value
         self.content = t
 
     @property
@@ -212,19 +218,23 @@ class XmlConstructor(object):
     def content(self, content):
         if isinstance(content, (list, tuple)):
             temp_content = []
+            index = 0
             for x in content:
                 if isinstance(x, XmlConstructor):
                     if not x._parent:
                         x._parent = self
+                        x._idx = index
                     else:
                         if x._parent.id != self.id:
                             if x.tag:
                                 y = copy(x)
                                 x = y
                                 x._parent = self
+                                x._idx = index
                 else:
                     x = str(x)
                 temp_content.append(x)
+                index += 1
             self._content = tuple(temp_content)
         else:
             self.content = (content, )  # recursive
@@ -458,19 +468,19 @@ class XmlConstructor(object):
                 else:
                     if search in str(x):
                         results.append(self)
+        elif isinstance(search, int):
+            results = []
+            for x in self.content:
+                if isinstance(x, XmlConstructor):
+                    if x.id == search:
+                        results.append(x)
+                        break
+                    else:
+                        resul_rec = x.search(search)
+                        if resul_rec:
+                            results.append(resul_rec[0])
+                            break
         return results
-
-    def replace(self, object_id, new_element):
-        index = 0
-        for x in self.content:
-            if isinstance(x, XmlConstructor):
-                if x.id == object_id:
-                    self.content[index] = new_element
-                else:
-                    x.replace(object_id, new_element)
-            index += 1
-        self.content
-        return self
 
     def __hash__(self):
         return hash(self.xml())

@@ -42,31 +42,6 @@ class XML(XmlConstructor, XssCleaner):
         self.strip_disallowed = False
 
     @property
-    def xml_content_for_humans(self):
-        temp_xml_content = ""
-        for x in self._content:
-            if isinstance(x, XmlConstructor):
-                x._ident_level = self._ident_level
-                temp_xml_content = "".join([temp_xml_content, x.humanize()])
-            else:
-                space = "".join(["\n", " " * ((self._ident_level) * self._ident_size)])
-                temp_xml_content = "".join([temp_xml_content, space, str(x)])
-
-        self._xml_content_for_humans = temp_xml_content
-        return self._xml_content_for_humans
-
-    def humanize(self):
-        human = ""
-        space = " " * (self._ident_level * self._ident_size)
-        if self.content and not self.singleton:
-            human = "".join([self.tag_begin, self.xml_content_for_humans, space, self.tag_end])
-        elif self.singleton:
-            human = "".join([self.tag_begin])
-        else:
-            human = "".join([self.tag_begin, space, self.tag_end])
-        return space + human
-
-    @property
     def xml_content(self):
         temp_xml_content = ""
         for x in self._content:

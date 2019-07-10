@@ -241,6 +241,7 @@ class TestHelpers(unittest.TestCase):
     def test_search(self):
         repeat_el = [DIV(_repeat_attr="repeat"), DIV(_repeat_attr="repeat"), DIV(_repeat_attr="repeat")]
         experiment = TD("cool experiment")
+        id_exp = experiment.id
         sample_search = DIV(
             DIV("class numbers", _class="one two"),
             A(
@@ -270,6 +271,8 @@ class TestHelpers(unittest.TestCase):
         self.assertEqual(sample_search.search({"_strange_attr": "yes"}), [element2])
         self.assertEqual(sample_search.search({"_repeat_attr": "repeat"}), repeat_el)
         self.assertEqual([x.xml() for x in sample_search.search("experiment")], [experiment.xml(), experiment.xml()])
+        self.assertEqual(sample_search.search(id_exp)[0], experiment)
+        self.assertEqual(sample_search.search(id_exp)[0].xml(), experiment.xml())
 
     def test_append_insert(self):
         to_test = DIV()
