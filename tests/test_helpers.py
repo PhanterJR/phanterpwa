@@ -1,3 +1,4 @@
+import unittest
 from phanterpwa.helpers import (
     DIV,
     IMG,
@@ -9,7 +10,9 @@ from phanterpwa.helpers import (
     CONCATENATE
 )
 from phanterpwa.xmlconstructor import XmlConstructor
-import unittest
+from phanterpwa.i18n import (
+    Translator
+)
 
 sample_html_to_xmlconstructor = """<div id="test02" enabled empty="=">
   <div style="background-color&#58;blue; width&#58;100%; height&#58;40px;">
@@ -52,9 +55,22 @@ sample_humanize2 = """<div>
   </div>
 </div>"""
 
+sample_i18n_entries_to_verbete = """<div>Abacaxi<a href="abacaxi"></a>abacaxi<span class="entries">verbete this is ignored?</span></div>"""
+sample_i18n_entries_to_verbete_without_ignore = """<div>Abacaxi<a href="abacaxi"></a>abacaxi<span class="entries">verbete isto é ignorado?</span></div>"""
+sample_i18n_glingon_without_ignore_humanized = """<div>
+  changed1
+  <a href="abacaxi">
+  </a>
+  changed2
+  <span class="entries">
+    changed3
+    changed4
+  </span>
+</div>"""
+sample_i18n_Abacaxi_to_Pinnaple = """<div>Pinnaple<a href="abacaxi"></a>abacaxi<span class="entries">entries this is ignored?</span></div>"""
 
 class TestHelpers(unittest.TestCase):
-    def test_tags(self):
+    def test1_tags(self):
         self.assertEqual(DIV().xml(), "<div></div>")
         self.assertEqual(IMG().xml(), "<img>")
         self.assertEqual(DIV(_id="my_id").xml(), "<div id=\"my_id\"></div>")
@@ -70,14 +86,14 @@ class TestHelpers(unittest.TestCase):
         self.assertEqual(
             DIV(XML("<b>don'txmlscapedthis</b>")).xml(), "<div><b>don'txmlscapedthis</b></div>")
 
-    def test_invalid_atribute_name(self):
+    def test2_invalid_atribute_name(self):
         i = [" ", "=", "'", '"', ">", "<", "/"]
         for x in i:
             b = "_any%sthings" % x
             attr = {b: "invalid_atribute_name"}
             self.assertRaises(ValueError, lambda attr=attr: DIV("any content", **attr))
 
-    def test_put_obj_python_to_obj_javascript_in_attr(self):
+    def test3_put_obj_python_to_obj_javascript_in_attr(self):
         object_list = [None, "a_string", 1, '1', "2", False, True]
         object_dict = {"list": object_list, 'false': False}
         attr = {"_data-list": object_list, "_data-obj": object_dict}
@@ -86,7 +102,7 @@ class TestHelpers(unittest.TestCase):
             '[null, "a_string", 1, "1", "2", false, true], ',
             '"false"&#58; false}\'></div>']))
 
-    def test_sanitize(self):
+    def test4_sanitize(self):
         permitted_tags = [
             'div',
             'td',
@@ -234,11 +250,11 @@ class TestHelpers(unittest.TestCase):
         self.assertEqual(XML(A(_href="invalid_link").xml(), sanitize=True,
             permitted_tags=['a']).xml(), "")
 
-    def test_html_to_xmlconstructor(self):
+    def test5_html_to_xmlconstructor(self):
         invert = HtmlToXmlConstructor(sample_html_to_xmlconstructor)
         self.assertEqual(invert.xml(), sample_html_to_xmlconstructor)
 
-    def test_search(self):
+    def test6_search(self):
         repeat_el = [DIV(_repeat_attr="repeat"), DIV(_repeat_attr="repeat"), DIV(_repeat_attr="repeat")]
         experiment = TD("cool experiment")
         id_exp = experiment.id
@@ -267,14 +283,23 @@ class TestHelpers(unittest.TestCase):
         # search by attrs
         element = sample_search[1][0]
         element2 = sample_search[3][0]
+        element3 = sample_search[0]
+        element4 = sample_search[2]
+        element5 = sample_search[3][1]
         self.assertEqual(sample_search.search({"_id": "inside_a"}), [element])
         self.assertEqual(sample_search.search({"_strange_attr": "yes"}), [element2])
         self.assertEqual(sample_search.search({"_repeat_attr": "repeat"}), repeat_el)
         self.assertEqual([x.xml() for x in sample_search.search("experiment")], [experiment.xml(), experiment.xml()])
+        self.assertEqual(sample_search.search({"_class": "one"}), [element3, element4])
+        self.assertEqual(sample_search.search({"_class": "one two"}), [element3])
+        self.assertEqual(sample_search.search({"_class": "two one"}), [element3])
+        self.assertEqual(sample_search.search({"class": "one"}), [element3, element4])
+        self.assertEqual(sample_search.search({"enabled": True}), [element5])
+        # search by id
         self.assertEqual(sample_search.search(id_exp)[0], experiment)
         self.assertEqual(sample_search.search(id_exp)[0].xml(), experiment.xml())
 
-    def test_append_insert(self):
+    def test7_append_insert(self):
         to_test = DIV()
         to_test.append(A(_example="gt"))
         self.assertEqual(DIV(A(_example="gt")).xml(), to_test.xml())
@@ -283,7 +308,7 @@ class TestHelpers(unittest.TestCase):
         to_test.insert(1, IMG(_alt="is_image"))
         self.assertEqual(DIV(A(_example="gt"), IMG(_alt="is_image"), SPAN()).xml(), to_test.xml())
 
-    def test_humanize(self):
+    def test8_humanize(self):
         sample = DIV(
             DIV(
                 A("string link", _href="localhost"),
@@ -333,6 +358,32 @@ class TestHelpers(unittest.TestCase):
             )
         )
         self.assertEqual(sample.humanize(), sample_humanize2)
+
+    def test9_i18n(self):
+        sample_i18n = DIV(
+            "Abacaxi",
+            A(_href="abacaxi"),
+            "abacaxi",
+            SPAN("entries", " this is ignored?", _class="entries")
+        )
+        Trans = Translator("test_helpers_languages")
+        Trans.translate("pt-BR", "entries", "verbete")
+        Trans.translate("pt-BR", " this is ignored?", " isto é ignorado?")
+        Trans.translate("en-US", "Abacaxi", "Pinnaple")
+        Trans.translate("glingon", "Abacaxi", "changed1")
+        Trans.translate("glingon", "abacaxi", "changed2")
+        Trans.translate("glingon", "entries", "changed3")
+        Trans.translate("glingon", " this is ignored?", "changed4")
+        original = sample_i18n.xml()
+        sample_i18n.i18n(Trans, 'pt-BR', ignored_entries=[" this is ignored?"])
+        self.assertNotEqual(original, sample_i18n)
+        self.assertEqual(sample_i18n_entries_to_verbete, sample_i18n.xml())
+        sample_i18n.i18n(Trans, 'pt-BR')
+        self.assertEqual(sample_i18n_entries_to_verbete_without_ignore, sample_i18n.xml())
+        sample_i18n.i18n(Trans, 'en-US', ignored_entries=[" this is ignored?"])
+        self.assertEqual(sample_i18n_Abacaxi_to_Pinnaple, sample_i18n.xml())
+        sample_i18n.i18n(Trans, 'glingon')
+        self.assertEqual(sample_i18n_glingon_without_ignore_humanized, sample_i18n.humanize())
 
 
 if __name__ == '__main__':

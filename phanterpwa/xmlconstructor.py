@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from .xss import xssescape
+from .i18n import Translator
 from xml.sax import saxutils
 import json
 from copy import copy
@@ -61,6 +62,7 @@ class XmlConstructor(object):
         self._ident_size = 2
         self._ident_level = 0
         self._idx = 0
+        self._translate = {}
 
     @classmethod
     def ident_size(cls, size):
@@ -96,7 +98,7 @@ class XmlConstructor(object):
             self._tag = tag
         else:
             raise TypeError("The tag must be string")
-
+    
     def append(self, value):
         t = list(self._content)
         t.append(value)
@@ -246,6 +248,8 @@ class XmlConstructor(object):
             if isinstance(x, XmlConstructor):
                 temp_xml_content = "".join([temp_xml_content, x.xml()])
             else:
+                if x in self._translate:
+                    x = self._translate[x]
                 x = xssescape(x)
                 temp_xml_content = "".join([temp_xml_content, x])
 
@@ -263,6 +267,8 @@ class XmlConstructor(object):
                     x._ident_level = self._ident_level + 1
                 temp_xml_content = "".join([temp_xml_content, x.humanize()])
             else:
+                if x in self._translate:
+                    x = self._translate[x]
                 x = xssescape(x)
                 if self.tag == "":
                     space = "".join(["\n", " " * ((self._ident_level) * (self._ident_size))])
@@ -450,7 +456,9 @@ class XmlConstructor(object):
                     if set(list_target_attrs) & set(list_source_attrs) == set(list_source_attrs):
                         for z in list_source_attrs.keys():
                             if z == "class":
-                                if set(list_source_attrs[z].split(" ")) & set(x.attributes["_%s" % z].split(" ")):
+                                if set(list_source_attrs[z].split(" ")) &\
+                                        set(x.attributes["_%s" % z].split(" ")) ==\
+                                        set(list_source_attrs[z].split(" ")):
                                     results.append(x)
                             else:
                                 if list_source_attrs[z] == x.attributes["_%s" % z]:
@@ -481,6 +489,29 @@ class XmlConstructor(object):
                             results.append(resul_rec[0])
                             break
         return results
+
+    def reset_i18n(self):
+        self._translate = {}
+
+    def i18n(self, i18nInstance, dictionary, ignored_entries=None):
+        self.reset_i18n()
+        if not isinstance(i18nInstance, Translator):
+            raise "The i18Insntance argument must be an instance" +\
+                " of the phanterpwa.i18n.Translator object, given %s" % type(i18nInstance)
+
+        for x in self.content:
+            if isinstance(x, XmlConstructor):
+                x.i18n(i18nInstance, dictionary, ignored_entries)
+            elif isinstance(x, str):
+                translated = None
+                if isinstance(ignored_entries, (list, tuple)):
+                    if x not in ignored_entries:
+                        translated = i18nInstance.translator(x, dictionary=dictionary)
+                else:
+                    translated = i18nInstance.translator(x, dictionary=dictionary)
+                if translated:
+                    self._translate[x] = translated
+        return self._translate
 
     def __hash__(self):
         return hash(self.xml())
