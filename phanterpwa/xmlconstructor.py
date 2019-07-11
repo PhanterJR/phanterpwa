@@ -55,6 +55,7 @@ class XmlConstructor(object):
         self.singleton = singleton
         self.content = content
         self.kargs = {}
+        self._escape_string = True
         self.attributes = attributes
         self._parent = None
         if tag:
@@ -98,7 +99,7 @@ class XmlConstructor(object):
             self._tag = tag
         else:
             raise TypeError("The tag must be string")
-    
+
     def append(self, value):
         t = list(self._content)
         t.append(value)
@@ -250,7 +251,8 @@ class XmlConstructor(object):
             else:
                 if x in self._translate:
                     x = self._translate[x]
-                x = xssescape(x)
+                if self._escape_string:
+                    x = xssescape(x)
                 temp_xml_content = "".join([temp_xml_content, x])
 
         self._xml_content = temp_xml_content
@@ -269,7 +271,8 @@ class XmlConstructor(object):
             else:
                 if x in self._translate:
                     x = self._translate[x]
-                x = xssescape(x)
+                if self._escape_string:
+                    x = xssescape(x)
                 if self.tag == "":
                     space = "".join(["\n", " " * ((self._ident_level) * (self._ident_size))])
                 else:
@@ -278,6 +281,24 @@ class XmlConstructor(object):
 
         self._xml_content_for_humans = temp_xml_content
         return self._xml_content_for_humans
+
+    @property
+    def map_content_index(self):
+        temp_map_content = ""
+        idx = 0
+        for x in self._content:
+            if isinstance(x, XmlConstructor):
+                x._ident_level = self._ident_level + 1
+                temp_map_content = "".join([temp_map_content, x.map_indexes()])
+            else:
+                x = saxutils.unescape(saxutils.quoteattr(x))
+                space = "".join(["\n", " " * ((self._ident_level + 1) * 4)])
+                prev = self._indexescalc("[%s][%s]" % (self._idx, idx))
+                temp_map_content = "".join([temp_map_content, space, prev, x])
+            idx += 1
+
+        self._map_content_index = temp_map_content
+        return self._map_content_index
 
     @property
     def parent(self):
@@ -352,7 +373,9 @@ class XmlConstructor(object):
                         fill_attr[k] = v
                         if isinstance(v, (list, dict)):
                             v = json.dumps(v)
-                        v = saxutils.quoteattr(v).replace(':', '&#58;')
+                            v = saxutils.quoteattr(v).replace(':', '&#58;')
+                        else:
+                            v = saxutils.quoteattr(v)
                         str_attr = " ".join([str_attr, "=".join([k[1:], v])])
                 else:
                     self.kargs[k] = attributes[k]
@@ -398,7 +421,30 @@ class XmlConstructor(object):
         if self.tag == "":
             return human
         else:
-            return "".join(["\n" if self._ident_level != 0 else "", space, human]).replace('&#58;', ':')
+            return "".join(["\n" if self._ident_level != 0 else "", space, human])
+
+    def _indexescalc(self, last=""):
+        n_last = last
+        if self._parent:
+            if self._parent._ident_level > 0:
+                last = "".join(["[%s]" % self._parent._idx, last])
+                n_last = self._parent._indexescalc(last)
+        return n_last
+
+    def map_indexes(self):
+        map_index = ""
+        space = " " * (self._ident_level * 4)
+        prev = self._indexescalc("[%s]" % self._idx if self._ident_level != 0 else "")
+        str_attr = json.dumps(self._attributes) if self.tag else "{}"
+        if self.content and not self.singleton:
+            map_index = "".join([
+                "<", self.tag if self.tag else "   ",
+                "> %s" % (str_attr),
+                self.map_content_index,
+            ])
+        else:
+            map_index = "".join(["<", self.tag, "> %s" % (str_attr)])
+        return "".join(["\n" if self._ident_level != 0 else "", space, prev, map_index])
 
     def xml(self):
         """

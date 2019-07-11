@@ -15,10 +15,10 @@ from phanterpwa.i18n import (
 )
 
 sample_html_to_xmlconstructor = """<div id="test02" enabled empty="=">
-  <div style="background-color&#58;blue; width&#58;100%; height&#58;40px;">
+  <div style="background-color:blue; width:100%; height:40px;">
     OOOOOPAAAAA
   </div>
-  <div json='{"teste"&#58; true}' testando-outro='["macaco", true, "boi"]' texto_com_aspas="queria muito &quot;tentar&quot; ou não 'tentar'" list_none="[null]" dict='{"testesss"&#58; true}' json_dums="[null, true, false]">
+  <div json='{"teste": true}' testando-outro='["macaco", true, "boi"]' texto_com_aspas="queria muito &quot;tentar&quot; ou não 'tentar'" list_none="[null]" dict='{"testesss": true}' json_dums="[null, true, false]">
     <div>
       conteudo
     </div>
@@ -68,6 +68,27 @@ sample_i18n_glingon_without_ignore_humanized = """<div>
   </span>
 </div>"""
 sample_i18n_Abacaxi_to_Pinnaple = """<div>Pinnaple<a href="abacaxi"></a>abacaxi<span class="entries">entries this is ignored?</span></div>"""
+sample_map_index = """<div> {}
+    [0]<span> {"_class": "opaaa", "_id": "doideira"}
+        [0][0]"conteudo"
+        [0][1]<span> {}
+    [1]<span> {}
+        [1][0]<img> {}
+    [2]<span> {}
+        [2][0]<span> {}
+        [2][1]\"novo_conteudo\""""
+
+sample_map_index_concatenate_xml = """<   > {}
+    [0]<div> {}
+        [0][0]<span> {}
+        [0][1]<   > {}
+            [0][1][0]<span> {}
+            [0][1][1]<span> {}
+        [0][2]<img> {}
+    [1]<img> {}
+    [2]<   > {}
+        [2][0]"<div id='xml_content'></div>\""""
+
 
 class TestHelpers(unittest.TestCase):
     def test1_tags(self):
@@ -128,12 +149,12 @@ class TestHelpers(unittest.TestCase):
                 self.assertEqual(XML(s_tag, sanitize=True,
                     permitted_tags=['img'],
                     allowed_attributes={'img': ['src', 'alt']}).xml(),
-                    "<img alt=\"empty\"/>")
+                    "<img alt=\"empty\">")
                 s_tag = IMG(_src="/image.png").xml()
                 self.assertEqual(XML(s_tag, sanitize=True,
                     permitted_tags=['img'],
                     allowed_attributes={'img': ['src', 'alt']}).xml(),
-                    "<img src=\"/image.png\"/>")
+                    "<img src=\"/image.png\">")
             elif x == "a":  # It has to have a valid href or title or not tag empty
                 s_tag = A("this is a link", _href="http://web2py.com/").xml()
                 self.assertEqual(XML(s_tag, sanitize=True,
@@ -162,7 +183,7 @@ class TestHelpers(unittest.TestCase):
                 self.assertEqual(XML(s_tag, sanitize=True,
                     permitted_tags=[x.replace("/", "")],
                     allowed_attributes=allowed_attributes).xml(), "<%s></%s>" %
-                    (x, x) if not x[-1] == "/" else "<%s>" % (x.replace("/", "/")))
+                    (x, x) if not x[-1] == "/" else "<%s>" % (x.replace("/", "")))
 
         # test tag out of list
         out_of_list = [
@@ -210,7 +231,7 @@ class TestHelpers(unittest.TestCase):
         self.assertEqual(XML(s_tag, sanitize=True,
             permitted_tags=['img'],
             allowed_attributes={'img': ['src', 'alt']}).xml(),
-            '<img src="/images/logo.png" alt="empty"/>')
+            '<img src="/images/logo.png" alt="empty">')
         s_tag = DIV("content", _style="{backgrond-color: red;}").xml()
         self.assertEqual(XML(s_tag, sanitize=True,
             permitted_tags=['div'],
@@ -238,7 +259,7 @@ class TestHelpers(unittest.TestCase):
             '&lt;evil&gt;<div>valid</div>&lt;/evil&gt;')
         self.assertEqual(XML(A(IMG(_src="/index.html"), _class="teste").xml(),
             sanitize=True,
-        permitted_tags=['a', 'img']).xml(), '<img src="/index.html"/>')
+        permitted_tags=['a', 'img']).xml(), '<img src="/index.html">')
 
         # tags deleted even allowed
         self.assertEqual(XML(IMG().xml(), sanitize=True,
@@ -272,7 +293,6 @@ class TestHelpers(unittest.TestCase):
             DIV("dad", experiment),
             A(experiment)
         )
-
         # no location
         self.assertEqual(sample_search.search(DIV()), [])
         self.assertEqual(sample_search.search(A()), [])
@@ -384,6 +404,57 @@ class TestHelpers(unittest.TestCase):
         self.assertEqual(sample_i18n_Abacaxi_to_Pinnaple, sample_i18n.xml())
         sample_i18n.i18n(Trans, 'glingon')
         self.assertEqual(sample_i18n_glingon_without_ignore_humanized, sample_i18n.humanize())
+
+    def test10_map_indexes(self):
+        map_0 = SPAN(_class="opaaa", _id="doideira")
+        map_00 = "conteudo"
+        map_01 = SPAN()
+        map_0.append(map_00)
+        map_0.append(map_01)
+        map_1 = SPAN()
+        map_10 = IMG()
+        map_1.append(map_10)
+        map_2 = SPAN()
+        map_20 = SPAN()
+        map_21 = "novo_conteudo"
+        map_2.append(map_20)
+        map_2.append(map_21)
+        sample_indexes = DIV()
+        sample_indexes.append(map_0)
+        sample_indexes.append(map_1)
+        sample_indexes.append(map_2)
+        self.assertEqual(sample_indexes.map_indexes(), sample_map_index)
+        self.assertEqual(sample_indexes[0], map_0)
+        self.assertEqual(sample_indexes[0][0], map_00)
+        self.assertEqual(sample_indexes[0][1], map_01)
+        self.assertEqual(sample_indexes[1], map_1)
+        self.assertEqual(sample_indexes[1][0], map_10)
+        self.assertEqual(sample_indexes[2], map_2)
+        self.assertEqual(sample_indexes[2][0], map_20)
+        self.assertEqual(sample_indexes[2][1], map_21)
+        concate_container = CONCATENATE()
+        concate_container.append(sample_indexes)
+        self.assertEqual(concate_container[0][0], map_0)
+        self.assertEqual(concate_container[0][0][0], map_00)
+        self.assertEqual(concate_container[0][0][1], map_01)
+        self.assertEqual(concate_container[0][1], map_1)
+        self.assertEqual(concate_container[0][1][0], map_10)
+        self.assertEqual(concate_container[0][2], map_2)
+        self.assertEqual(concate_container[0][2][0], map_20)
+        self.assertEqual(concate_container[0][2][1], map_21)
+        sample_concatenate = CONCATENATE(
+            DIV(
+                SPAN(),
+                CONCATENATE(
+                    SPAN(),
+                    SPAN()
+                ),
+                IMG(),
+            ),
+            IMG(),
+            XML("<div id='xml_content'></div>")
+        )
+        self.assertEqual(sample_concatenate.map_indexes(), sample_map_index_concatenate_xml)
 
 
 if __name__ == '__main__':

@@ -40,6 +40,7 @@ class XML(XmlConstructor, XssCleaner):
         self.permitted_tags = permitted_tags
         self.allowed_attributes = allowed_attributes
         self.strip_disallowed = False
+        self._escape_string = False
 
     @property
     def xml_content(self):

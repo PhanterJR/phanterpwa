@@ -98,7 +98,7 @@ class XssCleaner(HTMLParser):
             if bt == "<a" or bt == "<img":
                 return
             if tag in self.requires_no_close:
-                bt += "/"
+                bt += ""
             bt += ">"
             self.result += bt
             self.open_tags.insert(0, tag)
