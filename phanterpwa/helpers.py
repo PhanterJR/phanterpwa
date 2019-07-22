@@ -2,10 +2,132 @@
 from .xmlconstructor import XmlConstructor
 from .xss import XssCleaner
 
+SPECIAL_TAGS = [
+    'CONCATENATE',
+    'XML',
+    'XCOMMENT'
+]
+VOID_TAGS = [
+    'AREA',
+    'BASE',
+    'COL',
+    'EMBED',
+    'HR',
+    'IMG',
+    'INPUT',
+    'LINK',
+    'META',
+    'PARAM',
+    'SOURCE',
+    'TRACK',
+    'WBR',
+    'BR'
+]
+NORMAL_TAGS = [
+
+    'A',
+    'ABBR',
+    'ADDRESS',
+    'ARTICLE',
+    'ASIDE',
+    'AUDIO',
+    'B',
+    'BDI',
+    'BDO',
+    'BLOCKQUOTE',
+    'BODY',
+    'BUTTON',
+    'CANVAS',
+    'CAPTION',
+    'CITE',
+    'CODE',
+    'COLGROUP',
+    'DATA',
+    'DATALIST',
+    'DD',
+    'DEL',
+    'DETAILS',
+    'DFN',
+    'DIALOG',
+    'DIV',
+    'DL',
+    'DT',
+    'EM',
+    'FIELDSET',
+    'FIGCAPTION',
+    'FIGURE',
+    'FOOTER',
+    'FORM',
+    'H1',
+    'H2',
+    'H3',
+    'H4',
+    'H5',
+    'H6',
+    'HEAD',
+    'HEADER',
+    'HTML',
+    'I',
+    'IFRAME',
+    'INS',
+    'KBD',
+    'LABEL',
+    'LEGEND',
+    'LI',
+    'MAIN',
+    'MAP',
+    'MARK',
+    'METER',
+    'NAV',
+    'NOSCRIPT',
+    'OBJECT',
+    'OL',
+    'OPTGROUP',
+    'OPTION',
+    'OUTPUT',
+    'P',
+    'PICTURE',
+    'PRE',
+    'PROGRESS',
+    'Q',
+    'RP',
+    'RT',
+    'RUBY',
+    'S',
+    'SAMP',
+    'SCRIPT',
+    'SECTION',
+    'SELECT',
+    'SMALL',
+    'SPAN',
+    'STRONG',
+    'STYLE',
+    'SUB',
+    'SUMMARY',
+    'SUP',
+    'SVG',
+    'TABLE',
+    'TBODY',
+    'TD',
+    'TEMPLATE',
+    'TEXTAREA',
+    'TFOOT',
+    'TH',
+    'THEAD',
+    'TIME',
+    'TITLE',
+    'TR',
+    'U',
+    'UL',
+    'VAR',
+    'VIDEO',
+]
+ALL_TAGS = __all__ = SPECIAL_TAGS + VOID_TAGS + NORMAL_TAGS
+
 
 class CONCATENATE(XmlConstructor):
     def __init__(self, *content):
-        XmlConstructor.__init__(self, "", False, False, *content)
+        XmlConstructor.__init__(self, "", False, *content)
         self.alternative_tag = "concatenate"
 
 
@@ -33,151 +155,170 @@ class XML(XmlConstructor, XssCleaner):
                 'img': ['src', 'alt'],
                 'blockquote': ['type']
             }):
-        XmlConstructor.__init__(self, "", False, False, content)
+        XmlConstructor.__init__(self, "", False, content)
         XssCleaner.__init__(self)
         self.alternative_tag = "xml"
         self.sanitize = sanitize
         self.permitted_tags = permitted_tags
         self.allowed_attributes = allowed_attributes
         self.strip_disallowed = False
-        self._escape_string = False
+        self.escape_string = False
 
-    def xml(self):
-        xml = ""
-        if self.content:
-            xml = self.xml_content
+    def xml(self) -> str:
+        if self.minify:
+            xml = self._minified(
+                close_void=self.close_void,
+                i18nInstance=self.i18nInstance,
+                dictionary=self.dictionary,
+                do_not_translate=self.do_not_translate,
+                tag_translation=self.tag_translation
+            )
+            if self._format:
+                xml = xml.format(**self._format)
+        else:
+            xml = self.humanize()
         if self.sanitize:
-            xml = "".join([self.before_xml, xml, self.after_xml])
             return self.strip(xml)
-        xml = "".join([self.before_xml, xml, self.after_xml])
         return xml
 
+    # def xml(self):
+    #     xml = ""
+    #     if self.content:
+    #         xml = self.xml_content
+    #     if self.sanitize:
+    #         xml = "".join([self.before_xml, xml, self.after_xml])
+    #         return self.strip(xml)
+    #     xml = "".join([self.before_xml, xml, self.after_xml])
+    #     return xml
 
-class SCRIPTMINIFY(XmlConstructor):
-    def __init__(self, content, **attributes):
-        list_string_content = content.split("\n")
-        new_content = ""
-        for x in list_string_content:
-            new_content = " ".join([new_content, x.strip()])
-            new_content = new_content.strip()
-        XmlConstructor.__init__(self, "script", False, False, new_content, **attributes)
+
+class XCOMMENT(XmlConstructor):
+    def __init__(self, *content):
+        XmlConstructor.__init__(self, "", False, *content)
+        self.alternative_tag = "xcomment"
+        self.escape_string = False
+        self.before_xml = "<!--"
+        self.after_xml = "-->"
+
+    def _humanized(self, indent_size=2, close_void=False, translate=False):
+        return "".join(["\n", " " * (indent_size * (self._indent_level)), self.xml()])
 
 
 # html5 by default
 class HTML(XmlConstructor):
     def __init__(self, *content, **attributes):
-        XmlConstructor.__init__(self, "html", False, False, *content, **attributes)
+        XmlConstructor.__init__(self, "html", False, *content, **attributes)
         self.before_xml = "<!DOCTYPE html>"
 
 
 # void tags
-AREA = XmlConstructor.tagger("area", True, False)
-BASE = XmlConstructor.tagger("base", True, False)
-COL = XmlConstructor.tagger("col", True, False)
-EMBED = XmlConstructor.tagger("embed", True, False)
-HR = XmlConstructor.tagger("hr", True, False)
-IMG = XmlConstructor.tagger("img", True, False)
-INPUT = XmlConstructor.tagger("input", True, False)
-LINK = XmlConstructor.tagger("link", True, False)
-META = XmlConstructor.tagger("meta", True, False)
-PARAM = XmlConstructor.tagger("param", True, False)
-SOURCE = XmlConstructor.tagger("source", True, False)
-TRACK = XmlConstructor.tagger("track", True, False)
-WBR = XmlConstructor.tagger("wbr", True, False)
-BR = XmlConstructor.tagger("br", True, False)
+AREA = XmlConstructor.tagger("area", True)
+BASE = XmlConstructor.tagger("base", True)
+COL = XmlConstructor.tagger("col", True)
+EMBED = XmlConstructor.tagger("embed", True)
+HR = XmlConstructor.tagger("hr", True)
+IMG = XmlConstructor.tagger("img", True)
+INPUT = XmlConstructor.tagger("input", True)
+LINK = XmlConstructor.tagger("link", True)
+META = XmlConstructor.tagger("meta", True)
+PARAM = XmlConstructor.tagger("param", True)
+SOURCE = XmlConstructor.tagger("source", True)
+TRACK = XmlConstructor.tagger("track", True)
+WBR = XmlConstructor.tagger("wbr", True)
+BR = XmlConstructor.tagger("br", True)
 # normal tags
-A = XmlConstructor.tagger("a", False, False)
-ABBR = XmlConstructor.tagger("abbr", False, False)
-ADDRESS = XmlConstructor.tagger("address", False, False)
-ARTICLE = XmlConstructor.tagger("article", False, False)
-ASIDE = XmlConstructor.tagger("aside", False, False)
-AUDIO = XmlConstructor.tagger("audio", False, False)
-B = XmlConstructor.tagger("b", False, False)
-BDI = XmlConstructor.tagger("bdi", False, False)
-BDO = XmlConstructor.tagger("bdo", False, False)
-BLOCKQUOTE = XmlConstructor.tagger("blockquote", False, False)
-BODY = XmlConstructor.tagger("body", False, False)
-BUTTON = XmlConstructor.tagger("button", False, False)
-CANVAS = XmlConstructor.tagger("canvas", False, False)
-CAPTION = XmlConstructor.tagger("caption", False, False)
-CITE = XmlConstructor.tagger("cite", False, False)
-CODE = XmlConstructor.tagger("code", False, False)
-COLGROUP = XmlConstructor.tagger("colgroup", False, False)
-DATA = XmlConstructor.tagger("data", False, False)
-DATALIST = XmlConstructor.tagger("datalist", False, False)
-DD = XmlConstructor.tagger("dd", False, False)
-DEL = XmlConstructor.tagger("del", False, False)
-DETAILS = XmlConstructor.tagger("details", False, False)
-DFN = XmlConstructor.tagger("dfn", False, False)
-DIALOG = XmlConstructor.tagger("dialog", False, False)
-DIV = XmlConstructor.tagger("div", False, False)
-DL = XmlConstructor.tagger("dl", False, False)
-DT = XmlConstructor.tagger("dt", False, False)
-EM = XmlConstructor.tagger("em", False, False)
-FIELDSET = XmlConstructor.tagger("fieldset", False, False)
-FIGCAPTION = XmlConstructor.tagger("figcaption", False, False)
-FIGURE = XmlConstructor.tagger("figure", False, False)
-FOOTER = XmlConstructor.tagger("footer", False, False)
-FORM = XmlConstructor.tagger("form", False, False)
-H1 = XmlConstructor.tagger("h1", False, False)
-H2 = XmlConstructor.tagger("h2", False, False)
-H3 = XmlConstructor.tagger("h3", False, False)
-H4 = XmlConstructor.tagger("h4", False, False)
-H5 = XmlConstructor.tagger("h5", False, False)
-H6 = XmlConstructor.tagger("h6", False, False)
-HEAD = XmlConstructor.tagger("head", False, False)
-HEADER = XmlConstructor.tagger("header", False, False)
-I = XmlConstructor.tagger("i", False, False)
-IFRAME = XmlConstructor.tagger("iframe", False, False)
-INS = XmlConstructor.tagger("ins", False, False)
-KBD = XmlConstructor.tagger("kbd", False, False)
-LABEL = XmlConstructor.tagger("label", False, False)
-LEGEND = XmlConstructor.tagger("legend", False, False)
-LI = XmlConstructor.tagger("li", False, False)
-MAIN = XmlConstructor.tagger("main", False, False)
-MAP = XmlConstructor.tagger("map", False, False)
-MARK = XmlConstructor.tagger("mark", False, False)
-METER = XmlConstructor.tagger("meter", False, False)
-NAV = XmlConstructor.tagger("nav", False, False)
-NOSCRIPT = XmlConstructor.tagger("noscript", False, False)
-OBJECT = XmlConstructor.tagger("object", False, False)
-OL = XmlConstructor.tagger("ol", False, False)
-OPTGROUP = XmlConstructor.tagger("optgroup", False, False)
-OPTION = XmlConstructor.tagger("option", False, False)
-OUTPUT = XmlConstructor.tagger("output", False, False)
-P = XmlConstructor.tagger("p", False, False)
-PICTURE = XmlConstructor.tagger("picture", False, False)
-PRE = XmlConstructor.tagger("pre", False, False)
-PROGRESS = XmlConstructor.tagger("progress", False, False)
-Q = XmlConstructor.tagger("q", False, False)
-RP = XmlConstructor.tagger("rp", False, False)
-RT = XmlConstructor.tagger("rt", False, False)
-RUBY = XmlConstructor.tagger("ruby", False, False)
-S = XmlConstructor.tagger("s", False, False)
-SAMP = XmlConstructor.tagger("samp", False, False)
-SCRIPT = XmlConstructor.tagger("script", False, False)
-SECTION = XmlConstructor.tagger("section", False, False)
-SELECT = XmlConstructor.tagger("select", False, False)
-SMALL = XmlConstructor.tagger("small", False, False)
-SPAN = XmlConstructor.tagger("span", False, False)
-STRONG = XmlConstructor.tagger("strong", False, False)
-STYLE = XmlConstructor.tagger("style", False, False)
-SUB = XmlConstructor.tagger("sub", False, False)
-SUMMARY = XmlConstructor.tagger("summary", False, False)
-SUP = XmlConstructor.tagger("sup", False, False)
-SVG = XmlConstructor.tagger("svg", False, False)
-TABLE = XmlConstructor.tagger("table", False, False)
-TBODY = XmlConstructor.tagger("tbody", False, False)
-TD = XmlConstructor.tagger("td", False, False)
-TEMPLATE = XmlConstructor.tagger("template", False, False)
-TEXTAREA = XmlConstructor.tagger("textarea", False, False)
-TFOOT = XmlConstructor.tagger("tfoot", False, False)
-TH = XmlConstructor.tagger("th", False, False)
-THEAD = XmlConstructor.tagger("thead", False, False)
-TIME = XmlConstructor.tagger("time", False, False)
-TITLE = XmlConstructor.tagger("title", False, False)
-TR = XmlConstructor.tagger("tr", False, False)
-U = XmlConstructor.tagger("u", False, False)
-UL = XmlConstructor.tagger("ul", False, False)
-VAR = XmlConstructor.tagger("var", False, False)
-VIDEO = XmlConstructor.tagger("video", False, False)
+A = XmlConstructor.tagger("a")
+ABBR = XmlConstructor.tagger("abbr")
+ADDRESS = XmlConstructor.tagger("address")
+ARTICLE = XmlConstructor.tagger("article")
+ASIDE = XmlConstructor.tagger("aside")
+AUDIO = XmlConstructor.tagger("audio")
+B = XmlConstructor.tagger("b")
+BDI = XmlConstructor.tagger("bdi")
+BDO = XmlConstructor.tagger("bdo")
+BLOCKQUOTE = XmlConstructor.tagger("blockquote")
+BODY = XmlConstructor.tagger("body")
+BUTTON = XmlConstructor.tagger("button")
+CANVAS = XmlConstructor.tagger("canvas")
+CAPTION = XmlConstructor.tagger("caption")
+CITE = XmlConstructor.tagger("cite")
+CODE = XmlConstructor.tagger("code")
+COLGROUP = XmlConstructor.tagger("colgroup")
+DATA = XmlConstructor.tagger("data")
+DATALIST = XmlConstructor.tagger("datalist")
+DD = XmlConstructor.tagger("dd")
+DEL = XmlConstructor.tagger("del")
+DETAILS = XmlConstructor.tagger("details")
+DFN = XmlConstructor.tagger("dfn")
+DIALOG = XmlConstructor.tagger("dialog")
+DIV = XmlConstructor.tagger("div")
+DL = XmlConstructor.tagger("dl")
+DT = XmlConstructor.tagger("dt")
+EM = XmlConstructor.tagger("em")
+FIELDSET = XmlConstructor.tagger("fieldset")
+FIGCAPTION = XmlConstructor.tagger("figcaption")
+FIGURE = XmlConstructor.tagger("figure")
+FOOTER = XmlConstructor.tagger("footer")
+FORM = XmlConstructor.tagger("form")
+H1 = XmlConstructor.tagger("h1")
+H2 = XmlConstructor.tagger("h2")
+H3 = XmlConstructor.tagger("h3")
+H4 = XmlConstructor.tagger("h4")
+H5 = XmlConstructor.tagger("h5")
+H6 = XmlConstructor.tagger("h6")
+HEAD = XmlConstructor.tagger("head")
+HEADER = XmlConstructor.tagger("header")
+I = XmlConstructor.tagger("i")
+IFRAME = XmlConstructor.tagger("iframe")
+INS = XmlConstructor.tagger("ins")
+KBD = XmlConstructor.tagger("kbd")
+LABEL = XmlConstructor.tagger("label")
+LEGEND = XmlConstructor.tagger("legend")
+LI = XmlConstructor.tagger("li")
+MAIN = XmlConstructor.tagger("main")
+MAP = XmlConstructor.tagger("map")
+MARK = XmlConstructor.tagger("mark")
+METER = XmlConstructor.tagger("meter")
+NAV = XmlConstructor.tagger("nav")
+NOSCRIPT = XmlConstructor.tagger("noscript")
+OBJECT = XmlConstructor.tagger("object")
+OL = XmlConstructor.tagger("ol")
+OPTGROUP = XmlConstructor.tagger("optgroup")
+OPTION = XmlConstructor.tagger("option")
+OUTPUT = XmlConstructor.tagger("output")
+P = XmlConstructor.tagger("p")
+PICTURE = XmlConstructor.tagger("picture")
+PRE = XmlConstructor.tagger("pre")
+PROGRESS = XmlConstructor.tagger("progress")
+Q = XmlConstructor.tagger("q")
+RP = XmlConstructor.tagger("rp")
+RT = XmlConstructor.tagger("rt")
+RUBY = XmlConstructor.tagger("ruby")
+S = XmlConstructor.tagger("s")
+SAMP = XmlConstructor.tagger("samp")
+SCRIPT = XmlConstructor.tagger("script")
+SECTION = XmlConstructor.tagger("section")
+SELECT = XmlConstructor.tagger("select")
+SMALL = XmlConstructor.tagger("small")
+SPAN = XmlConstructor.tagger("span")
+STRONG = XmlConstructor.tagger("strong")
+STYLE = XmlConstructor.tagger("style")
+SUB = XmlConstructor.tagger("sub")
+SUMMARY = XmlConstructor.tagger("summary")
+SUP = XmlConstructor.tagger("sup")
+SVG = XmlConstructor.tagger("svg")
+TABLE = XmlConstructor.tagger("table")
+TBODY = XmlConstructor.tagger("tbody")
+TD = XmlConstructor.tagger("td")
+TEMPLATE = XmlConstructor.tagger("template")
+TEXTAREA = XmlConstructor.tagger("textarea")
+TFOOT = XmlConstructor.tagger("tfoot")
+TH = XmlConstructor.tagger("th")
+THEAD = XmlConstructor.tagger("thead")
+TIME = XmlConstructor.tagger("time")
+TITLE = XmlConstructor.tagger("title")
+TR = XmlConstructor.tagger("tr")
+U = XmlConstructor.tagger("u")
+UL = XmlConstructor.tagger("ul")
+VAR = XmlConstructor.tagger("var")
+VIDEO = XmlConstructor.tagger("video")

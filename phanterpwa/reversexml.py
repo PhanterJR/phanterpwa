@@ -2,12 +2,13 @@
 from html.parser import HTMLParser
 from html.entities import name2codepoint
 from .xmlconstructor import XmlConstructor
-from .helpers import CONCATENATE
+from .helpers import CONCATENATE, XML, XCOMMENT
+import json
 
 
 class _Tag(XmlConstructor):
-    def __init__(self, tag, void, void_close, is_closed):
-        XmlConstructor.__init__(self, tag, void, void_close)
+    def __init__(self, tag, void, is_closed):
+        XmlConstructor.__init__(self, tag, void)
         self._is_closed = False
 
     @property
@@ -26,7 +27,7 @@ class _Tag(XmlConstructor):
 
 
 class HtmlToXmlConstructor(CONCATENATE, HTMLParser):
-    def __init__(self, strhtml):
+    def __init__(self, strhtml, filter_empty_content=False, filter_comments=True):
         self.void_tags = ["br", "area", "base", "col", "embed", "hr", "img",
             "input", "link", "meta", "param", "source", "track", "wbr"]
         self.strhtml = strhtml
@@ -34,14 +35,18 @@ class HtmlToXmlConstructor(CONCATENATE, HTMLParser):
         CONCATENATE.__init__(self, "")
         HTMLParser.__init__(self)
         self.content = []
+        self.filter_empty_content = filter_empty_content
+        self.HTMLdoctypedeclaration = ""
         self.feed(strhtml)
 
     def handle_starttag(self, tag, attrs):
         attr_tag = {}
         for attr in attrs:
             attr_tag["_%s" % attr[0]] = True if attr[1] is None else attr[1]
-        el = _Tag(tag, True if tag in self.void_tags else False, False, False)
+        el = _Tag(tag, True if tag in self.void_tags else False, False)
         el.attributes = attr_tag
+        if all([tag == "html", self.HTMLdoctypedeclaration, self.HTMLdoctypedeclaration != "<!DOCTYPE html>"]):
+            el.before_xml=self.HTMLdoctypedeclaration
         if self.opened_el:
             last_el = self.opened_el[-1]
             if not last_el.is_closed:
@@ -54,34 +59,42 @@ class HtmlToXmlConstructor(CONCATENATE, HTMLParser):
             self.opened_el.append(el)
 
     def handle_endtag(self, tag):
-        last_el = self.opened_el[-1]
-        if not last_el.is_closed:
-            last_el.is_closed = True
-            self.opened_el.pop(-1)
+        if tag not in self.void_tags:
+            last_el = self.opened_el[-1]
+            if not last_el.is_closed:
+                last_el.is_closed = True
+                self.opened_el.pop(-1)
 
     def handle_data(self, data):
+        just_data = set([" ", "\n", "\t", "\r"])
+        set_data = set(data)
         if self.opened_el:
             last_el = self.opened_el[-1]
             if not last_el.is_closed:
                 content = list(last_el.content)
-                content.append(data)
+                if (set_data.union(just_data) == just_data):
+                    if not self.filter_empty_content:
+                        content.append(data)
+                else:
+                    content.append(data)
                 last_el.content = content
         else:
-            self.append(data)
+            if set_data.union(just_data) == just_data:
+                if not self.filter_empty_content:
+                    self.append(data)
+            else:
+                self.append(data)
 
     def handle_comment(self, data):
-        print("Comment  :", data)
-
-    def handle_entityref(self, name):
-        c = chr(name2codepoint[name])
-        print("Named ent:", c)
-
-    def handle_charref(self, name):
-        if name.startswith('x'):
-            c = chr(int(name[1:], 16))
+        if self.opened_el:
+            last_el = self.opened_el[-1]
+            if not last_el.is_closed:
+                content = list(last_el.content)
+                content.append(XCOMMENT(data))
+                last_el.content = content
         else:
-            c = chr(int(name))
-        print("Num ent  :", c)
+            self.append(XCOMMENT(data))
+
 
     def handle_decl(self, data):
-        print("Decl     :", data)
+        self.HTMLdoctypedeclaration = "<!%s>" %data.strip()

@@ -158,3 +158,6 @@ class Translator(object):
     @property
     def languages(self):
         return self._languages
+
+    def __bool__(self):
+        return bool(self.keys)
