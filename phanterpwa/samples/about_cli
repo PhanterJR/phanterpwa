@@ -1,0 +1,14 @@
+
+    Version: {{VERSION}}
+    Author: PhanterJR<junior.conex@gmail.com>
+    License: MIT
+
+Technologies: 
+    Python, pydal, tornado, transcrypt, istsdangerous
+    libsass, pillow
+
+Honorable Mention:
+    Sublime Text
+
+..--´´´´--..__..--´´´´--..__..--´´´´--..__..--´´´´--.._..--´´´´--..
+-------------------------------------------------------------------

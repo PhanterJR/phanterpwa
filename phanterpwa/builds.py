@@ -22,7 +22,7 @@ class BuildViews(object):
             try:
                 os.makedirs(os.path.join(value), exist_ok=True)
             except OSError as e:
-                raise e("Problem on create folder '%s'." % os.path.join(value))
+                raise e("Problem on create folder '{0}'.".format(os.path.join(value)))
         self._folder = os.path.join(value)
 
     def build(self):

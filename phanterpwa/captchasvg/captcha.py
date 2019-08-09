@@ -5,22 +5,30 @@ import json
 from glob import glob
 from phanterpwa.helpers import DIV, XML, SVG, SPAN
 from phanterpwa.i18n import Translator
-
+from itsdangerous import (
+    TimedJSONWebSignatureSerializer as Serialize
+)
 __dirname__ = os.path.dirname(__file__)
 
 
 class Captcha(object):
     def __init__(self,
-            _id,
-            token="",
-            num_opt=4,
-            question="Which figure below corresponds to: %(option)s.",
-            debug=False,
-            sign_options=None,
-            translator=None
-            ):
+        _id,
+        secret_key,
+        time_token_expire,
+        num_opt=4,
+        question="Which figure below corresponds to: %(option)s.",
+        debug=False,
+        translator=None):
         super(Captcha, self).__init__()
         self.debug = debug
+        self.secret_key = secret_key
+        self.time_token_expire = time_token_expire
+        self.serializer = Serialize(
+            self.secret_key,
+            self.time_token_expire
+        )
+
         self._background_color = {
             "red": "#990000",
             "yellow": "#FFCC00",
@@ -31,6 +39,7 @@ class Captcha(object):
             "white": "white",
             "green": "#009933"
         }
+        self._choice = None
         self.translator = translator
         self.color_pairs = dict()
         self.options = dict()
@@ -40,12 +49,13 @@ class Captcha(object):
         self.grafical_forms = dict()
         self.svg_forms = dict()
         self.question = question
-        self._id = _id
-        self.token = token
+        if isinstance(_id, str):
+            self._id = _id
+        else:
+            raise ValueError("The captcha id must be string. Given: {0}".format(type(_id)))
         self.num_opt = num_opt
         self.keys_attributes = []
         self.keys_lines_cols = []
-        self.sign_options = sign_options
         if self.debug or not os.path.exists(os.path.join(__dirname__, "captchadata.json")):
             self._combine_colors()
             self._recipes()
@@ -78,12 +88,22 @@ class Captcha(object):
                     "fill-rule: nonzero",
                     "\n"
                 ])
-                t_sass = "".join([".phanterpwa-captchasvg-%s%s" %
-                    (str(cont_b).zfill(2), str(cont_f).zfill(2)), "\n", t_sass_0, t_sass_1])
+                t_sass = "".join([
+                    ".phanterpwa-captchasvg-{0}{1}".format(
+                        str(cont_b).zfill(2),
+                        str(cont_f).zfill(2)
+                    ),
+                    "\n", t_sass_0,
+                    t_sass_1
+                ])
                 sass = "\n".join([sass, t_sass])
                 t_sass = ""
-                self.color_pairs["phanterpwa-captchasvg-%s%s" %
-                    (str(cont_b).zfill(2), str(cont_f).zfill(2))] = [x, y]
+                self.color_pairs[
+                    "phanterpwa-captchasvg-{0}{1}".format(
+                        str(cont_b).zfill(2),
+                        str(cont_f).zfill(2)
+                    )
+                ] = [x, y]
         with open(os.path.join(__dirname__, "sass", "captcha.sass"), "w", encoding="utf-8") as f:
             f.write(sass)
 
@@ -126,16 +146,13 @@ class Captcha(object):
 
     @property
     def choice(self):
-        self._choicer()
+        if not self._choice:
+            self._choicer()
         return self._choice
 
     @property
-    def token(self):
-        return self._token
-
-    @token.setter
-    def token(self, value):
-        self._token = value
+    def signature(self):
+        return self._signature
 
     def _choicer(self):
         self.keys_attributes = [x for x in self.options.keys()] +\
@@ -145,6 +162,11 @@ class Captcha(object):
         count_attr = len(self.keys_attributes)
         choice = self.keys_attributes[random.randint(0, count_attr - 1)]
         self._choice = choice
+        sign_captha = self.serializer.dumps({
+            'id_form': self._id,
+            'choice': choice
+        })
+        self._signature = sign_captha.decode("utf-8")
 
     def check(self, attribute, number):
         try:
@@ -160,7 +182,8 @@ class Captcha(object):
     def html(self):
         question = self.question
         num_opt = self.num_opt
-        choice = self._choice
+        choice = self.choice
+
         options = []
         random.shuffle(self.keys_lines_cols)
         cont_err = 0
@@ -189,10 +212,10 @@ class Captcha(object):
         else:
             question = question % {'option': option}
         content = []
-        if self.token:
-            token_question = self.token
-        else:
+        if self.debug:
             token_question = choice
+        else:
+            token_question = self.signature
         for x in options:
             attrs = {
                 "_xmlns": "http://www.w3.org/2000/svg",
@@ -211,9 +234,13 @@ class Captcha(object):
             attrs["_class"] = svg_e[5]
             svg_recipe = ""
             svg_vector = ""
-            token_option = str(x)
-            if callable(self.sign_options):
-                token_option = self.sign_options(str(x))
+            if self.debug:
+                token_option = str(x)
+            else:
+                sign_option = self.serializer.dumps({
+                    'option': str(x)
+                })
+                token_option = sign_option.decode("utf-8")
 
             with open(os.path.join(__dirname__, "recipes", "%s.recs" % recipe), 'r', encoding='utf-8') as f:
                 svg_recipe = f.read()
@@ -254,10 +281,6 @@ class Captcha(object):
 
 
 if __name__ == '__main__':
-    captcha = Captcha("teste")
-    captcha.token = '----------------------------------------------'
+    captcha = Captcha("form", "teste", 5000)
+    print(captcha.choice)
     print(captcha.html)
-
-    # for x in captcha.svg_forms:
-    #     with open('%s.svg' %x, 'w', encoding="utf-8") as f:
-    #         f.write(captcha.svg_forms[x].xml().replace("&#58;",":"))

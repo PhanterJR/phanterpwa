@@ -1,0 +1,52 @@
+// phanterpwa-components
+
+$COLOR: red
+$CONTAINERWIDTH: 60px
+$CONTAINERHEIGHT: 60px
+$PERSPECTIVE: $CONTAINERWIDTH * 1.5
+$BORDERRADIUS: 0
+
+.phanterpwa-components-preloaders-square
+
+  *
+    box-sizing: border-box
+
+  .preloader-wrapper
+    display: inline-block
+    position: relative
+    width: $CONTAINERWIDTH
+    height: $CONTAINERHEIGHT
+    .phanterpwa_square_container
+      perspective: $PERSPECTIVE
+      width: 100%
+      height: 100%
+    &.enabled
+      .phanterpwa_square
+        width: 100%
+        height: 100%
+        background-color: $COLOR
+        -webkit-animation: phanterpwa_square_animate 1s infinite ease-in-out
+        animation: phanterpwa_square_animate 1s infinite ease-in-out
+        margin-right: auto
+        margin-left: auto
+        -webkit-border-radius: $BORDERRADIUS
+        border-radius: $BORDERRADIUS
+
+
+@-webkit-keyframes phanterpwa_square_animate
+  50%
+    -webkit-transform: rotateY(-180deg)
+  100%
+    -webkit-transform: rotateY(-180deg) rotateX(-180deg)
+
+
+@keyframes phanterpwa_square_animate
+  0% 
+    -webkit-transform: rotateX(0deg) rotateY(0deg)
+    transform: rotateX(0deg) rotateY(0deg)
+  50%
+    -webkit-transform: rotateX(-180deg) rotateY(0deg)
+    transform: rotateX(-180deg) rotateY(0deg)
+  100%
+    -webkit-transform: rotateX(-180deg) rotateY(-180deg)
+    transform: rotateX(-180deg) rotateY(-180deg)

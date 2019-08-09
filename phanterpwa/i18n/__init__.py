@@ -18,12 +18,13 @@ class Translator(object):
         self._languages = {}
         self.debug = debug
         self.path = path
+        self.direct_translation = None
         self.load()
 
     def add_language(self, lang):
         """Adds new dictionarie"""
-        if not os.path.exists(os.path.join(self.path, "%s.json" % lang)):
-            with open(os.path.join(self.path, "%s.json" % lang), 'w', encoding='utf-8') as f:
+        if not os.path.exists(os.path.join(self.path, "{0}.json".format(lang))):
+            with open(os.path.join(self.path, "{0}.json".format(lang)), 'w', encoding='utf-8') as f:
                 json.dump({}, f, ensure_ascii=False, indent=2)
                 self._languages[lang] = {}
 
@@ -47,9 +48,28 @@ class Translator(object):
                     if t not in self._languages[l]:
                         self._languages[l][t] = t
         else:
-            raise IOError("path must be a folder. give: %s" % self.path)
+            raise IOError("path must be a folder. give: {0}".format(self.path))
+
+    @property
+    def direct_translation(self):
+        return self._direct_translation
+
+    @direct_translation.setter
+    def direct_translation(self, dictionary):
+        if isinstance(dictionary, str):
+            self._direct_translation = str(dictionary)
+        elif dictionary is None:
+            self._direct_translation = None
+        else:
+            raise TypeError("The dictionary of T must be a string or None. Given: {0}".format(type(dictionary)))
 
     def T(self, entry):
+        if self.direct_translation:
+            return self.translator(entry, self.direct_translation)
+        else:
+            return self._T(entry)
+
+    def _T(self, entry):
         """Adds new word in all dictionaries after save if it does not exist"""
         if self.debug:
             self.load()
@@ -99,7 +119,7 @@ class Translator(object):
         while in the other dictionary will not be changed
 
         """
-        self.T(entry)
+        self._T(entry)
         if dictionary not in self._languages:
             self.add_language(dictionary)
             self._languages[dictionary] = {entry: translation}
@@ -110,7 +130,7 @@ class Translator(object):
         return {dictionary: {entry: translation}}
 
     def translator(self, entry, dictionary=None):
-        self.T(entry)
+        self._T(entry)
         if dictionary and dictionary in self._languages:
             if entry in self._languages[dictionary]:
                 return self._languages[dictionary][entry]
@@ -126,7 +146,7 @@ class Translator(object):
                 langs = {}
                 for l in self.languages:
                     for v in entries:
-                        self.T(v)
+                        self._T(v)
                         if v in self.languages[l]:
                             langs[l] = {v: self.languages[l][v]}
                 return langs
@@ -134,7 +154,7 @@ class Translator(object):
                 langs = {}
                 for l in self.languages:
                     for v in entries:
-                        self.T(entries[v])
+                        self._T(entries[v])
                         if entries[v] in self.languages[l]:
                             if l in langs:
                                 langs[l][v] = self.languages[l][entries[v]]
@@ -146,7 +166,7 @@ class Translator(object):
             elif isinstance(entries, str):
                 langs = {}
                 for l in self.languages:
-                    self.T(entries)
+                    self._T(entries)
                     if entries in self.languages[l]:
                         langs[l] = {entries: self.languages[l][entries]}
                 return langs
@@ -154,6 +174,23 @@ class Translator(object):
                 return {}
         else:
             return self.languages
+
+    def phanterpwa_i18n(self, entrie):
+        if isinstance(entrie, str):
+            langs = {}
+            o_keys = list(self.languages.keys())
+            o_keys.sort()
+
+            for l in o_keys:
+                self._T(entrie)
+                if entrie in self.languages[l]:
+                    if entrie != self.languages[l][entrie]:
+                        langs[l] = {entrie: self.languages[l][entrie]}
+            if langs:
+                return langs
+            return None
+        else:
+            raise ('The arg entrie in method phanterpwa_i18n must be String. Given: {0}'.format(type(entrie)))
 
     @property
     def languages(self):

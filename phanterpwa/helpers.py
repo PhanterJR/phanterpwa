@@ -133,7 +133,7 @@ class CONCATENATE(XmlConstructor):
 
 class XML(XmlConstructor, XssCleaner):
     def __init__(self,
-            content,
+            *content,
             sanitize=False,
             permitted_tags=[
                 'a',
@@ -173,8 +173,8 @@ class XML(XmlConstructor, XssCleaner):
                 do_not_translate=self.do_not_translate,
                 tag_translation=self.tag_translation
             )
-            if self._format:
-                xml = xml.format(**self._format)
+            if self._formatter:
+                xml = self.interpolate(xml, self._formatter, self.delimiters)
         else:
             xml = self.humanize()
         if self.sanitize:

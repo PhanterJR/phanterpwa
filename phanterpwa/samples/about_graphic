@@ -1,0 +1,22 @@
+PhanterPWA Developer
+
+    Version: {{VERSION}}
+    Author: PhanterJR<junior.conex@gmail.com>
+    License: MIT
+
+
+Technologies Used:
+
+    python
+    pydal
+    tornado
+    transcrypt
+    istsdangerous
+    libsass
+    pillow
+    psutil
+
+
+Honorable Mention
+
+    Sublime Text

@@ -62,7 +62,7 @@ class MaterializeInputText(XmlConstructor):
         XmlConstructor.__init__(self, 'div', False, *new_content, **attributes)
 
     def disable(self):
-        self.input.attributes['_disabled'] = ""
+        self.input['_disabled'] = ""
 
 
 class MaterializeChips(XmlConstructor):
@@ -415,91 +415,6 @@ class MaterializeButtonForm(XmlConstructor):
         ]
 
 
-class MaterializePreloaderCircle(XmlConstructor):
-    def __init__(self, _id, size=None, color=None, **attributes):
-        self.size = size
-        self.color = color
-        self.initial_class = ""
-        if "_class" in attributes:
-            self.initial_class = attributes['_class'].strip()
-        XmlConstructor.__init__(self, 'div', False, **attributes)
-        self._update_content()
-
-    def _update_content(self):
-        new_size = ""
-        if self.size:
-            new_size = " %s" % self.size
-        attr = self.attributes
-        if self.initial_class:
-            attr['_class'] = "".join([self.initial_class, " preloader-wrapper active", new_size])
-        else:
-            attr['_class'] = "preloader-wrapper active%s" % new_size
-        self.attributes = attr
-        if self.color:
-            if self.color == "red":
-                self.content = [self._base_spinner("spinner-red-only")]
-            elif self.color == "blue":
-                self.content = [self._base_spinner("spinner-blue-only")]
-            elif self.color == "yellow":
-                self.content = [self._base_spinner("spinner-yellow-only")]
-            elif self.color == "green":
-                self.content = [self._base_spinner("spinner-green-only")]
-        else:
-            content = []
-            default_colors = ["spinner-blue", "spinner-red", "spinner-yellow", "spinner-green"]
-            for x in default_colors:
-                content.append(self._base_spinner(x))
-            self.content = content
-        return self.content
-
-    @staticmethod
-    def _base_spinner(class_color):
-        html_base = DIV(
-            DIV(
-                DIV(_class="circle"),
-                _class="circle-clipper left"),
-            DIV(
-                DIV(_class="circle"),
-                _class="gap-patch"),
-            DIV(
-                DIV(_class="circle"),
-                _class="circle-clipper right"),
-            _class="spinner-layer %s" % class_color)
-        return html_base
-
-    @property
-    def size(self):
-        return self._size
-
-    @size.setter
-    def size(self, value):
-        if (value is None) or (value == "medium"):
-            self._size = ""
-        elif value == "big":
-            self._size = "big"
-        elif value == "small":
-            self._size = "smal"
-        else:
-            raise ValueError("The size must is big, small or medium (or None Type)")
-
-    @property
-    def color(self):
-        return self._color
-
-    @color.setter
-    def color(self, value):
-        if (value is None) or (value == "multicolor"):
-            self._color = None
-        elif value == "red":
-            self._color = "red"
-        elif value == "blue":
-            self._color = "blue"
-        elif value == "green":
-            self._color = "green"
-        elif value == "yellow":
-            self._color = "yellow"
-        else:
-            raise ValueError("The color must is big, small or medium (or None Type)")
 
 
 class MaterializeSearchBar(XmlConstructor):
@@ -574,7 +489,7 @@ class MaterializeSearchBar(XmlConstructor):
 
     def showSelect(self):
         if not self.select_search_container.content and self.select_search is None:
-            self.input_search.attributes["_class"] = " ".join([
+            self.input_search["_class"] = " ".join([
                 "has_select col s12 m8 l8",
                 self.input_search.attributes["_class"]])
             self.select_search = SELECT(

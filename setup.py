@@ -38,8 +38,8 @@ setuptools.setup(
         ],
     },
     install_requires=[
-        'psutil', 'libsass', 'transcrypt', 'livereload', 'flask',
-        'pillow', 'flask_restful', 'flask_mail', 'flask_cors', 'itsdangerous',
+        'psutil', 'tornado', 'libsass', 'transcrypt', 
+        'pillow', 'itsdangerous',
         'pydal>=19.04'
     ],
     dependency_links=[

@@ -1,0 +1,143 @@
+// phanterpwa-components
+
+$CONTAINERWIDTH: 60px
+$PERSPECTIVE: $CONTAINERWIDTH * 1.5
+$COLOR1: red
+$COLOR2: $COLOR1
+$COLOR3: $COLOR1
+$BORDERSIZE: 4px
+$CONTAINERHEIGHT: 60px
+$BORDERRADIUS: 0
+.phanterpwa-components-preloaders-squares
+
+  *
+    box-sizing: border-box
+  .left
+      float: left !important
+  .right
+      float: right !important
+  .preloader-wrapper
+    display: inline-block
+    position: relative
+    width: $CONTAINERWIDTH
+    height: $CONTAINERHEIGHT
+    .phanterpwa_squares_container
+      perspective: $PERSPECTIVE
+      height: 100%
+      width: 100%
+
+    .phanterpwa_squares
+      width: 33.33%
+      height: 33.33%
+      background-color: rgba(255,255,255,0)
+      margin-right: auto
+      margin-left: auto
+      border: $BORDERSIZE solid $COLOR1
+      left: 33.33%
+      top: 33.33%
+      position: absolute
+      -moz-border-radius: $BORDERRADIUS
+      -webkit-border-radius: $BORDERRADIUS
+      border-radius: $BORDERRADIUS
+
+    
+    &.enabled
+      .phanterpwa_squares_one
+        border: $BORDERSIZE solid $COLOR1
+        -webkit-animation: phanterpwa_squares_one_animate 1s infinite ease-in-out
+        animation: phanterpwa_squares_one_animate 1s infinite ease-in-out
+       
+      .phanterpwa_squares_two
+        border: $BORDERSIZE solid $COLOR2
+        -webkit-animation: phanterpwa_squares_two 1s forwards, phanterpwa_squares_two_animate 1s infinite ease-in-out
+        animation: phanterpwa_squares_two 1s forwards, phanterpwa_squares_two_animate 1s infinite ease-in-out
+
+      .phanterpwa_squares_three
+        border: $BORDERSIZE solid $COLOR3
+        -webkit-animation: phanterpwa_squares_three 1s forwards, phanterpwa_squares_three_animate 1s infinite ease-in-out
+        animation: phanterpwa_squares_three 1s forwards, phanterpwa_squares_three_animate 1s infinite ease-in-out
+  
+  
+@-webkit-keyframes phanterpwa_squares_two 
+  100%
+    width: 66.66%
+    height: 66.66%
+    left: 48px
+    top: 48px
+   
+@keyframes phanterpwa_squares_two 
+  100%
+    width: 66.66%
+    height: 66.66%
+    left: 16.66%
+    top: 16.66%
+
+@-webkit-keyframes phanterpwa_squares_three 
+  100% 
+    width: 100%
+    height: 100%
+    left: 0
+    top: 0
+   
+@keyframes phanterpwa_squares_three 
+  100% 
+    width: 100%
+    height: 100%
+    left: 0
+    top: 0
+
+@-webkit-keyframes phanterpwa_squares_one_animate 
+
+  50%
+    -webkit-transform: rotateY(-180deg)
+  100%
+    -webkit-transform: rotateY(-180deg) rotateX(-180deg)
+
+
+@keyframes phanterpwa_squares_one_animate 
+  0%  
+    transform: rotateX(0deg) rotateY(0deg)
+    -webkit-transform: rotateX(0deg) rotateY(0deg) 
+  50%  
+    transform: rotateX(-180deg) rotateY(0deg)
+    -webkit-transform: rotateX(-180deg) rotateY(0deg) 
+  100%  
+    transform: rotateX(-180deg) rotateY(-180deg)
+    -webkit-transform: rotateX(-180deg) rotateY(-180deg)
+  
+@-webkit-keyframes phanterpwa_squares_two_animate 
+
+  50%
+    -webkit-transform: rotateY(180deg)
+  100%
+    -webkit-transform: rotateY(180deg) rotateX(180deg)
+
+@keyframes phanterpwa_squares_two_animate 
+  0%  
+    transform: rotateX(0deg) rotateY(0deg)
+    -webkit-transform: rotateX(0deg) rotateY(0deg)
+  50%  
+    transform: rotateX(180deg) rotateY(0deg)
+    -webkit-transform: rotateX(180deg) rotateY(0deg)
+  100%  
+    transform: rotateX(180deg) rotateY(180deg)
+    -webkit-transform: rotateX(180deg) rotateY(180deg)
+  
+@-webkit-keyframes phanterpwa_squares_three_animate 
+
+  50%
+    -webkit-transform: rotateY(-180deg)
+  100%
+    -webkit-transform: rotateY(-180deg) rotateX(-180deg)
+
+
+@keyframes phanterpwa_squares_three_animate 
+  0%  
+    transform: rotateX(0deg) rotateY(0deg)
+    -webkit-transform: rotateX(0deg) rotateY(0deg)
+  50%  
+    transform: rotateX(-180deg) rotateY(0deg)
+    -webkit-transform: rotateX(-180deg) rotateY(0deg)
+  100%  
+    transform: rotateX(-180deg) rotateY(-180deg)
+    -webkit-transform: rotateX(-180deg) rotateY(-180deg)

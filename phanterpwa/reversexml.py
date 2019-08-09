@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 from html.parser import HTMLParser
-from html.entities import name2codepoint
 from .xmlconstructor import XmlConstructor
-from .helpers import CONCATENATE, XML, XCOMMENT
-import json
+from .helpers import CONCATENATE, XCOMMENT
 
 
 class _Tag(XmlConstructor):
@@ -23,7 +21,7 @@ class _Tag(XmlConstructor):
             if isinstance(v, bool):
                 self._is_closed = v
             else:
-                raise TypeError("is_closed must be bool, given: %s" % type(v))
+                raise TypeError("is_closed must be bool, given: {0}".format(type(v)))
 
 
 class HtmlToXmlConstructor(CONCATENATE, HTMLParser):
@@ -45,8 +43,10 @@ class HtmlToXmlConstructor(CONCATENATE, HTMLParser):
             attr_tag["_%s" % attr[0]] = True if attr[1] is None else attr[1]
         el = _Tag(tag, True if tag in self.void_tags else False, False)
         el.attributes = attr_tag
-        if all([tag == "html", self.HTMLdoctypedeclaration, self.HTMLdoctypedeclaration != "<!DOCTYPE html>"]):
-            el.before_xml=self.HTMLdoctypedeclaration
+        if all([tag == "html",
+            self.HTMLdoctypedeclaration,
+            self.HTMLdoctypedeclaration != "<!DOCTYPE html>"]):
+            el.before_xml = self.HTMLdoctypedeclaration
         if self.opened_el:
             last_el = self.opened_el[-1]
             if not last_el.is_closed:
@@ -95,6 +95,5 @@ class HtmlToXmlConstructor(CONCATENATE, HTMLParser):
         else:
             self.append(XCOMMENT(data))
 
-
     def handle_decl(self, data):
-        self.HTMLdoctypedeclaration = "<!%s>" %data.strip()
+        self.HTMLdoctypedeclaration = "<!{0}>".format(data.strip())

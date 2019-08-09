@@ -115,9 +115,9 @@ class PhanterpwaGalleryInput(XmlConstructor):
         self._html_input(global_id)
         human = ""
         space = " " * (self._ident_level * self._ident_size)
-        if self.content and not self.singleton:
+        if self.content and not self.void:
             human = "".join([self.tag_begin, self.xml_content_for_humans, "\n", space, self.tag_end])
-        elif self.singleton:
+        elif self.void:
             human = "".join([self.tag_begin])
         else:
             human = "".join([self.tag_begin, "\n", space, self.tag_end])
@@ -127,9 +127,9 @@ class PhanterpwaGalleryInput(XmlConstructor):
         global_id = self._global_id
         self._html_input(global_id)
         xml = ""
-        if self.content and not self.singleton:
+        if self.content and not self.void:
             xml = "".join([self.tag_begin, self.xml_content, self.tag_end])
-        elif self.singleton:
+        elif self.void:
             xml = self.tag_begin
         else:
             xml = "".join([self.tag_begin, self.tag_end])

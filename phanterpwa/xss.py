@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # title: Cross-site scripting (XSS) defense
 # source-code: https://github.com/ActiveState/code/tree/master/recipes/Python/496942_Crosssite_scripting_XSS_defense/
 # Originally published: 2006-08-05 10:45:10
