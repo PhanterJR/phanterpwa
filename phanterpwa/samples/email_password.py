@@ -15,7 +15,8 @@ from phanterpwa.helpers import (
     TR,
     TD,
     P,
-    BR
+    BR,
+    CONCATENATE
 )
 
 
@@ -38,7 +39,7 @@ html = HTML(
             _name="viewport",
             _content="width=device-width"
         ),
-        STYLE(XML(css))
+        STYLE(css)
     ),
     BODY(
         SPAN(
@@ -135,6 +136,22 @@ html = HTML(
         )
     )
 )
-text = ""
-with open("email_password.txt", "r", encoding="utf-8") as f:
-    text = f.read()
+text = CONCATENATE(
+    "Greetings {{user_name}},",
+    "\n\n",
+    "A new password was requested on {{app_name}}, a temporary password was sent (Expires in {{time_expires}}), use it to add a new password.",
+    "\n\n",
+    "{{password}}",
+    "\n\n",
+    "If you have not made this request, you do not have to do anything.",
+    "\n",
+    "Any problem please contact support.",
+    "\n\n",
+    "{{copyright}}",
+    "\n",
+    "{{link_to_your_page}}"
+)
+
+
+
+

@@ -12,6 +12,7 @@ from passlib.hash import pbkdf2_sha512
 from glob import glob
 from pathlib import PurePath
 from phanterpwa.samples.project_config_sample import project_config_sample
+from pydal import Field
 
 
 def interpolate(xstring, context, delimiters=["{{", "}}"], ignore_non_strings=False):
@@ -581,7 +582,7 @@ def compile_scripts(project_path, ignore=["__init__.py"]):
                     x,
                     script_file
                 )
-    print("Finish")
+    print("Finish compiling scripts")
 
 
 def generate_script_importing_transcrypt_module(project_path: dict) -> list:
@@ -672,7 +673,7 @@ def generate_password_hash(password):
 
 
 def check_password_hash(password, hash):
-    return pbkdf2_sha512.verify(password, hash)
+    return pbkdf2_sha512.verify(hash, password)
 
 
 class CheckDictOnFieldsDAL(object):

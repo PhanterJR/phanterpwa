@@ -177,12 +177,11 @@ class Translator(object):
 
     def phanterpwa_i18n(self, entrie):
         if isinstance(entrie, str):
+            self._T(entrie)
             langs = {}
             o_keys = list(self.languages.keys())
             o_keys.sort()
-
             for l in o_keys:
-                self._T(entrie)
                 if entrie in self.languages[l]:
                     if entrie != self.languages[l][entrie]:
                         langs[l] = {entrie: self.languages[l][entrie]}
@@ -197,4 +196,26 @@ class Translator(object):
         return self._languages
 
     def __bool__(self):
-        return bool(self.keys)
+        return os.path.exists(os.path.join(self.path, "entries.json"))
+
+def browser_language(header_langugage, default="en-US"):
+    if header_langugage:
+        languages = header_langugage.split(",")
+        locales = []
+        for language in languages:
+            parts = language.strip().split(";")
+            if len(parts) > 1 and parts[1].startswith("q="):
+                try:
+                    score = float(parts[1][2:])
+                except (ValueError, TypeError):
+                    score = 0.0
+            else:
+                score = 1.0
+            locales.append((parts[0], score))
+        if locales:
+            locales.sort(key=lambda pair: pair[1], reverse=True)
+            codes = [l[0] for l in locales]
+            if len(codes) > 1:
+                return codes[0]
+    
+    return default

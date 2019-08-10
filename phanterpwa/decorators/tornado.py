@@ -122,15 +122,17 @@ def check_csrf_token(projectConfig, db):
                             db.commit()
                             return f(self, *args, **kargs)
                         else:
-                            return {
+                            self.set_status(400)
+                            return self.write({
                                 'status': 'Bad Request',
                                 'code': 400,
                                 'message': "The crsf token is invalid!"
-                            }, 400
-            return {
+                            })
+            self.set_status(400)
+            return self.write({
                 'status': 'Bad Request',
                 'code': 400,
                 'message': "The crsf token is invalid!"
-            }, 400
+            })
         return f_intern
     return decorator

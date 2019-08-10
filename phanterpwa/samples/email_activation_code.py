@@ -15,7 +15,8 @@ from phanterpwa.helpers import (
     TR,
     TD,
     P,
-    BR
+    BR,
+    CONCATENATE
 )
 
 http_equiv = {
@@ -37,7 +38,7 @@ html = HTML(
             _name="viewport",
             _content="width=device-width"
         ),
-        STYLE(XML(css))
+        STYLE(css)
     ),
     BODY(
         SPAN(
@@ -134,6 +135,25 @@ html = HTML(
         )
     )
 )
-text = ""
-with open("email_activation_code.txt", "r", encoding="utf-8") as f:
-    text = f.read()
+text = CONCATENATE(
+    "Greetings {{user_name}},",
+    "\n\n",
+    "You have created an account on {{app_name}}, we are happy about it, but there is still one step left: confirmation of your email, this is possible using the confirmation code below that will be requested in the application.",
+    "\n\n",
+    "{{code}}",
+    "\n\n",
+    "The code will expire in {{time_expires}} after sending, if it expires, do not worry, you can request another one.",
+    "\n",
+    "Thank you for your trust! Bye!",
+    "\n\n",
+    "{{copyright}}",
+    "\n",
+    "{{link_to_your_page}}"
+)
+
+
+
+
+
+
+

@@ -1,13 +1,11 @@
 import os
 import sys
 import importlib
-from phanterpwa.app_compiler import (
-    compiler
-)
 from phanterpwa.tools import (
     config,
     url_pattern_relative_paths,
-    interpolate
+    interpolate,
+    compiler
 )
 from tornado import (
     web,

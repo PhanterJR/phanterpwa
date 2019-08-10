@@ -269,6 +269,7 @@ class XmlConstructor(object):
         self._minify_css = None
         self._target_sass = None
         self._target_css = None
+        self.never_translate = False
 
     @property
     def id(self) -> int:
@@ -1756,6 +1757,17 @@ class XmlConstructor(object):
             ]))
 
     @property
+    def never_translate(self):
+        return self._never_translate
+
+    @never_translate.setter
+    def never_translate(self, value: bool):
+        if isinstance(value, bool):
+            self._never_translate = value
+        else:
+            raise ValueError("The never_translate must be boolean. Given: {0}".format(type(value))) 
+
+    @property
     def delimiters(self):
         """
         This property changes the delimiters of the formatter method.
@@ -3145,15 +3157,34 @@ class XmlConstructor(object):
         You can perform two ways of translating
         strings, one of them makes more sense to be used on the server
         side and the other on the client side.
-        Uma das formas de tradução, ela é traduzida diretamente usando um dicionário específico, o xml gerado nos métodos xml e humanize tem as strings encontradas no dicionário traduzidas para usar este método você deve ter uma instancia do objeto phanterpwa.i18n.Translator no argumento i18nInstance e um dicionario válido especificado no argumento dictionary.
-        Já a outra forma ela cria um elemeto com uma tag especificada no argumento tag_translation e com um atributo chamado "phanterpwa_i18n" na qual é armazenado um dicionário com todos os dicionários com aquelá tradução específica, no lado cliente pode-se usar um plug-in Jquery ($("id_parent_element").phanterpwa_i18n();) para substituir o conteúdo do elemento com o valor do attributo de um dicionário específico, que pode até ser a linguagem do browser. Lembrando que nada impede do lado servidor utilizar este método comum do lado cliente ou vice versa.
+        One of the ways of translation, it is translated directly using a
+        specific dictionary, the xml generated in the xml and humanize methods
+        have the strings found in the dictionary translated to use this method
+        you must have an instance of the phanterpwa.i18n.Translator object in
+        the i18nInstance argument and a valid dictionary specified in the
+        dictionary argument.
+        In the other way, it creates an element with a tag specified in
+        the tag_translation argument and with an attribute called
+        "phanterpwa_i18n" in which a dictionary with all dictionaries
+        with that specific translation is stored, on the client side
+        you can use a Jquery plug-in, example:
+            $("#id_parent_element").phanterpwa_i18n();
+        This plug-in from phanterpwa.js replace the element content with the
+        attribute value of a specific dictionary, which may even be the
+        browser language. Remember that nothing prevents the server
+        side using this common method on the client side or vice
+        versa.
 
         Args:
 
             @i18nInstance: phanterpwa.i18n.Translator instance.
-            @dictionary: A dictionary disponible on phanterpwa.i18n.Translator. When setting a dictionary the tag_translation automatically changes to None.
-            @tag_translation: New tag_translation name. When you set a new valid tag name the dictionary is automatically changed to None.
-            @do_not_translate: list of strings that should be ignored in the translation
+            @dictionary: A dictionary disponible on phanterpwa.i18n.Translator.
+                When setting a dictionary the tag_translation automatically
+                changes to None.
+            @tag_translation: New tag_translation name. When you set a new
+                valid tag name the dictionary is automatically changed to None.
+            @do_not_translate: list of strings that should be ignored in the
+                translation
 
         Example:
 
@@ -3504,7 +3535,7 @@ class XmlConstructor(object):
         return cls._close_void
 
     @classmethod
-    def tagger(cls, tag: str, void: bool=False) -> 'XmlConstructor':
+    def tagger(cls, tag: str, void: bool=False, escape_string: bool=True, never_translate: bool=False) -> 'XmlConstructor':
         """
         Using the tagger method you can create a metaclass of class
         XmlConstructor
@@ -3514,6 +3545,8 @@ class XmlConstructor(object):
         class TAGGER(cls):
             def __init__(self, *content, **attributes):
                 cls.__init__(self, tag, void, *content, **attributes)
+                self.never_translate = never_translate
+                self.escape_string = escape_string
         return TAGGER
 
     @classmethod
@@ -3730,11 +3763,11 @@ class XmlConstructor(object):
                     )
                 ])
             else:
-                if all([dictionary, i18nInstance, x not in do_not_translate]):
+                if all([dictionary, i18nInstance, x not in do_not_translate, not self.never_translate]):
                     x = i18nInstance.translator(x, dictionary)
                     if self.escape_string:
                         x = xssescape(x)
-                elif all([i18nInstance, x not in do_not_translate, tag_translation]):
+                elif all([i18nInstance, x not in do_not_translate, tag_translation, not self.never_translate]):
                     attr_i18n = i18nInstance.phanterpwa_i18n(x)
                     if attr_i18n:
                         x = XmlConstructor.tagger(tag_translation)(x, {'_phanterpwa_i18n': attr_i18n})
@@ -3763,9 +3796,9 @@ class XmlConstructor(object):
                 x._indent_level = self._indent_level + 1
                 t_src_content = "".join([t_src_content, x.source_code(translate=translate)])
             else:
-                if all([dictionary, i18nInstance, x not in do_not_translate, translate]):
+                if all([dictionary, i18nInstance, x not in do_not_translate, translate, not self.never_translate]):
                     x = i18nInstance.translator(x, dictionary)
-                elif all([i18nInstance, x not in do_not_translate, translate, tag_translation]):
+                elif all([i18nInstance, x not in do_not_translate, translate, tag_translation, not self.never_translate]):
                     attr_i18n = i18nInstance.phanterpwa_i18n(x)
                     if attr_i18n:
                         x = XmlConstructor.tagger(tag_translation)(x, {'_phanterpwa_i18n': attr_i18n})
@@ -3797,12 +3830,11 @@ class XmlConstructor(object):
                     tag_translation
                 )])
             else:
-                if all([dictionary, i18nInstance, x not in do_not_translate]):
+                if all([dictionary, i18nInstance, x not in do_not_translate, not self.never_translate]):
                     x = i18nInstance.translator(x, dictionary)
                     if self.escape_string:
                         x = xssescape(x)
-                elif all([i18nInstance, x not in do_not_translate, tag_translation]):
-
+                elif all([i18nInstance, x not in do_not_translate, tag_translation, not self.never_translate]):
                     attr_i18n = i18nInstance.phanterpwa_i18n(x)
                     if attr_i18n:
                         x = XmlConstructor.tagger(tag_translation)(x, {'_phanterpwa_i18n': attr_i18n})
