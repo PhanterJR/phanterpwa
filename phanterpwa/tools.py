@@ -465,7 +465,7 @@ def compile_styles(project_path):
                         t = "$app-version: {0}\n".format(version)
                     c = "".join([c, t])
                 if debug:
-                    new_css = sass.compile(string=c, indented=True, output_style="expanded") + "\n"
+                    new_css = "".join([sass.compile(string=c, indented=True, output_style="expanded"), "\n"])
                 else:
                     new_css = sass.compile(string=c, indented=True, output_style="compressed")
                 with open(
@@ -569,9 +569,9 @@ def compile_scripts(project_path, ignore=["__init__.py"]):
         if not os.path.exists(target):
             os.makedirs(target, exist_ok=True)
         if debug:
-            subprocess.run("%s -m transcrypt %s -n -m" % (python_env, ta))
+            subprocess.run("%s -m transcrypt %s -n -m" % (python_env, ta), shell=True)
         else:
-            subprocess.run("%s -m transcrypt %s -m" % (python_env, ta))
+            subprocess.run("%s -m transcrypt %s -m" % (python_env, ta), shell=True)
         list_all = glob(os.path.join(source, "*"))
         for x in list_all:
             if os.path.isfile(x):

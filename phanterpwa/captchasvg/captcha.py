@@ -17,7 +17,7 @@ class Captcha(object):
         secret_key,
         time_token_expire,
         num_opt=4,
-        question="Which figure below corresponds to: %(option)s.",
+        question="Which figure below corresponds to: {option}.",
         debug=False,
         translator=None):
         super(Captcha, self).__init__()
@@ -207,10 +207,12 @@ class Captcha(object):
         if isinstance(self.translator, Translator):
             for d in self.translator.languages:
                 t = self.translator.translator(question, d)
-                new_dict_t[d] = {question % {'option': option}: t % {'option': self.translator.translator(option, d)}}
-            question = SPAN(question % {'option': option}, _phanterpwa_languages=new_dict_t)
+                new_dict_t[d] = {
+                    question.format(option=option): t.format(option=self.translator.translator(option, d))
+                }
+            question = SPAN(question.format(option=option), _phanterpwa_i18n=new_dict_t)
         else:
-            question = question % {'option': option}
+            question = question.format(option=option)
         content = []
         if self.debug:
             token_question = choice
@@ -241,10 +243,11 @@ class Captcha(object):
                     'option': str(x)
                 })
                 token_option = sign_option.decode("utf-8")
-
-            with open(os.path.join(__dirname__, "recipes", "%s.recs" % recipe), 'r', encoding='utf-8') as f:
+            p = os.path.join(__dirname__, "recipes", "{0}.recs".format(recipe))
+            with open(p, 'r', encoding='utf-8') as f:
                 svg_recipe = f.read()
-            with open(os.path.join(__dirname__, "vectors", sub_folder, "%s.recs" % vector), 'r', encoding='utf-8') as f:
+            p = os.path.join(__dirname__, "vectors", sub_folder, "{0}.recs".format(vector))
+            with open(p, 'r', encoding='utf-8') as f:
                 svg_vector = f.read()
             content.append(
                 DIV(
@@ -274,8 +277,13 @@ class Captcha(object):
     def html_ok(self):
         self._html_ok = DIV(
             DIV(
-                XML('<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="50px" height="50px" style="shape-rendering:geometricPrecision; text-rendering:geometricPrecision; image-rendering:optimizeQuality; fill-rule:evenodd; clip-rule:evenodd" viewBox="0 0 50 50" xmlns:xlink="http://www.w3.org/1999/xlink"><circle class="fil0" cx="25.1541" cy="25.1175" r="24.5529"/><polygon class="fil1" points="14.6544,18.9408 20.4585,26.0181 39.3804,13.6859 43.962,20.7361 21.8877,35.1224 18.7388,37.1752 16.3517,34.266 8.16404,24.2795 "/></svg>'),
-                _class="captcha-ok-svg-container", _id="captcha-ok-svg-container-%s" % (self._id)),
+                XML("".join(['<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="50px" '
+                    'height="50px" style="shape-rendering:geometricPrecision; text-rendering:geometricPrecision;',
+                    ' image-rendering:optimizeQuality; fill-rule:evenodd; clip-rule:evenodd" viewBox="0 0 50 50"',
+                    ' xmlns:xlink="http://www.w3.org/1999/xlink"><circle class="fil0" cx="25.1541" cy="25.1175" ',
+                    'r="24.5529"/><polygon class="fil1" points="14.6544,18.9408 20.4585,26.0181 39.3804,13.6859'
+                    ' 43.962,20.7361 21.8877,35.1224 18.7388,37.1752 16.3517,34.266 8.16404,24.2795 "/></svg>'])),
+                _class="captcha-ok-svg-container", _id="captcha-ok-svg-container-{0}".format(self._id)),
             _class='captcha-container')
         return self._html_ok
 

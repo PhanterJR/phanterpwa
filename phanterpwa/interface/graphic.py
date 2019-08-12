@@ -35,7 +35,8 @@ from phanterpwa.tools import (
     splits_seconds,
     join_seconds,
     interpolate,
-    package_project_app
+    package_project_app,
+    compiler
 )
 from phanterpwa.i18n import Translator
 ENV_PYTHON = os.path.normpath(sys.executable)
@@ -447,7 +448,6 @@ class MainPWA:
             icon='warning'
         )
         if choice == "yes":
-            from phanterpwa.app_compiler import compiler
             name_dir = os.path.basename(projectPath)
             button_0 = self.buttons_dict[projectPath][0]
             button_2 = self.buttons_dict[projectPath][2]
@@ -1446,7 +1446,6 @@ class AppsPWA:
             icon='warning'
         )
         if choice == "yes":
-            from phanterpwa.app_compiler import compiler
             name_dir = os.path.basename(projectPath)
             b1 = self.button_compile
             b2 = self.button_start

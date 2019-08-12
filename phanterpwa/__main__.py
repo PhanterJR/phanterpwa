@@ -7,14 +7,19 @@ import psutil
 import subprocess
 import argparse
 import logging
-from phanterpwa.tools import config
+import traceback
+from phanterpwa.tools import (
+    config,
+    compiler
+)
 from phanterpwa.interface.graphic import start
 from phanterpwa.interface.cli import start as start_cli
 CURRENT_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__)))
 CWD = os.path.join(CURRENT_DIR, "interface")
 CONFIG = config(CWD)
 ENV_PYTHON = os.path.normpath(sys.executable)
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(description="".join(['Without arguments the phanterpwa GUI will be executed,\n',
+    ' if there is an error try to use the CLI version.']))
 
 
 def start_server(projectPath):
@@ -29,19 +34,27 @@ def CLEAR_CONSOLE():
 
 if not len(sys.argv) > 1:
     def main():
-        start()
+        try:
+            start()
+        except Exception as e:
+            print("Error trying to run graphical version of phanterpwa")
+            traceback.print_tb(e.__traceback__)
+            parser.print_help()
 else:
-    parser.add_argument('--cli', '-c', nargs='?', const=True,
+    parser.add_argument('-c', '--cli', action="store_true", default=False,
                         help='CLI interface')
 
-    parser.add_argument('--run_last_app', '-r', nargs='?', const=True,
-                        help='Run server of last running application')
+    parser.add_argument('-r', '--compile_and_server_last_project', action="store_true", default=False,
+                        help='Compile and server of last running project')
+
+    parser.add_argument('-s', '--server_last_project', action="store_true", default=False,
+                        help='Run server of last running project')
 
     def main():
         args = parser.parse_args()
         if args.cli:
             start_cli()
-        elif args.run_last_app:
+        elif args.compile_and_server_last_project or args.server_last_project:
             if 'last_application' in CONFIG:
                 configApp = config(CONFIG['last_application'])
                 projectPath = CONFIG['last_application']
@@ -62,6 +75,13 @@ else:
                 sh.setLevel(logging.ERROR)
                 sh.setFormatter(formatter_out_app)
                 logger.addHandler(sh)
+                if args.compile_and_server_last_project:
+                    try:
+                        compiler(projectPath)
+                    except Exception as e:
+                        logger.error("Compile error", exc_info=True)
+                        traceback.print_tb(e.__traceback__)
+
                 print("API Server running in http://{0}:{1}".format(
                     configApp['API_SERVER']['host'], configApp['API_SERVER']['port']))
                 print("APP Server running in http://{0}:{1}".format(

@@ -104,3 +104,4 @@ venv.bak/
 .mypy_cache/
 *.ffs_db
 setup.bat
+phanterpwa/interface/config.json

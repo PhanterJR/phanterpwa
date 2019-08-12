@@ -181,16 +181,6 @@ class XML(XmlConstructor, XssCleaner):
             return self.strip(xml)
         return xml
 
-    # def xml(self):
-    #     xml = ""
-    #     if self.content:
-    #         xml = self.xml_content
-    #     if self.sanitize:
-    #         xml = "".join([self.before_xml, xml, self.after_xml])
-    #         return self.strip(xml)
-    #     xml = "".join([self.before_xml, xml, self.after_xml])
-    #     return xml
-
 
 class XCOMMENT(XmlConstructor):
     def __init__(self, *content):
