@@ -6,7 +6,9 @@ from glob import glob
 from phanterpwa.helpers import DIV, XML, SVG, SPAN
 from phanterpwa.i18n import Translator
 from itsdangerous import (
-    TimedJSONWebSignatureSerializer as Serialize
+    TimedJSONWebSignatureSerializer as Serialize,
+    BadSignature,
+    SignatureExpired
 )
 __dirname__ = os.path.dirname(__file__)
 
@@ -39,10 +41,13 @@ class Captcha(object):
             "white": "white",
             "green": "#009933"
         }
+
+        self._signature = None
         self._choice = None
         self.translator = translator
         self.color_pairs = dict()
         self.options = dict()
+        self._opt = []
         self.recipes = dict()
         self.classification = set()
         self.vectors = dict()
@@ -145,6 +150,12 @@ class Captcha(object):
             json.dump([self.options, self.grafical_forms], f, ensure_ascii=True, indent=2)
 
     @property
+    def option(self):
+        if not self._option:
+            self._choicer()
+        return self._option
+
+    @property
     def choice(self):
         if not self._choice:
             self._choicer()
@@ -152,6 +163,8 @@ class Captcha(object):
 
     @property
     def signature(self):
+        if not self._signature:
+            self._choicer()
         return self._signature
 
     def _choicer(self):
@@ -162,63 +175,78 @@ class Captcha(object):
         count_attr = len(self.keys_attributes)
         choice = self.keys_attributes[random.randint(0, count_attr - 1)]
         self._choice = choice
-        sign_captha = self.serializer.dumps({
-            'id_form': self._id,
-            'choice': choice
-        })
-        self._signature = sign_captha.decode("utf-8")
-
-    def check(self, attribute, number):
-        try:
-            number = int(number)
-        except ValueError:
-            return False
-        if attribute in self.grafical_forms[str(number)][:-1]:
-            return True
-        else:
-            return False
-
-    @property
-    def html(self):
-        question = self.question
-        num_opt = self.num_opt
-        choice = self.choice
-
-        options = []
+        self._opt = []
         random.shuffle(self.keys_lines_cols)
         cont_err = 0
         cont_ok = 0
+        self._option = None
         for x in self.keys_lines_cols:
             t_choice = self.grafical_forms[x][:-1]
             if choice in t_choice:
                 if cont_ok == 0:
-                    options.append(x)
+                    self._opt.append(x)
+                    self._option = x
                     cont_ok += 1
             else:
-                if cont_err < num_opt - 1:
-                    options.append(x)
+                if cont_err < self.num_opt - 1:
+                    self._opt.append(x)
                     cont_err += 1
                 else:
                     if cont_ok == 1:
                         break
-        random.shuffle(options)
+        random.shuffle(self._opt)
+        sign_captha = self.serializer.dumps({
+            'id_form': self._id,
+            'choice': choice,
+            'option': self._option
+        })
+        self._signature = sign_captha.decode("utf-8")
+
+    def check(self, signature, option):
+        read_signature = None
+        try:
+            read_signature = self.serializer.loads(signature)
+        except BadSignature:
+            read_signature = None
+        except SignatureExpired:
+            read_signature = None
+        else:
+            try:
+                read_option = self.serializer.loads(option)
+            except BadSignature:
+                read_option = None
+            except SignatureExpired:
+                read_option = None
+            else:
+                if read_option and read_signature:
+                    if read_signature['choice'] in self.grafical_forms[str(read_option['option'])][:-1] and\
+                        read_signature['id_form'] == self._id:
+                        return True
+                    else:
+                        return False
+        return False
+
+    @property
+    def html(self):
+        question = self.question
+        choice = self.choice
         new_dict_t = dict()
-        option = self.options[choice]
+        opt = self.options[choice]
         if isinstance(self.translator, Translator):
             for d in self.translator.languages:
                 t = self.translator.translator(question, d)
                 new_dict_t[d] = {
-                    question.format(option=option): t.format(option=self.translator.translator(option, d))
+                    question.format(option=opt): t.format(option=self.translator.translator(opt, d))
                 }
-            question = SPAN(question.format(option=option), _phanterpwa_i18n=new_dict_t)
+            question = SPAN(question.format(option=opt), _phanterpwa_i18n=new_dict_t)
         else:
-            question = question.format(option=option)
+            question = question.format(option=opt)
         content = []
         if self.debug:
             token_question = choice
         else:
             token_question = self.signature
-        for x in options:
+        for x in self._opt:
             attrs = {
                 "_xmlns": "http://www.w3.org/2000/svg",
                 "_xml:space": "preserve",
@@ -270,6 +298,7 @@ class Captcha(object):
                 *content,
                 _class='captcha-options-container'),
             _class='captcha-container')
+        html.sass_file(os.path.join(__dirname__, "sass", "captcha.sass"))
         self._html = html
         return self._html
 

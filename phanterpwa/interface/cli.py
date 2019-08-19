@@ -100,6 +100,38 @@ def title(title="", size=79, char="="):
         return char * size
 
 
+def interface_project_folder():
+    my_alert = Alerts()
+    exit = False
+    while not exit:
+        exists_path = False
+        while not exists_path:
+            CLEAR_CONSOLE()
+            print(title(T('Project Folder'), char="|"))
+            print()
+            print(T("Current Folder:"), config(CURRENT_DIR)['applications_folder'])
+            print(title("", char="-"))
+            print(my_alert.alert)
+            my_alert.alert = ""
+            e = input("".join([T("Enter the folder path and press <enter> or 'E' to exit."), "\n -> "]))
+            if e == "e" or e == "E":
+                exit = exists_path = True
+            elif e == "":
+                my_alert.alert = T("The path can't empty.")
+            else:
+                try:
+                    if os.path.exists(e) and os.path.isdir(e):
+                        exists_path = True
+                    else:
+                        raise IOError("Invalid path!")
+                except Exception:
+                    my_alert.alert = T("The path does not exist or is not a folder, try again!")
+                else:
+                    if e:
+                        config(CURRENT_DIR, {"applications_folder": e})
+                    exit = True
+
+
 def app_menu(configApp):
     is_run = True
     projectPath = configApp['PATH']['project']
@@ -222,7 +254,8 @@ def interface_translate():
         alert = Alerts()
         while True:
             CLEAR_CONSOLE()
-            print(title(T("Languages")))
+            print(title(T("Languages"), char="|"))
+            print()
             langs = []
             cont = 0
             for v in Trans.languages:
@@ -280,53 +313,59 @@ def start():
                     interfaceConfig["applications_folder"] = f
                     config(CURRENT_DIR, interfaceConfig)
                     applications_folder = f
-            apps = list_installed_applications(applications_folder)
-            if apps:
-                alert_main = Alerts()
-                while True:
-                    CLEAR_CONSOLE()
-                    print(title("PhanterPWA - Developer", char="|"))
-                    print()
-                    print(title(T("Enviroment")))
-                    print("Path: {0}".format(ENV_PATH))
-                    print("Python: {0}".format(ENV_PYTHON))
-                    print("Python version: {0}".format(PY_VERSION))
-                    print("PhanterPWA version: {0}".format(PHANTERPWA_VERSION))
-                    print(title(char="-"))
-                    print()
-                    print(title(T("Applications")))
+
+            alert_main = Alerts()
+            while True:
+                CLEAR_CONSOLE()
+                print(title("PhanterPWA - Developer", char="|"))
+                print()
+                print(title(T("Enviroment")))
+                print("{0}: {1}".format(T("Path"), ENV_PATH))
+                print("Python: {0}".format(ENV_PYTHON))
+                print("{0}: {1}".format(T("Python version"), PY_VERSION))
+                print("{0}: {1}".format(T("PhanterPWA version"), PHANTERPWA_VERSION))
+                print(title(char="-"))
+                print()
+                print(title(T("Project List")))
+                apps = list_installed_applications(config(CURRENT_DIR)["applications_folder"])
+                if apps:
                     l_app = []
                     for n, a in enumerate(apps):
                         l_app.append(apps[a])
                         print("[{0}] - {1} - {2}".format(n, a, apps[a]['PATH']['project']))
-                    print(title(char="-"))
-                    print("[T] - Translate")
-                    print("[Q] - Quit")
-                    print(title(char="-"))
-                    if alert_main:
-                        print(alert_main)
-                    e = input("".join([T("What do you want to do?"), " "]))
-                    print(title())
-                    if e == "Q" or e == "q":
+                else:
+                    print(T("No installed projects found"))
+                print(title(char="-"))
+                print("[C] -", T("Change project folder"))
+                print("[T] -", T("Translate"))
+                print("[Q] -", T("Quit"))
+                print(title(char="-"))
+                if alert_main:
+                    print(alert_main)
+                e = input("".join([T("What do you want to do?"), " "]))
+                print(title())
+                if e == "Q" or e == "q":
+                    alert_main.alert = ""
+                    CLEAR_CONSOLE()
+                    print("\nGoodbye!")
+                    break
+                elif e == "T" or e == "t":
+                    alert_main.alert = ""
+                    interface_translate()
+                elif e == "c" or e == "C":
+                    interface_project_folder()
+                else:
+                    v = None
+                    try:
+                        e_int = int(e)
+                        v = l_app[e_int]
+                    except Exception:
+                        alert_main.alert = T("The value is invalid! Try again!")
+                    if v:
                         alert_main.alert = ""
-                        CLEAR_CONSOLE()
-                        print("\nGoodbye!")
-                        break
-                    elif e == "T" or e == "t":
-                        alert_main.alert = ""
-                        interface_translate()
-                    else:
-                        v = None
-                        try:
-                            e_int = int(e)
-                            v = l_app[e_int]
-                        except Exception:
-                            alert_main.alert = T("The value is invalid! Try again!")
-                        if v:
-                            alert_main.alert = ""
-                            is_run = app_menu(v)
-                            if is_run is False:
-                                break
+                        is_run = app_menu(v)
+                        if is_run is False:
+                            break
                 break
                 print("Goodbye!")
 

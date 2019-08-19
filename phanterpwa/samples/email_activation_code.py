@@ -150,10 +150,3 @@ text = CONCATENATE(
     "\n",
     "{{link_to_your_page}}"
 )
-
-
-
-
-
-
-

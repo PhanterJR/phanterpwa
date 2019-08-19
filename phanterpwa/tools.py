@@ -64,32 +64,32 @@ def sass_map_vars(string_sass):
 def temporary_password():
     import random
     matrix = 'abcdefghijlmnopqrstuvxzwykABCDEFGHIJLMNOPQRSTUVXZWYK0123456789'
-    password = []
-    while len(password) < 8:
+    p = []
+    while len(p) < 8:
         number = random.randint(0, len(matrix) - 1)
         char = matrix[number]
-        if char not in password:
-            password.append(char)
-    final_password = "".join(password)
-    return final_password
+        if char not in p:
+            p.append(char)
+    f = "".join(p)
+    return f
 
 
-def activation_code(size=6):
+def generate_activation_code(size=6):
     import random
     matrix = '0123456789'
     ver = "ABCDEFGHI"
-    password = []
+    p = ["0"]
     su = 0
-    while len(password) < size:
+    while len(p) < size:
         number = random.randint(0, len(matrix) - 1)
         char = matrix[number]
-        if char not in password:
-            password.append(char)
+        if char not in p:
+            p.append(char)
             su += int(char)
             if su >= 9:
                 su = su - 9
-    final_password = "".join(password)
-    return "-".join([final_password, ver[su]])
+    f = "".join(p)
+    return "-".join([f, ver[su]])
 
 
 def check_activation_code(code, size=6):
@@ -125,7 +125,7 @@ def check_valid_project_config(config_file) -> dict:
             else:
                 return config_file
     else:
-        print("The '{0}' is not valid config file! Not exists or not is file.".format(config_file))
+        raise RuntimeError("The '{0}' is not valid config file! Not exists or not is file.".format(config_file))
     return {}
 
 
@@ -134,7 +134,11 @@ def list_installed_applications(path_applications):
     apps = {}
     for y in [x for x in g if os.path.isdir(x)]:
         cfg = os.path.join(y, "config.json")
-        if check_valid_project_config(cfg):
+        try:
+            check_valid_project_config(cfg)
+        except Exception:
+            print("Not a valid project folder:", y)
+        else:
             n = os.path.basename(y)
             j = ""
             with open(cfg, 'r', encoding='utf-8') as f:
@@ -672,14 +676,14 @@ def generate_password_hash(password):
     return hash
 
 
-def check_password_hash(password, hash):
-    return pbkdf2_sha512.verify(hash, password)
+def check_password_hash(hash, password):
+    return pbkdf2_sha512.verify(password, hash)
 
 
-class CheckDictOnFieldsDAL(object):
+class DictArgsToDALFields(object):
 
     def __init__(self, dict_args, *fields):
-        super(CheckDictOnFieldsDAL, self).__init__()
+        super(DictArgsToDALFields, self).__init__()
         self.dict_args = dict_args
         self.fields = fields
         self._errors = {}
@@ -771,4 +775,36 @@ class CheckDictOnFieldsDAL(object):
 
 
 if __name__ == '__main__':
-    package_project_app("D:\\Nova_pasta\\PhanterPWA", "D:\\Nova_pasta")
+
+    if all([
+        check_activation_code("265417-H"),
+        check_activation_code("532980-A"),
+        check_activation_code("403268-F"),
+        check_activation_code("819037-B"),
+        check_activation_code("890243-I"),
+        check_activation_code("150384-D"),
+        check_activation_code("627540-G"),
+        check_activation_code("540873-A"),
+        check_activation_code("891702-A"),
+        check_activation_code("415637-I"),
+        check_activation_code("297805-E"),
+        check_activation_code("623947-E"),
+        check_activation_code("392745-D"),
+        check_activation_code("079465-E"),
+        check_activation_code("203865-G"),
+        check_activation_code("247965-G"),
+        check_activation_code("963805-E"),
+        check_activation_code("705829-E"),
+        check_activation_code("438765-G"),
+        check_activation_code("278043-G"),
+        check_activation_code("902674-B"),
+        check_activation_code("764295-G"),
+        check_activation_code("514263-D"),
+        check_activation_code("196802-I"),
+        check_activation_code("824760-A"),
+        check_activation_code("198256-E"),
+        check_activation_code("486290-C"),
+        check_activation_code("784012-E"),
+        check_activation_code("015478-H")
+    ]):
+        print("ok")

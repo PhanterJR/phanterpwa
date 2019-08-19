@@ -123,7 +123,6 @@ class PhanterPWATornado(object):
 if __name__ == "__main__":
     import os
     projectPath = os.getcwd()
-    print(projectPath)
     AppRunv = PhanterPWATornado(projectPath)
     try:
         AppRunv.run()
