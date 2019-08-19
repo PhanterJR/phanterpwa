@@ -19,9 +19,6 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     packages=[
         'phanterpwa',
-        'phanterpwa/scaffolds',
-        'phanterpwa/components',
-        'phanterpwa/i18n',
         'phanterpwa/captchasvg',
         'phanterpwa/captchasvg/recipes',
         'phanterpwa/captchasvg/sass',
@@ -31,6 +28,13 @@ setuptools.setup(
         'phanterpwa/captchasvg/vectors/number',
         'phanterpwa/captchasvg/vectors/letter',
         'phanterpwa/captchasvg/vectors/mean_of_transport',
+        'phanterpwa/components',
+        'phanterpwa/config',
+        'phanterpwa/decorators',
+        'phanterpwa/i18n',
+        'phanterpwa/interface',
+        'phanterpwa/samples',
+        'phanterpwa/scaffolds',
     ],
     entry_points={
         "console_scripts": [
