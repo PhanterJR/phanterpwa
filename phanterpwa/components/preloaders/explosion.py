@@ -25,4 +25,3 @@ PRELOADER = DIV(
 PRELOADER.sass_file(
     os.path.join(os.path.dirname(__file__), "explosion.sass")
 )
-

@@ -1197,7 +1197,7 @@ class AppsPWA:
         row += 1
         API_key_token_label = ttk.Label(frame, text=T("Token time"))
         API_key_token_label.grid(column=0, row=row, padx=(10, 5), pady=(5, 5))
-        API_key_token = self.AppCONFIG['API']['default_time_token_expires']
+        API_key_token = self.AppCONFIG['API']['default_time_user_token_expire']
         self.API_key_token_input = ttk.Entry(frame, width=70)
         self.API_key_token_input.insert(
             0,
@@ -1208,7 +1208,7 @@ class AppsPWA:
         button = ttk.Button(
             frame,
             text=T("Change"),
-            command=lambda z='default_time_token_expires',
+            command=lambda z='default_time_user_token_expire',
                 y=API_key_token,
                 x=self.API_key_token_input: self.getSeconds(
                     x,
@@ -1221,7 +1221,7 @@ class AppsPWA:
         row += 1
         API_key_csrf_label = ttk.Label(frame, text=T("CSRF token time"))
         API_key_csrf_label.grid(column=0, row=row, padx=(10, 5), pady=(5, 5))
-        API_key_csrf = self.AppCONFIG['API']['default_time_csrf_token_expires']
+        API_key_csrf = self.AppCONFIG['API']['default_time_csrf_token_expire']
         self.API_key_csrf_input = ttk.Entry(frame, width=70)
         self.API_key_csrf_input.insert(
             0,
@@ -1232,7 +1232,7 @@ class AppsPWA:
         button = ttk.Button(
             frame,
             text=T("Change"),
-            command=lambda z='default_time_csrf_token_expires',
+            command=lambda z='default_time_csrf_token_expire',
                 y=API_key_csrf,
                 x=self.API_key_csrf_input: self.getSeconds(
                     x,
@@ -1245,7 +1245,7 @@ class AppsPWA:
         row += 1
         API_key_passsword_label = ttk.Label(frame, text=T("Temporary password time"))
         API_key_passsword_label.grid(column=0, row=row, padx=(10, 5), pady=(5, 5))
-        API_key_passsword = self.AppCONFIG['API']['default_time_temporary_password_expires']
+        API_key_passsword = self.AppCONFIG['API']['default_time_temporary_password_expire']
         self.API_key_passsword_input = ttk.Entry(frame, width=70)
         self.API_key_passsword_input.insert(
             0,
@@ -1256,7 +1256,7 @@ class AppsPWA:
         button = ttk.Button(
             frame,
             text=T("Change"),
-            command=lambda z='default_time_temporary_password_expires',
+            command=lambda z='default_time_temporary_password_expire',
                 y=API_key_passsword,
                 x=self.API_key_passsword_input: self.getSeconds(
                     x,
@@ -1269,7 +1269,7 @@ class AppsPWA:
         row += 1
         API_key_attempt_login_label = ttk.Label(frame, text=T("Attempt to login time"))
         API_key_attempt_login_label.grid(column=0, row=row, padx=(10, 5), pady=(5, 5))
-        API_key_attempt_login = self.AppCONFIG['API']['default_time_next_attempt_to_login']
+        API_key_attempt_login = self.AppCONFIG['API']['default_time_temporary_password_expire']
         self.API_key_attempt_login_input = ttk.Entry(frame, width=70)
         self.API_key_attempt_login_input.insert(
             0,
@@ -1280,7 +1280,7 @@ class AppsPWA:
         button = ttk.Button(
             frame,
             text=T("Change"),
-            command=lambda z='default_time_next_attempt_to_login',
+            command=lambda z='default_time_temporary_password_expire',
                 y=API_key_attempt_login,
                 x=self.API_key_attempt_login_input: self.getSeconds(
                     x,
@@ -1293,7 +1293,7 @@ class AppsPWA:
 
         API_key_client_token_label = ttk.Label(frame, text=T("Client Token time"))
         API_key_client_token_label.grid(column=0, row=row, padx=(10, 5), pady=(5, 5))
-        API_key_client_token = self.AppCONFIG['API']['default_time_client_token_expires']
+        API_key_client_token = self.AppCONFIG['API']['default_time_client_token_expire']
         self.API_key_client_token_input = ttk.Entry(frame, width=70)
         self.API_key_client_token_input.insert(
             0,
@@ -1304,7 +1304,7 @@ class AppsPWA:
         button = ttk.Button(
             frame,
             text=T("Change"),
-            command=lambda z='default_time_client_token_expires',
+            command=lambda z='default_time_client_token_expire',
                 y=API_key_client_token,
                 x=self.API_key_client_token_input: self.getSeconds(
                     x,
@@ -1329,7 +1329,7 @@ class AppsPWA:
         self.api_server_address = ttk.Entry(frame, width=50)
         self.api_server_address.insert(0, server_adress)
         self.api_server_address.grid(column=1, row=row, padx=(5, 10), pady=(5, 5))
-        api_server_address_help = ttk.Label(frame, text="http://localhost:5000")
+        api_server_address_help = ttk.Label(frame, text="http://localhost:8881")
         api_server_address_help.grid(column=2, row=row, padx=(10, 5), pady=(5, 5), sticky="w")
         button = ttk.Button(frame, text=T("Save"), command=lambda: self.validAndSave("API_access_by"))
         button.grid(column=3, row=row, padx=10, pady=(5, 5), sticky="w")
@@ -1932,7 +1932,7 @@ class RunAPP:
         webbrowser.open_new("http://127.0.0.1:{0}".format(self.AppCONFIG["APP_SERVER"]["port"]))
 
     def run(self):
-        self.target = os.path.abspath(os.path.join("..", "server.py"))
+        self.target = os.path.normpath(os.path.join(CURRENT_DIR, "..", "server.py"))
         command = " ".join([ENV_PYTHON, self.target])
         self.subprocess = subprocess.Popen(command, cwd=self.projectPath, shell=True)
 

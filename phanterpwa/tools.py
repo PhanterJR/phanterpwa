@@ -617,16 +617,21 @@ def generate_script_importing_transcrypt_module(project_path: dict) -> list:
     return res
 
 
-def package_project_app(project_path, target):
+def package_project_app(project_path, target, reset_config=True):
     appConfig = config(project_path)
-    appConfig['ENVIRONMENT']['path'] = ""
-    appConfig['ENVIRONMENT']['python'] = ""
-    appConfig['PROJECT']['packaged'] = True
-    appConfig['APP']['compiled_app_folder'] = "{{PROJECT_FOLDER}}\\app\\www"
-    appConfig['PATH']['project'] = '{{PROJECT_FOLDER}}'
-    appConfig['PATH']['api'] = '{{PROJECT_FOLDER}}\\api'
-    appConfig['PATH']['app'] = '{{PROJECT_FOLDER}}\\app'
-    appConfig['TRANSCRYPT']['main_files']
+    secret_key = appConfig['API']['secret_key']
+    password_email = appConfig['EMAIL']['password']
+    if reset_config:
+        appConfig['ENVIRONMENT']['path'] = ""
+        appConfig['ENVIRONMENT']['python'] = ""
+        appConfig['PROJECT']['packaged'] = True
+        appConfig['API']['secret_key'] = "secret_key"
+        appConfig['APP']['compiled_app_folder'] = "{{PROJECT_FOLDER}}\\app\\www"
+        appConfig['PATH']['project'] = '{{PROJECT_FOLDER}}'
+        appConfig['PATH']['api'] = '{{PROJECT_FOLDER}}\\api'
+        appConfig['PATH']['app'] = '{{PROJECT_FOLDER}}\\app'
+        appConfig['EMAIL']['password'] = "email_password"
+        appConfig['TRANSCRYPT']['main_files'] = ""
     file_name = os.path.basename(project_path)
     temp_main_files = []
     for t in appConfig['TRANSCRYPT']['main_files']:
@@ -648,9 +653,29 @@ def package_project_app(project_path, target):
         json.dump(appConfig, f, ensure_ascii=True, indent=2)
     if os.path.exists(os.path.join(temp_file, "app", "www")):
         shutil.rmtree(os.path.join(temp_file, "app", "www"))
+    if os.path.exists(os.path.join(temp_file, "api", "databases")):
+        shutil.rmtree(os.path.join(temp_file, "api", "databases"))
+    if os.path.exists(os.path.join(temp_file, "api", "languages")):
+        shutil.rmtree(os.path.join(temp_file, "api", "languages"))
+    if os.path.exists(os.path.join(temp_file, "app", "languages")):
+        shutil.rmtree(os.path.join(temp_file, "app", "languages"))
+    if os.path.exists(os.path.join(temp_file, "api", "uploads")):
+        shutil.rmtree(os.path.join(temp_file, "api", "uploads"))
     if os.path.exists(os.path.join(temp_file, "logs")):
         shutil.rmtree(os.path.join(temp_file, "logs"))
+    if os.path.exists(os.path.join(temp_file, "__pycache__")):
+        shutil.rmtree(os.path.join(temp_file, "__pycache__"))
 
+    pycaches = glob("{0}\\**\\__pycache__".format(temp_file), recursive=True)
+    for x in pycaches:
+        shutil.rmtree(x)
+    pid = glob("{0}\\**\\phanterpwa.pid".format(temp_file), recursive=True)
+    for x in pid:
+        os.remove(x)
+    os.makedirs(os.path.join(temp_file, "api", "languages"), exist_ok=True)
+    os.makedirs(os.path.join(temp_file, "app", "languages"), exist_ok=True)
+    os.makedirs(os.path.join(temp_file, "api", "uploads"), exist_ok=True)
+    os.makedirs(os.path.join(temp_file, "api", "databases"), exist_ok=True)
     os.makedirs(os.path.join(temp_file, "app", "www"), exist_ok=True)
     os.makedirs(os.path.join(temp_file, "logs"), exist_ok=True)
 
@@ -659,6 +684,10 @@ def package_project_app(project_path, target):
         os.path.join(compact_temp, "{0}.zip".format(file_name)),
         os.path.join(target, "{0}.ppwa".format(file_name))
     )
+    with open(os.path.join(target, "{0}.secret".format(file_name)), "w", encoding="utf-8") as f:
+        f.write(
+            "secret_key: {0}\npassword_email: {1}".format(secret_key, password_email)
+        )
 
 
 def compiler(projectPath):
@@ -772,39 +801,3 @@ class DictArgsToDALFields(object):
             elif rep.id and commit:
                 dbtable._db.commit()
             return rep
-
-
-if __name__ == '__main__':
-
-    if all([
-        check_activation_code("265417-H"),
-        check_activation_code("532980-A"),
-        check_activation_code("403268-F"),
-        check_activation_code("819037-B"),
-        check_activation_code("890243-I"),
-        check_activation_code("150384-D"),
-        check_activation_code("627540-G"),
-        check_activation_code("540873-A"),
-        check_activation_code("891702-A"),
-        check_activation_code("415637-I"),
-        check_activation_code("297805-E"),
-        check_activation_code("623947-E"),
-        check_activation_code("392745-D"),
-        check_activation_code("079465-E"),
-        check_activation_code("203865-G"),
-        check_activation_code("247965-G"),
-        check_activation_code("963805-E"),
-        check_activation_code("705829-E"),
-        check_activation_code("438765-G"),
-        check_activation_code("278043-G"),
-        check_activation_code("902674-B"),
-        check_activation_code("764295-G"),
-        check_activation_code("514263-D"),
-        check_activation_code("196802-I"),
-        check_activation_code("824760-A"),
-        check_activation_code("198256-E"),
-        check_activation_code("486290-C"),
-        check_activation_code("784012-E"),
-        check_activation_code("015478-H")
-    ]):
-        print("ok")

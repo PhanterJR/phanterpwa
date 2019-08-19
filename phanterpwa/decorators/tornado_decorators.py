@@ -96,9 +96,9 @@ def check_client_token(projectConfig, db, i18n=None):
         def check_client_token_decorator(self, *args, **kargs):
             if not hasattr(self, "phanterpwa_client_token_checked"):
                 self.phanterpwa_client_token_checked = None
-                self.phanterpwa_cliente_token = self.request.headers.get('phanterpwa-client-token')
+                self.phanterpwa_client_token = self.request.headers.get('phanterpwa-client-token')
                 self.phanterpwa_authorization = self.request.headers.get('phanterpwa-authorization')
-                if not self.phanterpwa_cliente_token:
+                if not self.phanterpwa_client_token:
                     msg = 'Client token is not in the header. "phanterpwa-client-token"'
                     dict_response = {
                         'status': 'Bad Request',
@@ -133,12 +133,12 @@ def check_client_token(projectConfig, db, i18n=None):
                     projectConfig['API']['default_time_client_token_expire']
                 )
                 db._adapter.reconnect()
-                q = db(db.client.token == self.phanterpwa_cliente_token).select().first()
+                q = db(db.client.token == self.phanterpwa_client_token).select().first()
                 is_valid_token = False
                 if q:
                     token_content = None
                     try:
-                        token_content = t.loads(self.phanterpwa_cliente_token)
+                        token_content = t.loads(self.phanterpwa_client_token)
                     except BadSignature:
                         token_content = None
                     except SignatureExpired:
@@ -150,7 +150,7 @@ def check_client_token(projectConfig, db, i18n=None):
                                 if self.phanterpwa_authorization:
                                     t_user = Serialize(
                                         projectConfig['API']['secret_key'],
-                                        projectConfig['API']['default_time_token_expire']
+                                        projectConfig['API']['default_time_user_token_expire']
                                     )
                                     token_content_user = None
                                     id_user = None
@@ -251,7 +251,7 @@ def check_csrf_token(projectConfig, db, i18n=None):
                 return self.write(dict_response)
             t = Serialize(
                 projectConfig['API']['secret_key'],
-                projectConfig['API']['default_time_token_expire']
+                projectConfig['API']['default_time_user_token_expire']
             )
             token_content = None
             try:
@@ -344,13 +344,13 @@ def check_user_token(projectConfig, db, i18n=None):
             if not hasattr(self, "phanterpwa_user_token_checked"):
                 self.phanterpwa_user_token_checked = None
                 self.phanterpwa_current_user = None
-                self.phanterpwa_cliente_token = self.request.headers.get('phanterpwa-client-token')
+                self.phanterpwa_client_token = self.request.headers.get('phanterpwa-client-token')
                 self.phanterpwa_authorization = self.request.headers.get('phanterpwa-authorization')
                 id_user = None
-                if self.phanterpwa_cliente_token and self.phanterpwa_authorization:
+                if self.phanterpwa_client_token and self.phanterpwa_authorization:
                     t = Serialize(
                         projectConfig['API']['secret_key'],
-                        projectConfig['API']['default_time_token_expire']
+                        projectConfig['API']['default_time_user_token_expire']
                     )
                     token_content = None
                     try:
@@ -368,18 +368,18 @@ def check_user_token(projectConfig, db, i18n=None):
                     self.phanterpwa_current_user = q_user
                     q_client = db(
                         (db.client.id_user == id_user) &
-                        (db.client.token == self.phanterpwa_cliente_token)
+                        (db.client.token == self.phanterpwa_client_token)
                     ).select().first()
                     if q_user and q_client:
                         if not q_user.permit_mult_login:
                             r_client = db(
                                 (db.client.id_user == id_user) &
-                                (db.client.token != self.phanterpwa_cliente_token)
+                                (db.client.token != self.phanterpwa_client_token)
                             ).select()
                             if r_client:
                                 r_client = db(
                                     (db.client.id_user == id_user) &
-                                    (db.client.token != self.phanterpwa_cliente_token)
+                                    (db.client.token != self.phanterpwa_client_token)
                                 ).remove()
                         db.commit()
                         return f(self, *args, **kargs)

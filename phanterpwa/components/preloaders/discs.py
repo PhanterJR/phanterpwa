@@ -1,7 +1,7 @@
 import os
 from ...helpers import DIV
 
-html = DIV(
+PRELOADER = DIV(
     DIV(
         DIV(
             DIV(
@@ -18,10 +18,10 @@ html = DIV(
     _class="phanterpwa-components-preloaders-discs"
 )
 
-html.sass_file(
+PRELOADER.sass_file(
     os.path.join(os.path.dirname(__file__), "discs.sass")
 )
-html.sass_vars = {
+PRELOADER.sass_vars = {
     'COLOR1TOP': 'red',
     'COLOR1LEFT': 'transparent',
     'COLOR1BOTTOM': '$COLOR1TOP',

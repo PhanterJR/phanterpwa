@@ -1,7 +1,7 @@
 import os
 from ...helpers import DIV
 
-html = DIV(
+PRELOADER = DIV(
     DIV(
         DIV(
             DIV(
@@ -97,10 +97,10 @@ html = DIV(
     _class="phanterpwa-components-preloaders-android"
 )
 
-html.sass_file(
+PRELOADER.sass_file(
     os.path.join(os.path.dirname(__file__), "android.sass")
 )
-html.sass_vars = {
+PRELOADER.sass_vars = {
     'STROKEWIDTH': '10px',
     'CONTAINERWIDTH': '200px',
     'COLOR1': 'blue',

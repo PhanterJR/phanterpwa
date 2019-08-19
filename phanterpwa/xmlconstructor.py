@@ -3892,6 +3892,7 @@ class XmlConstructor(object):
                 return ""
             else:
                 human = "".join([self._tag_begin_cmp(close_void), "\n", space, self.tag_end])
+        human = "".join([self.before_xml, human, self.after_xml])
         if self.tag == "":
             return human
         else:

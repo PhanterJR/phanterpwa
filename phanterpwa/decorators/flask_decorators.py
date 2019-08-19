@@ -159,7 +159,7 @@ def check_client_token(projectConfig, db, i18n=None):
                                 if self.phanterpwa_authorization:
                                     t_user = Serialize(
                                         projectConfig['API']['secret_key'],
-                                        projectConfig['API']['default_time_token_expire']
+                                        projectConfig['API']['default_time_user_token_expire']
                                     )
                                     token_content_user = None
                                     id_user = None
@@ -223,16 +223,13 @@ def check_csrf_token(projectConfig, db, i18n=None):
         @check_client_token(projectConfig, db, i18n)
         def check_csrf_token_decorator(self, *args, **kargs):
             self.phanterpwa_csrf_token_content = None
-            dict_vars = {x: request.form[x] for x in request.form}
-            self.phanterpwa_csrf_token = dict_vars["csrf_token"]
-            data = {
-                'csrf_token': self.phanterpwa_csrf_token
-            }
+            dict_arguments = {x: request.form[x] for x in request.form}
+            self.phanterpwa_csrf_token = dict_arguments["csrf_token"]
             self.phanterpwa_user_agent = request.user_agent
             self.phanterpwa_remote_ip = request.remote_addr
             user_agent = str(self.phanterpwa_user_agent)
             remote_addr = str(self.phanterpwa_remote_ip)
-            if not data['csrf_token']:
+            if not self.phanterpwa_csrf_token:
                 msg = 'The CSRF token is not in form. "csrf_token"'
                 dict_response = {
                     'status': 'Bad Request',
@@ -263,11 +260,11 @@ def check_csrf_token(projectConfig, db, i18n=None):
                 return dict_response, 400
             t = Serialize(
                 projectConfig['API']['secret_key'],
-                projectConfig['API']['default_time_token_expire']
+                projectConfig['API']['default_time_user_token_expire']
             )
             token_content = None
             try:
-                token_content = t.loads(data['csrf_token'].encode("utf-8"))
+                token_content = t.loads(self.phanterpwa_csrf_token)
             except BadSignature:
                 token_content = None
             except SignatureExpired:
@@ -279,7 +276,7 @@ def check_csrf_token(projectConfig, db, i18n=None):
                     if q:
                         q.update_record(used=True)
                         db.commit()
-                        if (q.token == data['csrf_token']) and\
+                        if (q.token == self.phanterpwa_csrf_token) and\
                                 user_agent == q.user_agent and\
                                 remote_addr == q.ip:
                             q.delete_record()
@@ -363,7 +360,7 @@ def check_user_token(projectConfig, db, i18n=None):
                 if self.phanterpwa_client_token and self.phanterpwa_authorization:
                     t = Serialize(
                         projectConfig['API']['secret_key'],
-                        projectConfig['API']['default_time_token_expire']
+                        projectConfig['API']['default_time_user_token_expire']
                     )
                     token_content = None
                     try:

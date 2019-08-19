@@ -1,0 +1,14 @@
+include phanterpwa/scaffolds/*.ppwa
+include phanterpwa/samples/*
+include phanterpwa/interface/grafics/icon.ico
+include phanterpwa/interface/langs/*.json
+include phanterpwa/interface/*.py
+include phanterpwa/captchasvg/captchadata.json
+include phanterpwa/captchasvg/recipes/*.recs
+include phanterpwa/captchasvg/sass/*.sass
+include phanterpwa/captchasvg/vectors/animal/*.recs
+include phanterpwa/captchasvg/vectors/arrow/*.recs
+include phanterpwa/captchasvg/vectors/letter/*.recs
+include phanterpwa/captchasvg/vectors/mean_of_transport/*.recs
+include phanterpwa/captchasvg/vectors/number/*.recs
+include phanterpwa/components/preloaders/*.*

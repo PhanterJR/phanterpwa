@@ -1,7 +1,7 @@
 import os
 from ...helpers import DIV
 
-html = DIV(
+PRELOADER = DIV(
     DIV(
         DIV(
             DIV(
@@ -14,10 +14,10 @@ html = DIV(
     _class="phanterpwa-components-preloaders-square"
 )
 
-html.sass_file(
+PRELOADER.sass_file(
     os.path.join(os.path.dirname(__file__), "square.sass")
 )
-html.sass_vars = {
+PRELOADER.sass_vars = {
     "CONTAINERWIDTH": "200px",
     "CONTAINERHEIGHT": "200px",
     "COLOR": "orange",

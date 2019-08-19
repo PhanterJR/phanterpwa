@@ -42,7 +42,7 @@ setuptools.setup(
         ],
     },
     install_requires=[
-        'psutil', 'tornado', 'libsass', 'transcrypt', 
+        'psutil', 'tornado', 'libsass', 'transcrypt',
         'pillow', 'itsdangerous',
         'pydal>=19.04'
     ],
