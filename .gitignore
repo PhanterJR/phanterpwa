@@ -105,3 +105,4 @@ venv.bak/
 *.ffs_db
 setup.bat
 phanterpwa/interface/config.json
+*.pid
