@@ -631,7 +631,6 @@ def package_project_app(project_path, target, reset_config=True):
         appConfig['PATH']['api'] = '{{PROJECT_FOLDER}}\\api'
         appConfig['PATH']['app'] = '{{PROJECT_FOLDER}}\\app'
         appConfig['EMAIL']['password'] = "email_password"
-        appConfig['TRANSCRYPT']['main_files'] = ""
     file_name = os.path.basename(project_path)
     temp_main_files = []
     for t in appConfig['TRANSCRYPT']['main_files']:
@@ -647,7 +646,8 @@ def package_project_app(project_path, target, reset_config=True):
         shutil.rmtree(temp_file)
     shutil.copytree(
         project_path,
-        temp_file
+        temp_file,
+        ignore=shutil.ignore_patterns('*.pyc', '.*', '__target__')
     )
     with open(os.path.join(temp_file, "config.json"), "w", encoding="utf-8") as f:
         json.dump(appConfig, f, ensure_ascii=True, indent=2)
@@ -665,6 +665,8 @@ def package_project_app(project_path, target, reset_config=True):
         shutil.rmtree(os.path.join(temp_file, "logs"))
     if os.path.exists(os.path.join(temp_file, "__pycache__")):
         shutil.rmtree(os.path.join(temp_file, "__pycache__"))
+    if os.path.exists(os.path.join(temp_file, ".git")):
+        shutil.rmtree(os.path.join(temp_file, ".git"))
 
     pycaches = glob("{0}\\**\\__pycache__".format(temp_file), recursive=True)
     for x in pycaches:
@@ -672,6 +674,12 @@ def package_project_app(project_path, target, reset_config=True):
     pid = glob("{0}\\**\\phanterpwa.pid".format(temp_file), recursive=True)
     for x in pid:
         os.remove(x)
+    if os.path.exists("{0}\\**\\.gitattributes".format(temp_file)):
+        os.remove("{0}\\**\\.gitattributes".format(temp_file))
+
+    if os.path.exists("{0}\\**\\.gitignore".format(temp_file)):
+        os.remove("{0}\\**\\.gitignore".format(temp_file))
+
     os.makedirs(os.path.join(temp_file, "api", "languages"), exist_ok=True)
     os.makedirs(os.path.join(temp_file, "app", "languages"), exist_ok=True)
     os.makedirs(os.path.join(temp_file, "api", "uploads"), exist_ok=True)
@@ -801,3 +809,7 @@ class DictArgsToDALFields(object):
             elif rep.id and commit:
                 dbtable._db.commit()
             return rep
+
+
+if __name__ == '__main__':
+    package_project_app()
