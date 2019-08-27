@@ -2,7 +2,8 @@ from functools import wraps
 from itsdangerous import (
     TimedJSONWebSignatureSerializer as Serialize,
     BadSignature,
-    SignatureExpired
+    SignatureExpired,
+    URLSafeSerializer
 )
 from inspect import currentframe, getframeinfo, getfile
 from flask import request
@@ -143,7 +144,6 @@ def check_client_token(projectConfig, db, i18n=None):
                 )
                 db._adapter.reconnect()
                 q = db(db.client.token == self.phanterpwa_client_token).select().first()
-                is_valid_token = False
                 if q:
                     token_content = None
                     try:
@@ -172,12 +172,10 @@ def check_client_token(projectConfig, db, i18n=None):
                                     if token_content_user and 'id' in token_content_user:
                                         id_user = token_content_user['id']
                                     if id_user and 'id_user' in token_content and id_user == token_content['id_user']:
-                                        is_valid_token = True
+                                        self.phanterpwa_client_token_checked = token_content
                                 else:
-                                    is_valid_token = True
-                                self.phanterpwa_client_token_checked = token_content
-                if is_valid_token:
-                    self.phanterpwa_client_token_checked = True
+                                    self.phanterpwa_client_token_checked = token_content
+                if self.phanterpwa_client_token_checked:
                     return f(self, *args, **kargs)
                 else:
                     if q:
@@ -214,6 +212,93 @@ def check_client_token(projectConfig, db, i18n=None):
             else:
                 return f(self, *args, **kargs)
         return check_client_token_decorator
+    return decorator
+
+
+def check_url_token(projectConfig, db, i18n=None):
+    def decorator(f):
+        @wraps(f)
+        def check_url_token_decorator(self, *args, **kargs):
+
+            self.phanterpwa_url_token_checked = None
+            dict_arguments = {x: request.form[x] for x in request.form}
+            self.phanterpwa_url_token = dict_arguments['sign']
+            if not self.phanterpwa_url_token:
+                msg = 'The URL token is not valid.'
+                dict_response = {
+                    'status': 'Bad Request',
+                    'code': 400,
+                    'message': msg,
+                    'i18n': {
+                        'message': i18n.T(msg) if i18n else msg
+                    }
+                }
+                fi = getframeinfo(currentframe())
+                if not projectConfig['PROJECT']['debug']:
+                    help_debug = "({0}){1}.{2}->({3})@{4}:{5}".format(
+                        getfile(self.__class__),
+                        self.__class__.__name__,
+                        f.__name__,
+                        fi.filename,
+                        fi.function,
+                        fi.lineno + 19
+                    )
+                else:
+                    help_debug = "{0}.{1}@{2}:{3}".format(
+                        self.__class__.__name__,
+                        f.__name__,
+                        fi.function,
+                        fi.lineno + 19
+                    )
+                dict_response['help_debug'] = help_debug
+
+                return dict_response, 400
+            t = URLSafeSerializer(
+                projectConfig['API']['url_secret_key'],
+                salt="url_secret_key"
+            )
+            db._adapter.reconnect()
+            token_content = None
+            try:
+                token_content = t.loads(self.phanterpwa_url_token)
+            except BadSignature:
+                token_content = None
+            if token_content:
+                if "user_agent" in token_content and "id_client" in token_content:
+                    if token_content['user_agent'] == str(self.request.headers.get('User-Agent')):
+                        self.phanterpwa_url_token_checked = token_content
+            if self.phanterpwa_url_token_checked:
+                return f(self, *args, **kargs)
+            else:
+                msg = "The URL token is invalid!"
+                dict_response = {
+                    'status': 'Forbidden',
+                    'code': 403,
+                    'message': msg,
+                    'i18n': {
+                        'message': i18n.T(msg) if i18n else msg
+                    }
+                }
+                fi = getframeinfo(currentframe())
+                if not projectConfig['PROJECT']['debug']:
+                    help_debug = "({0}){1}.{2}->({3})@{4}:{5}".format(
+                        getfile(self.__class__),
+                        self.__class__.__name__,
+                        f.__name__,
+                        fi.filename,
+                        fi.function,
+                        fi.lineno + 19
+                    )
+                else:
+                    help_debug = "{0}.{1}@{2}:{3}".format(
+                        self.__class__.__name__,
+                        f.__name__,
+                        fi.function,
+                        fi.lineno + 19
+                    )
+                dict_response['help_debug'] = help_debug
+                return dict_response, 403
+        return check_url_token_decorator
     return decorator
 
 
@@ -455,4 +540,98 @@ def check_user_token(projectConfig, db, i18n=None):
             else:
                 return f(self, *args, **kargs)
         return check_user_token_decorator
+    return decorator
+
+
+def requires_authentication(projectConfig, db, i18n=None, ids=None):
+    def decorator(f):
+        @wraps(f)
+        @check_user_token(projectConfig, db, i18n)
+        def requires_authenticatio_decorator(self, *args, **kargs):
+            if not ids:
+                if self.phanterpwa_current_user.id in ids:
+                    return f(self, *args, **kargs)
+                else:
+                    msg = "User cannot access this feature!"
+                    dict_response = {
+                        'status': 'Unauthorized',
+                        'code': 401,
+                        'message': msg,
+                        'i18n': {
+                            'message': i18n.T(msg) if i18n else msg
+                        }
+                    }
+                    fi = getframeinfo(currentframe())
+                    if not projectConfig['PROJECT']['debug']:
+                        help_debug = "({0}){1}.{2}->({3})@{4}:{5}".format(
+                            getfile(self.__class__),
+                            self.__class__.__name__,
+                            f.__name__,
+                            fi.filename,
+                            fi.function,
+                            fi.lineno + 19
+                        )
+                    else:
+                        help_debug = "{0}.{1}@{2}:{3}".format(
+                            self.__class__.__name__,
+                            f.__name__,
+                            fi.function,
+                            fi.lineno + 19
+                        )
+                    dict_response['help_debug'] = help_debug
+                    return dict_response, 401
+            else:
+                return f(self, *args, **kargs)
+        return requires_authenticatio_decorator
+    return decorator
+
+
+def requires_authentication_group(projectConfig, db, i18n=None, roles=None, ids=None):
+    def decorator(f):
+        @wraps(f)
+        @check_user_token(projectConfig, db, i18n)
+        def requires_authentication_group_decorator(self, *args, **kargs):
+            self.phanterpwa_current_user_groups = None
+            if roles or ids:
+                q_user_groups = db(
+                    (db.auth_membership.auth_user == self.phanterpwa_current_user.id) &
+                    (db.auth_membership.auth_group == db.auth_group.id)
+                ).select(db.auth_group.id, db.auth_group.role, orderby=~db.auth_group.grade)
+                user_roles = set([x.role for x in q_user_groups if x.role in roles or x.id in ids])
+                if user_roles:
+                    self.phanterpwa_current_user_groups = q_user_groups
+                    return f(self, *args, **kargs)
+                else:
+                    msg = "User does not have sufficient privileges!"
+                    dict_response = {
+                        'status': 'Unauthorized',
+                        'code': 401,
+                        'message': msg,
+                        'i18n': {
+                            'message': i18n.T(msg) if i18n else msg
+                        }
+                    }
+                    fi = getframeinfo(currentframe())
+                    if not projectConfig['PROJECT']['debug']:
+                        help_debug = "({0}){1}.{2}->({3})@{4}:{5}".format(
+                            getfile(self.__class__),
+                            self.__class__.__name__,
+                            f.__name__,
+                            fi.filename,
+                            fi.function,
+                            fi.lineno + 19
+                        )
+                    else:
+                        help_debug = "{0}.{1}@{2}:{3}".format(
+                            self.__class__.__name__,
+                            f.__name__,
+                            fi.function,
+                            fi.lineno + 19
+                        )
+                    dict_response['help_debug'] = help_debug
+                    return dict_response, 401
+            else:
+                return f(self, *args, **kargs)
+
+        return requires_authentication_group_decorator
     return decorator

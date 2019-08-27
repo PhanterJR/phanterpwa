@@ -106,3 +106,4 @@ venv.bak/
 setup.bat
 phanterpwa/interface/config.json
 *.pid
+phanterpwa/interface/config.json

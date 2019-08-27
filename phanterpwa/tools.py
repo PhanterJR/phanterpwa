@@ -13,6 +13,11 @@ from glob import glob
 from pathlib import PurePath
 from phanterpwa.samples.project_config_sample import project_config_sample
 from pydal import Field
+from urllib.parse import quote
+
+
+def file_name(name, encoding="utf-8"):
+    return quote(name, encoding=encoding)
 
 
 def interpolate(xstring, context, delimiters=["{{", "}}"], ignore_non_strings=False):
@@ -78,7 +83,7 @@ def generate_activation_code(size=6):
     import random
     matrix = '0123456789'
     ver = "ABCDEFGHI"
-    p = ["0"]
+    p = []
     su = 0
     while len(p) < size:
         number = random.randint(0, len(matrix) - 1)
@@ -742,7 +747,7 @@ class DictArgsToDALFields(object):
             self._dict_args = dict_args
         else:
             raise TypeError(
-                "The dict_args must be flaks.dict_args object. given: %s" % type(dict_args)
+                "The dict_args must be dict object. given: %s" % type(dict_args)
             )
 
     @property
@@ -751,12 +756,16 @@ class DictArgsToDALFields(object):
 
     @fields.setter
     def fields(self, list_fields):
+        n_l = list()
         for x in list_fields:
-            if not isinstance(x, Field):
-                raise TypeError(
-                    "The fields must be pydal.Field object. given: %s" % type(x)
-                )
-        self._fields = list_fields
+            if isinstance(x, Field):
+                n_l.append(x)
+            else:
+                if x is not None:
+                    raise TypeError(
+                        "The fields must be pydal.Field object. given: %s" % type(x)
+                    )
+        self._fields = n_l
 
     @property
     def verified(self):
