@@ -274,8 +274,6 @@ def check_csrf_token(projectConfig, db, i18n=None):
                     db._adapter.reconnect()
                     q = db(db.csrf.id == token_content["id"]).select().first()
                     if q:
-                        q.update_record(used=True)
-                        db.commit()
                         if (q.token == self.phanterpwa_csrf_token) and\
                                 user_agent == q.user_agent and\
                                 remote_addr == q.ip:
@@ -377,18 +375,18 @@ def check_user_token(projectConfig, db, i18n=None):
                     q_user = db(db.auth_user.id == id_user).select().first()
                     self.phanterpwa_current_user = q_user
                     q_client = db(
-                        (db.client.id_user == id_user) &
+                        (db.client.auth_user == id_user) &
                         (db.client.token == self.phanterpwa_client_token)
                     ).select().first()
                     if q_user and q_client:
                         if not q_user.permit_mult_login:
                             r_client = db(
-                                (db.client.id_user == id_user) &
+                                (db.client.auth_user == id_user) &
                                 (db.client.token != self.phanterpwa_client_token)
                             ).select()
                             if r_client:
                                 r_client = db(
-                                    (db.client.id_user == id_user) &
+                                    (db.client.auth_user == id_user) &
                                     (db.client.token != self.phanterpwa_client_token)
                                 ).remove()
                         db.commit()

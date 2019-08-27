@@ -14,6 +14,7 @@
   },
   "API": {
     "secret_key": "your_default_key",
+    "url_secret_key": "your_default_key2",
     "default_time_user_token_expire": 7200,
     "default_time_csrf_token_expire": 4200,
     "default_time_temporary_password_expire": 4200,

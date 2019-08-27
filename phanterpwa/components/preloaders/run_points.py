@@ -34,7 +34,7 @@ PRELOADER.sass_file(
 PRELOADER.sass_vars = {
     'COLOR1': 'red',
     'COLOR2': 'blue',
-    'COLOR3': 'black',
+    'COLOR3': 'yellow',
     'COLOR4': 'pink',
     'COLOR5': 'green',
     'BORDERRADIUS': '100%',
