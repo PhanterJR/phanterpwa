@@ -221,7 +221,7 @@ def check_url_token(projectConfig, db, i18n=None):
         def check_url_token_decorator(self, *args, **kargs):
 
             self.phanterpwa_url_token_checked = None
-            dict_arguments = {x: request.form[x] for x in request.form}
+            dict_arguments = {x: request.args[x] for x in request.args}
             self.phanterpwa_url_token = dict_arguments['sign']
             if not self.phanterpwa_url_token:
                 msg = 'The URL token is not valid.'
@@ -265,7 +265,7 @@ def check_url_token(projectConfig, db, i18n=None):
                 token_content = None
             if token_content:
                 if "user_agent" in token_content and "id_client" in token_content:
-                    if token_content['user_agent'] == str(self.request.headers.get('User-Agent')):
+                    if token_content['user_agent'] == str(request.headers.get('User-Agent')):
                         self.phanterpwa_url_token_checked = token_content
             if self.phanterpwa_url_token_checked:
                 return f(self, *args, **kargs)

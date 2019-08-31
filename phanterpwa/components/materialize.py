@@ -12,7 +12,8 @@ from ..helpers import (
     CONCATENATE,
     UL,
     LI,
-    A
+    A,
+    P
 )
 from ..xmlconstructor import XmlConstructor
 
@@ -373,15 +374,18 @@ class MaterializeInputCheckBox(XmlConstructor):
             attributes["_class"] = "phanterpwa-materialize-input-checkbox"
         new_content = [
             DIV(
-                LABEL(
-                    INPUT(
-                        _name=inputname,
-                        _id=id_input,
-                        _class="form-control%s" % (" filled-in" if filledIn else ""),
-                        _checked="checked" if checked else None,
-                        _disabled="disabled" if disabled else None,
-                        _type="checkbox"),
-                    SPAN(label),
+                P(
+                    LABEL(
+                        INPUT(
+                            _name=inputname,
+                            _id=id_input,
+                            _class="form-control%s" % (" filled-in" if filledIn else ""),
+                            _checked="checked" if checked else None,
+                            _disabled="disabled" if disabled else None,
+                            _type="checkbox"),
+                        SPAN(label),
+                        _for=id_input
+                    )
                 ),
                 _class="input-field-checkbox"),
         ]
