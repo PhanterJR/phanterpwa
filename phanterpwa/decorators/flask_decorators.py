@@ -162,6 +162,7 @@ def check_client_token(projectConfig, db, i18n=None):
                                     except SignatureExpired:
                                         token_content_user = None
                                     if token_content_user and 'id' in token_content_user:
+                                        self.phanterpwa_authorization_checked = token_content_user
                                         id_user = token_content_user['id']
                                     if id_user and 'id_user' in token_content and id_user == token_content['id_user']:
                                         self.phanterpwa_client_token_checked = token_content
@@ -256,7 +257,6 @@ def check_url_token(projectConfig, db, i18n=None):
                 token_content = t.loads(self.phanterpwa_url_token)
             except BadSignature:
                 token_content = None
-                print("Bad Signature")
             if token_content:
                 if "user_agent" in token_content and "id_client" in token_content:
                     if token_content['user_agent'] == self.phanterpwa_user_agent:
