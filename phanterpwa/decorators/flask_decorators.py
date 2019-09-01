@@ -6,8 +6,6 @@ from itsdangerous import (
     URLSafeSerializer
 )
 from inspect import currentframe, getframeinfo, getfile
-from flask_restful import reqparse
-parser = reqparse.RequestParser()
 
 
 def check_application(projectConfig, i18n=None):
