@@ -101,6 +101,7 @@ def check_client_token(projectConfig, db, i18n=None):
                 self.phanterpwa_authorization_checked = None
                 self.phanterpwa_client_token = self.request.headers.get('phanterpwa-client-token')
                 self.phanterpwa_authorization = self.request.headers.get('phanterpwa-authorization')
+                self.phanterpwa_user_agent = self.request.headers.get('User-Agent')
                 if not self.phanterpwa_client_token:
                     msg = 'Client token is not in the header. "phanterpwa-client-token"'
                     dict_response = {
@@ -147,7 +148,7 @@ def check_client_token(projectConfig, db, i18n=None):
                         token_content = None
                     if token_content:
                         if "user_agent" in token_content and "id_client" in token_content:
-                            if token_content['user_agent'] == str(self.request.headers.get('User-Agent')) and\
+                            if token_content['user_agent'] == self.phanterpwa_user_agent and\
                                 int(token_content['id_client']) == q.id:
                                 if self.phanterpwa_authorization:
                                     t_user = Serialize(
@@ -215,9 +216,10 @@ def check_url_token(projectConfig, db, i18n=None):
         @wraps(f)
         def check_url_token_decorator(self, *args, **kargs):
 
+            dict_arguments = {k: self.request.arguments.get(k)[0].decode('utf-8') for k in self.request.arguments}
             self.phanterpwa_url_token_checked = None
-            self.phanterpwa_url_token = self.request.arguments.get(
-                'sign', [b""])[0].decode('utf-8')
+            self.phanterpwa_url_token = dict_arguments.get('sign')
+            self.phanterpwa_user_agent = self.request.headers.get('User-Agent')
             if not self.phanterpwa_url_token:
                 msg = 'The URL token is not valid.'
                 dict_response = {
@@ -260,7 +262,7 @@ def check_url_token(projectConfig, db, i18n=None):
                 token_content = None
             if token_content:
                 if "user_agent" in token_content and "id_client" in token_content:
-                    if token_content['user_agent'] == str(self.request.headers.get('User-Agent')):
+                    if token_content['user_agent'] == self.phanterpwa_user_agent:
                         self.phanterpwa_url_token_checked = token_content
             if self.phanterpwa_url_token_checked:
                 return f(self, *args, **kargs)
@@ -303,11 +305,11 @@ def check_csrf_token(projectConfig, db, i18n=None):
         @wraps(f)
         @check_client_token(projectConfig, db, i18n)
         def check_csrf_token_decorator(self, *args, **kargs):
-            self.phanterpwa_csrf_token_content = None
             dict_arguments = {k: self.request.arguments.get(k)[0].decode('utf-8') for k in self.request.arguments}
-            self.phanterpwa_csrf_token = dict_arguments['csrf_token']
-            user_agent = str(self.request.headers.get('User-Agent'))
-            remote_addr = str(self.request.remote_ip)
+            self.phanterpwa_csrf_token_content = None
+            self.phanterpwa_csrf_token = dict_arguments.get("csrf_token")
+            self.phanterpwa_user_agent = self.request.headers.get('User-Agent')
+            self.phanterpwa_remote_ip = str(self.request.remote_ip)
             if not self.phanterpwa_csrf_token:
                 msg = 'The CSRF token is not in form. "csrf_token"'
                 dict_response = {
@@ -355,8 +357,8 @@ def check_csrf_token(projectConfig, db, i18n=None):
                     q = db(db.csrf.id == token_content["id"]).select().first()
                     if q:
                         if (q.token == self.phanterpwa_csrf_token) and\
-                                user_agent == q.user_agent and\
-                                remote_addr == q.ip:
+                                self.phanterpwa_user_agent == q.user_agent and\
+                                self.phanterpwa_remote_ip == q.ip:
                             q.delete_record()
                             db.commit()
                             return f(self, *args, **kargs)

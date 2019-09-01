@@ -6,7 +6,6 @@ from itsdangerous import (
     URLSafeSerializer
 )
 from inspect import currentframe, getframeinfo, getfile
-from flask import request
 from flask_restful import reqparse
 parser = reqparse.RequestParser()
 
@@ -16,14 +15,11 @@ def check_application(projectConfig, i18n=None):
         @wraps(f)
         def check_application_decorator(self, *args, **kargs):
             if not hasattr(self, "phanterpwa_client_application_checked"):
-                parser.add_argument('phanterpwa-application', location='headers', default=None)
-                parser.add_argument('phanterpwa-application-version', location='headers', default=None)
-                parse_args = parser.parse_args()
                 self.phanterpwa_client_application_checked = None
                 project_name = projectConfig['PROJECT']['name']
                 project_version = projectConfig['PROJECT']['version']
-                self.phanterpwa_application = parse_args['phanterpwa-application']
-                self.phanterpwa_application_version = parse_args['phanterpwa-application-version']
+                self.phanterpwa_application = self.request.headers.get('phanterpwa-application')
+                self.phanterpwa_application_version = self.request.headers.get('phanterpwa-application-version')
                 if self.phanterpwa_application == project_name:
                     if self.phanterpwa_application_version != project_version:
                         msg = 'The client needs update ({0})'
@@ -101,14 +97,10 @@ def check_client_token(projectConfig, db, i18n=None):
         def check_client_token_decorator(self, *args, **kargs):
             if not hasattr(self, "phanterpwa_client_token_checked"):
                 self.phanterpwa_client_token_checked = None
-                parser.add_argument('phanterpwa-client-token', location='headers', default=None)
-                parser.add_argument('phanterpwa-authorization', location='headers', default=None)
-                parse_args = parser.parse_args()
-                self.phanterpwa_client_token = parse_args['phanterpwa-client-token']
-                self.phanterpwa_authorization = parse_args['phanterpwa-authorization']
-                self.phanterpwa_user_agent = request.user_agent
-                self.phanterpwa_remote_ip = request.remote_addr
-                user_agent = str(self.phanterpwa_user_agent)
+                self.phanterpwa_authorization_checked = None
+                self.phanterpwa_client_token = self.request.headers.get('phanterpwa-client-token')
+                self.phanterpwa_authorization = self.request.headers.get('phanterpwa-authorization')
+                self.phanterpwa_user_agent = self.request.headers.get('User-Agent')
                 if not self.phanterpwa_client_token:
                     msg = 'Client token is not in the header. "phanterpwa-client-token"'
                     dict_response = {
@@ -154,7 +146,7 @@ def check_client_token(projectConfig, db, i18n=None):
                         token_content = None
                     if token_content:
                         if "user_agent" in token_content and "id_client" in token_content:
-                            if token_content['user_agent'] == user_agent and\
+                            if token_content['user_agent'] == self.phanterpwa_user_agent and\
                                 int(token_content['id_client']) == q.id:
                                 if self.phanterpwa_authorization:
                                     t_user = Serialize(
@@ -220,9 +212,10 @@ def check_url_token(projectConfig, db, i18n=None):
         @wraps(f)
         def check_url_token_decorator(self, *args, **kargs):
 
+            dict_arguments = {x: self.request.args[x] for x in self.request.args}
             self.phanterpwa_url_token_checked = None
-            dict_arguments = {x: request.args[x] for x in request.args}
-            self.phanterpwa_url_token = dict_arguments['sign']
+            self.phanterpwa_url_token = dict_arguments.get('sign')
+            self.phanterpwa_user_agent = self.request.headers.get('User-Agent')
             if not self.phanterpwa_url_token:
                 msg = 'The URL token is not valid.'
                 dict_response = {
@@ -263,9 +256,10 @@ def check_url_token(projectConfig, db, i18n=None):
                 token_content = t.loads(self.phanterpwa_url_token)
             except BadSignature:
                 token_content = None
+                print("Bad Signature")
             if token_content:
                 if "user_agent" in token_content and "id_client" in token_content:
-                    if token_content['user_agent'] == str(request.headers.get('User-Agent')):
+                    if token_content['user_agent'] == self.phanterpwa_user_agent:
                         self.phanterpwa_url_token_checked = token_content
             if self.phanterpwa_url_token_checked:
                 return f(self, *args, **kargs)
@@ -307,13 +301,11 @@ def check_csrf_token(projectConfig, db, i18n=None):
         @wraps(f)
         @check_client_token(projectConfig, db, i18n)
         def check_csrf_token_decorator(self, *args, **kargs):
+            dict_arguments = {x: self.request.form[x] for x in self.request.form}
             self.phanterpwa_csrf_token_content = None
-            dict_arguments = {x: request.form[x] for x in request.form}
-            self.phanterpwa_csrf_token = dict_arguments["csrf_token"]
-            self.phanterpwa_user_agent = request.user_agent
-            self.phanterpwa_remote_ip = request.remote_addr
-            user_agent = str(self.phanterpwa_user_agent)
-            remote_addr = str(self.phanterpwa_remote_ip)
+            self.phanterpwa_csrf_token = dict_arguments.get("csrf_token")
+            self.phanterpwa_user_agent = self.request.headers.get('User-Agent')
+            self.phanterpwa_remote_ip = str(self.request.remote_addr)
             if not self.phanterpwa_csrf_token:
                 msg = 'The CSRF token is not in form. "csrf_token"'
                 dict_response = {
@@ -360,8 +352,8 @@ def check_csrf_token(projectConfig, db, i18n=None):
                     q = db(db.csrf.id == token_content["id"]).select().first()
                     if q:
                         if (q.token == self.phanterpwa_csrf_token) and\
-                                user_agent == q.user_agent and\
-                                remote_addr == q.ip:
+                                self.phanterpwa_user_agent == q.user_agent and\
+                                self.phanterpwa_remote_ip == q.ip:
                             q.delete_record()
                             db.commit()
                             return f(self, *args, **kargs)
@@ -434,11 +426,8 @@ def check_user_token(projectConfig, db, i18n=None):
             if not hasattr(self, "phanterpwa_user_token_checked"):
                 self.phanterpwa_user_token_checked = None
                 self.phanterpwa_current_user = None
-                parser.add_argument('phanterpwa-client-token', location='headers', default=None)
-                parser.add_argument('phanterpwa-authorization', location='headers', default=None)
-                parse_args = parser.parse_args()
-                self.phanterpwa_client_token = parse_args['phanterpwa-client-token']
-                self.phanterpwa_authorization = parse_args['phanterpwa-authorization']
+                self.phanterpwa_client_token = self.request.headers.get('phanterpwa-client-token')
+                self.phanterpwa_authorization = self.request.headers.get('phanterpwa-authorization')
                 id_user = None
                 if self.phanterpwa_client_token and self.phanterpwa_authorization:
                     t = Serialize(
