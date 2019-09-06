@@ -91,12 +91,13 @@ def check_application(projectConfig, i18n=None):
     return decorator
 
 
-def check_client_token(projectConfig, db, i18n=None):
+def check_client_token(projectConfig, db, i18n=None, ignore_locked=True):
     def decorator(f):
         @wraps(f)
         @check_application(projectConfig, i18n)
         def check_client_token_decorator(self, *args, **kargs):
             if not hasattr(self, "phanterpwa_client_token_checked"):
+                self.phanterpwa_current_client = None
                 self.phanterpwa_client_token_checked = None
                 self.phanterpwa_authorization_checked = None
                 self.phanterpwa_client_token = self.request.headers.get('phanterpwa-client-token')
@@ -171,6 +172,37 @@ def check_client_token(projectConfig, db, i18n=None):
                                 else:
                                     self.phanterpwa_client_token_checked = token_content
                 if self.phanterpwa_client_token_checked:
+                    if q and q.locked and not ignore_locked:
+                        msg = "The user has locked your session!"
+                        dict_response = {
+                            'status': 'Unauthorized',
+                            'code': 401,
+                            'message': msg,
+                            'i18n': {
+                                'message': i18n.T(msg) if i18n else msg
+                            }
+                        }
+                        fi = getframeinfo(currentframe())
+                        if not projectConfig['PROJECT']['debug']:
+                            help_debug = "({0}){1}.{2}->({3})@{4}:{5}".format(
+                                getfile(self.__class__),
+                                self.__class__.__name__,
+                                f.__name__,
+                                fi.filename,
+                                fi.function,
+                                fi.lineno + 19
+                            )
+                        else:
+                            help_debug = "{0}.{1}@{2}:{3}".format(
+                                self.__class__.__name__,
+                                f.__name__,
+                                fi.function,
+                                fi.lineno + 19
+                            )
+                        dict_response['help_debug'] = help_debug
+                        self.set_status(401)
+                        return self.write(dict_response)
+                    self.phanterpwa_current_client = q
                     return f(self, *args, **kargs)
                 else:
                     if q:
@@ -428,7 +460,7 @@ def check_csrf_token(projectConfig, db, i18n=None):
 def check_user_token(projectConfig, db, i18n=None):
     def decorator(f):
         @wraps(f)
-        @check_client_token(projectConfig, db, i18n)
+        @check_client_token(projectConfig, db, i18n, ignore_locked=False)
         def check_user_token_decorator(self, *args, **kargs):
             if not hasattr(self, "phanterpwa_user_token_checked"):
                 self.phanterpwa_user_token_checked = None
