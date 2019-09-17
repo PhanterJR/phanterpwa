@@ -237,36 +237,34 @@ def url_pattern_relative_paths(path_base, file_search="*.html"):
 
 def create_transcrypt_config(project_path, keys=["PROJECT", "CONFIGJS"]):
     appConfig = config(project_path)
-    target = appConfig['TRANSCRYPT']['main_files']
-    targets = []
-    if isinstance(target, list):
-        t = set()
-        for x in set(target):
-            t.add(os.path.normpath(os.path.dirname(x)))
-        targets = list(t)
-    else:
-        targets.append(os.path.dirname(target))
-    CONFIG = {}
-    for x in keys:
-        CONFIG[x] = appConfig[x]
-    ini = "\n".join([
-        "# Created automatically.",
-        "#",
-        "# In development it may be necessary to add static data",
-        "# to the client side application after compiling, use",
-        "# the CONFIGJS section of the application's config.json",
-        "# file for this.",
-        "#",
-        "\n\nfrom org.transcrypt.stubs.browser import __pragma__\n\n",
-        "__pragma__('jsiter')",
-        "\n"
-    ])
-    end = "\n__pragma__('nojsiter')\n"
-    for ta in targets:
-        with open(os.path.join(ta, "config.py"), 'w', encoding="utf-8") as f:
-            content = "".join([ini, "CONFIG = {0}".format(json.dumps(CONFIG, ensure_ascii=True, indent=2)), end])
-            content = content.replace('true', 'True').replace('false', 'False').replace('null', 'None')
-            f.write(content)
+    apps_list = appConfig.get("APPS")
+    apps_list_basedir = os.path.join(appConfig['PROJECT']['path'], "apps")
+    if apps_list and apps_list_basedir:
+        for x in apps_list:
+            CONFIG = {'PROJECT': {}, 'CONFIGJS': {}}
+
+            CONFIG['PROJECT'] = appConfig['PROJECT']
+            CONFIG['CONFIGJS']['api_server_address'] = appConfig['API']['remote_address']
+            CONFIG['CONFIGJS']['api_websocket_address'] = appConfig['API']['websocket_address']
+            CONFIG['CONFIGJS']['timeout_to_resign'] = apps_list[x]['timeout_to_resign']
+            ini = "\n".join([
+                "# Created automatically.",
+                "#",
+                "# In development it may be necessary to add static data",
+                "# to the client side application after compiling, use",
+                "# the CONFIGJS section of the application's config.json",
+                "# file for this.",
+                "#",
+                "\n\nfrom org.transcrypt.stubs.browser import __pragma__\n\n",
+                "__pragma__('jsiter')",
+                "\n"
+            ])
+            end = "\n__pragma__('nojsiter')\n"
+
+            with open(os.path.join(apps_list_basedir, x, "scripts", "config.py"), 'w', encoding="utf-8") as f:
+                content = "".join([ini, "CONFIG = {0}".format(json.dumps(CONFIG, ensure_ascii=True, indent=2)), end])
+                content = content.replace('true', 'True').replace('false', 'False').replace('null', 'None')
+                f.write(content)
 
 
 def splits_seconds(seconds, d={}):
@@ -411,98 +409,118 @@ def humanize_seconds(seconds, translator_instance=None):
 
 def delete_compiled_app_folder(project_path):
     appConfig = config(project_path)
-    target = appConfig['APP']['compiled_app_folder']
-    if os.path.exists(target) and os.path.isdir(target):
-        shutil.rmtree(target)
+    if appConfig.get('APPS'):
+        for x in appConfig.get('APPS'):
+            target = appConfig.get('APPS')[x]['compiled_folder']
+            if target:
+                if os.path.exists(target) and os.path.isdir(target):
+                    shutil.rmtree(target)
 
 
 def copy_statics(project_path):
+    print("copying statics...")
     appConfig = config(project_path)
-    target = os.path.join(appConfig['APP']['compiled_app_folder'], "static")
-    source = os.path.join(appConfig['PATH']['app'], "statics")
     version = appConfig['PROJECT']['version']
-    if os.path.exists(target) and os.path.isdir(target):
-        shutil.rmtree(target)
-    shutil.copytree(
-        source,
-        os.path.join(target, version)
-    )
+    apps_list = appConfig.get("APPS")
+    apps_list_basedir = os.path.join(appConfig['PROJECT']['path'], "apps")
+    if apps_list and apps_list_basedir:
+        for x in apps_list:
+            compiled_folder_static = os.path.join(apps_list[x]["compiled_folder"], "static")
+            if os.path.exists(compiled_folder_static) and os.path.isdir(compiled_folder_static):
+                shutil.rmtree(compiled_folder_static)
+            if os.path.exists(os.path.join(apps_list_basedir, x, "statics")):
+                shutil.copytree(
+                    os.path.join(apps_list_basedir, x, "statics"),
+                    os.path.join(compiled_folder_static, version)
+                )
+                print("copied on", os.path.join(compiled_folder_static, version))
 
 
 def copy_languages(project_path):
+    print("copying languages...")
     appConfig = config(project_path)
     version = appConfig['PROJECT']['version']
-    source = os.path.join(appConfig['PATH']['app'], "languages")
-    target = os.path.join(appConfig['APP']['compiled_app_folder'], "static", version, "languages")
     debug = appConfig['PROJECT']['debug']
-    if not os.path.exists(target):
-        os.makedirs(
-            os.path.join(target), exist_ok=True
-        )
-    langs = glob(os.path.join(source, "*.json"))
-    for x in langs:
-        with open(x, "r", encoding='utf-8') as f:
-            c = json.load(f)
-            lang_file = os.path.join(target, os.path.basename(x))
-            with open(lang_file, "w", encoding='utf-8') as o:
-                if debug:
-                    json.dump(c, o, ensure_ascii=False, indent=2)
-                else:
-                    json.dump(c, o, ensure_ascii=False)
+    apps_list = appConfig.get("APPS")
+    apps_list_basedir = os.path.join(appConfig['PROJECT']['path'], "apps")
+    if apps_list and apps_list_basedir:
+        for x in apps_list:
+            source_apps = os.path.join(
+                apps_list_basedir,
+                "languages"
+            )
+            folder_lang_apps_list = os.path.join(
+                apps_list[x]['compiled_folder'],
+                "static",
+                version,
+                "languages"
+            )
+            os.makedirs(
+                os.path.join(
+                    folder_lang_apps_list), exist_ok=True)
+            if not os.path.exists(folder_lang_apps_list):
+                os.makedirs(
+                    os.path.join(folder_lang_apps_list), exist_ok=True
+                )
+            langs = glob(os.path.join(source_apps, "*.json"))
+            for y in langs:
+                with open(y, "r", encoding='utf-8') as f:
+                    c = json.load(f)
+                    lang_file = os.path.join(folder_lang_apps_list, os.path.basename(y))
+                    with open(lang_file, "w", encoding='utf-8') as o:
+                        if debug:
+                            json.dump(c, o, ensure_ascii=False, indent=2)
+                        else:
+                            json.dump(c, o, ensure_ascii=False)
+
+
+def compile_style(main_file, target_css, app_version, debug=False):
+    sass_files_subfolders = glob(os.path.join(os.path.dirname(main_file), "**", "*.sass"))
+    with open(main_file, 'r', encoding="utf-8") as f:
+        txt = f.read()
+        for x in sass_files_subfolders:
+            with open(x, 'r', encoding="utf-8") as s:
+                c = ""
+                temp_c = s.readlines()
+                for t in temp_c:
+                    if t[0:12] == "$app-version":
+                        t = "$app-version: {0}\n".format(app_version)
+                    c = "".join([c, t])
+                txt = "\n".join([txt, c])
+        print("compiling Sass to Css: {0}".format(target_css))
+        if debug:
+            new_css = sass.compile(string=txt, indented=True, output_style="expanded")
+        else:
+            new_css = sass.compile(string=txt, indented=True, output_style="compressed")
+        with open(target_css, "w") as o:
+            o.write(new_css)
 
 
 def compile_styles(project_path):
     appConfig = config(project_path)
     version = appConfig['PROJECT']['version']
-    source = os.path.join(appConfig['PATH']['app'], "styles")
-    target = os.path.join(appConfig['APP']['compiled_app_folder'], "static", version, "css")
-    list_sass = glob(os.path.join(source, "*"))
     debug = appConfig['PROJECT']['debug']
-    exclude = ["__pycache__", "__init__.py"]
-    for s in list_sass:
-        os.makedirs(
-            os.path.join(
-                target), exist_ok=True)
-        if os.path.isfile(s) and s[-5:] == ".sass":
-            print("compiling Sass to Css: {0}".format(s))
-            with open(s, "r") as f:
-                filename = os.path.basename(s)[0:-5]
-                c = ""
-                temp_c = f.readlines()
-                for t in temp_c:
-                    if t[0:12] == "$app-version":
-                        t = "$app-version: {0}\n".format(version)
-                    c = "".join([c, t])
-                if debug:
-                    new_css = "".join([sass.compile(string=c, indented=True, output_style="expanded"), "\n"])
-                else:
-                    new_css = sass.compile(string=c, indented=True, output_style="compressed")
-                with open(
-                    os.path.join(
-                        target, "{0}.css".format(filename)), "w") as o:
-                    o.write(new_css)
-        elif os.path.isdir(s) and s not in exclude:
-            n_list_sass = glob(os.path.join(s, "*.sass"))
-            filename = os.path.split(s)[-1]
-            pre_c = ""
-            for n in n_list_sass:
-                with open(n, "r") as f:
-                    c = ""
-                    temp_c = f.readlines()
-                    for t in temp_c:
-                        if t[0:12] == "$app-version":
-                            t = "$app-version: {0}\n".format(version)
-                        c = "".join([c, t])
-                    pre_c = "".join([pre_c, c, "\n"])
-            print("compiling Sass to Css: %s" % os.path.join(s, "{0}.css".format(filename)))
-            if debug:
-                new_css = sass.compile(string=pre_c, indented=True, output_style="expanded")
-            else:
-                new_css = sass.compile(string=pre_c, indented=True, output_style="compressed")
-            with open(
+    apps_list = appConfig.get("APPS")
+    apps_list_basedir = os.path.join(appConfig['PROJECT']['path'], "apps")
+    if apps_list and apps_list_basedir:
+        for x in apps_list:
+            folder_css_apps_list = os.path.join(
+                apps_list[x]['compiled_folder'],
+                "static",
+                version,
+                "css"
+            )
+            os.makedirs(
                 os.path.join(
-                    target, "{0}.css".format(filename)), "w") as o:
-                o.write(new_css)
+                    folder_css_apps_list), exist_ok=True)
+            target_css_apps_list = os.path.join(
+                folder_css_apps_list,
+                "{0}.css".format(apps_list[x]['styles_main_file'])
+            )
+            styles_main_file = os.path.join(
+                apps_list_basedir, x, "styles", "{0}.sass".format(apps_list[x]['styles_main_file'])
+            )
+            compile_style(styles_main_file, target_css_apps_list, version, debug)
 
 
 def compile_views(project_path):
@@ -510,10 +528,10 @@ def compile_views(project_path):
     sys.path.append(project_path)
     os.chdir(project_path)
     debug = appConfig['PROJECT']['debug']
-    target = appConfig['APP']['compiled_app_folder']
-    source = os.path.join(appConfig['PATH']['app'], "views")
+    apps_list = appConfig.get("APPS")
+    apps_list_basedir = os.path.join(appConfig['PROJECT']['path'], "apps")
 
-    def _compile_html(file, base="", ignore=["__init__.py"]):
+    def _compile_html(file, base="", target=None, is_apps=False, ignore=["__init__.py"]):
         if os.path.isfile(file) and os.path.basename(file) not in ignore and file[-3:] == ".py":
             print("compiling Python to html: %s" % file)
             i_mod = "%s" % (os.path.basename(file)[0:-3])
@@ -522,7 +540,10 @@ def compile_views(project_path):
             i = importlib.import_module(i_mod)
             importlib.reload(i)
             name = "".join([*i_mod.split(".")[-1], ".html"])
-            files_www = os.path.join(target, *i_mod.split(".")[2:-1])
+            f_parts = i_mod.split(".")[2:-1]
+            files_www = os.path.join(target, *f_parts)
+            if is_apps:
+                files_www = os.path.join(target, *f_parts[1:])
             if not os.path.exists(os.path.join(files_www)):
                 try:
                     os.makedirs(os.path.join(files_www), exist_ok=True)
@@ -539,62 +560,72 @@ def compile_views(project_path):
                 else:
                     f.write(i.html.xml())
 
-    def _compile_htmls(source, base=""):
+    def _compile_htmls(source, base="", target=None, is_apps=False):
         # htmls to www
         list_all = glob(os.path.join(source, "*"))
         for x in list_all:
             if os.path.isdir(x) and not os.path.basename(x) == "__pycache__":
                 if base:
                     new_base = "%s.%s" % (base, os.path.basename(x))
-                    _compile_htmls(x, new_base)
+                    _compile_htmls(x, new_base, target=target, is_apps=is_apps)
             elif os.path.isfile(x):
-                _compile_html(x, base=base)
+                _compile_html(x, base=base, target=target, is_apps=is_apps)
 
-    _compile_htmls(source, "app.views")
+    if apps_list and apps_list_basedir:
+        for x in apps_list:
+            target_apps = apps_list[x]['compiled_folder']
+            _compile_htmls(
+                os.path.join(apps_list_basedir, x, "views"),
+                "apps.{0}.views".format(x),
+                target=target_apps,
+                is_apps=True
+            )
 
 
 def compile_scripts(project_path, ignore=["__init__.py"]):
     appConfig = config(project_path)
-    main_files = appConfig['TRANSCRYPT']['main_files']
-    targets = []
-    if isinstance(main_files, list):
-        t = set()
-        for x in set(main_files):
-            t.add(os.path.normpath(x))
-        targets = list(t)
-    else:
-        targets.append(os.path.normpath(main_files))
-
     version = appConfig['PROJECT']['version']
     python_env = appConfig['ENVIRONMENT']['python']
     debug = appConfig['PROJECT']['debug']
-    for ta in targets:
-        source = os.path.join(os.path.dirname(ta), "__target__")
-        path_name = os.path.basename(os.path.dirname(ta))
-        target = os.path.join(
-            appConfig['APP']['compiled_app_folder'], "static", version, "js", "transcrypt", path_name
-        )
-        print("compiling Python to Javascript: %s" % ta)
-        if not os.path.exists(target):
-            os.makedirs(target, exist_ok=True)
-        if debug:
-            subprocess.run("%s -m transcrypt %s -n -m" % (python_env, ta), shell=True)
-        else:
-            subprocess.run("%s -m transcrypt %s -m" % (python_env, ta), shell=True)
-        list_all = glob(os.path.join(source, "*"))
-        for x in list_all:
-            if os.path.isfile(x):
-                script_file = os.path.join(
-                    target, os.path.basename(x)
-                )
-                shutil.copy(
-                    x,
-                    script_file
-                )
+
+    apps_list = appConfig.get("APPS")
+    apps_list_basedir = os.path.join(appConfig['PROJECT']['path'], "apps")
+    if apps_list and apps_list_basedir:
+        for x in apps_list:
+            folder_script_apps_list = os.path.join(
+                apps_list[x]['compiled_folder'],
+                "static",
+                version,
+                "js",
+                "transcrypt"
+            )
+            os.makedirs(
+                os.path.join(
+                    folder_script_apps_list), exist_ok=True)
+            source = os.path.join(apps_list_basedir, x, "scripts", "__target__")
+            tar_apps = os.path.join(
+                apps_list_basedir, x, "scripts", "{0}.py".format(apps_list[x]['scrypts_main_file']))
+            print("compiling Python to Javascript: %s" % tar_apps)
+            if debug:
+                subprocess.run("%s -m transcrypt %s -n -m" % (python_env, tar_apps), shell=True)
+            else:
+                subprocess.run("%s -m transcrypt %s -m" % (python_env, tar_apps), shell=True)
+            list_all = glob(os.path.join(source, "*"))
+
+            for y in list_all:
+                if os.path.isfile(y):
+                    script_file = os.path.join(
+                        folder_script_apps_list, os.path.basename(y)
+                    )
+                    shutil.copy(
+                        y,
+                        script_file
+                    )
+
     print("Finish compiling scripts")
 
 
-def generate_script_importing_transcrypt_module(project_path: dict) -> list:
+def generate_script_importing_transcrypt_module(project_path, script_main_file) -> list:
     appConfig = config(project_path)
     base = os.path.join(appConfig['PATH']['app'], "scripts")
     main_files = appConfig['TRANSCRYPT']['main_files']
@@ -609,17 +640,25 @@ def generate_script_importing_transcrypt_module(project_path: dict) -> list:
         targets.append(os.path.normpath(main_files))
     res = []
     for x in targets:
-        p = PurePath(x)
+        p = PurePath(script_main_file)
         p = p.relative_to(base)
         p.parts
         rel = "/".join(p.parts)
         rel = rel.replace("\\", "/")
         cod = interpolate(
-            "<script type=\"module\">import * as application from '/static/{{VERSION}}/js/transcrypt/{{FILE}}'</script>",
-            context={'VERSION': version, 'FILE': "{0}.js".format(rel[:-3])}
+            "<script type=\"module\">import * as {{MODULE}} from '/static/{{VERSION}}/js/transcrypt/{{FILE}}'</script>",
+            context={'MODULE': os.path.basename(rel)[:-3], 'VERSION': version, 'FILE': "{0}.js".format(rel[:-3])}
         )
         res.append(cod)
     return res
+
+
+def app_folder_name_from_apps(project_path, file_or_folder_in_apps_path):
+    appConfig = config(project_path)
+    apps_list_basedir = os.path.join(appConfig['PROJECT']['path'], "apps")
+    p = PurePath(file_or_folder_in_apps_path)
+    r = p.relative_to(os.path.join(apps_list_basedir))
+    return r.parts[0]
 
 
 def package_project_app(project_path, target, reset_config=True):

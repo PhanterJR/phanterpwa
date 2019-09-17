@@ -24,8 +24,17 @@ class PhanterPWATornado(object):
         super(PhanterPWATornado, self).__init__()
         self.projectPath = projectPath
         self.projectConfig = config(os.path.join(self.projectPath, "config.json"))
-        self.api_port = self.projectConfig['API_SERVER']["port"]
-        self.app_port = self.projectConfig['APP_SERVER']["port"]
+        self.api_port = self.projectConfig['API']["port"]
+        self.apps_ports = []
+        if self.projectConfig.get("APPS") and \
+            os.path.exists(os.path.join(self.projectConfig['PROJECT']['path'], "apps")):
+            for x in self.projectConfig['APPS']:
+                current_port = self.projectConfig['APPS'][x]['port']
+                if current_port not in self.apps_ports and current_port != self.api_port:
+                    self.apps_ports.append(current_port)
+                else:
+                    raise ValueError("The '{0}' app port ({1}) is not valid".format(x, current_port))
+
         self.debug = self.projectConfig["PROJECT"]["debug"]
         self.version = self.projectConfig["PROJECT"]["version"]
         self.oncli = False
@@ -53,59 +62,34 @@ class PhanterPWATornado(object):
                 print(f.read())
         sys.path.append(self.projectPath)
         os.chdir(self.projectPath)
-        handlers_app = importlib.import_module("app.handlers")
         handlers_api = importlib.import_module("api.handlers")
-        if all([isinstance(handlers_api.HANDLER, (list, tuple)),
-            isinstance(handlers_app.HANDLER, (list, tuple)),
-            self.api_port == self.app_port]):
-
-            print("".join(["The APP and API are running on the same port, so the urls",
-                " will start (will be added) by '/app' and '/api' respectively."]))
-            new_handler = []
-            for a in handlers_app.HANDLER:
-                t = list(a)
-                n = "".join([r"/app", t[0]])
-                t[0] = n
-                new_handler.append(tuple(t))
-            for a in handlers_api.HANDLER:
-                t = list(a)
-                n = "".join([r"/api", t[0]])
-                t[0] = n
-                new_handler.append(tuple(t))
-
-            new_setting = {}
-            for s in handlers_app.SETTINGS:
-                new_setting[s] = handlers_app.SETTINGS[s]
-            for s in handlers_api.SETTINGS:
-                new_setting[s] = handlers_api.SETTINGS[s]
-            app = web.Application(
-                new_handler,
-                **new_setting
+        if isinstance(handlers_api.HANDLER, (list, tuple)):
+            api = web.Application(
+                handlers_api.HANDLER,
+                **handlers_api.SETTINGS
             )
+            api_http_server = httpserver.HTTPServer(api)
+            api_http_server.listen(int(self.api_port))
         else:
-            if isinstance(handlers_app.HANDLER, (list, tuple)):
-                app = web.Application(
-                    handlers_app.HANDLER,
-                    **handlers_app.SETTINGS
-                )
-                app_http_server = httpserver.HTTPServer(app)
-                app_http_server.listen(int(self.app_port))
-            else:
-                app = handlers_app.HANDLER
-                app_http_server = httpserver.HTTPServer(app)
-                app_http_server.listen(int(self.app_port))
+            api = handlers_api.HANDLER
+            api_http_server = httpserver.HTTPServer(api)
+            api_http_server.listen(int(self.api_port))
 
-            if isinstance(handlers_api.HANDLER, (list, tuple)):
-                api = web.Application(
-                    handlers_api.HANDLER,
-                    **handlers_api.SETTINGS
-                )
-                api_http_server = httpserver.HTTPServer(api)
-                api_http_server.listen(int(self.api_port))
-            else:
-                api = handlers_api.HANDLER
-                api_http_server = httpserver.HTTPServer(api)
-                api_http_server.listen(int(self.api_port))
+        if self.apps_ports:
+            for x in self.projectConfig['APPS']:
+                current_port = self.projectConfig['APPS'][x]['port']
+                handlers_app = importlib.import_module("apps.{0}.handlers".format(x))
+                if isinstance(handlers_app.HANDLER, (list, tuple)):
+                    app = web.Application(
+                        handlers_app.HANDLER,
+                        **handlers_app.SETTINGS
+                    )
+                    app_http_server = httpserver.HTTPServer(app)
+                    app_http_server.listen(int(current_port))
+                else:
+                    app = handlers_app.HANDLER
+                    app_http_server = httpserver.HTTPServer(app)
+                    app_http_server.listen(int(current_port))
         ioloop.IOLoop.current().start()
         print("start stopped")
         ioloop.IOLoop.current().add_callback(lambda: ioloop.IOLoop.current().close(True))
