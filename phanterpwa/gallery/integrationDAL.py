@@ -32,7 +32,7 @@ class PhanterpwaGalleryUserImage():
         self.db = db
         self.id_user = id_user
         self.upload_folder = os.path.normpath(
-            os.path.join(projectConfig["PATH"]["api"], "uploads")
+            os.path.join(projectConfig["PROJECT"]["path"], "api", "uploads")
         )
         self.projectConfig = projectConfig
 

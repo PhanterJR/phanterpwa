@@ -405,7 +405,8 @@ class MaterializeButtonForm(XmlConstructor):
         else:
             self.button_attributes["_class"] = "btn phanterpwa-materialize-button-form link"
         if "_title" not in self.button_attributes:
-            self.button_attributes["_title"] = self.label
+            if isinstance(self.label, str):
+                self.button_attributes["_title"] = self.label
 
         XmlConstructor.__init__(self, 'div', False, _class=initial_class)
         self._update_content()

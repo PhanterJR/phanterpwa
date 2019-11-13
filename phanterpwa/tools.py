@@ -13,7 +13,10 @@ from glob import glob
 from pathlib import PurePath
 from phanterpwa.samples.project_config_sample import project_config_sample
 from pydal import Field
+from pydal.objects import Set
+from pydal.DAL import Table
 from urllib.parse import quote
+from unicodedata import normalize
 
 
 def file_name(name, encoding="utf-8"):
@@ -237,6 +240,9 @@ def url_pattern_relative_paths(path_base, file_search="*.html"):
 
 def create_transcrypt_config(project_path, keys=["PROJECT", "CONFIGJS"]):
     appConfig = config(project_path)
+    appConfig['PROJECT']['compilation'] += 1
+    with open(os.path.join(project_path, "config.json"), "w", encoding="utf-8") as f:
+        json.dump(appConfig, f, ensure_ascii=True, indent=2)
     apps_list = appConfig.get("APPS")
     apps_list_basedir = os.path.join(appConfig['PROJECT']['path'], "apps")
     if apps_list and apps_list_basedir:
@@ -838,7 +844,7 @@ class DictArgsToDALFields(object):
 
     def validate_and_insert(self, dbtable, commit=True):
         self.validate()
-        if not self.errors:
+        if not self.errors and isinstance(dbtable, Table):
             rep = dbtable.validate_and_insert(**self.verified)
             dbtable._db._adapter.reconnect()
             if rep.errors:
@@ -846,17 +852,30 @@ class DictArgsToDALFields(object):
             elif rep.id and commit:
                 dbtable._db.commit()
             return rep
+        else:
+            if not self.errors:
+                raise "The dbtable must be pydal.DAL.Table instance. given: {0}.".format(type(dbtable))
 
-    def validate_and_update(self, dbtable, commit=True):
+    def validate_and_update(self, dbset, commit=True):
         self.validate()
-        if not self.errors:
-            rep = dbtable.validate_and_insert(**self.verified)
-            dbtable._db._adapter.reconnect()
+        if not self.errors and isinstance(dbset, Set):
+            rep = dbset.validate_and_update(**self.verified)
+            dbset._db._adapter.reconnect()
             if rep.errors:
-                dbtable._db.rollback
+                dbset._db.rollback
             elif rep.id and commit:
-                dbtable._db.commit()
+                dbset._db.commit()
             return rep
+        else:
+            if not self.errors:
+                raise "The dbtable must be pydal.Objects.Set instance. given: {0}.".format(type(dbset))
+
+
+def text_normalize(text, upper=True):
+    if upper:
+        return normalize('NFKD', text).upper()
+    else:
+        return normalize('NFKD', text).encode('ascii', 'ignore').decode('ascii')
 
 
 if __name__ == '__main__':
