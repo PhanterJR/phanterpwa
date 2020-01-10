@@ -31,10 +31,13 @@ setuptools.setup(
         'phanterpwa/components',
         'phanterpwa/config',
         'phanterpwa/decorators',
+        'phanterpwa/gallery',
         'phanterpwa/i18n',
         'phanterpwa/interface',
         'phanterpwa/samples',
         'phanterpwa/scaffolds',
+        'phanterpwa/transcrypt',
+        'phanterpwa/transcrypt/components'
     ],
     entry_points={
         "console_scripts": [
@@ -44,7 +47,7 @@ setuptools.setup(
     install_requires=[
         'psutil', 'tornado', 'libsass', 'transcrypt',
         'pillow', 'itsdangerous',
-        'pydal>=19.04'
+        'pydal>=19.04', 'passlib'
     ],
     dependency_links=[
         'git+https://github.com/web2py/pydal.git',
