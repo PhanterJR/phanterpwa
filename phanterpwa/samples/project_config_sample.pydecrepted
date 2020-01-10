@@ -8,15 +8,13 @@ project_config_sample = {
         "name": "PhanterPWA",
         "title": "PhanterPWA",
         "version": "0.0.1",
-        "compilation": 0,
         "author": "PhanterJR<phanterjr@conexaodidata.com.br>",
         "debug": True,
-        "packaged": True,
-        "path": ""
+        "packaged": True
     },
     "API": {
-        "secret_key": "secret_key",
-        "url_secret_key": "secret_key2",
+        "secret_key": "your_default_key",
+        "url_secret_key": "your_default_key2",
         "default_time_user_token_expire": 7200,
         "default_time_user_token_expire_remember_me": 2592000,
         "default_time_csrf_token_expire": 4200,
@@ -27,15 +25,17 @@ project_config_sample = {
         "wait_time_to_try_activate_again": 3900,
         "timeout_to_resend_activation_email": 300,
         "timeout_to_resign": 600,
-        "timeout_to_next_login_attempt": 4200,
         "max_login_attempts": 5,
-        "max_activation_attempts": 5,
-        "remote_address": "http://127.0.0.1:8881",
-        "websocket_address": "ws://127.0.0.1:8881/websocket",
-        "host": "0.0.0.0",
-        "port": 8881
+        "max_activation_attempts": 5
     },
-    "APPS": {
+    "APP": {
+        "compiled_app_folder": "{{PROJECT_FOLDER}}\\app\\www",
+        "address_in_development": "http://127.0.0.1:8882"
+    },
+    "PATH": {
+        "project": "{{PROJECT_FOLDER}}",
+        "api": "{{PROJECT_FOLDER}}\\api",
+        "app": "{{PROJECT_FOLDER}}\\app"
     },
     "EMAIL": {
         "server": "mail.yourservermail.com",
@@ -45,6 +45,25 @@ project_config_sample = {
         "port": 465,
         "use_tls": False,
         "use_ssl": True
+    },
+    "TRANSCRYPT": {
+        "main_files": [
+            "{{PROJECT_FOLDER}}\\app\\scripts\\application\\application.py",
+            "{{PROJECT_FOLDER}}\\app\\scripts\\websocket\\websocket.py"
+        ]
+    },
+    "API_SERVER": {
+        "host": "127.0.0.1",
+        "port": 8881
+    },
+    "APP_SERVER": {
+        "host": "127.0.0.1",
+        "port": 8882
+    },
+    "CONFIGJS": {
+        "api_server_address": "http://127.0.0.1:8881",
+        "api_websocket_address": "ws://127.0.0.1:8881/websocket",
+        "timeout_to_resign": 600
     },
     "CONTENT_EMAILS": {
         "copyright": "Conexão Didata © 2011-{{now}}",

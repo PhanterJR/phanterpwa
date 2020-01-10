@@ -1,10 +1,18 @@
 {
   "CONFIG_INDENTIFY": "inteface_config",
-  "applications_folder": "D:\\Github",
-  "MainPWA": "728x593+-1077+33",
+  "MainPWA": "1366x686+-354+138",
   "MainPWA_state": "normal",
-  "AppsPWA": "749x624+-1057+73",
-  "AppsPWA_state": "normal",
-  "language": "Portuguese",
-  "last_application": "D:\\Nova_Pasta\\PhanterPWA"
+  "AppsPWA": "1366x706+258+32",
+  "AppsPWA_state": "zoomed",
+  "language": "English",
+  "last_application": "D:\\Nova_Pasta\\PhanterPWA",
+  "ConfigAPI": "1366x706+-1355+-15",
+  "ConfigAPI_state": "zoomed",
+  "ProjectPWA": "1366x706+-1251+-9",
+  "ProjectPWA_state": "zoomed",
+  "ProjectsPWA": "1366x686+328+81",
+  "ProjectsPWA_state": "zoomed",
+  "ConfigAPP": "792x250+-1114+202",
+  "ConfigAPP_state": "normal",
+  "projects_folder": "D:\\Github"
 }

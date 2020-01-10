@@ -184,18 +184,18 @@ class PhanterpwaGalleryInput(XmlConstructor):
                 'phanterpwa-gallery-imagecuted-control-erase',
             '_data-imagecuted-control-change':
                 'phanterpwa-gallery-imagecuted-control-change',
-            '_data-input-name-cutterSizeX':
-                'phanterpwa-gallery-input-name-cutterSizeX',
-            '_data-input-name-cutterSizeY':
-                'phanterpwa-gallery-input-name-cutterSizeY',
-            '_data-input-name-positionX':
-                'phanterpwa-gallery-input-name-positionX',
-            '_data-input-name-positionY':
-                'phanterpwa-gallery-input-name-positionY',
-            '_data-input-name-newSizeX':
-                'phanterpwa-gallery-input-name-newSizeX',
-            '_data-input-name-newSizeY':
-                'phanterpwa-gallery-input-name-newSizeY',
+            '_data-input-name-cuttersizex':
+                'phanterpwa-gallery-input-name-cuttersizex',
+            '_data-input-name-cuttersizey':
+                'phanterpwa-gallery-input-name-cuttersizey',
+            '_data-input-name-positionx':
+                'phanterpwa-gallery-input-name-positionx',
+            '_data-input-name-positiony':
+                'phanterpwa-gallery-input-name-positiony',
+            '_data-input-name-newsizex':
+                'phanterpwa-gallery-input-name-newsizex',
+            '_data-input-name-newsizey':
+                'phanterpwa-gallery-input-name-newsizey',
         }
         if _id:
             for x in ids_elements:
@@ -312,28 +312,28 @@ class PhanterpwaGalleryInput(XmlConstructor):
                         _name=ids_elements["_data-upload-input"]
                     ),
                     _class="input-field"),
-                INPUT(_id=ids_elements['_data-input-name-cutterSizeX'],
-                    _name=ids_elements['_data-input-name-cutterSizeX'],
+                INPUT(_id=ids_elements['_data-input-name-cuttersizex'],
+                    _name=ids_elements['_data-input-name-cuttersizex'],
                     _value="",
                     _type="text"),
-                INPUT(_id=ids_elements['_data-input-name-cutterSizeY'],
-                    _name=ids_elements['_data-input-name-cutterSizeY'],
+                INPUT(_id=ids_elements['_data-input-name-cuttersizey'],
+                    _name=ids_elements['_data-input-name-cuttersizey'],
                     _value="",
                     _type="text"),
-                INPUT(_id=ids_elements['_data-input-name-positionX'],
-                    _name=ids_elements['_data-input-name-positionX'],
+                INPUT(_id=ids_elements['_data-input-name-positionx'],
+                    _name=ids_elements['_data-input-name-positionx'],
                     _value="",
                     _type="text"),
-                INPUT(_id=ids_elements['_data-input-name-positionY'],
-                    _name=ids_elements['_data-input-name-positionY'],
+                INPUT(_id=ids_elements['_data-input-name-positiony'],
+                    _name=ids_elements['_data-input-name-positiony'],
                     _value="",
                     _type="text"),
-                INPUT(_id=ids_elements['_data-input-name-newSizeX'],
-                    _name=ids_elements['_data-input-name-newSizeX'],
+                INPUT(_id=ids_elements['_data-input-name-newsizex'],
+                    _name=ids_elements['_data-input-name-newsizex'],
                     _value="",
                     _type="text"),
-                INPUT(_id=ids_elements['_data-input-name-newSizeY'],
-                    _name=ids_elements['_data-input-name-newSizeY'],
+                INPUT(_id=ids_elements['_data-input-name-newsizey'],
+                    _name=ids_elements['_data-input-name-newsizey'],
                     _value="",
                     _type="text"),
                 _id=ids_elements["_data-upload-form-container"],
@@ -381,16 +381,16 @@ class PhanterpwaGalleryCutter(object):
     def __init__(self,
                  imageName,
                  imageBytes,
-                 cutterSizeX, cutterSizeY,
-                 positionX, positionY,
-                 newSizeX, newSizeY, force_png=False):
+                 cuttersizex, cuttersizey,
+                 positionx, positiony,
+                 newsizex, newsizey, force_png=False):
         self.imageBytes = imageBytes
-        self.cutterSizeX = cutterSizeX
-        self.cutterSizeY = cutterSizeY
-        self.positionX = positionX
-        self.positionY = positionY
-        self.newSizeX = newSizeX
-        self.newSizeY = newSizeY
+        self.cuttersizex = cuttersizex
+        self.cuttersizey = cuttersizey
+        self.positionx = positionx
+        self.positiony = positiony
+        self.newsizex = newsizex
+        self.newsizey = newsizey
         self.force_png = force_png
         if force_png:
             self.extensao = 'png'
@@ -402,17 +402,17 @@ class PhanterpwaGalleryCutter(object):
         imageBytes = self.imageBytes
         nome_da_imagem = self.nome_da_imagem
         im = PILImage.open(imageBytes)
-        newSizeX = int(float(self.newSizeX))
-        newSizeY = int(float(self.newSizeY))
-        cutterSizeX = int(float(self.cutterSizeX))
-        cutterSizeY = int(float(self.cutterSizeY))
-        positionX = float(self.positionX)
-        positionY = float(self.positionY)
+        newsizex = int(float(self.newsizex))
+        newsizey = int(float(self.newsizey))
+        cuttersizex = int(float(self.cuttersizex))
+        cuttersizey = int(float(self.cuttersizey))
+        positionx = float(self.positionx)
+        positiony = float(self.positiony)
         nome_do_arquivo, extensao = os.path.splitext(nome_da_imagem)
-        im = im.crop((positionX, positionY,
-                      positionX + newSizeX,
-                      positionY + newSizeY))
-        im = im.resize((cutterSizeX, cutterSizeY),
+        im = im.crop((positionx, positiony,
+                      positionx + newsizex,
+                      positiony + newsizey))
+        im = im.resize((cuttersizex, cuttersizey),
                        PILImage.ANTIALIAS)
         jpeg_image_buffer = io.BytesIO()
         if extensao.lower() == '.png' or self.force_png:

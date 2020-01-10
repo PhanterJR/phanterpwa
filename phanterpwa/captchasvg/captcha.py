@@ -235,10 +235,12 @@ class Captcha(object):
         if isinstance(self.translator, Translator):
             for d in self.translator.languages:
                 t = self.translator.translator(question, d)
-                new_dict_t[d] = {
-                    question.format(option=opt): t.format(option=self.translator.translator(opt, d))
-                }
-            question = SPAN(question.format(option=opt), _phanterpwa_i18n=new_dict_t)
+                new_dict_t["_{0}".format(d.lower())] = t.format(option=self.translator.translator(opt, d))
+            new_dict_t["_phanterpwa-i18n"] = question.format(option=opt)
+            question = SPAN(
+                question.format(option=opt),
+                **new_dict_t
+            )
         else:
             question = question.format(option=opt)
         content = []

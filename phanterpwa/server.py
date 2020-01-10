@@ -10,7 +10,8 @@ from phanterpwa.tools import (
 from tornado import (
     web,
     ioloop,
-    httpserver
+    httpserver,
+    autoreload
 )
 
 

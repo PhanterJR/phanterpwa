@@ -9,9 +9,9 @@ from phanterpwa.helpers import (
 from phanterpwa.xmlconstructor import (
     XmlConstructor
 )
-from pydal import Field
-from pydal.objects import Set
-from pydal.DAL import Table
+# from pydal import Field
+from pydal.objects import (Set, Table, Field)
+# from pydal.DAL import Table
 
 
 class SubmitButton(XmlConstructor):
@@ -42,7 +42,7 @@ class SubmitButton(XmlConstructor):
         ]
 
 
-class customWidget():
+class CustomWidget():
     def __init__(self, name, label, _type, default=None, **phanterpwa):
         self.name = name
         self.label = label
@@ -64,36 +64,36 @@ class customWidget():
         return json.dumps(self.as_dict(), indent=indent)
 
 
-class TextWidget(customWidget):
+class TextWidget(CustomWidget):
     def __init__(self, name, label, default=None, **phanterpwa):
         self.name = name
         self.label = label
         self.default = default
         self.type = 'string'
         self.phanterpwa = phanterpwa
-        customWidget.__init__(
+        CustomWidget.__init__(
             self, name, label, "string", default, **phanterpwa)
 
 
-class PasswordWidget(customWidget):
+class PasswordWidget(CustomWidget):
     def __init__(self, name, label, default=None, **phanterpwa):
         self.name = name
         self.label = label
         self.default = default
         self.type = 'password'
         self.phanterpwa = phanterpwa
-        customWidget.__init__(
+        CustomWidget.__init__(
             self, name, label, "password", default, **phanterpwa)
 
 
-class CheckedWidget(customWidget):
+class CheckedWidget(CustomWidget):
     def __init__(self, name, label, default=False, **phanterpwa):
         self.name = name
         self.label = label
         self.default = default
         self.type = 'boolean'
         self.phanterpwa = phanterpwa
-        customWidget.__init__(
+        CustomWidget.__init__(
             self, name, label, "boolean", default, **phanterpwa)
 
     @property
@@ -106,7 +106,7 @@ class CheckedWidget(customWidget):
             self._default = value
 
 
-class WidgetFromFieldDAL():
+class WidgetFromFieldDALFromTableDAL():
     def __init__(self, table, field, record_id=None):
         self.table = table
         self._db = self.table._db
@@ -242,6 +242,180 @@ class WidgetFromFieldDAL():
             json_field["phanterpwa"] = self.table[self._field].phanterpwa
         return json_field
 
+    def as_xml(self):
+        pass
+
+
+class WidgetFromFieldDAL():
+    def __init__(self, field, db=None):
+        self._field = field
+        self._db = db
+
+    def as_dict(self):
+        json_field = dict()
+        t = self._field.type
+        if t.startswith("reference"):
+            if not self.db:
+                raise SyntaxError("The db must be ")
+            ref_table = t.split(" ")[1]
+            ref_fields = []
+            for f in self.db[ref_table].fields:
+                ref_fields.append(f)
+            data_ref_table = []
+            data_ref_table_formated = []
+            q_ref_table = self.db(self.db[ref_table]).select()
+            fmt = None
+            if self.db[ref_table]._format:
+                fmt = self.db[ref_table]._format
+            for q in q_ref_table:
+                f_format = {}
+                row = []
+                for z in ref_fields:
+                    if (self.db[ref_table][z].type == "datetime") or\
+                            (self.db[ref_table][z].type == "date") or\
+                            (self.db[ref_table][z].type == "time"):
+                        row.append(q[z].isoformat())
+                    else:
+                        row.append(q[z])
+                    f_format[z] = q[z]
+                data_ref_table.append(row)
+                if fmt:
+                    if hasattr(fmt, '__call__'):
+                        data_ref_table_formated.append(
+                            [q.id, fmt(q) % f_format])
+                    else:
+                        data_ref_table_formated.append(
+                            [q.id, fmt % f_format])
+                else:
+                    data_ref_table_formated = None
+
+            default = self._field.default
+            json_field = {
+                'label': self._field.label,
+                'default': default,
+                'type': 'reference',
+                'fields': ref_fields,
+                'data': data_ref_table,
+                'formatted': data_ref_table_formated
+            }
+        elif (t == "datetime") or\
+                (t == "date") or\
+                (t == "time"):
+            default = self._field.default
+            if self._record:
+                default = self._record[self._field]
+            if default:
+                default = default.isoformat()
+            json_field = {
+                'label': self._field.label,
+                'default': default,
+                'type': self._field.type
+            }
+            if hasattr(self._field, "phanterpwa"):
+                if "validators" in self._field.phanterpwa and\
+                    "format" not in self._field.phanterpwa:
+                    for v in self._field.phanterpwa['validators']:
+                        if v.startswith("IS_DATE:"):
+                            self._field.phanterpwa[
+                                'format'] = v[8:]
+                        elif v.startswith("IS_DATETIME:"):
+                            self._field.phanterpwa[
+                                'format'] = v[12:]
+
+        else:
+            if self._field == "id":
+                default = None
+                json_field = {
+                    'label': self._field.label,
+                    'default': default,
+                    'type': 'id'
+                }
+            else:
+                default = self._field.default
+                json_field = {
+                    'label': self._field.label,
+                    'default': default,
+                    'type': self._field.type
+                }
+        if hasattr(self._field, "phanterpwa"):
+            json_field["phanterpwa"] = self._field.phanterpwa
+        return json_field
+
+
+class FormFromFieldsDAL():
+    def __init__(self, table_name, *fields):
+        self._table_name = table_name
+        self._fields = fields
+        self._extra_fields = dict()
+        self.json_widgets = dict()
+        self.widgets = dict()
+
+    def _process(self):
+        self.dict = {
+            "table": self._table_name,
+            "id": None,
+            "json_widgets": self.json_widgets
+        }
+        for x in self.fields:
+            json_widget = WidgetFromFieldDAL(x)
+            self.json_widgets[x] = json_widget.as_dict()
+            self.widgets[x] = json_widget.as_xml()
+
+    def as_dict(self):
+        self._process()
+        return self.dict
+
+    def as_json(self, indent=2):
+        return json.dumps(self.as_dict(), indent=indent)
+
+    def as_xml(self, show_id=False, submit_button=None):
+        self.show_id = show_id
+        self._xml = FORM(
+            DIV(
+                DIV(
+                    I(
+                        _class="fas fa-check"
+                    ),
+                    _id="phanterpwa-widget-check-{0}-csrf_token".format(self.table_name),
+                    _class="phanterpwa-widget-check"
+                ),
+                DIV(
+                    INPUT(
+                        _id="phanterpwa-widget-input-{0}-csrf_token".format(self.table_name),
+                        _name="csrf_token",
+                        _phanterpwa_widget_validator=['IS_NOT_EMPTY'],
+                        _phanterpwa_widget_table_name=self.table_name,
+                        _type="hidden"
+                    ),
+                    LABEL(
+                        "CSRF Token",
+                        _for="phanterpwa-widget-input-{0}-csrf_token".format(self.table_name),
+                    ),
+                    _class='input-field'
+                ),
+                DIV(_class="phanterpwa-widget-error"),
+                _id='phanterpwa-widget-{0}-csrf_token'.format(self.table_name),
+                _class='phanterpwa-widget phanterpwa-widget-hidden easy_forced_hidden'
+            ),
+            _id="phanterpwa-jsonform-{0}".format(self.table_name),
+            _class="phanterpwa-jsonform",
+            _phanterpwa_jsonform=self.table_name
+        )
+        if submit_button is not None:
+            self._buttons_container = DIV(
+                submit_button,
+                _class='buttons-form-container'
+            )
+        else:
+            self._buttons_container = DIV(
+                SubmitButton(
+                    "phanterpwa-widget-submit_button-{0}".format(self.table_name),
+                    "Submit",
+                    _phanterpwa_widget_submit_button=True
+                ),
+                _class='buttons-form-container'
+            )
+
 
 class FormFromTableDAL():
     def __init__(self, table, record_id=None, fields=None):
@@ -258,7 +432,7 @@ class FormFromTableDAL():
         self.widgets = dict()
 
     def add_extra_field(self, value):
-        if isinstance(value, customWidget):
+        if isinstance(value, CustomWidget):
             if value.name in self.fields:
                 raise ValueError("The name of extra field must be unique.")
             self._extra_fields[value.name] = value
@@ -319,7 +493,7 @@ class FormFromTableDAL():
             "json_widgets": self.json_widgets
         }
         for x in self.fields:
-            json_widget = WidgetFromFieldDAL(self.table, x, self.record_id)
+            json_widget = WidgetFromFieldDALFromTableDAL(self.table, x, self.record_id)
             self.json_widgets[x] = json_widget.as_dict()
             self.widgets[x] = json_widget.as_xml()
         for e in self._extra_fields:
@@ -382,10 +556,10 @@ class FormFromTableDAL():
             )
 
 
-class UseFieldsDALToCheckDictArgs(object):
+class FieldsDALValidateDictArgs(object):
 
     def __init__(self, dict_args, *fields):
-        super(UseFieldsDALToCheckDictArgs, self).__init__()
+        super(FieldsDALValidateDictArgs, self).__init__()
         self.dict_args = dict_args
         self.fields = fields
         self._errors = {}
@@ -457,7 +631,7 @@ class UseFieldsDALToCheckDictArgs(object):
         if self._errors:
             return self._errors
 
-    def insert(self, dbtable, commit=True):
+    def insert_on(self, dbtable, commit=True):
         self.validate()
         if not self.errors and isinstance(dbtable, Table):
             rep = dbtable.validate_and_insert(**self.verified)
@@ -471,7 +645,7 @@ class UseFieldsDALToCheckDictArgs(object):
             if not self.errors:
                 raise "The dbtable must be pydal.DAL.Table object. given: {0}.".format(type(dbtable))
 
-    def update(self, dbset, commit=True):
+    def update_on(self, dbset, commit=True):
         self.validate()
         if not self.errors and isinstance(dbset, Set):
             rep = dbset.validate_and_update(**self.verified)

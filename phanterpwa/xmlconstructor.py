@@ -3700,7 +3700,7 @@ class XmlConstructor(object):
                         "Invalid caracter (\"{0}\": {1}) in attribute name: \"{2}\"".format(i_caracter[c], c, k)
                     )
         else:
-            raise TypeError("The key of atribute must is String. Given: \"{0}\"".format(str(type(k))))
+            raise TypeError("The key of attribute must is String. Given: \"{0}\"".format(str(type(k))))
         return k
 
     def _check_keys_attr(self, k: str) -> bool:
