@@ -1,5 +1,5 @@
 from org.transcrypt.stubs.browser import __pragma__
-from phanterpwa.transcrypt import helpers
+from phanterpwa.apptools import helpers
 __pragma__('alias', "jQuery", "$")
 __pragma__('skip')
 

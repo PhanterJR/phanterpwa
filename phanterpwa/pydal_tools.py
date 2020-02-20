@@ -395,7 +395,7 @@ class FormFromFieldsDAL():
                 ),
                 DIV(_class="phanterpwa-widget-error"),
                 _id='phanterpwa-widget-{0}-csrf_token'.format(self.table_name),
-                _class='phanterpwa-widget phanterpwa-widget-hidden easy_forced_hidden'
+                _class='phanterpwa-widget phanterpwa-widget-hidden e-display_hidden'
             ),
             _id="phanterpwa-jsonform-{0}".format(self.table_name),
             _class="phanterpwa-jsonform",
@@ -534,7 +534,7 @@ class FormFromTableDAL():
                 ),
                 DIV(_class="phanterpwa-widget-error"),
                 _id='phanterpwa-widget-{0}-csrf_token'.format(self.table_name),
-                _class='phanterpwa-widget phanterpwa-widget-hidden easy_forced_hidden'
+                _class='phanterpwa-widget phanterpwa-widget-hidden e-display_hidden'
             ),
             _id="phanterpwa-jsonform-{0}".format(self.table_name),
             _class="phanterpwa-jsonform",

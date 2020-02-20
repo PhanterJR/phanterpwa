@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-from .tools import interpolate, sass_change_vars, sass_map_vars
-from .xss import xssescape
-from .i18n import Translator
+from phanterpwa.tools import interpolate, sass_change_vars, sass_map_vars
+from phanterpwa.xss import xssescape
+from phanterpwa.i18n import Translator
 from xml.sax import saxutils
 import json
 from copy import copy
@@ -1925,8 +1925,15 @@ class XmlConstructor(object):
             self._sass_vars = sass_map_vars(self._sass)
             self.css(self._minify_css, self._target_css)
             if self._target_sass:
-                with open(self._target_sass, 'w', encoding='utf-8') as f:
-                    f.write(self._sass)
+                if not os.path.exists(self._target_sass):
+                    with open(self._target_sass, 'w', encoding='utf-8') as f:
+                        f.write(self._sass)
+                else:
+                    with open(self._target_sass, 'r', encoding='utf-8') as f:
+                        current_sass = f.read() 
+                    if current_sass != self._sass:
+                        with open(self._target_sass, 'w', encoding='utf-8') as f:
+                            f.write(self._sass)
             return self._sass
         else:
             raise SyntaxError("A sass file must be defined in the sass method to use this property.")

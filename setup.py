@@ -29,15 +29,15 @@ setuptools.setup(
         'phanterpwa/captchasvg/vectors/letter',
         'phanterpwa/captchasvg/vectors/mean_of_transport',
         'phanterpwa/components',
-        'phanterpwa/config',
         'phanterpwa/decorators',
         'phanterpwa/gallery',
         'phanterpwa/i18n',
         'phanterpwa/interface',
         'phanterpwa/samples',
         'phanterpwa/scaffolds',
-        'phanterpwa/transcrypt',
-        'phanterpwa/transcrypt/components'
+        'phanterpwa/apitools',
+        'phanterpwa/apptools',
+        'phanterpwa/apptools/components'
     ],
     entry_points={
         "console_scripts": [

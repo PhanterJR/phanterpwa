@@ -15,8 +15,8 @@ project_config_sample = {
         "path": ""
     },
     "API": {
-        "secret_key": "secret_key",
-        "url_secret_key": "secret_key2",
+        "secret_key": "{{secret_key}}",
+        "url_secret_key": "{{url_secret_key}}",
         "default_time_user_token_expire": 7200,
         "default_time_user_token_expire_remember_me": 2592000,
         "default_time_csrf_token_expire": 4200,
@@ -30,18 +30,30 @@ project_config_sample = {
         "timeout_to_next_login_attempt": 4200,
         "max_login_attempts": 5,
         "max_activation_attempts": 5,
-        "remote_address": "http://127.0.0.1:8881",
-        "websocket_address": "ws://127.0.0.1:8881/websocket",
+        "remote_address_on_development": "http://127.0.0.1:8881",
+        "websocket_address_on_development": "ws://127.0.0.1:8881/websocket",
+        "remote_address_on_production": "https://your_domain.com",
+        "websocket_address_on_production": "wss://your_domain.com/websocket",
         "host": "0.0.0.0",
         "port": 8881
     },
     "APPS": {
+        "app_01": {
+          "title": "PhanterPWAClient",
+          "build_folder": "",
+          "timeout_to_resign": 600,
+          "host": "127.0.0.1",
+          "port": 8882,
+          "transcrypt_main_file": "application",
+          "styles_main_file": "application",
+          "views_main_file": "index"
+        },
     },
     "EMAIL": {
         "server": "mail.yourservermail.com",
         "username": "username@yourservermail.com",
         "default_sender": "contato@conexaodidata.com.br",
-        "password": "password",
+        "password": "{{password}}",
         "port": 465,
         "use_tls": False,
         "use_ssl": True

@@ -24,7 +24,7 @@ class I18NServer():
                 t = JSON.parse(t)
                 result = t
             except Exception:
-                console.log("the phanterpwa_i18n is corrupted")
+                console.error("the phanterpwa_i18n is corrupted")
         return result
 
     def save_storage(self):

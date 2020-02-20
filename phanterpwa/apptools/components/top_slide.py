@@ -1,4 +1,4 @@
-import phanterpwa.transcrypt.helpers as helpers
+import phanterpwa.apptools.helpers as helpers
 from org.transcrypt.stubs.browser import __pragma__
 
 
@@ -45,7 +45,6 @@ class TopSlide(helpers.XmlConstructor):
     def open(self):
         self.start()
         self.target_element.find("#phanterpwa-component-topslide-wrapper").slideDown()
-        console.log("opening", self.target_element.find("#phanterpwa-component-topslide-wrapper"))
         if self._after_open is not None and self._after_open is not js_undefined:
             self._after_open(self.target_element.find("#phanterpwa-component-topslide-wrapper"))
 

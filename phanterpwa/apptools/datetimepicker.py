@@ -1,4 +1,4 @@
-from phanterpwa.transcrypt import helpers
+from phanterpwa.apptools import helpers
 # pragmas
 
 from org.transcrypt.stubs.browser import __pragma__
@@ -168,9 +168,7 @@ class Datepickers():
 
     def _read_formated(self, value):
         filted_format = self.format
-        console.log(filted_format)
         filted_value = self._sanitize_i18ns(self._map_escape_str(value))
-        console.log(filted_value)
         if "dddd" in filted_format:
             p = "|".join([self._sanitize_i18ns(x) for x in self.days])
             r = "{0}".format(p)

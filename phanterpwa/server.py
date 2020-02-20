@@ -1,11 +1,10 @@
 import os
 import sys
 import importlib
+import logging
 from phanterpwa.tools import (
-    config,
     url_pattern_relative_paths,
-    interpolate,
-    compiler
+    interpolate
 )
 from tornado import (
     web,
@@ -13,6 +12,9 @@ from tornado import (
     httpserver,
     autoreload
 )
+from phanterpwa import compiler
+from phanterpwa import configer
+
 
 
 CURRENT_DIR = os.path.join(os.path.dirname(__file__))
@@ -24,7 +26,7 @@ class PhanterPWATornado(object):
     def __init__(self, projectPath):
         super(PhanterPWATornado, self).__init__()
         self.projectPath = projectPath
-        self.projectConfig = config(os.path.join(self.projectPath, "config.json"))
+        self.projectConfig = configer.ProjectConfig(os.path.join(self.projectPath, "config.json"))
         self.api_port = self.projectConfig['API']["port"]
         self.apps_ports = []
         if self.projectConfig.get("APPS") and \
@@ -52,15 +54,16 @@ class PhanterPWATornado(object):
             raise "The oncli must be boolean. Given: {0}".format(type(oncli))
 
     def compile(self):
-        compiler(self.projectPath)
+        c = compiler.Compiler(self.projectPath)
+        c.compile()
 
     def run(self):
         if self.oncli:
             with open(os.path.join(CURRENT_DIR, "samples", "art_cli"), "r") as f:
-                print(f.read())
+                logging.warning(f.read())
         else:
             with open(os.path.join(CURRENT_DIR, "samples", "art"), "r") as f:
-                print(f.read())
+                logging.warning(f.read())
         sys.path.append(self.projectPath)
         os.chdir(self.projectPath)
         handlers_api = importlib.import_module("api.handlers")

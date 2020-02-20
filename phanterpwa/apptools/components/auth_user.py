@@ -1,13 +1,13 @@
 
-import phanterpwa.transcrypt.components.modal as modal
-import phanterpwa.transcrypt.components.top_slide as top_slide
-import phanterpwa.transcrypt.components.left_bar as left_bar
-import phanterpwa.transcrypt.components.gallery as gallery
-import phanterpwa.transcrypt.helpers as helpers
-import phanterpwa.transcrypt.forms as forms
-import phanterpwa.transcrypt.preloaders as preloaders
-import phanterpwa.transcrypt.application as application
-import phanterpwa.transcrypt.handler as handler
+import phanterpwa.apptools.components.modal as modal
+import phanterpwa.apptools.components.top_slide as top_slide
+import phanterpwa.apptools.components.left_bar as left_bar
+import phanterpwa.apptools.components.gallery as gallery
+import phanterpwa.apptools.helpers as helpers
+import phanterpwa.apptools.forms as forms
+import phanterpwa.apptools.preloaders as preloaders
+import phanterpwa.apptools.application as application
+import phanterpwa.apptools.handler as handler
 from org.transcrypt.stubs.browser import __pragma__
 
 __pragma__('alias', "jQuery", "$")
@@ -28,9 +28,9 @@ __pragma__('kwargs')
 
 
 class AuthUser(application.Component):
-    def __init__(self, element, **parameters):
-        application.Component.__init__(self, "AuthUser", self.element)
-        self.element_target = jQuery(element)
+    def __init__(self, target_selector, **parameters):
+        self.target_selector = target_selector
+        self.element_target = jQuery(self.target_selector)
         self.callback = None
         self.Modal = None
         self.AlertActivationAccount = AlertActivationAccount("#layout-top_slide-container")
@@ -38,34 +38,40 @@ class AuthUser(application.Component):
         self.authorization = None
         if "callback" in parameters:
             self.callback = parameters["callback"]
-        self.xml_button_wrapper = DIV(
+        html = DIV(
             DIV(
-                _class="link component-toggle-auth_user-button"
+                _class="link phanterpwa-component-auth_user-button-toggle"
             ),
             DIV(
-                _class="component-toggle-auth_user-options"),
+                _class="phanterpwa-component-auth_user-button-toggle-options"),
             _id="phanterpwa-component-auth_user-container",
             _class="phanterpwa-component-auth_user-container"
-        ).jquery()
-
-        window.PhanterPWA.xml_to_dom_element(
-            self.xml_button_wrapper,
-            self.element_target
         )
 
+        application.Component.__init__(self, "auth_user", html)
+        self.html_to(target_selector)
+
     def switch_menu(self):
+        self.element_target = jQuery(self.target_selector)
         if self.element_target.find(".phanterpwa-component-auth_user-container").hasClass("enabled"):
             self.close_menu()
         else:
             self.open_menu()
 
     def bind_menu_button(self):
-        self.element_target.find(".component-toggle-auth_user-button").off(
+        self.element_target = jQuery(self.target_selector)
+        self.element_target.find(".phanterpwa-component-auth_user-button-toggle").off(
             "click.components-auth_user-button"
         ).on(
             "click.components-auth_user-button",
-            self.switch_menu
+            lambda: self.switch_menu()
         )
+
+    def reload(self, **context):
+        if "ajax" in context:
+            if context["ajax"][1][0] == "client" or context["ajax"][1][0] == "auth":
+                self.element_target = jQuery(self.target_selector)
+                self.start()
 
     @staticmethod
     def _open_menu():
@@ -85,8 +91,10 @@ class AuthUser(application.Component):
         LeftBarAuthUserNoLogin._close_menu()
 
     def _close_on_click_out(self, event):
+        self.element_target = jQuery(self.target_selector)
         if jQuery(event.target).closest(self.element_target).length == 0:
-            if jQuery(event.target).closest(jQuery(".phanterpwa-component-left_bar-menu_button-wrapper-auth_user")).length == 0:
+            if jQuery(event.target).closest(
+                    jQuery(".phanterpwa-component-left_bar-menu_button-wrapper-auth_user")).length == 0:
                 self.close_menu()
 
     def modal_login(self):
@@ -95,8 +103,8 @@ class AuthUser(application.Component):
             "#modal-container"
         )
         self.Modal.open()
-        forms.SignForm("login", has_captcha=True)
-        forms.ValidateForm("login")
+        forms.SignForm("#form-login", has_captcha=True)
+        forms.ValidateForm("#form-login")
 
     def modal_register(self):
         self.close_menu()
@@ -104,8 +112,8 @@ class AuthUser(application.Component):
             "#modal-container"
         )
         self.Modal.open()
-        forms.SignForm("register", has_captcha=True)
-        forms.ValidateForm("register")
+        forms.SignForm("#form-register", has_captcha=True)
+        forms.ValidateForm("#form-register")
 
     def modal_request_password(self):
         self.close_menu()
@@ -113,8 +121,8 @@ class AuthUser(application.Component):
             "#modal-container"
         )
         self.Modal.open()
-        forms.SignForm("request_password", has_captcha=True)
-        forms.ValidateForm("request_password")
+        forms.SignForm("#form-request_password", has_captcha=True)
+        forms.ValidateForm("#form-request_password")
 
     def modal_change_password(self, temporary_password=None):
         self.close_menu()
@@ -123,21 +131,22 @@ class AuthUser(application.Component):
             temporary_password=temporary_password
         )
         self.Modal.open()
-        forms.SignForm("change_password")
-        forms.ValidateForm("change_password")
+        forms.SignForm("#form-change_password")
+        forms.ValidateForm("#form-change_password")
 
     def logout(self):
         sessionStorage.removeItem("phanterpwa-authorization")
         sessionStorage.removeItem("auth_user")
         localStorage.removeItem("phanterpwa-authorization")
         localStorage.removeItem("auth_user")
-        window.PhanterPWA.open_default_route()
-        LeftBar = window.PhanterPWA.Components["LeftBar"]
+        window.PhanterPWA.open_default_way()
+        LeftBar = window.PhanterPWA.Components['left_bar']
         if LeftBar is not None and LeftBar is not js_undefined:
             LeftBar.reload()
-        window.PhanterPWA.Components["AuthUser"].start()
+        window.PhanterPWA.Components["auth_user"].start()
 
     def start(self):
+        self.element_target = jQuery(self.target_selector)
         jQuery(
             document
         ).off(
@@ -190,109 +199,110 @@ class AuthUser(application.Component):
                         _class="cmd-bar_user-expand-container"),
                     _class="cmp-bar_user-info-container"),
                 _id="toggle-cmp-bar_user",
-                _class="cmp-bar_user-container black link waves-effect waves-phanterpwa"
-            ).jquery()
+                _class="cmp-bar_user-container black link wave_on_click waves-phanterpwa"
+            )
 
             self.xml_button_login_options = CONCATENATE(
                 DIV(
                     DIV(
-                        I("face", _class="material-icons"),
+                        I(_class="fas fa-user-circle"),
                         I18N("Profile", **{"_pt-br": "Perfil"}),
-                        _phanterpwa_route="profile",
-                        _class="option-label-menu"
+                        **{"_phanterpwa-way": "profile",
+                            "_class": "option-label-menu"}
                     ),
                     _id="component-auth_user-option-profile",
-                    _class='component-auth_user-option link waves-effect waves-phanterpwa'
+                    _class='component-auth_user-option link wave_on_click waves-phanterpwa'
                 ),
                 DIV(
                     DIV(
-                        I("https", _class="material-icons"),
+                        I(_class="fas fa-unlock"),
                         I18N("Lock", **{"_pt-br": "Bloquear"}),
-                        _phanterpwa_route="lock",
-                        _class="option-label-menu"
+                        **{"_phanterpwa-way": "lock",
+                            "_class": "option-label-menu"}
                     ),
                     _id="component-auth_user-option-lock",
-                    _class='component-auth_user-option link waves-effect waves-phanterpwa'
+                    _class='component-auth_user-option link wave_on_click waves-phanterpwa'
                 ),
                 DIV(
                     DIV(
-                        I("power_settings_new", _class="material-icons"),
+                        I(_class="fas fa-power-off"),
                         I18N("Logout", **{"_pt-br": "Sair"}),
                         _class="option-label-menu"
                     ),
                     _id="component-auth_user-option-logout",
-                    _class='component-auth_user-option link waves-effect waves-phanterpwa'
+                    _class='component-auth_user-option link wave_on_click waves-phanterpwa'
                 )
-            ).jquery()
+            )
 
-            self.element_target.find(
-                ".component-toggle-auth_user-button"
-            ).html(
-                self.xml_button_login
-            )
-            self.element_target.find(
-                ".component-toggle-auth_user-options"
-            ).html(
-                self.xml_button_login_options
-            )
+            self.xml_button_login.html_to(self.element_target.find(
+                ".phanterpwa-component-auth_user-button-toggle"
+            ))
+
+            self.xml_button_login_options.html_to(self.element_target.find(
+                ".phanterpwa-component-auth_user-button-toggle-options"
+            ))
+
             self.element_target.find("#component-auth_user-option-logout").off("click.auth_user-option-logout").on(
                 "click.auth_user-option-logout",
                 lambda: self.logout()
             )
         else:
             self.xml_button_no_login = DIV(
-                DIV(
+                SPAN(
                     DIV(
-                        DIV(_class="led"),
-                        _class="cmd-bar_user-expands"),
-                    _class="cmd-bar_user-expand-container"),
-                DIV(
-                    I18N("START"),
-                    _class="cmd-bar-start"),
-                _id="toggle-cmp-bar_user",
-                _class="cmp-bar_user-container link waves-effect waves-phanterpwa"
-            ).jquery()
+                        DIV(
+                            DIV(_class="led"),
+                            _class="phanterpwa-component-auth_user-nologin-led"
+                        ),
+                        DIV(
+                            I18N("START"),
+                            _class="phanterpwa-component-auth_user-nologin-start"
+                        ),
+                        _class="phanterpwa-component-auth_user-nologin-led_and_start"
+                    ),
+                    _class="phanterpwa-component-auth_user-nologin-led_and_start-wrapper"
+                ),
+                _class="phanterpwa-component-auth_user-nologin-wrapper link wave_on_click"
+            )
 
             self.xml_button_no_login_options = CONCATENATE(
                 DIV(
                     DIV(
-                        I("power_settings_new", _class="material-icons"),
+                        I(_class="fas fa-power-off"),
                         I18N("Login", **{"_pt-br": "Login"}),
                         _class="option-label-menu"
                     ),
                     _id="component-auth_user-option-login",
-                    _class='component-auth_user-option link waves-effect waves-phanterpwa'
+                    _class='component-auth_user-option link wave_on_click waves-phanterpwa'
                 ),
                 DIV(
                     DIV(
-                        I("person_add", _class="material-icons"),
+                        I(_class="fas fa-user-plus"),
                         I18N("Create an account", **{"_pt-br": "Criar uma conta"}),
                         _class="option-label-menu"
                     ),
                     _id="component-auth_user-option-register",
-                    _class='component-auth_user-option link waves-effect waves-phanterpwa'
+                    _class='component-auth_user-option link wave_on_click waves-phanterpwa'
                 ),
                 DIV(
                     DIV(
-                        I("lock", _class="material-icons"),
+                        I(_class="fas fa-lock"),
                         I18N("Recover password", **{"_pt-br": "Esqueci a senha"}),
                         _class="option-label-menu"
                     ),
                     _id="component-auth_user-option-request_password",
-                    _class='component-auth_user-option link waves-effect waves-phanterpwa'
+                    _class='component-auth_user-option link wave_on_click waves-phanterpwa'
                 )
-            ).jquery()
+            )
 
-            self.element_target.find(
-                ".component-toggle-auth_user-button"
-            ).html(
-                self.xml_button_no_login
-            )
-            self.element_target.find(
-                ".component-toggle-auth_user-options"
-            ).html(
-                self.xml_button_no_login_options
-            )
+            self.xml_button_no_login.html_to(self.element_target.find(
+                ".phanterpwa-component-auth_user-button-toggle"
+            ))
+
+            self.xml_button_no_login_options.html_to(self.element_target.find(
+                ".phanterpwa-component-auth_user-button-toggle-options"
+            ))
+
             self.element_target.find(
                 "#component-auth_user-option-login"
             ).off(
@@ -323,8 +333,8 @@ class AuthUser(application.Component):
 
 class ModalLogin(modal.Modal):
     def __init__(self, target_element):
-        self.target_element = jQuery(target_element)
-        AuthUserCmp = window.PhanterPWA.Components.AuthUser
+        self.element_target = jQuery(target_element)
+        AuthUserCmp = window.PhanterPWA.Components["auth_user"]
         self.AuthUser = None
         if AuthUserCmp is not None and AuthUserCmp is not js_undefined and not isinstance(AuthUserCmp, AuthUser):
             console.error("Need AuthUser instance on window.PhanterPWA.Components")
@@ -375,50 +385,47 @@ class ModalLogin(modal.Modal):
                     forms.FormButton(
                         "form-login-button-other-user",
                         I18N("Other account", **{"_pt-br": "Outra Conta"}),
-                        _class="waves-effect waves-phanterpwa btn-s"
+                        _class="wave_on_click waves-phanterpwa btn-s"
                     ),
                     _class='buttons-form-container'
                 ),
                 _id="form-login-button-other-user-container",
-                _class="col s12"
+                _class="p-col w1p100"
             ),
-            forms.Widget(
+            forms.FormWidget(
                 "login",
                 "email",
                 **{
                     "type": "string",
                     "label": I18N("E-mail"),
-                    "default": email,
-                    "phanterpwa": {
-                        "validators": ["IS_NOT_EMPTY", "IS_EMAIL"]
-                    }
+                    "value": email,
+                    "validators": ["IS_NOT_EMPTY", "IS_EMAIL"],
                 }
             ),
             DIV(
-                forms.Widget(
+                forms.FormWidget(
                     "login",
                     "password",
                     **{
                         "label": I18N("Password", **{"_pt-br": "Senha"}),
                         "type": "password",
-                        "phanterpwa": {
-                            "validators": ["IS_NOT_EMPTY"]
-                        }
+                        "validators": ["IS_NOT_EMPTY"],
+
                     }
                 ),
-                _class="col s12 m12"
+                _class="p-col w1p100"
             ),
             DIV(
-                forms.Widget(
+                forms.FormWidget(
                     "login",
                     "remember_me",
                     **{
-                        "default": remember_me,
+                        "value": remember_me,
                         "label": I18N("Remember-me", **{"_pt-br": "Lembre-me"}),
                         "type": "boolean"
                     }
                 ),
-                _class="input-field col s12"
+                _class="input-field p-col w1p100"
             ),
             _class="phanterpwa-auth_user-form-inputs"
         ).jquery()
@@ -434,27 +441,28 @@ class ModalLogin(modal.Modal):
                 forms.SubmitButton(
                     "login",
                     I18N("Login", **{"_pt-br": "Login"}),
-                    _class="btn-autoresize waves-effect waves-phanterpwa"
+                    _class="btn-autoresize wave_on_click waves-phanterpwa"
                 ),
                 forms.FormButton(
                     "register",
                     I18N("Create an account", **{"_pt-br": "Criar uma conta"}),
-                    _class="btn-autoresize waves-effect waves-phanterpwa"
+                    _class="btn-autoresize wave_on_click waves-phanterpwa"
                 ),
                 forms.FormButton(
                     "password",
                     I18N("Recover password", **{"_pt-br": "Esqueci a senha"}),
-                    _class="btn-autoresize waves-effect waves-phanterpwa"
+                    _class="btn-autoresize wave_on_click waves-phanterpwa"
                 ),
                 _class='phanterpwa-form-buttons-container'
             ),
-            _class="col s12"
+            _class="p-col w1p100"
         ).jquery()
         modal.Modal.__init__(
             self,
-            self.target_element,
+            self.element_target,
             **{
-                "_phanterpwa-jsonform": "login",
+                "_phanterpwa-form": "login",
+                "_id": "form-login",
                 "header_height": 50,
                 "footer_height": 200,
                 "title": I18N("Login"),
@@ -465,34 +473,33 @@ class ModalLogin(modal.Modal):
         )
 
     def other_account(self):
-        self.target_element.find(".phanterpwa-auth_user-form-inputs").removeClass("has_auth_user")
-        M.updateTextFields()
+        self.element_target.find(".phanterpwa-auth_user-form-inputs").removeClass("has_auth_user")
 
     def open_modal_register(self):
         self.close()
-        window.PhanterPWA.Components.AuthUser.modal_register()
+        window.PhanterPWA.Components['auth_user'].modal_register()
 
     def open_modal_request_password(self):
         self.close()
-        window.PhanterPWA.Components.AuthUser.modal_request_password()
+        window.PhanterPWA.Components['auth_user'].modal_request_password()
 
     def binds(self):
-        self.target_element.find("#phanterpwa-widget-submit_button-login").off('click.modal_submit_login').on(
+        self.element_target.find("#phanterpwa-widget-form-submit_button-login").off('click.modal_submit_login').on(
             'click.modal_submit_login',
             lambda: self.submit()
         )
-        self.target_element.find("#phanterpwa-widget-form_button-form-login-button-other-user").off(
+        self.element_target.find("#phanterpwa-widget-form-form_button-form-login-button-other-user").off(
             "click.other_account_button"
         ).on(
             "click.other_account_button",
             lambda: self.other_account()
         )
-        self.target_element.find("#phanterpwa-widget-form_button-register").off("click.form_button_register").on(
+        self.element_target.find("#phanterpwa-widget-form-form_button-register").off("click.form_button_register").on(
             "click.form_button_register",
             self.open_modal_register
         )
-        self.target_element.find(
-            "#phanterpwa-widget-form_button-password"
+        self.element_target.find(
+            "#phanterpwa-widget-form-form_button-password"
         ).off(
             "click.form_button_request_password"
         ).on(
@@ -501,7 +508,7 @@ class ModalLogin(modal.Modal):
         )
 
     def clear_errors(self):
-        self.modal_wrapper.find(".phanterpwa-widget-error").removeClass("enabled").html("")
+        jQuery(self.modal_wrapper).find(".phanterpwa-widget-error").removeClass("enabled").html("")
 
     def after_submit(self, data, ajax_status):
         if ajax_status == "success":
@@ -511,19 +518,19 @@ class ModalLogin(modal.Modal):
                 self.AuthUser.start()
                 self.AuthUser.AlertActivationAccount.check_activation()
                 if json.used_temporary is not None and json.used_temporary is not js_undefined:
-                    console.error(json.used_temporary)
+                    if window.PhanterPWA.DEBUG:
+                        console.error(json.used_temporary)
                     self.AuthUser.modal_change_password(temporary_password=json.used_temporary)
-            M.toast({'html': json.i18n.message})
-            LeftBar = window.PhanterPWA.Components["LeftBar"]
+            window.PhanterPWA.flash({'html': json.i18n.message})
+            LeftBar = window.PhanterPWA.Components['left_bar']
             if LeftBar is not None and LeftBar is not js_undefined:
                 LeftBar.reload()
-
 
         else:
             if data.status == 400:
                 json = data.responseJSON
-                M.toast({'html': json.i18n.message})
-                forms.SignForm("login", has_captcha=True)
+                window.PhanterPWA.flash({'html': json.i18n.message})
+                forms.SignForm("#form-login", has_captcha=True)
                 errors = dict(json['errors'])
                 if errors is not js_undefined:
                     for x in errors.keys():
@@ -535,84 +542,78 @@ class ModalLogin(modal.Modal):
         self.clear_errors()
         window.PhanterPWA.login(
             jQuery("#phanterpwa-widget-input-login-csrf_token").val(),
-            jQuery("#phanterpwa-widget-input-login-email").val(),
-            jQuery("#phanterpwa-widget-input-login-password").val(),
-            jQuery("#phanterpwa-widget-input-login-remember_me").prop("checked"),
+            jQuery("#phanterpwa-widget-input-input-login-email").val(),
+            jQuery("#phanterpwa-widget-input-input-login-password").val(),
+            jQuery("#phanterpwa-widget-checkbox-input-login-remember_me").prop("checked"),
             callback=self.after_submit
         )
 
 
 class ModalRegister(modal.Modal):
     def __init__(self, target_element):
-        self.target_element = jQuery(target_element)
-        AuthUserCmp = window.PhanterPWA.Components.AuthUser
+        self.element_target = jQuery(target_element)
+        AuthUserCmp = window.PhanterPWA.Components['auth_user']
         self.AuthUser = None
         if AuthUserCmp is not None and AuthUserCmp is not js_undefined and not isinstance(AuthUserCmp, AuthUser):
             console.error("Need AuthUser instance on window.PhanterPWA.Components")
         else:
             self.AuthUser = AuthUserCmp
         tcontent = DIV(
-            forms.Widget(
+            forms.FormWidget(
                 "register",
                 "first_name",
                 **{
                     "type": "string",
                     "label": I18N("First Name"),
-                    "phanterpwa": {
-                        "validators": ["IS_NOT_EMPTY"]
-                    },
-                    "_class": "col s12 m6"
+                    "validators": ["IS_NOT_EMPTY"],
+                    "_class": "p-col w1p100 w3p50"
                 },
             ),
-            forms.Widget(
+            forms.FormWidget(
                 "register",
                 "last_name",
                 **{
                     "type": "string",
                     "label": I18N("Last Name"),
-                    "phanterpwa": {
-                        "validators": ["IS_NOT_EMPTY"]
-                    },
-                    "_class": "col s12 m6"
+                    "validators": ["IS_NOT_EMPTY"],
+                    "_class": "p-col w1p100 w3p50"
                 },
             ),
-            forms.Widget(
+            forms.FormWidget(
                 "register",
                 "email",
                 **{
                     "type": "string",
                     "label": I18N("E-Mail"),
-                    "phanterpwa": {
-                        "validators": ["IS_EMAIL"]
-                    },
-                    "_class": "col s12"
+                    "validators": ["IS_EMAIL"],
+                    "_class": "p-col w1p100"
                 }
             ),
-            forms.Widget(
+            forms.FormWidget(
                 "register",
                 "password",
                 **{
                     "type": "password",
                     "label": I18N("Password"),
                     "phanterpwa": {
-                        "validators": ["IS_NOT_EMPTY", "IS_EQUALS:#phanterpwa-widget-input-register-password_repeat"]
+                        "validators": ["IS_NOT_EMPTY", "IS_EQUALS:#phanterpwa-widget-input-register-password_repeat"],
                     },
-                    "_class": "col s12 m6"
+                    "_class": "p-col w1p100 w3p50"
                 }
             ),
-            forms.Widget(
+            forms.FormWidget(
                 "register",
                 "password_repeat",
                 **{
                     "type": "password",
                     "label": I18N("Repeat Password"),
                     "phanterpwa": {
-                        "validators": ["IS_NOT_EMPTY", "IS_EQUALS:#phanterpwa-widget-input-register-password"]
+                        "validators": ["IS_NOT_EMPTY", "IS_EQUALS:#phanterpwa-widget-input-register-password"],
                     },
-                    "_class": "col s12 m6"
+                    "_class": "p-col w1p100 w3p50"
                 }
             ),
-            _class="phanterpwa-register-form-inputs row"
+            _class="phanterpwa-register-form-inputs p-row"
         ).jquery()
         if self.auth_user is not None and self.auth_user is not js_undefined:
             tcontent.addClass("has_auth_user")
@@ -626,27 +627,28 @@ class ModalRegister(modal.Modal):
                 forms.SubmitButton(
                     "register",
                     I18N("Create", **{"_pt-br": "Criar"}),
-                    _class="btn-autoresize waves-effect waves-phanterpwa"
+                    _class="btn-autoresize wave_on_click waves-phanterpwa"
                 ),
                 forms.FormButton(
                     "login",
                     I18N("Login", **{"_pt-br": "Login"}),
-                    _class="btn-autoresize waves-effect waves-phanterpwa"
+                    _class="btn-autoresize wave_on_click waves-phanterpwa"
                 ),
                 forms.FormButton(
                     "password",
                     I18N("Recover password", **{"_pt-br": "Esqueci a senha"}),
-                    _class="btn-autoresize waves-effect waves-phanterpwa"
+                    _class="btn-autoresize wave_on_click waves-phanterpwa"
                 ),
                 _class='phanterpwa-form-buttons-container'
             ),
-            _class="col s12"
+            _class="p-col w1p100"
         ).jquery()
         modal.Modal.__init__(
             self,
-            self.target_element,
+            self.element_target,
             **{
-                "_phanterpwa-jsonform": "register",
+                "_phanterpwa-form": "register",
+                "_id": "form-register",
                 "header_height": 50,
                 "footer_height": 200,
                 "title": I18N("Register", **{"_pt-br": "Registrar"}),
@@ -658,31 +660,31 @@ class ModalRegister(modal.Modal):
 
     def open_modal_login(self):
         self.close()
-        window.PhanterPWA.Components.AuthUser.modal_login()
+        window.PhanterPWA.Components['auth_user'].modal_login()
 
     def open_modal_request_password(self):
         self.close()
-        window.PhanterPWA.Components.AuthUser.modal_request_password()
+        window.PhanterPWA.Components['auth_user'].modal_request_password()
 
     def binds(self):
-        self.target_element.find(
-            "#phanterpwa-widget-form_button-login"
+        self.element_target.find(
+            "#phanterpwa-widget-form-form_button-login"
         ).off(
             "click.form_button_login"
         ).on(
             "click.form_button_login",
             self.open_modal_login
         )
-        self.target_element.find(
-            "#phanterpwa-widget-form_button-password"
+        self.element_target.find(
+            "#phanterpwa-widget-form-form_button-password"
         ).off(
             "click.form_button_request_password"
         ).on(
             "click.form_button_request_password",
             self.open_modal_request_password
         )
-        self.target_element.find(
-            "#phanterpwa-widget-submit_button-register"
+        self.element_target.find(
+            "#phanterpwa-widget-form-submit_button-register"
         ).off(
             'click.modal_submit_register'
         ).on(
@@ -699,16 +701,16 @@ class ModalRegister(modal.Modal):
             if self.AuthUser is not None and self.AuthUser is not js_undefined:
                 self.AuthUser.start()
             self.close()
-            M.toast({'html': json.i18n.message})
-            LeftBar = window.PhanterPWA.Components["LeftBar"]
+            window.PhanterPWA.flash({'html': json.i18n.message})
+            LeftBar = window.PhanterPWA.Components['left_bar']
             if LeftBar is not None and LeftBar is not js_undefined:
                 LeftBar.reload()
 
         else:
             if data.status == 400:
                 json = data.responseJSON
-                M.toast({'html': json.i18n.message})
-                forms.SignForm("register", has_captcha=True)
+                window.PhanterPWA.flash({'html': json.i18n.message})
+                forms.SignForm("#form-register", has_captcha=True)
                 errors = dict(json['errors'])
                 if errors is not js_undefined:
                     for x in errors.keys():
@@ -731,43 +733,43 @@ class ModalRegister(modal.Modal):
 
 class ModalRequestPassword(modal.Modal):
     def __init__(self, target_element):
-        self.target_element = jQuery(target_element)
-        AuthUserCmp = window.PhanterPWA.Components.AuthUser
+        self.element_target = jQuery(target_element)
+        AuthUserCmp = window.PhanterPWA.Components['auth_user']
         self.AuthUser = None
         if AuthUserCmp is not None and AuthUserCmp is not js_undefined and not isinstance(AuthUserCmp, AuthUser):
             console.error("Need AuthUser instance on window.PhanterPWA.Components")
         else:
             self.AuthUser = AuthUserCmp
-        widget_email = forms.Widget(
+        widget_email = forms.FormWidget(
             "request_password",
             "email",
             **{
                 "type": "string",
                 "label": I18N("E-Mail"),
                 "phanterpwa": {
-                    "validators": ["IS_EMAIL"]
+                    "validators": ["IS_EMAIL"],
                 },
-                "_class": "col s12"
+                "_class": "p-col w1p100"
             }
         )
         last_auth_user = window.PhanterPWA.get_last_auth_user()
         if last_auth_user is not None:
-            widget_email = forms.Widget(
+            widget_email = forms.FormWidget(
                 "request_password",
                 "email",
                 **{
                     "type": "string",
                     "label": I18N("E-Mail"),
                     "phanterpwa": {
-                        "validators": ["IS_EMAIL"]
+                        "validators": ["IS_EMAIL"],
                     },
-                    "default": last_auth_user.email,
-                    "_class": "col s12"
+                    "value": last_auth_user.email,
+                    "_class": "p-col w1p100"
                 }
             )
         tcontent = DIV(
             widget_email,
-            _class="phanterpwa-request_password-form-inputs row"
+            _class="phanterpwa-request_password-form-inputs p-row"
         ).jquery()
         if self.auth_user is not None and self.auth_user is not js_undefined:
             tcontent.addClass("has_auth_user")
@@ -781,27 +783,28 @@ class ModalRequestPassword(modal.Modal):
                 forms.SubmitButton(
                     "request_password",
                     I18N("Recover", **{"_pt-br": "Recuperar"}),
-                    _class="btn-autoresize waves-effect waves-phanterpwa"
+                    _class="btn-autoresize wave_on_click waves-phanterpwa"
                 ),
                 forms.FormButton(
                     "register",
                     I18N("Create an Account", **{"_pt-br": "Criar uma Conta"}),
-                    _class="btn-autoresize waves-effect waves-phanterpwa"
+                    _class="btn-autoresize wave_on_click waves-phanterpwa"
                 ),
                 forms.FormButton(
                     "login",
                     I18N("Login", **{"_pt-br": "Login"}),
-                    _class="btn-autoresize waves-effect waves-phanterpwa"
+                    _class="btn-autoresize wave_on_click waves-phanterpwa"
                 ),
                 _class='phanterpwa-form-buttons-container'
             ),
-            _class="col s12"
+            _class="p-col w1p100"
         ).jquery()
         modal.Modal.__init__(
             self,
-            self.target_element,
+            self.element_target,
             **{
-                "_phanterpwa-jsonform": "request_password",
+                "_phanterpwa-form": "request_password",
+                "_id": "form-request_password",
                 "header_height": 50,
                 "footer_height": 200,
                 "title": I18N("Recover Password", **{"_pt-br": "Recuperar Senha"}),
@@ -813,26 +816,26 @@ class ModalRequestPassword(modal.Modal):
 
     def open_modal_login(self):
         self.close()
-        window.PhanterPWA.Components.AuthUser.modal_login()
+        window.PhanterPWA.Components['auth_user'].modal_login()
 
     def open_modal_register(self):
         self.close()
-        window.PhanterPWA.Components.AuthUser.modal_register()
+        window.PhanterPWA.Components['auth_user'].modal_register()
 
     def binds(self):
-        self.target_element.find(
-            "#phanterpwa-widget-submit_button-request_password"
+        self.element_target.find(
+            "#phanterpwa-widget-form-submit_button-request_password"
         ).off(
             'click.modal_submit_request'
         ).on(
             'click.modal_submit_request',
             lambda: self.submit()
         )
-        self.target_element.find("#phanterpwa-widget-form_button-register").off("click.form_button_register").on(
+        self.element_target.find("#phanterpwa-widget-form-form_button-register").off("click.form_button_register").on(
             "click.form_button_register",
             self.open_modal_register
         )
-        self.target_element.find("#phanterpwa-widget-form_button-login").off("click.form_button_login").on(
+        self.element_target.find("#phanterpwa-widget-form-form_button-login").off("click.form_button_login").on(
             "click.form_button_login",
             self.open_modal_login
         )
@@ -844,15 +847,15 @@ class ModalRequestPassword(modal.Modal):
         if ajax_status == "success":
             json = data.responseJSON
             self.close()
-            M.toast({'html': json.i18n.message})
-            LeftBar = window.PhanterPWA.Components["LeftBar"]
+            window.PhanterPWA.flash({'html': json.i18n.message})
+            LeftBar = window.PhanterPWA.Components['left_bar']
             if LeftBar is not None and LeftBar is not js_undefined:
                 LeftBar.reload()
         else:
             if data.status == 400:
                 json = data.responseJSON
-                M.toast({'html': json.i18n.message})
-                forms.SignForm("request_password", has_captcha=True)
+                window.PhanterPWA.flash({'html': json.i18n.message})
+                forms.SignForm("#form-request_password", has_captcha=True)
                 errors = dict(json['errors'])
                 if errors is not js_undefined:
                     for x in errors.keys():
@@ -889,14 +892,14 @@ class AlertActivationAccount(top_slide.TopSlide):
             FORM(
                 DIV(
                     DIV(
-                        forms.Widget(
+                        forms.FormWidget(
                             "activation",
                             "activation_code",
                             **{
                                 "type": "string",
                                 "label": I18N("Activation Code", **{"_pt-br": "Código de Ativação"}),
                                 "phanterpwa": {
-                                    "validators": ["IS_NOT_EMPTY", "IS_ACTIVATION_CODE"]
+                                    "validators": ["IS_NOT_EMPTY", "IS_ACTIVATION_CODE"],
                                 }
                             }
                         ),
@@ -906,12 +909,12 @@ class AlertActivationAccount(top_slide.TopSlide):
                         forms.SubmitButton(
                             "activation",
                             I18N("Activate", **{"_pt-br": "Ativar"}),
-                            _class="btn-autoresize waves-effect waves-phanterpwa"
+                            _class="btn-autoresize wave_on_click waves-phanterpwa"
                         ),
                         forms.FormButton(
                             "activation_new_code",
                             I18N("Request Activation Code", **{"_pt-br": "Requisitar novo código"}),
-                            _class="btn-autoresize waves-effect waves-phanterpwa"
+                            _class="btn-autoresize wave_on_click waves-phanterpwa"
                         ),
                         _class='phanterpwa-form-buttons-container'
                     ),
@@ -919,7 +922,8 @@ class AlertActivationAccount(top_slide.TopSlide):
                 ),
                 **{
                     "_class": "phanterpwa-auth_user-activation-actions-container",
-                    "_phanterpwa-jsonform": "activation"
+                    "_phanterpwa-form": "activation",
+                    "_id": "form-activation"
                 }
             ),
             _class="phanterpwa-auth_user-activation-container"
@@ -928,15 +932,15 @@ class AlertActivationAccount(top_slide.TopSlide):
         top_slide.TopSlide.__init__(self, target_element, content, **parameters)
 
     def binds(self):
-        forms.SignForm("activation")
-        forms.ValidateForm("activation")
-        self.target_element.find("#phanterpwa-widget-submit_button-activation").off(
+        forms.SignForm("#form-activation")
+        forms.ValidateForm("#form-activation")
+        self.element_target.find("#phanterpwa-widget-form-submit_button-activation").off(
             'click.modal_submit_activation'
         ).on(
             'click.modal_submit_activation',
             lambda: self.submit()
         )
-        self.target_element.find("#phanterpwa-widget-form_button-activation_new_code").off(
+        self.element_target.find("#phanterpwa-widget-form-form_button-activation_new_code").off(
             'click.modal_submit_activation_new_code'
         ).on(
             'click.modal_submit_activation_new_code',
@@ -947,18 +951,18 @@ class AlertActivationAccount(top_slide.TopSlide):
         if ajax_status == "success":
             json = data.responseJSON
             message = json.i18n.message
-            M.toast({'html': message})
+            window.PhanterPWA.flash({'html': message})
         else:
             if data.status == 400:
                 json = data.responseJSON
-                M.toast({'html': json.i18n.message})
-                forms.SignForm("activation", has_captcha=True)
+                window.PhanterPWA.flash({'html': json.i18n.message})
+                forms.SignForm("#form-activation", has_captcha=True)
                 errors = dict(json['errors'])
                 if errors is not js_undefined:
                     for x in errors.keys():
                         id_error = "#phanterpwa-widget-activation-{0} .phanterpwa-widget-error".format(x)
                         message = SPAN(errors[x]).xml()
-                        self.target_element.find(id_error).html(message).addClass("enabled")
+                        self.element_target.find(id_error).html(message).addClass("enabled")
 
     def request_new_activation_code_to_send_to_email(self):
         window.PhanterPWA.ApiServer.GET(**{
@@ -967,18 +971,18 @@ class AlertActivationAccount(top_slide.TopSlide):
         })
 
     def clear_errors(self):
-        self.target_element.find(".phanterpwa-widget-error").removeClass("enabled").html("")
+        self.element_target.find(".phanterpwa-widget-error").removeClass("enabled").html("")
 
     def after_submit(self, data, ajax_status):
         if ajax_status == "success":
             json = data.responseJSON
             self.close()
-            M.toast({'html': json.i18n.message})
+            window.PhanterPWA.flash({'html': json.i18n.message})
         else:
             if data.status == 400:
                 json = data.responseJSON
-                M.toast({'html': json.i18n.message})
-                forms.SignForm("activation")
+                window.PhanterPWA.flash({'html': json.i18n.message})
+                forms.SignForm("#form-activation")
                 errors = dict(json['errors'])
                 if errors is not js_undefined:
                     for x in errors.keys():
@@ -989,8 +993,8 @@ class AlertActivationAccount(top_slide.TopSlide):
     def submit(self):
         self.clear_errors()
         window.PhanterPWA.activation_account(
-            self.target_element.find("#phanterpwa-widget-input-activation-csrf_token").val(),
-            self.target_element.find("#phanterpwa-widget-input-activation-activation_code").val(),
+            self.element_target.find("#phanterpwa-widget-input-activation-csrf_token").val(),
+            self.element_target.find("#phanterpwa-widget-input-activation-activation_code").val(),
             callback=self.after_submit
         )
 
@@ -998,81 +1002,74 @@ class AlertActivationAccount(top_slide.TopSlide):
         auth_user = window.PhanterPWA.get_auth_user()
         if auth_user is not None:
             if not auth_user.activated:
-                console.log("cheking", auth_user)
+                if window.PhanterPWA.DEBUG:
+                    console.info("cheking", auth_user)
                 self.open()
 
 
 class ModalChangePassword(modal.Modal):
-    def __init__(self, target_element, **parameters):
-        self.target_element = jQuery(target_element)
-        AuthUserCmp = window.PhanterPWA.Components.AuthUser
+    def __init__(self, target_selector, **parameters):
+        self.target_selector = target_selector
+        self.element_target = jQuery(self.target_selector)
+        AuthUserCmp = window.PhanterPWA.Components['auth_user']
         self.AuthUser = None
         if AuthUserCmp is not None and AuthUserCmp is not js_undefined and not isinstance(AuthUserCmp, AuthUser):
             console.error("Need AuthUser instance on window.PhanterPWA.Components")
         else:
             self.AuthUser = AuthUserCmp
-        widget_password = forms.Widget(
+        widget_password = forms.FormWidget(
             "change_password",
             "password",
             **{
                 "type": "password",
                 "label": I18N("Current Password"),
-                "phanterpwa": {
-                    "validators": ["IS_NOT_EMPTY"]
-                },
-                "_class": "col s12"
+                "validators": ["IS_NOT_EMPTY"],
+                "_class": "p-col w1p100"
             }
         )
-        console.error(parameters)
         if "temporary_password" in parameters:
             if parameters["temporary_password"] is not None and parameters["temporary_password"] is not js_undefined:
-                widget_password = forms.Widget(
+                widget_password = forms.FormWidget(
                     "change_password",
                     "password",
                     **{
                         "type": "password",
                         "label": I18N("Current Password"),
-                        "phanterpwa": {
-                            "validators": ["IS_NOT_EMPTY"]
-                        },
-                        "default": parameters["temporary_password"],
-                        "_class": "col s12",
+                        "validators": ["IS_NOT_EMPTY"],
+                        "value": parameters["temporary_password"],
+                        "_class": "p-col w1p100",
                         "_style": "display: none;"
                     },
                 )
         tcontent = DIV(
             widget_password,
-            forms.Widget(
+            forms.FormWidget(
                 "change_password",
                 "new_password",
                 **{
                     "type": "password",
                     "label": I18N("New password"),
-                    "phanterpwa": {
-                        "validators": [
-                            "IS_NOT_EMPTY",
-                            "IS_EQUALS:#phanterpwa-widget-input-change_password-new_password_repeat"
-                        ]
-                    },
-                    "_class": "col s12"
+                    "validators": [
+                        "IS_NOT_EMPTY",
+                        "IS_EQUALS:#phanterpwa-widget-input-change_password-new_password_repeat"
+                    ],
+                    "_class": "p-col w1p100"
                 }
             ),
-            forms.Widget(
+            forms.FormWidget(
                 "change_password",
                 "new_password_repeat",
                 **{
                     "type": "password",
                     "label": I18N("Password Repeat"),
-                    "phanterpwa": {
-                        "validators": [
-                            "IS_NOT_EMPTY",
-                            "IS_EQUALS:#phanterpwa-widget-input-change_password-new_password"
-                        ]
-                    },
-                    "_class": "col s12"
+                    "validators": [
+                        "IS_NOT_EMPTY",
+                        "IS_EQUALS:#phanterpwa-widget-input-change_password-new_password"
+                    ],
+                    "_class": "p-col w1p100"
                 }
             ),
-            _class="phanterpwa-change_password-form-inputs row"
+            _class="phanterpwa-change_password-form-inputs p-row"
         ).jquery()
         if self.auth_user is not None and self.auth_user is not js_undefined:
             tcontent.addClass("has_auth_user")
@@ -1082,17 +1079,18 @@ class ModalChangePassword(modal.Modal):
                 forms.SubmitButton(
                     "change_password",
                     I18N("Change password", **{"_pt-br": "Mudar a senha"}),
-                    _class="btn-autoresize waves-effect waves-phanterpwa"
+                    _class="btn-autoresize wave_on_click waves-phanterpwa"
                 ),
                 _class='phanterpwa-form-buttons-container'
             ),
-            _class="col s12"
+            _class="p-col w1p100"
         ).jquery()
         modal.Modal.__init__(
             self,
-            self.target_element,
+            self.element_target,
             **{
-                "_phanterpwa-jsonform": "change_password",
+                "_phanterpwa-form": "change_password",
+                "_id": "form-change_password",
                 "header_height": 50,
                 "title": I18N("Change Password"),
                 "content": tcontent,
@@ -1102,7 +1100,8 @@ class ModalChangePassword(modal.Modal):
         )
 
     def binds(self):
-        self.target_element.find("#phanterpwa-widget-submit_button-change_password").off(
+        self.element_target = jQuery(self.target_selector)
+        self.element_target.find("#phanterpwa-widget-form-submit_button-change_password").off(
             'click.modal_submit_request'
         ).on(
             'click.modal_submit_request',
@@ -1116,16 +1115,16 @@ class ModalChangePassword(modal.Modal):
         if ajax_status == "success":
             json = data.responseJSON
             self.close()
-            M.toast({'html': json.i18n.message})
-            LeftBar = window.PhanterPWA.Components["LeftBar"]
+            window.PhanterPWA.flash({'html': json.i18n.message})
+            LeftBar = window.PhanterPWA.Components['left_bar']
             if LeftBar is not None and LeftBar is not js_undefined:
                 LeftBar.reload()
 
         else:
             if data.status == 400:
                 json = data.responseJSON
-                M.toast({'html': json.i18n.message})
-                forms.SignForm("change_password")
+                window.PhanterPWA.flash({'html': json.i18n.message})
+                forms.SignForm("#form-change_password")
                 errors = dict(json['errors'])
                 if errors is not js_undefined:
                     for x in errors.keys():
@@ -1141,15 +1140,15 @@ class ModalChangePassword(modal.Modal):
             jQuery("#phanterpwa-widget-input-change_password-new_password").val(),
             jQuery("#phanterpwa-widget-input-change_password-new_password_repeat").val(),
             callback=self.after_submit
-        )  
+        )
 
 
 class LeftBarMainButton(left_bar.LeftBarMainButton):
-    def __init__(self, target_element):
-        self.target_element = target_element
-        left_bar.LeftBarMainButton.__init__(self, target_element)
+    def __init__(self, target_selector):
+        left_bar.LeftBarMainButton.__init__(self, target_selector)
 
     def switch_leftbar(self):
+        self.element_target = jQuery(self.target_selector)
         el = self.element_target.find("#phanterpwa-component-left_bar-main_button")
         if el.hasClass("enabled") and el.hasClass("enabled_submenu"):
             self.close_leftbar()
@@ -1182,7 +1181,8 @@ class LeftBarMainButton(left_bar.LeftBarMainButton):
 
 
 class LeftBar(left_bar.LeftBar):
-    def start(self):
+    def __init__(self, target_selector, **parameters):
+        left_bar.LeftBar.__init__(self, target_selector, **parameters)
         self.add_button(LeftBarAuthUserLogin())
         self.add_button(LeftBarAuthUserNoLogin())
         self.add_button(
@@ -1190,15 +1190,10 @@ class LeftBar(left_bar.LeftBar):
                 "home",
                 I18N("Home", **{"_pt-br": "Principal"}),
                 I(_class="fas fa-home"),
-                _phanterpwa_route="home",
-                position="top"
+                **{"_phanterpwa-way": "home",
+                    "position": "top"}
             )
         )
-        window.PhanterPWA.xml_to_dom_element(
-            self.xml,
-            self.element_target
-        )
-        self.reload()
 
 
 class LeftBarAuthUserLogin(left_bar.LeftBarUserMenu):
@@ -1208,8 +1203,8 @@ class LeftBarAuthUserLogin(left_bar.LeftBarUserMenu):
         self.addSubmenu(
             "profile",
             I18N("Profile", **{"_pt-br": "Perfil"}),
-            _class="command_user",
-            _phanterpwa_route="profile"
+            **{"_class": "command_user",
+                "_phanterpwa-way": "profile"}
         )
 
         self.addSubmenu(
@@ -1264,11 +1259,11 @@ class LeftBarAuthUserLogin(left_bar.LeftBarUserMenu):
     def logout(self):
         sessionStorage.removeItem("phanterpwa-authorization")
         sessionStorage.removeItem("auth_user")
-        window.PhanterPWA.open_default_route()
-        LeftBar = window.PhanterPWA.Components["LeftBar"]
+        window.PhanterPWA.open_default_way()
+        LeftBar = window.PhanterPWA.Components['left_bar']
         if LeftBar is not None and LeftBar is not js_undefined:
             LeftBar.reload()
-        window.PhanterPWA.Components["AuthUser"].start()
+        window.PhanterPWA.Components['auth_user'].start()
 
     def start(self):
         element = jQuery("#phanterpwa-component-left_bar").find(
@@ -1339,7 +1334,6 @@ class LeftBarAuthUserNoLogin(left_bar.LeftBarMenu):
         el = jQuery("#phanterpwa-component-left_bar").find(
             "#phanterpwa-component-left_bar-menu_button-auth_user_no_login"
         ).parent()
-        console.error(el)
         if el.hasClass("enabled"):
             self.close_menu()
         else:
@@ -1369,7 +1363,6 @@ class LeftBarAuthUserNoLogin(left_bar.LeftBarMenu):
             jQuery("#phanterpwa-component-left_bar-main_button").removeClass("enabled_submenu")
 
     def close_menu(self):
-        console.log("fechandooooooooooooooooo")
         AuthUser._close_menu()
         self._close_menu()
 
@@ -1386,8 +1379,8 @@ class LeftBarAuthUserNoLogin(left_bar.LeftBarMenu):
             "#modal-container"
         )
         self.Modal.open()
-        forms.SignForm("login", has_captcha=True)
-        forms.ValidateForm("login")
+        forms.SignForm("#form-login", has_captcha=True)
+        forms.ValidateForm("#form-login")
 
     def modal_register(self):
         self.close_all()
@@ -1395,8 +1388,8 @@ class LeftBarAuthUserNoLogin(left_bar.LeftBarMenu):
             "#modal-container"
         )
         self.Modal.open()
-        forms.SignForm("register", has_captcha=True)
-        forms.ValidateForm("register")
+        forms.SignForm("#form-register", has_captcha=True)
+        forms.ValidateForm("#form-register")
 
     def modal_request_password(self):
         self.close_all()
@@ -1404,8 +1397,8 @@ class LeftBarAuthUserNoLogin(left_bar.LeftBarMenu):
             "#modal-container"
         )
         self.Modal.open()
-        forms.SignForm("request_password", has_captcha=True)
-        forms.ValidateForm("request_password")
+        forms.SignForm("#form-request_password", has_captcha=True)
+        forms.ValidateForm("#form-request_password")
 
     def start(self):
 
@@ -1433,18 +1426,18 @@ class LeftBarAuthUserNoLogin(left_bar.LeftBarMenu):
             "click.left_bar_register_button",
             lambda: self.modal_register()
         )
-        jQuery("#phanterpwa-component-left_bar-submenu-button-request_password").off("click.left_bar_request_button").on(
-            "click.left_bar_request_button",
+        jQuery("#phanterpwa-component-left_bar-submenu-button-request_password").off("click.left_bar_request_btn").on(
+            "click.left_bar_request_btn",
             lambda: self.modal_request_password()
         )
 
 
-class Profile(handler.RequestRouteHandler):
+class Profile(handler.GateHandler):
     def after_submit(self, data, ajax_status):
             if ajax_status == "success":
                 json = data.responseJSON
                 message = json.i18n.message
-                M.toast({'html': message})
+                window.PhanterPWA.flash({'html': message})
                 if data.status == 200:
                     jQuery(".phanterpwa-gallery-upload-input-file").val('')
                     auth_user = json.auth_user
@@ -1452,15 +1445,13 @@ class Profile(handler.RequestRouteHandler):
                     self.js_update()
 
             else:
-                forms.SignForm(
-                    "profile"
-                )
+                forms.SignForm("#form-profile")
                 json = data.responseJSON
                 message = json.i18n.message
-                M.toast({'html': message})
+                window.PhanterPWA.flash({'html': message})
 
     def submit(self):
-        formdata = __new__(FormData(jQuery("#phanterpwa-jsonform-profile")[0]))
+        formdata = __new__(FormData(jQuery("#form-profile")[0]))
         window.PhanterPWA.ApiServer.PUT(**{
             'url_args': ["api", "auth", "change"],
             'form_data': formdata,
@@ -1468,12 +1459,12 @@ class Profile(handler.RequestRouteHandler):
         })
 
     def open_modal_change_password(self):
-        window.PhanterPWA.Components.AuthUser.modal_change_password()
+        window.PhanterPWA.Components['auth_user'].modal_change_password()
 
     def binds(self):
-        forms.ValidateForm("profile")
+        forms.ValidateForm("#form-profile")
         jQuery(
-            "#phanterpwa-widget-submit_button-profile"
+            "#phanterpwa-widget-form-submit_button-profile"
         ).off(
             "click.profile_button_save"
         ).on(
@@ -1481,7 +1472,7 @@ class Profile(handler.RequestRouteHandler):
             self.submit
         )
         jQuery(
-            "#phanterpwa-widget-form_button-change_password"
+            "#phanterpwa-widget-form-form_button-change_password"
         ).off(
             "click.profile_button_change_password"
         ).on(
@@ -1490,7 +1481,7 @@ class Profile(handler.RequestRouteHandler):
         )
 
     def js_update(self):
-        forms.SignForm("profile")
+        forms.SignForm("#form-profile")
         self.auth_user = window.PhanterPWA.get_last_auth_user()
         first_name = ""
         last_name = ""
@@ -1544,72 +1535,66 @@ class Profile(handler.RequestRouteHandler):
                                             _style="text-align:center;"
                                         ),
                                         _id="profile-image-user-container",
-                                        _class='row'
+                                        _class='p-row'
                                     ),
-                                    _class="col s12 m12 l4"
+                                    _class="p-col w1p100 l4"
                                 ),
                                 DIV(
                                     DIV(
-                                        forms.Widget(
+                                        forms.FormWidget(
                                             "profile",
                                             "first_name",
                                             **{
                                                 "type": "string",
                                                 "label": I18N("First Name"),
-                                                "default": first_name,
-                                                "phanterpwa": {
-                                                    "validators": ["IS_NOT_EMPTY"]
-                                                },
-                                                "_class": "col s12 m6"
+                                                "value": first_name,
+                                                "validators": ["IS_NOT_EMPTY"],
+                                                "_class": "p-col w1p100 w3p50"
                                             },
                                         ),
-                                        forms.Widget(
+                                        forms.FormWidget(
                                             "profile",
                                             "last_name",
                                             **{
                                                 "type": "string",
                                                 "label": I18N("Last Name"),
-                                                "default": last_name,
-                                                "phanterpwa": {
-                                                    "validators": ["IS_NOT_EMPTY"]
-                                                },
-                                                "_class": "col s12 m6"
+                                                "value": last_name,
+                                                "validators": ["IS_NOT_EMPTY"],
+                                                "_class": "p-col w1p100 w3p50"
                                             },
                                         ),
-                                        forms.Widget(
+                                        forms.FormWidget(
                                             "profile",
                                             "email",
                                             **{
                                                 "type": "string",
                                                 "label": I18N("E-Mail"),
-                                                "default": email,
-                                                "phanterpwa": {
-                                                    "validators": ["IS_EMAIL"]
-                                                },
-                                                "_class": "col s12"
+                                                "value": email,
+                                                "validators": ["IS_EMAIL"],
+                                                "_class": "p-col w1p100"
                                             }
                                         ),
-                                        _class="row reset-css-row profile_inputs_container"
+                                        _class="p-row profile_inputs_container"
                                     ),
                                     DIV(
                                         forms.SubmitButton(
                                             "profile",
                                             I18N("Save Changes", **{"_pt-br": "Salvar Mudanças"}),
-                                            _class="btn-autoresize waves-effect waves-phanterpwa"
+                                            _class="btn-autoresize wave_on_click waves-phanterpwa"
                                         ),
                                         forms.FormButton(
                                             "change_password",
                                             I18N("Change Password", **{"_pt-br": "Mudar Senha"}),
-                                            _class="btn-autoresize waves-effect waves-phanterpwa"
+                                            _class="btn-autoresize wave_on_click waves-phanterpwa"
                                         ),
                                         _class='phanterpwa-form-buttons-container'
                                     ),
-                                    _class="col s12 m12 l8"
+                                    _class="p-col w1p100"
                                 ),
                                 **{
-                                    "_phanterpwa-jsonform": "profile",
-                                    "_id": "phanterpwa-jsonform-profile",
-                                    "_class": "row",
+                                    "_phanterpwa-form": "profile",
+                                    "_id": "form-profile",
+                                    "_class": "p-row",
                                     "_autocomplete": "off"
                                 }
                             ),
@@ -1622,18 +1607,18 @@ class Profile(handler.RequestRouteHandler):
                 _class="phanterpwa-container container"
             )
         )
-        window.PhanterPWA.DOMXmlWriter.html(jQuery("#main-container"), xml_content)
+        xml_content.html_to("#main-container")
         self.js_update()
         self.binds()
 
 
-class Lock(handler.RequestRouteHandler):
+class Lock(handler.GateHandler):
     def on_other_user_click(self):
         jQuery("body").removeClass("phanterpwa-lock")
         localStorage.removeItem("last_auth_user")
-        localStorage.removeItem("current_route")
-        localStorage.removeItem("route_before_lock")
-        window.PhanterPWA.Components.AuthUser.logout()
+        localStorage.removeItem("current_way")
+        localStorage.removeItem("way_before_lock")
+        window.PhanterPWA.Components['auth_user'].logout()
 
     def after_submit(self, data, ajax_status):
         if ajax_status == "success":
@@ -1657,24 +1642,24 @@ class Lock(handler.RequestRouteHandler):
                     localStorage.removeItem("phanterpwa-authorization")
                     localStorage.removeItem("auth_user")
                 localStorage.setItem("last_auth_user", JSON.stringify(auth_user))
-            route_before_lock = sessionStorage.getItem("route_before_lock")
-            if route_before_lock is not None and route_before_lock is not js_undefined:
-                window.PhanterPWA.open_route(route_before_lock)
+            way_before_lock = sessionStorage.getItem("way_before_lock")
+            if way_before_lock is not None and way_before_lock is not js_undefined:
+                window.PhanterPWA.open_way(way_before_lock)
             else:
-                window.PhanterPWA.open_default_route()
-            self.AuthUser = window.PhanterPWA.Components.AuthUser
+                window.PhanterPWA.open_default_way()
+            self.AuthUser = window.PhanterPWA.Components['auth_user']
             if self.AuthUser is not None and self.AuthUser is not js_undefined:
                 self.AuthUser.start()
                 self.AuthUser.AlertActivationAccount.check_activation()
-            LeftBar = window.PhanterPWA.Components["LeftBar"]
+            LeftBar = window.PhanterPWA.Components['left_bar']
             if LeftBar is not None and LeftBar is not js_undefined:
                 LeftBar.reload()
             jQuery("body").removeClass("phanterpwa-lock")
-            M.toast({'html': json.i18n.message})
+            window.PhanterPWA.flash({'html': json.i18n.message})
         else:
             if data.status == 400:
                 json = data.responseJSON
-                M.toast({'html': json.i18n.message})
+                window.PhanterPWA.flash({'html': json.i18n.message})
                 forms.SignLockForm()
                 errors = dict(json['errors'])
                 if errors is not js_undefined:
@@ -1688,18 +1673,18 @@ class Lock(handler.RequestRouteHandler):
         formdata = __new__(FormData())
         formdata.append(
             "csrf_token",
-            jQuery("#phanterpwa-jsonform-lock #phanterpwa-widget-input-lock-csrf_token").val()
+            jQuery("#form-lock #phanterpwa-widget-input-lock-csrf_token").val()
         )
         login_password = "{0}:{1}".format(
-            window.btoa(jQuery("#phanterpwa-jsonform-lock #phanterpwa-widget-input-lock-email").val()),
-            window.btoa(jQuery("#phanterpwa-jsonform-lock #phanterpwa-widget-input-lock-password").val())
+            window.btoa(jQuery("#form-lock #phanterpwa-widget-input-lock-email").val()),
+            window.btoa(jQuery("#form-lock #phanterpwa-widget-input-lock-password").val())
         )
         formdata.append("authorization", login_password)
         remember_me = False
-        if jQuery("#phanterpwa-jsonform-lock #phanterpwa-widget-input-lock-remember_me").prop("checked"):
+        if jQuery("#form-lock #phanterpwa-widget-input-lock-remember_me").prop("checked"):
             remember_me = True
         formdata.append(
-            jQuery("#phanterpwa-jsonform-lock #phanterpwa-widget-input-lock-remember_me").attr("name"),
+            jQuery("#form-lock #phanterpwa-widget-input-lock-remember_me").attr("name"),
             remember_me
         )
         window.PhanterPWA.ApiServer.POST(**{
@@ -1711,7 +1696,7 @@ class Lock(handler.RequestRouteHandler):
     def binds(self):
         forms.SignLockForm()
         jQuery(
-            "#phanterpwa-widget-form_button-other"
+            "#phanterpwa-widget-form-form_button-other"
         ).off(
             "click.other_user_unlock"
         ).on(
@@ -1719,7 +1704,7 @@ class Lock(handler.RequestRouteHandler):
             self.on_other_user_click
         )
         jQuery(
-            "#phanterpwa-widget-submit_button-lock"
+            "#phanterpwa-widget-form-submit_button-lock"
         ).off(
             "click.login_user_unlock"
         ).on(
@@ -1763,34 +1748,31 @@ class Lock(handler.RequestRouteHandler):
                                             _id="form-lock-image-user-container",
                                             _class="form-image-user-container"
                                         ),
-                                        forms.Widget(
+                                        forms.FormWidget(
                                             "lock",
                                             "email",
                                             **{
                                                 "type": "string",
                                                 "label": I18N("E-mail"),
-                                                "phanterpwa": {
-                                                    "validators": ["IS_NOT_EMPTY", "IS_EMAIL"]
-                                                },
-                                                "_class": "easy_forced_hidden"
+                                                "validators": ["IS_NOT_EMPTY", "IS_EMAIL"],
+                                                "_class": "e-display_hidden"
                                             }
                                         ),
                                         DIV(
-                                            forms.Widget(
+                                            forms.FormWidget(
                                                 "lock",
                                                 "password",
                                                 **{
                                                     "label": I18N("Password", **{"_pt-br": "Senha"}),
                                                     "type": "password",
-                                                    "phanterpwa": {
-                                                        "validators": ["IS_NOT_EMPTY"]
-                                                    }
+                                                    "validators": ["IS_NOT_EMPTY"],
+
                                                 }
                                             ),
-                                            _class="col s12 m12"
+                                            _class="p-col w1p100"
                                         ),
                                         DIV(
-                                            forms.Widget(
+                                            forms.FormWidget(
                                                 "lock",
                                                 "remember_me",
                                                 **{
@@ -1798,34 +1780,34 @@ class Lock(handler.RequestRouteHandler):
                                                     "type": "boolean"
                                                 }
                                             ),
-                                            _class="input-field col s12"
+                                            _class="input-field p-col w1p100"
                                         ),
                                         DIV(
                                             DIV(
                                                 forms.SubmitButton(
                                                     "lock",
                                                     I18N("Unlock", **{"_pt-br": "Desbloquear"}),
-                                                    _class="btn-autoresize waves-effect waves-phanterpwa"
+                                                    _class="btn-autoresize wave_on_click waves-phanterpwa"
                                                 ),
                                                 forms.FormButton(
                                                     "other",
                                                     I18N("Use other account", **{"_pt-br": "Usar outra conta"}),
-                                                    _class="btn-autoresize waves-effect waves-phanterpwa"
+                                                    _class="btn-autoresize wave_on_click waves-phanterpwa"
                                                 ),
                                                 _class='phanterpwa-form-buttons-container'
                                             ),
-                                            _class="input-field col s12"
+                                            _class="input-field p-col w1p100"
                                         ),
                                         **{
-                                            "_phanterpwa-jsonform": "lock",
-                                            "_id": "phanterpwa-jsonform-lock",
-                                            "_class": "row",
+                                            "_phanterpwa-form": "lock",
+                                            "_id": "form-lock",
+                                            "_class": "p-row",
                                             "_autocomplete": "off"
                                         }
                                     ),
-                                    _class="col s12"
+                                    _class="p-col w1p100"
                                 ),
-                                _class="row"
+                                _class="p-row"
                             ),
                             _class='lock-container'
                         ),
@@ -1839,10 +1821,11 @@ class Lock(handler.RequestRouteHandler):
             localStorage.removeItem("phanterpwa-authorization")
             localStorage.removeItem("auth_user")
             jQuery("body").addClass("phanterpwa-lock")
-            jQuery("#main-container").html(html.jquery())
-            jQuery("#phanterpwa-jsonform-lock #phanterpwa-widget-input-lock-email").val(self.last_auth_user.email)
+            # jQuery("#main-container").html(html.jquery())
+            html.html_to("#main-container")
+            jQuery("#form-lock #phanterpwa-widget-input-lock-email").val(self.last_auth_user.email)
             if self.last_auth_user.remember_me:
-                jQuery("#phanterpwa-jsonform-lock #phanterpwa-widget-input-lock-remember_me").attr("checked", "checked")
+                jQuery("#form-lock #phanterpwa-widget-input-lock-remember_me").attr("checked", "checked")
             jQuery(
                 "#form-lock-profile-user-name"
             ).text(
@@ -1854,15 +1837,15 @@ class Lock(handler.RequestRouteHandler):
         else:
             self.on_other_user_click()
         json = data.responseJSON
-        M.toast({'html': json.i18n.message})
+        window.PhanterPWA.flash({'html': json.i18n.message})
 
     def start(self):
         request = self.request
-        last_route = request["last_route"]
-        if last_route is not None and last_route is not js_undefined and last_route is not "lock":
-            sessionStorage.setItem("route_before_lock", last_route)
+        last_way = request["last_way"]
+        if last_way is not None and last_way is not js_undefined and last_way is not "lock":
+            sessionStorage.setItem("way_before_lock", last_way)
         else:
-            sessionStorage.setItem("route_before_lock", window.PhanterPWA.default_route)
+            sessionStorage.setItem("way_before_lock", window.PhanterPWA.default_way)
         self.last_auth_user = window.PhanterPWA.get_last_auth_user()
         self.last_auth_user_image = window.PhanterPWA.get_last_auth_user_image()
         if self.last_auth_user is not None:

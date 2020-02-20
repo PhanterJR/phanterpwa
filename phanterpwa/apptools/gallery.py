@@ -1,4 +1,4 @@
-from phanterpwa.transcrypt import helpers
+from phanterpwa.apptools import helpers
 from org.transcrypt.stubs.browser import __pragma__
 
 __pragma__('alias', "jQuery", "$")
@@ -347,7 +347,7 @@ class phanterpwaInput():
         self.addInputPanel()
 
 
-class phanterpwaGalleryCutter:
+class phanterpwaGalleryCutter():
     def __init__(self, base64data, phanterpwaInput):
         self.base64data = base64data
         self.phanterpwaInput = phanterpwaInput

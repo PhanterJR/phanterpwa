@@ -1,4 +1,4 @@
-from phanterpwa.transcrypt import helpers
+from phanterpwa.apptools import helpers
 
 DIV = helpers.XmlConstructor.tagger("div", False)
 

@@ -1,9 +1,9 @@
-import phanterpwa.transcrypt.helpers as helpers
-import phanterpwa.transcrypt.application as application
+import phanterpwa.apptools.helpers as helpers
+import phanterpwa.apptools.application as application
 from org.transcrypt.stubs.browser import __pragma__
 __pragma__('alias', "jQuery", "$")
 __pragma__('skip')
-jQuery = window = Hammer = this = js_undefined = window = console = 0
+jQuery = window = Hammer = this = js_undefined = window = console = __new__ = RegExp = 0
 __pragma__('noskip')
 
 
@@ -17,9 +17,9 @@ __pragma__('kwargs')
 
 
 class LeftBar(application.Component):
-    def __init__(self, element_target, **parameters):
-        self.element_target = jQuery(element_target)
-        self.identifier = "LeftBar"
+    def __init__(self, target_selector, **parameters):
+        self.target_selector = target_selector
+        self.element_target = jQuery(self.target_selector)
         if "_id" not in parameters:
             parameters['_id'] = "phanterpwa-component-left_bar"
         if "_class" in parameters:
@@ -34,33 +34,38 @@ class LeftBar(application.Component):
             DIV(_id="phanterpwa-component-left_bar-bottom")
         ]
         self.all_buttons = list()
-        self.xml = DIV(*tcontent, **parameters)
+        self.html = DIV(*tcontent, **parameters)
+        application.Component.__init__(self, "left_bar", self.html)
+        self.html_to(target_selector)
 
     def add_button(self, button, **parameters):
         if isinstance(button, (LeftBarMenu, LeftBarButton, LeftBarUserMenu)):
             id_button = button.identifier
             has_button = False
+            cont = 0
+            position = None
             for b in self.all_buttons:
                 if b.identifier == id_button:
                     has_button = True
+                    position = cont
+                cont += 1
 
             if not has_button:
                 self.all_buttons.append(button)
-            self.reload()
-
-    def start(self):
-        window.PhanterPWA.xml_to_dom_element(
-            self.xml,
-            self.element_target
-        )
+            else:
+                self.all_buttons[position] = button
         self.reload()
 
     def reload(self):
+        self.start()
+
+    def start(self):
+        self.element_target = jQuery(self.target_selector)
         for x in self.all_buttons:
             id_button = "phanterpwa-component-left_bar-menu_button-{0}".format(x.identifier)
 
             if all([self._check_button_requires_login(x),
-                self._check_button_routes(x),
+                self._check_button_ways(x),
                 self._check_button_roles(x)]):
                 position = self._get_button_position(x)
                 b = self.element_target.find(
@@ -75,6 +80,7 @@ class LeftBar(application.Component):
                 x.start()
             else:
                 self.element_target.find("#{0}".format(id_button)).parent().remove()
+        window.PhanterPWA.reload_events(**{"selector": "#phanterpwa-component-left_bar"})
 
     def _get_button_position(self, button):
         pos = button.position
@@ -111,27 +117,38 @@ class LeftBar(application.Component):
 
         return False
 
-    def _check_button_routes(self, button):
-        current_route = window.PhanterPWA.get_current_route()
-        routes = button.routes
-        if routes is not None and routes is not js_undefined:
-            if isinstance(routes, list):
-                if "all" in routes:
+    def _check_button_ways(self, button):
+        current_way = window.PhanterPWA.get_current_way()
+        ways = button.ways
+        if ways is not None and ways is not js_undefined:
+            if isinstance(ways, list):
+                if "all" in ways:
                     return True
-                elif current_route in routes:
+                elif current_way in ways:
                     return True
+                else:
+                    for x in ways:
+                        if callable(x):
+                            if x(current_way) is True:
+                                return True
+                        elif x.startswith("^"):
+                            r = __new__(RegExp(x))
+                            result = current_way.match(r)
+                            if result is not None:
+                                return True
+
         return False
 
     @staticmethod
     def _open():
-        element = jQuery("#phanterpwa-component-left_bar").addClass("enabled")
+        jQuery("#phanterpwa-component-left_bar").addClass("enabled")
 
     def open(self):
         self._open()
 
     @staticmethod
     def _close():
-        element = jQuery("#phanterpwa-component-left_bar").removeClass("enabled").removeClass("enabled_submenu").find(
+        jQuery("#phanterpwa-component-left_bar").removeClass("enabled").removeClass("enabled_submenu").find(
             ".phanterpwa-component-left_bar-menu_button-wrapper"
         ).removeClass("enabled")
 
@@ -140,28 +157,30 @@ class LeftBar(application.Component):
 
 
 class LeftBarMainButton(application.Component):
-    def __init__(self, element_target, **parameters):
-        application.Component.__init__(self, "LeftBarMainButton", self.element)
-        self.element_target = jQuery(element_target)
+    def __init__(self, target_selector, **parameters):
+        self.target_selector = target_selector
+        self.element_target = jQuery(self.target_selector)
         self._icon = I(_class="fas fa-bars")
         if "_id" not in parameters:
             parameters['_id'] = "phanterpwa-component-left_bar-main_button"
         if "_class" in parameters:
             parameters["_class"] = "{0} {1}".format(
                 parameters["_class"],
-                "phanterpwa-component-left_bar-main_button-wrapper waves-effect waves-phanterpwa link"
+                "phanterpwa-component-left_bar-main_button-wrapper wave_on_click waves-phanterpwa link"
             )
         else:
             parameters["_class"] = "{0} {1}".format(
                 "phanterpwa-component-left_bar-main_button-wrapper",
-                "waves-effect waves-phanterpwa link"
+                "wave_on_click waves-phanterpwa link"
             )
         if "icon" in parameters:
             self._icon = parameters["icon"]
-        self.xml = DIV(self._icon, **parameters)
-
+        html = DIV(self._icon, **parameters)
+        application.Component.__init__(self, "left_bar_main_button", html)
+        self.html_to(target_selector)
 
     def switch_leftbar(self):
+        self.element_target = jQuery(self.target_selector)
         el = self.element_target.find("#phanterpwa-component-left_bar-main_button")
         if el.hasClass("enabled") or el.hasClass("enabled_submenu"):
             self.close_leftbar()
@@ -169,23 +188,28 @@ class LeftBarMainButton(application.Component):
             self.open_leftbar()
 
     def close_leftbar(self):
-        el = self.element_target.find(
+        self.element_target = jQuery(self.target_selector)
+        self.element_target.find(
             "#phanterpwa-component-left_bar-main_button").removeClass("enabled").removeClass("enabled_submenu")
         LeftBar._close()
 
     def open_leftbar(self):
+        self.element_target = jQuery(self.target_selector)
         self.element_target.find("#phanterpwa-component-left_bar-main_button").addClass("enabled")
         LeftBar._open()
 
-    def start(self):
-        window.PhanterPWA.xml_to_dom_element(
-            self.xml,
-            self.element_target
-        )
+    def _binds(self):
+        self.element_target = jQuery(self.target_selector)
         self.element_target.find("#phanterpwa-component-left_bar-main_button").off("click.mainbutton_leftbar").on(
             "click.mainbutton_leftbar",
             lambda: self.switch_leftbar()
         )
+
+    def reload(self):
+        self._binds()
+
+    def start(self):
+        self._binds()
 
 
 class LeftBarButton(helpers.XmlConstructor):
@@ -195,7 +219,7 @@ class LeftBarButton(helpers.XmlConstructor):
         self.icon = icon
         self.requires_login = False
         self.autorized_roles = ["all"]
-        self.routes = ["all"]
+        self.ways = ["all"]
         self.position = "bottom"
         parameters["_id"] = "phanterpwa-component-left_bar-menu_button-{0}".format(self.identifier)
         if "_class" in parameters:
@@ -212,13 +236,15 @@ class LeftBarButton(helpers.XmlConstructor):
             if isinstance(parameters["autorized_roles"], list):
                 self.autorized_roles = parameters["autorized_roles"]
             else:
-                console.error("The parameter 'autorized_roles' must be type list")
+                if window.PhanterPWA.DEBUG:
+                    console.error("The parameter 'autorized_roles' must be type list")
 
-        if "routes" in parameters:
-            if isinstance(parameters["routes"], list):
-                self.routes = parameters["routes"]
+        if "ways" in parameters:
+            if isinstance(parameters["ways"], list):
+                self.ways = parameters["ways"]
             else:
-                console.error("The parameter 'routes' must be type list")
+                if window.PhanterPWA.DEBUG:
+                    console.error("The parameter 'ways' must be type list")
 
         if "position" in parameters:
             self.position = parameters["position"]
@@ -237,7 +263,8 @@ class LeftBarButton(helpers.XmlConstructor):
         )
 
     def start(self):
-        console.log("start this button")
+        if window.PhanterPWA.DEBUG:
+            console.info("start button {0}".format(self.identifier))
 
 
 class LeftBarSubMenu(helpers.XmlConstructor):
@@ -267,7 +294,7 @@ class LeftBarMenu(helpers.XmlConstructor):
         self.componentSubmenu = LeftBarSubMenu
         self.requires_login = False
         self.autorized_roles = ["all"]
-        self.routes = ["all"]
+        self.ways = ["all"]
         self.position = "bottom"
         parameters["_id"] = "phanterpwa-component-left_bar-menu_button-{0}".format(self.identifier)
         if "_class" in parameters:
@@ -284,12 +311,14 @@ class LeftBarMenu(helpers.XmlConstructor):
             if isinstance(parameters["autorized_roles"], list):
                 self.autorized_roles = parameters["autorized_roles"]
             else:
-                console.error("The parameter 'autorized_roles' must be type list")
-        if "routes" in parameters:
-            if isinstance(parameters["routes"], list):
-                self.routes = parameters["routes"]
+                if window.PhanterPWA.DEBUG:
+                    console.error("The parameter 'autorized_roles' must be type list")
+        if "ways" in parameters:
+            if isinstance(parameters["ways"], list):
+                self.ways = parameters["ways"]
             else:
-                console.error("The parameter 'routes' must be type list")
+                if window.PhanterPWA.DEBUG:
+                    console.error("The parameter 'ways' must be type list")
         if "position" in parameters:
             self.position = parameters["position"]
 
@@ -337,7 +366,8 @@ class LeftBarMenu(helpers.XmlConstructor):
             "#phanterpwa-component-left_bar-menu_button-{0}".format(self.identifier)
         ).parent()
         element.removeClass("enabled")
-        if jQuery("#phanterpwa-component-left_bar .phanterpwa-component-left_bar-menu_button-wrapper.enabled").length == 0:
+        if jQuery("#phanterpwa-component-left_bar").find(
+                ".phanterpwa-component-left_bar-menu_button-wrapper.enabled").length == 0:
             jQuery("#phanterpwa-component-left_bar").removeClass("enabled_submenu").removeClass("enabled")
             jQuery("#phanterpwa-component-left_bar-main_button").removeClass("enabled")
 
@@ -346,13 +376,13 @@ class LeftBarMenu(helpers.XmlConstructor):
         element = jQuery("#phanterpwa-component-left_bar").find(
             "#phanterpwa-component-left_bar-menu_button-{0}".format(self.identifier)
         )
-        console.log("achou", element)
         element.off("click.open_leftbar_menu").on(
             "click.open_leftbar_menu",
             lambda: self.switch_menu(this)
         )
         sub_element = jQuery("#phanterpwa-component-left_bar").find(
-            "#phanterpwa-component-left_bar-submenu-from-{0} .phanterpwa-component-left_bar-submenu-button".format(self.identifier))
+            "#phanterpwa-component-left_bar-submenu-from-{0} {1}".format(
+                self.identifier, ".phanterpwa-component-left_bar-submenu-button"))
         sub_element.off("click.close_leftbar_submenu").on(
             "click.close_leftbar_submenu",
             lambda: self.close_menu()
@@ -366,7 +396,7 @@ class LeftBarUserMenu(helpers.XmlConstructor):
         self.parameters = parameters
         self.requires_login = True
         self.autorized_roles = ["all"]
-        self.routes = ["all"]
+        self.ways = ["all"]
         self.position = "bottom"
         parameters["_id"] = "phanterpwa-component-left_bar-menu_button-{0}".format(self.identifier)
         if "_class" in parameters:
@@ -383,12 +413,14 @@ class LeftBarUserMenu(helpers.XmlConstructor):
             if isinstance(parameters["autorized_roles"], list):
                 self.autorized_roles = parameters["autorized_roles"]
             else:
-                console.error("The parameter 'autorized_roles' must be type list")
-        if "routes" in parameters:
-            if isinstance(parameters["routes"], list):
-                self.routes = parameters["routes"]
+                if window.PhanterPWA.DEBUG:
+                    console.error("The parameter 'autorized_roles' must be type list")
+        if "ways" in parameters:
+            if isinstance(parameters["ways"], list):
+                self.ways = parameters["ways"]
             else:
-                console.error("The parameter 'routes' must be type list")
+                if window.PhanterPWA.DEBUG:
+                    console.error("The parameter 'ways' must be type list")
         if "position" in parameters:
             self.position = parameters["position"]
 
@@ -413,7 +445,8 @@ class LeftBarUserMenu(helpers.XmlConstructor):
         html_submenus = ""
         self.parameters
         if self.submenus:
-            self.parameters["_target_submenu"] = "phanterpwa-component-left_bar-submenu-from-{0}".format(self.identifier)
+            self.parameters["_target_submenu"] = \
+                "phanterpwa-component-left_bar-submenu-from-{0}".format(self.identifier)
             html_submenus = DIV(
                 *self.submenus,
                 _id=self.parameters["_target_submenu"],
@@ -450,7 +483,8 @@ class LeftBarUserMenu(helpers.XmlConstructor):
             "#phanterpwa-component-left_bar-menu_button-{0}".format(self.identifier)
         ).parent()
         element.removeClass("enabled")
-        if jQuery("#phanterpwa-component-left_bar .phanterpwa-component-left_bar-menu_button-wrapper.enabled").length == 0:
+        if jQuery("#phanterpwa-component-left_bar").find(
+                ".phanterpwa-component-left_bar-menu_button-wrapper.enabled").length == 0:
             jQuery("#phanterpwa-component-left_bar").removeClass("enabled_submenu").removeClass("enabled")
             jQuery("#phanterpwa-component-left_bar-main_button").removeClass("enabled")
 
@@ -487,136 +521,3 @@ class LeftBarUserMenu(helpers.XmlConstructor):
 
 
 __pragma__('nokwargs')
-
-# def close_menu():
-#     jQuery("#left_bar").removeClass("enabled_submenu").removeClass("enabled")
-#     jQuery("#menu-button-main-page").removeClass("enabled_submenu").removeClass("enabled")
-#     jQuery(".phanterpwa-component-left_bar").removeClass("enabled")
-#     jQuery(".cmp-bar_user_and_menu-container").removeClass("enabled")
-
-
-# def open_menu():
-#     jQuery("#left_bar").addClass("enabled")
-#     jQuery("#menu-button-main-page").addClass("enabled")
-
-
-# def toggle_menu():
-#     opened_menu = jQuery("#left_bar").hasClass("enabled")
-#     opened_submenu = jQuery("#left_bar").hasClass("enabled_submenu")
-#     if (opened_menu and opened_submenu):
-#         jQuery("#left_bar").removeClass("enabled")
-#         jQuery("#left_bar, #menu-button-main-page").removeClass("enabled_submenu")
-#         jQuery("#menu-button-main-page").removeClass("enabled")
-#         jQuery(".phanterpwa-component-left_bar, .cmp-bar_user_and_menu-container").removeClass("enabled")
-#     elif (opened_menu):
-#         jQuery("#left_bar").removeClass("enabled")
-#         jQuery("#left_bar, #menu-button-main-page").removeClass("enabled_submenu")
-#         jQuery("#menu-button-main-page").removeClass("enabled")
-#         jQuery(".phanterpwa-component-left_bar, .cmp-bar_user_and_menu-container").removeClass("enabled")
-#     elif (opened_submenu):
-#         with_screen = jQuery(window).width()
-#         if int(with_screen) < 992:
-#             jQuery("#left_bar").removeClass("enabled")
-#             jQuery("#left_bar, #menu-button-main-page").removeClass("enabled_submenu")
-#             jQuery("#menu-button-main-page").removeClass("enabled")
-#             jQuery(".phanterpwa-component-left_bar, .cmp-bar_user_and_menu-container").removeClass("enabled")
-#         else:
-#             jQuery("#left_bar").addClass("enabled")
-#             jQuery("#menu-button-main-page").addClass("enabled")
-#     else:
-#         jQuery("#left_bar").addClass("enabled")
-#         jQuery("#menu-button-main-page").addClass("enabled")
-
-
-# __pragma__('kwargs')
-
-
-# @decorators.check_if_has_role(roles=["administrator", "root"])
-# def botoes_administrador(**kargs):
-#     if kargs.has_role is True:
-#         def after_load(data):
-#             id_data = jQuery(data).attr("id")
-#             has_button = list()
-
-#             def open_submenu_administracao(el):
-#                 parent = jQuery(el).parent()
-#                 if jQuery(parent).hasClass('enabled'):
-#                     jQuery(parent).removeClass('enabled')
-#                 else:
-#                     jQuery(parent).addClass('enabled')
-#                     open_menu()
-#                 jQuery(
-#                     ".phanterpwa-component-left_bar-submenu-button, .phanterpwa-component-left_bar-button"
-#                 ).off(
-#                     "click.close_menu"
-#                 ).on(
-#                     "click.close_menu",
-#                     lambda: close_menu()
-#                 )
-
-#             def check_has_button(el):
-
-#                 id_check = jQuery(el).attr("id")
-#                 if id_check == id_data:
-#                     has_button.append(id_data)
-#             jQuery("#options-bottom-main-bar-left>.phanterpwa-component-left_bar").each(
-#                 lambda id, el: check_has_button(el)
-#             )
-#             if len(has_button) == 0:
-#                 jQuery("#options-bottom-main-bar-left").append(data)
-#                 jQuery(
-#                     "#phanterpwa-component-left_bar-administracao>.phanterpwa-component-left_bar-menu"
-#                 ).off(
-#                     "click.administracao"
-#                 ).on(
-#                     "click.administracao",
-#                     lambda: open_submenu_administracao(this)
-#                 )
-#         jQuery("<div></div>").load("./components/left_bar/botao_administracao.html", after_load)
-#     else:
-#         jQuery("#phanterpwa-component-left_bar-administracao").remove()
-
-
-# __pragma__('nokwargs')
-
-
-# def start():
-#     jQuery(
-#         "#menu-button-main-page"
-#     ).off(
-#         "click.button_menu_left"
-#     ).on(
-#         "click.button_menu_left",
-#         toggle_menu
-#     )
-#     jQuery(
-#         ".phanterpwa-component-left_bar-submenu-button, .phanterpwa-component-left_bar-button"
-#     ).off(
-#         "click.close_menu"
-#     ).on(
-#         "click.close_menu",
-#         close_menu
-#     )
-#     __pragma__('jsiter')
-#     hammerconf = {
-#         'inputClass': Hammer.PointerEventInput if Hammer.SUPPORT_POINTER_EVENTS else Hammer.TouchInput
-#     }
-#     __pragma__('nojsiter')
-
-#     def gesture_open_left_menu(ev):
-#         if((ev.gesture.center.x - ev.gesture.deltaX) < 10):
-#             open_menu()
-
-#     jQuery("body").hammer(
-#         hammerconf
-#     ).off(
-#         "swiperight.event_menu, tap.event_menu"
-#     ).on(
-#         "swiperight.event_menu",
-#         lambda ev: gesture_open_left_menu(ev)
-#     ).on(
-#         "tap.event_menu",
-#         close_menu
-#     )
-#     botoes_administrador()
-

@@ -9,6 +9,256 @@ window = jQuery = console = document = localStorage = String = setTimeout =\
 __pragma__('noskip')
 
 
+class Mask():
+    def __init__(self, target_selector, mask_function, reverse=False, apply_on_init=False):
+        self.target_selector = target_selector
+        self.element_target = jQuery(target_selector)
+        self.mask_function = mask_function
+        self.reverse = reverse
+        self.apply_on_init = apply_on_init
+        self.start()
+
+    @staticmethod
+    def stringFilter(
+        value,
+        you_want_array=["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]):
+        value = str(value)
+        new_value = ""
+        for x in value:
+            if x in you_want_array:
+                new_value += x
+        return new_value
+
+    def onKeyPress(self, event, el):
+        code = event.keyCode or event.which
+        element = jQuery(el)
+        pos = element[0].selectionStart
+        end = element[0].selectionEnd
+        if pos == end:
+            current_value = element.val()
+            v = String.fromCharCode(code)
+            text0 = current_value[0: pos] + v
+            text1 = current_value[pos:]
+            numbers = [str(x) for x in range(10)]
+            if v in numbers:
+                print(current_value[pos])
+                if current_value[pos] in numbers or current_value[pos] == "_":
+                    pos = pos + 1
+                else:
+                    pos = pos + 2
+        else:
+            current_value = element.val()
+            v = String.fromCharCode(code)
+            text0 = current_value[0: pos] + v
+            text1 = current_value[end:]
+            numbers = [str(x) for x in range(10)]
+            if v in numbers:
+                pos = pos + 1
+        new_value = "{0}{1}".format(text0, text1)
+        pure_value = self.stringFilter(new_value)
+        new_value = self.mask_function(pure_value)[0]
+        if pure_value is not "":
+            element.val(new_value)
+        else:
+            element.val("")
+        if pos > self.mask_function(pure_value)[1]:
+            element[0].selectionStart = self.mask_function(pure_value)[1]
+            element[0].selectionEnd = self.mask_function(pure_value)[1]
+        else:
+            element[0].selectionStart = pos
+            element[0].selectionEnd = pos
+        event.preventDefault()
+
+    def onNonPrintingKeysIn(self, event, el):
+        noprintkeys = [8, 46]
+        code = event.keyCode or event.which
+        element = jQuery(el)
+        if code in noprintkeys:
+            if code == 8:
+                current_value = element.val()
+                if self.stringFilter(current_value) is not "":
+                    pos = element[0].selectionStart
+                    end = element[0].selectionEnd
+                    text0 = current_value[0:pos - 1]
+                    numbers = [str(x) for x in range(10)]
+                    if pos == end:
+                        if current_value[pos - 1] in numbers:
+                            text0 = current_value[0: pos - 1]
+                        elif current_value[pos - 1] is not "":
+                            text0 = current_value[0: pos - 2]
+                            pos = pos - 1
+                        text1 = current_value[pos:]
+                        new_value = "{0}{1}".format(text0, text1)
+                        element[0].selectionStart = pos - 1
+                        element[0].selectionEnd = pos - 1
+                    else:
+                        text0 = current_value[0: pos]
+                        text1 = current_value[end:]
+                        new_value = "{0}{1}".format(text0, text1)
+                        element[0].selectionStart = pos
+                        element[0].selectionEnd = pos
+                    pure_value = self.stringFilter(new_value)
+                    new_value = self.mask_function(pure_value)[0]
+                    if pure_value is not "":
+                        element.val(new_value)
+                    else:
+                        element.val("")
+                    element[0].selectionStart = pos - 1
+                    element[0].selectionEnd = pos - 1
+                else:
+                    element.val("")
+            elif code == 46:
+                current_value = element.val()
+                if self.stringFilter(current_value) is not "":
+                    pos = element[0].selectionStart
+                    end = element[0].selectionEnd
+                    if pos == end:
+                        text0 = current_value[0:pos]
+                        numbers = [str(x) for x in range(10)]
+                        if current_value[pos] in numbers:
+                            text1 = current_value[pos + 1:]
+                        elif current_value[pos] is not "":
+                            text1 = current_value[pos + 2:]
+
+                        new_value = "{0}{1}".format(text0, text1)
+                        element[0].selectionStart = pos
+                        element[0].selectionEnd = pos
+                    else:
+                        text0 = current_value[0: pos]
+                        text1 = current_value[end:]
+                        new_value = "{0}{1}".format(text0, text1)
+                        element[0].selectionStart = pos
+                        element[0].selectionEnd = pos
+                    pure_value = self.stringFilter(new_value)
+                    new_value = self.mask_function(pure_value)[0]
+                    if pure_value is not "":
+                        element.val(new_value)
+                    else:
+                        element.val("")
+                    element[0].selectionStart = pos
+                    element[0].selectionEnd = pos
+                else:
+                    element.val("")
+
+            event.preventDefault()
+        # else:
+            # pos = element[0].selectionStart
+            # end = element[0].selectionEnd
+            # if pos == end:
+            #     current_value = element.val()
+            #     v = String.fromCharCode(code)
+            #     text0 = current_value[0: pos] + v
+            #     text1 = current_value[pos:]
+            #     numbers = [str(x) for x in range(10)]
+            #     if v in numbers:
+            #         print(current_value[pos])
+            #         if current_value[pos] in numbers or current_value[pos] == "_":
+            #             pos = pos + 1
+            #         else:
+            #             pos = pos + 2
+            # else:
+            #     current_value = element.val()
+            #     v = String.fromCharCode(code)
+            #     text0 = current_value[0: pos] + v
+            #     text1 = current_value[end:]
+            #     numbers = [str(x) for x in range(10)]
+            #     if v in numbers:
+            #         if current_value[end] in numbers or current_value[end] == "_":
+            #             pos = pos + 1
+            #         else:
+            #             pos = pos + 2
+            # new_value = "{0}{1}".format(text0, text1)
+            # pure_value = self.stringFilter(new_value)
+            # new_value = self.mask_function(pure_value)[0]
+            # if pure_value is not "":
+            #     element.val(new_value)
+            # else:
+            #     element.val("")
+            # if pos > self.mask_function(pure_value)[1]:
+            #     element[0].selectionStart = self.mask_function(pure_value)[1]
+            #     element[0].selectionEnd = self.mask_function(pure_value)[1]
+            # else:
+            #     element[0].selectionStart = pos
+            #     element[0].selectionEnd = pos
+            # event.preventDefault()
+
+    def onNonPrintingKeys(self, event, el):
+        event.preventDefault()
+        element = jQuery(el)
+        code = event.keyCode or event.which
+        noprintkeys = [8, 46, 9]
+        if code in noprintkeys:
+            value = element.val()
+            element.val(value + "_")
+            if (self.reverse):
+                if (self.stringFilter(value) != ""):
+                    value = str(int(self.stringFilter(value)))
+            new_value = ""
+
+            pure_value = self.stringFilter(value)
+            if pure_value == "":
+                element.val("")
+            else:
+                new_value = self.mask_function(pure_value)[0]
+                element.attr("phanterpwa-mask-justnumbers", self.stringFilter(new_value))
+                selection_pos = self.mask_function(pure_value)[1]
+                element.val(new_value)
+                if (self.reverse):
+                    element[0].selectionStart = -len(new_value)
+                    element[0].selectionEnd = -len(new_value)
+                else:
+                    element[0].selectionStart = selection_pos
+                    element[0].selectionEnd = selection_pos
+                if(code != 9):
+                    event.preventDefault()
+        else:
+            pure_value = self.stringFilter(element.val())
+            if pure_value == "":
+                element.val("")
+
+    def start(self):
+        element = jQuery(self.target_selector)
+        value = element.val()
+        pure_value = self.stringFilter(value)
+        new_value = self.mask_function(pure_value)[0]
+        selection_pos = self.mask_function(pure_value)[1]
+
+        if(self.apply_on_init):
+            element.val(new_value)
+            if(reverse):
+                element[0].selectionStart = -len(new_value)
+                element[0].selectionEnd = -len(new_value)
+            else:
+                element[0].selectionStart = selection_pos
+                element[0].selectionEnd = selection_pos
+
+        element.off(
+            "keypress.phanterpwaMask, focusout.phanterpwaMask"
+        ).on(
+            "keypress.phanterpwaMask, focusout.phanterpwaMask",
+            lambda event: self.onKeyPress(event, this)
+        )
+        element.off(
+            "keydown.phanterpwaMask, focusout.phanterpwaMask"
+        ).on(
+            "keydown.phanterpwaMask, focusout.phanterpwaMask",
+            lambda event: self.onNonPrintingKeysIn(event, this)
+        )
+
+
+def date_and_datetime_to_maks(value):
+    date_format = ["d", "M", "o", "t", "y", "H", "m", "s"]
+    string_mask = ""
+    if isinstance(value, str):
+        for x in value:
+            if x in date_format:
+                y = "#"
+            else:
+                y = x
+            string_mask += y
+    return string_mask
+
+
 def isNotEmpty(value):
     if ((value is not None) and (value is not "") and (value is not js_undefined)):
         return True
@@ -162,28 +412,27 @@ def floatToCurrency(value, casas_decimais=2, separador_decimal=",", separador_mi
 
 
 def baseCustom(value, custom_mask, cursorPosition=0):
-        value = str(value)
-        size = len(value)
-        char_plus = 0
-        pos_num = 0
-        new_value = ""
-        new_value_ignore = ""
-        cont_int = 0
-        for i in range(len(custom_mask)):
-            if (custom_mask[i] == "#"):
-                if (pos_num < size):
-                    new_value += value[pos_num]
-                    pos_num += 1
-                else:
-                    new_value += "_"
-                    pos_num += 1
+    value = str(value)
+    size = len(value)
+    char_plus = 0
+    pos_num = 0
+    new_value = ""
+    for i in range(len(custom_mask)):
+        if (custom_mask[i] == "#"):
+            if (pos_num < size):
+                new_value += value[pos_num]
+                pos_num += 1
             else:
-                if (i < (size + char_plus)):
-                    char_plus += 1
+                new_value += "_"
+                pos_num += 1
+        else:
+            if (i < (size + char_plus)):
+                char_plus += 1
 
-                new_value += custom_mask[i]
-        cursorPosition = int(size) + char_plus
-        return [new_value, cursorPosition]
+            new_value += custom_mask[i]
+    cursorPosition = int(size) + char_plus
+    return [new_value, cursorPosition]
+
 
 def maskFone(valor):
         valor = str(valor)
@@ -457,16 +706,20 @@ def phanterDecimals(
                 qu_decs += "0"
             new_value = "0{0}{1}".format(separador_decimal, qu_decs)
             if(element.prop('TagName') == "INPUT"):
-                element.val(floatToCurrency(stringToFloatstringLimitDecimals(new_value, casas_decimais), casas_decimais, separador_decimal, separador_milhar, l_currency))
+                element.val(floatToCurrency(stringToFloatstringLimitDecimals(
+                    new_value, casas_decimais), casas_decimais, separador_decimal, separador_milhar, l_currency))
             else:
-                element.text(floatToCurrency(stringToFloatstringLimitDecimals(new_value, casas_decimais), casas_decimais, separador_decimal, separador_milhar, l_currency))
+                element.text(floatToCurrency(stringToFloatstringLimitDecimals(
+                    new_value, casas_decimais), casas_decimais, separador_decimal, separador_milhar, l_currency))
             element.attr("phantermaskValue", stringToFloatstringLimitDecimals(value, casas_decimais))
         else:
             new_value = value.replace(".", separador_decimal)
             if(element.prop('TagName') == "INPUT"):
-                element.val(floatToCurrency(stringToFloatstringLimitDecimals(new_value, casas_decimais), casas_decimais, separador_decimal, separador_milhar, l_currency))
+                element.val(floatToCurrency(stringToFloatstringLimitDecimals(
+                    new_value, casas_decimais), casas_decimais, separador_decimal, separador_milhar, l_currency))
             else:
-                element.text(floatToCurrency(stringToFloatstringLimitDecimals(new_value, casas_decimais), casas_decimais, separador_decimal, separador_milhar, l_currency))
+                element.text(floatToCurrency(stringToFloatstringLimitDecimals(
+                    new_value, casas_decimais), casas_decimais, separador_decimal, separador_milhar, l_currency))
             element.attr("phantermaskValue", stringToFloatstringLimitDecimals(value, casas_decimais))
         element[0].selectionStart = -len(new_value)
         element[0].selectionEnd = -len(new_value)
@@ -490,16 +743,20 @@ def phanterDecimals(
                 qu_decs += "0"
             new_value = "0" + separador_decimal + qu_decs
             if(element.prop('TagName') == "INPUT"):
-                element.val(floatToCurrency(stringToFloatstringLimitDecimals(new_value, casas_decimais), casas_decimais, separador_decimal, separador_milhar, l_currency))
+                element.val(floatToCurrency(stringToFloatstringLimitDecimals(
+                    new_value, casas_decimais), casas_decimais, separador_decimal, separador_milhar, l_currency))
             else:
-                element.text(floatToCurrency(stringToFloatstringLimitDecimals(new_value, casas_decimais), casas_decimais, separador_decimal, separador_milhar, l_currency))
+                element.text(floatToCurrency(stringToFloatstringLimitDecimals(
+                    new_value, casas_decimais), casas_decimais, separador_decimal, separador_milhar, l_currency))
             element.attr("phantermaskValue", stringToFloatstringLimitDecimals(value, casas_decimais))
         else:
             new_value = value.replace(".", separador_decimal)
             if(element.prop('TagName') == "INPUT"):
-                element.val(floatToCurrency(stringToFloatstringLimitDecimals(new_value, casas_decimais), casas_decimais, separador_decimal, separador_milhar, l_currency))
+                element.val(floatToCurrency(stringToFloatstringLimitDecimals(
+                    new_value, casas_decimais), casas_decimais, separador_decimal, separador_milhar, l_currency))
             else:
-                element.text(floatToCurrency(stringToFloatstringLimitDecimals(new_value, casas_decimais), casas_decimais, separador_decimal, separador_milhar, l_currency))
+                element.text(floatToCurrency(stringToFloatstringLimitDecimals(
+                    new_value, casas_decimais), casas_decimais, separador_decimal, separador_milhar, l_currency))
             element.attr("phantermaskValue", stringToFloatstringLimitDecimals(value, casas_decimais))
         element[0].selectionStart = -len(new_value)
         element[0].selectionEnd = -len(new_value)

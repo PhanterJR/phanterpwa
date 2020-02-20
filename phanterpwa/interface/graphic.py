@@ -1341,6 +1341,7 @@ class ProjectPWA():
     def updateAppCONFIG(self):
         self.AppCONFIG = config(os.path.join(self.AppCONFIG["PROJECT"]["path"], "config.json"), self.AppCONFIG)
 
+
 class ConfigAPI():
     def __init__(self, tkInstance, Root, project_path):
         self.CONFIG = config(CURRENT_DIR)
@@ -1550,8 +1551,6 @@ class ConfigAPI():
             self.AppCONFIG['API']['port'] = v
             self.updateAppCONFIG()
 
-
-
     def updateAppCONFIG(self):
         self.AppCONFIG = config(os.path.join(self.AppCONFIG["PROJECT"]["path"], "config.json"), self.AppCONFIG)
 
@@ -1728,7 +1727,7 @@ class ConfigAPP():
         row += 1
         APP_compiled_folder_label = ttk.Label(frame, text=T("Target folder on Compile"))
         APP_compiled_folder_label.grid(column=0, row=row, padx=(10, 5), pady=(5, 5), sticky="e")
-        APP_compiled_folder = self.AppCONFIG['APPS'][APP]['compiled_folder']
+        APP_compiled_folder = self.AppCONFIG['APPS'][APP]['build_folder']
         self.APP_compiled_folder_input = ttk.Entry(frame, width=70)
         self.APP_compiled_folder_input.insert(0, APP_compiled_folder)
         self.APP_compiled_folder_input.config(state="readonly")
@@ -1885,10 +1884,10 @@ class ConfigAPP():
 
     def setEntryFolder(self, APP):
 
-        current_path = self.AppCONFIG["APPS"][APP]["compiled_folder"]
+        current_path = self.AppCONFIG["APPS"][APP]["build_folder"]
         folder = filedialog.askdirectory(initialdir=current_path)
         if folder:
-            self.AppCONFIG["APPS"][APP]["compiled_folder"] = os.path.normpath(folder)
+            self.AppCONFIG["APPS"][APP]["build_folder"] = os.path.normpath(folder)
             self.updateAppCONFIG()
             self.APP_compiled_folder_input.config(state="normal")
             self.APP_compiled_folder_input.delete(0, END)

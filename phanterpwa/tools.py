@@ -1,19 +1,12 @@
 # -*- coding: utf-8 -*-
 import re
 import os
-import sys
 import json
 import shutil
-import importlib
-import subprocess
 import tempfile
-import sass
 from passlib.hash import pbkdf2_sha512
 from glob import glob
 from pathlib import PurePath
-from phanterpwa.samples.project_config_sample import project_config_sample
-#from pydal import Field
-#from pydal.objects import Set
 from pydal.objects import (Set, Table, Field)
 from urllib.parse import quote
 from unicodedata import normalize
@@ -115,26 +108,26 @@ def check_activation_code(code, size=6):
                 return code
 
 
-def check_valid_project_config(config_file) -> dict:
-    if os.path.exists(config_file) and os.path.isfile(config_file):
-        try:
-            with open(config_file, 'r', encoding="utf-8") as f:
-                cfg = json.load(f)
-        except json.JSONDecodeError as e:
-            raise e("Error on json decode the '{0}' config file. Error: {1}".format(config_file, e))
-        else:
-            for x in project_config_sample:
-                if x not in cfg:
-                    raise KeyError("The config file not is valid, not found the '{0}' key, it's required".format(x))
-                    for y in project_config_sample[x]:
-                        if y not in cfg[x]:
-                            raise KeyError("".join(["The config file not is valid,",
-                                " not found the '{0}' subkey of key '{1}' , it's required".format(y, x)]))
-            else:
-                return config_file
-    else:
-        raise RuntimeError("The '{0}' is not valid config file! Not exists or not is file.".format(config_file))
-    return {}
+# def check_valid_project_config(config_file) -> dict:
+#     if os.path.exists(config_file) and os.path.isfile(config_file):
+#         try:
+#             with open(config_file, 'r', encoding="utf-8") as f:
+#                 cfg = json.load(f)
+#         except json.JSONDecodeError as e:
+#             raise e("Error on json decode the '{0}' config file. Error: {1}".format(config_file, e))
+#         else:
+#             for x in project_config_sample:
+#                 if x not in cfg:
+#                     raise KeyError("The config file not is valid, not found the '{0}' key, it's required".format(x))
+#                     for y in project_config_sample[x]:
+#                         if y not in cfg[x]:
+#                             raise KeyError("".join(["The config file not is valid,",
+#                                 " not found the '{0}' subkey of key '{1}' , it's required".format(y, x)]))
+#             else:
+#                 return config_file
+#     else:
+#         raise RuntimeError("The '{0}' is not valid config file! Not exists or not is file.".format(config_file))
+#     return {}
 
 
 def list_installed_projects(path_project):
@@ -186,11 +179,11 @@ def list_installed_apps(path_project):
                     if not j["APPS"].get(app_name, None):
                         change = True
                         j["APPS"][app_name] = {
-                            "compiled_folder": os.path.join(p, "www"),
+                            "build_folder": os.path.join(p, "www"),
                             "timeout_to_resign": 600,
                             "host": "0.0.0.0",
                             "port": j["API"]["port"] + 1,
-                            "scrypts_main_file": "application",
+                            "transcrypt_main_file": "application",
                             "styles_main_file": "application",
                             "views_main_file": "application"
                         }
@@ -203,49 +196,48 @@ def list_installed_apps(path_project):
     return apps
 
 
-
-def config(cfg_file, dict_cfg={}, rewrite=False):
-    if isinstance(cfg_file, str):
-        if len(cfg_file) > 5:
-            if cfg_file[-5:] != ".json":
-                if os.path.exists(cfg_file) and os.path.isdir(cfg_file):
-                    cfg_file = os.path.join(cfg_file, "config.json")
-                else:
-                    cfg_file = "".join([cfg_file, ".json"])
-        else:
-            if os.path.exists(cfg_file) and os.path.isdir(cfg_file):
-                cfg_file = os.path.join(cfg_file, "config.json")
-            else:
-                cfg_file = "".join(cfg_file, ".json")
-    else:
-        raise ValueError("The arg 'cfg_file' must be strig. Given: {0}".format(type(cfg_file)))
-    if os.path.exists(cfg_file) and not rewrite:
-        cfg = None
-        with open(cfg_file, 'r', encoding="utf-8") as f:
-            cfg = json.load(f)
-        if cfg and isinstance(cfg, dict):
-            for x in dict_cfg:
-                cfg[x] = dict_cfg[x]
-        else:
-            cfg = dict_cfg
-    else:
-        basedir = os.path.dirname(cfg_file)
-        cfg = dict_cfg
-        if basedir:
-            os.makedirs(basedir, exist_ok=True)
-    with open(cfg_file, "w", encoding="utf-8") as f:
-        json.dump(cfg, f, ensure_ascii=True, indent=2)
-    if "CONFIG_INDENTIFY" in cfg and cfg["CONFIG_INDENTIFY"] == "project_config":
-        if cfg["PROJECT"]["packaged"] is True:
-            path_app = os.path.normpath(os.path.join(os.path.dirname(cfg_file)))
-            with open(cfg_file, "r", encoding="utf-8") as n:
-                string_file = n.read()
-                string_file = interpolate(string_file, context={"PROJECT_FOLDER": re.escape(path_app)})
-                cfg = json.loads(string_file)
-                cfg["PROJECT"]["packaged"] = False
-            with open(cfg_file, "w", encoding="utf-8") as f:
-                json.dump(cfg, f, ensure_ascii=True, indent=2)
-    return cfg
+# def config(cfg_file, dict_cfg={}, rewrite=False):
+#     if isinstance(cfg_file, str):
+#         if len(cfg_file) > 5:
+#             if cfg_file[-5:] != ".json":
+#                 if os.path.exists(cfg_file) and os.path.isdir(cfg_file):
+#                     cfg_file = os.path.join(cfg_file, "config.json")
+#                 else:
+#                     cfg_file = "".join([cfg_file, ".json"])
+#         else:
+#             if os.path.exists(cfg_file) and os.path.isdir(cfg_file):
+#                 cfg_file = os.path.join(cfg_file, "config.json")
+#             else:
+#                 cfg_file = "".join(cfg_file, ".json")
+#     else:
+#         raise ValueError("The arg 'cfg_file' must be strig. Given: {0}".format(type(cfg_file)))
+#     if os.path.exists(cfg_file) and not rewrite:
+#         cfg = None
+#         with open(cfg_file, 'r', encoding="utf-8") as f:
+#             cfg = json.load(f)
+#         if cfg and isinstance(cfg, dict):
+#             for x in dict_cfg:
+#                 cfg[x] = dict_cfg[x]
+#         else:
+#             cfg = dict_cfg
+#     else:
+#         basedir = os.path.dirname(cfg_file)
+#         cfg = dict_cfg
+#         if basedir:
+#             os.makedirs(basedir, exist_ok=True)
+#     with open(cfg_file, "w", encoding="utf-8") as f:
+#         json.dump(cfg, f, ensure_ascii=True, indent=2)
+#     if "CONFIG_INDENTIFY" in cfg and cfg["CONFIG_INDENTIFY"] == "project_config":
+#         if cfg["PROJECT"]["packaged"] is True:
+#             path_app = os.path.normpath(os.path.join(os.path.dirname(cfg_file)))
+#             with open(cfg_file, "r", encoding="utf-8") as n:
+#                 string_file = n.read()
+#                 string_file = interpolate(string_file, context={"PROJECT_FOLDER": re.escape(path_app)})
+#                 cfg = json.loads(string_file)
+#                 cfg["PROJECT"]["packaged"] = False
+#             with open(cfg_file, "w", encoding="utf-8") as f:
+#                 json.dump(cfg, f, ensure_ascii=True, indent=2)
+#     return cfg
 
 
 def url_pattern_relative_paths(path_base, file_search="*.html"):
@@ -271,43 +263,43 @@ def url_pattern_relative_paths(path_base, file_search="*.html"):
         return "".join([pattern, ")"])
 
 
-def create_transcrypt_config(project_path, keys=["PROJECT", "CONFIGJS"]):
-    appConfig = config(project_path)
-    appConfig['PROJECT']['compilation'] += 1
-    with open(os.path.join(project_path, "config.json"), "w", encoding="utf-8") as f:
-        json.dump(appConfig, f, ensure_ascii=True, indent=2)
-    apps_list = appConfig.get("APPS")
-    apps_list_basedir = os.path.join(appConfig['PROJECT']['path'], "apps")
-    if apps_list and apps_list_basedir:
-        for x in apps_list:
-            CONFIG = {'PROJECT': {}, 'CONFIGJS': {}}
+# def create_transcrypt_config(project_path, keys=["PROJECT", "CONFIGJS"]):
+#     appConfig = config(project_path)
+#     appConfig['PROJECT']['compilation'] += 1
+#     with open(os.path.join(project_path, "config.json"), "w", encoding="utf-8") as f:
+#         json.dump(appConfig, f, ensure_ascii=True, indent=2)
+#     apps_list = appConfig.get("APPS")
+#     apps_list_basedir = os.path.join(appConfig['PROJECT']['path'], "apps")
+#     if apps_list and apps_list_basedir:
+#         for x in apps_list:
+#             CONFIG = {'PROJECT': {}, 'CONFIGJS': {}}
 
-            CONFIG['PROJECT'] = appConfig['PROJECT']
-            CONFIG['CONFIGJS']['api_server_address'] = appConfig['API']['remote_address']
-            CONFIG['CONFIGJS']['api_websocket_address'] = appConfig['API']['websocket_address']
-            CONFIG['CONFIGJS']['timeout_to_resign'] = apps_list[x]['timeout_to_resign']
-            ini = "\n".join([
-                "# Created automatically.",
-                "#",
-                "# In development it may be necessary to add static data",
-                "# to the client side application after compiling, use",
-                "# the CONFIGJS section of the application's config.json",
-                "# file for this.",
-                "#",
-                "from org.transcrypt.stubs.browser import __pragma__\n\n",
-                "__pragma__('skip')\n",
-                "# it is ignored on transcrypt\n",
-                "window = 0\n",
-                "__pragma__('noskip')\n\n"
-                "__pragma__('jsiter')\n",
-            ])
-            end = "\n\n__pragma__('nojsiter')\n"
+#             CONFIG['PROJECT'] = appConfig['PROJECT']
+#             CONFIG['CONFIGJS']['api_server_address'] = appConfig['API']['remote_address']
+#             CONFIG['CONFIGJS']['api_websocket_address'] = appConfig['API']['websocket_address']
+#             CONFIG['CONFIGJS']['timeout_to_resign'] = apps_list[x]['timeout_to_resign']
+#             ini = "\n".join([
+#                 "# Created automatically.",
+#                 "#",
+#                 "# In development it may be necessary to add static data",
+#                 "# to the client side application after compiling, use",
+#                 "# the CONFIGJS section of the application's config.json",
+#                 "# file for this.",
+#                 "#",
+#                 "from org.transcrypt.stubs.browser import __pragma__\n\n",
+#                 "__pragma__('skip')\n",
+#                 "# it is ignored on transcrypt\n",
+#                 "window = 0\n",
+#                 "__pragma__('noskip')\n\n"
+#                 "__pragma__('jsiter')\n",
+#             ])
+#             end = "\n\n__pragma__('nojsiter')\n"
 
-            with open(os.path.join(
-                    apps_list_basedir, x, "sources", "transcrypts", "config.py"), 'w', encoding="utf-8") as f:
-                content = "".join([ini, "CONFIG = {0}".format(json.dumps(CONFIG, ensure_ascii=True, indent=4)), end])
-                content = content.replace('true', 'True').replace('false', 'False').replace('null', 'None')
-                f.write(content)
+#             with open(os.path.join(
+#                     apps_list_basedir, x, "sources", "transcrypts", "config.py"), 'w', encoding="utf-8") as f:
+#                 content = "".join([ini, "CONFIG = {0}".format(json.dumps(CONFIG, ensure_ascii=True, indent=4)), end])
+#                 content = content.replace('true', 'True').replace('false', 'False').replace('null', 'None')
+#                 f.write(content)
 
 
 def splits_seconds(seconds, d={}):
@@ -450,255 +442,291 @@ def humanize_seconds(seconds, translator_instance=None):
     return s
 
 
-def delete_compiled_app_folder(project_path):
-    appConfig = config(project_path)
-    if appConfig.get('APPS'):
-        for x in appConfig.get('APPS'):
-            target = appConfig.get('APPS')[x]['compiled_folder']
-            if target:
-                if os.path.exists(target) and os.path.isdir(target):
-                    shutil.rmtree(target)
+# def delete_compiled_app_folder(project_path):
+#     appConfig = config(project_path)
+#     if appConfig.get('APPS'):
+#         for x in appConfig.get('APPS'):
+#             target = appConfig.get('APPS')[x]['build_folder']
+#             if target:
+#                 if os.path.exists(target) and os.path.isdir(target):
+#                     shutil.rmtree(target)
 
 
-def copy_statics(project_path):
-    print("copying statics...")
-    appConfig = config(project_path)
-    version = appConfig['PROJECT']['version']
-    apps_list = appConfig.get("APPS")
-    apps_list_basedir = os.path.join(appConfig['PROJECT']['path'], "apps")
-    if apps_list and apps_list_basedir:
-        for x in apps_list:
-            compiled_folder_static = os.path.join(apps_list[x]["compiled_folder"], "static")
-            if os.path.exists(compiled_folder_static) and os.path.isdir(compiled_folder_static):
-                shutil.rmtree(compiled_folder_static)
-            if os.path.exists(os.path.join(apps_list_basedir, x, "statics")):
-                shutil.copytree(
-                    os.path.join(apps_list_basedir, x, "statics"),
-                    os.path.join(compiled_folder_static, version)
-                )
-                print("copied on", os.path.join(compiled_folder_static, version))
+# def copy_statics(project_path):
+#     print("copying statics...")
+#     appConfig = config(project_path)
+#     version = appConfig['PROJECT']['version']
+#     apps_list = appConfig.get("APPS")
+#     apps_list_basedir = os.path.join(appConfig['PROJECT']['path'], "apps")
+#     if apps_list and apps_list_basedir:
+#         for x in apps_list:
+#             compile_folder_static = os.path.join(apps_list[x]["build_folder"], "static")
+#             if os.path.exists(compile_folder_static) and os.path.isdir(compile_folder_static):
+#                 shutil.rmtree(compile_folder_static)
+#             if os.path.exists(os.path.join(apps_list_basedir, x, "statics")):
+#                 shutil.copytree(
+#                     os.path.join(apps_list_basedir, x, "statics"),
+#                     os.path.join(compile_folder_static, version)
+#                 )
+#                 print("copied on", os.path.join(compile_folder_static, version))
 
 
-def copy_languages(project_path):
-    print("copying languages...")
-    appConfig = config(project_path)
-    version = appConfig['PROJECT']['version']
-    debug = appConfig['PROJECT']['debug']
-    apps_list = appConfig.get("APPS")
-    apps_list_basedir = os.path.join(appConfig['PROJECT']['path'], "apps")
-    if apps_list and apps_list_basedir:
-        for x in apps_list:
-            source_apps = os.path.join(
-                apps_list_basedir,
-                "languages"
-            )
-            folder_lang_apps_list = os.path.join(
-                apps_list[x]['compiled_folder'],
-                "static",
-                version,
-                "languages"
-            )
-            os.makedirs(
-                os.path.join(
-                    folder_lang_apps_list), exist_ok=True)
-            if not os.path.exists(folder_lang_apps_list):
-                os.makedirs(
-                    os.path.join(folder_lang_apps_list), exist_ok=True
-                )
-            langs = glob(os.path.join(source_apps, "*.json"))
-            for y in langs:
-                with open(y, "r", encoding='utf-8') as f:
-                    c = json.load(f)
-                    lang_file = os.path.join(folder_lang_apps_list, os.path.basename(y))
-                    with open(lang_file, "w", encoding='utf-8') as o:
-                        if debug:
-                            json.dump(c, o, ensure_ascii=False, indent=2)
-                        else:
-                            json.dump(c, o, ensure_ascii=False)
+# def copy_languages(project_path):
+#     print("copying languages...")
+#     appConfig = config(project_path)
+#     version = appConfig['PROJECT']['version']
+#     debug = appConfig['PROJECT']['debug']
+#     apps_list = appConfig.get("APPS")
+#     apps_list_basedir = os.path.join(appConfig['PROJECT']['path'], "apps")
+#     if apps_list and apps_list_basedir:
+#         for x in apps_list:
+#             source_apps = os.path.join(
+#                 apps_list_basedir,
+#                 "languages"
+#             )
+#             folder_lang_apps_list = os.path.join(
+#                 apps_list[x]['build_folder'],
+#                 "static",
+#                 version,
+#                 "languages"
+#             )
+#             os.makedirs(
+#                 os.path.join(
+#                     folder_lang_apps_list), exist_ok=True)
+#             if not os.path.exists(folder_lang_apps_list):
+#                 os.makedirs(
+#                     os.path.join(folder_lang_apps_list), exist_ok=True
+#                 )
+#             langs = glob(os.path.join(source_apps, "*.json"))
+#             for y in langs:
+#                 with open(y, "r", encoding='utf-8') as f:
+#                     c = json.load(f)
+#                     lang_file = os.path.join(folder_lang_apps_list, os.path.basename(y))
+#                     with open(lang_file, "w", encoding='utf-8') as o:
+#                         if debug:
+#                             json.dump(c, o, ensure_ascii=False, indent=2)
+#                         else:
+#                             json.dump(c, o, ensure_ascii=False)
 
 
-def compile_style(main_file, target_css, app_version, debug=False):
-    sass_files_subfolders = glob(os.path.join(os.path.dirname(main_file), "**", "*.sass"))
-    with open(main_file, 'r', encoding="utf-8") as f:
-        txt = f.read()
-        for x in sass_files_subfolders:
-            with open(x, 'r', encoding="utf-8") as s:
-                c = ""
-                temp_c = s.readlines()
-                for t in temp_c:
-                    if t[0:12] == "$app-version":
-                        t = "$app-version: {0}\n".format(app_version)
-                    c = "".join([c, t])
-                txt = "\n".join([txt, c])
-        print("compiling Sass to Css: {0}".format(target_css))
-        if debug:
-            new_css = sass.compile(string=txt, indented=True, output_style="expanded")
-        else:
-            new_css = sass.compile(string=txt, indented=True, output_style="compressed")
-        with open(target_css, "w") as o:
-            o.write(new_css)
+# def compile_style(main_file, target_css, app_version, debug=False):
+#     sass_files_subfolders = glob(os.path.join(os.path.dirname(main_file), "**", "*.sass"))
+#     with open(main_file, 'r', encoding="utf-8") as f:
+#         txt = f.read()
+#         txt = "/* SASS Source Code (MAIN FILE): {0} */\n\n{1}".format(main_file, txt)
+#         for x in sass_files_subfolders:
+#             with open(x, 'r', encoding="utf-8") as s:
+#                 c = "/* SASS Source Code: {0} */\n\n".format(x)
+#                 temp_c = s.readlines()
+#                 for t in temp_c:
+#                     if t[0:13] == "$app-version:":
+#                         t = "$app-version: {0}\n".format(app_version)
+#                     c = "".join([c, t])
+#                 txt = "\n".join([txt, c])
+#         print("compiling Sass to Css: {0}".format(target_css))
+#         if debug:
+#             new_css = sass.compile(string=txt, indented=True, output_style="expanded")
+#             new_css = new_css.replace("/* start change programmatically */\n", "")
+#             new_css = new_css.replace("/*app-version*/\n", "")
+#             new_css = new_css.replace("/* end change programmatically */", "")
+#         else:
+#             new_css = sass.compile(string=txt, indented=True, output_style="compressed")
+#         with open(target_css, "w") as o:
+#             o.write(new_css)
 
 
-def compile_styles(project_path):
-    appConfig = config(project_path)
-    version = appConfig['PROJECT']['version']
-    debug = appConfig['PROJECT']['debug']
-    apps_list = appConfig.get("APPS")
-    apps_list_basedir = os.path.join(appConfig['PROJECT']['path'], "apps")
-    if apps_list and apps_list_basedir:
-        for x in apps_list:
-            folder_css_apps_list = os.path.join(
-                apps_list[x]['compiled_folder'],
-                "static",
-                version,
-                "css"
-            )
-            os.makedirs(
-                os.path.join(
-                    folder_css_apps_list), exist_ok=True)
-            target_css_apps_list = os.path.join(
-                folder_css_apps_list,
-                "{0}.css".format(apps_list[x]['styles_main_file'])
-            )
-            styles_main_file = os.path.join(
-                apps_list_basedir, x, "sources", "styles", "{0}.sass".format(apps_list[x]['styles_main_file'])
-            )
-            compile_style(styles_main_file, target_css_apps_list, version, debug)
+# def compile_styles(project_path):
+#     appConfig = config(project_path)
+#     version = appConfig['PROJECT']['version']
+#     debug = appConfig['PROJECT']['debug']
+#     apps_list = appConfig.get("APPS")
+#     apps_list_basedir = os.path.join(appConfig['PROJECT']['path'], "apps")
+#     if apps_list and apps_list_basedir:
+#         for x in apps_list:
+#             folder_css_apps_list = os.path.join(
+#                 apps_list[x]['build_folder'],
+#                 "static",
+#                 version,
+#                 "css"
+#             )
+#             os.makedirs(
+#                 os.path.join(
+#                     folder_css_apps_list), exist_ok=True)
+#             target_css_apps_list = os.path.join(
+#                 folder_css_apps_list,
+#                 "{0}.css".format(apps_list[x]['styles_main_file'])
+#             )
+#             styles_main_file = os.path.join(
+#                 apps_list_basedir, x, "sources", "styles", "{0}.sass".format(apps_list[x]['styles_main_file'])
+#             )
+#             compile_style(styles_main_file, target_css_apps_list, version, debug)
 
 
-def compile_views(project_path):
-    appConfig = config(project_path)
-    sys.path.append(project_path)
-    os.chdir(project_path)
-    debug = appConfig['PROJECT']['debug']
-    apps_list = appConfig.get("APPS")
-    apps_list_basedir = os.path.join(appConfig['PROJECT']['path'], "apps")
+# def compile_views(project_path):
+#     appConfig = config(project_path)
+#     sys.path.append(project_path)
+#     os.chdir(project_path)
+#     debug = appConfig['PROJECT']['debug']
+#     apps_list = appConfig.get("APPS")
+#     apps_list_basedir = os.path.join(appConfig['PROJECT']['path'], "apps")
+#     try:
+#         os.makedirs(os.path.join(project_path, "temp"), exist_ok=True)
+#     except OSError as e:
+#         raise e("Problem on create folder '{0}'.".format(os.path.join(project_path, "temp")))
+#     reg_update = config(os.path.join(project_path, "temp", "python_templates_mtime.json"))
+#     new_reg_update = {}
 
-    def _compile_html(file, base="", target=None, is_apps=False, ignore=["__init__.py"]):
-        if os.path.isfile(file) and os.path.basename(file) not in ignore and file[-3:] == ".py":
-            print("compiling Python to html: %s" % file)
-            i_mod = "%s" % (os.path.basename(file)[0:-3])
-            if base:
-                i_mod = "%s.%s" % (base, i_mod)
-            i = importlib.import_module(i_mod)
-            importlib.reload(i)
-            name = "".join([*i_mod.split(".")[-1], ".html"])
-            f_parts = i_mod.split(".")[3:-1]
-            files_www = os.path.join(target, *f_parts)
-            if is_apps:
-                files_www = os.path.join(target, *f_parts[1:])
-            if not os.path.exists(os.path.join(files_www)):
-                try:
-                    os.makedirs(os.path.join(files_www), exist_ok=True)
-                except OSError as e:
-                    raise e("Problem on create folder '{0}'.".format(os.path.join(files_www)))
-            new_folder = os.path.join(files_www)
-            with open(
-                os.path.join(new_folder, name),
-                "wt",
-                encoding="utf-8"
-            ) as f:
-                if debug:
-                    f.write(i.html.humanize())
-                else:
-                    f.write(i.html.xml())
-
-    def _compile_htmls(source, base="", target=None, is_apps=False):
-        # htmls to www
-        list_all = glob(os.path.join(source, "*"))
-        for x in list_all:
-            if os.path.isdir(x) and not os.path.basename(x) == "__pycache__":
-                if base:
-                    new_base = "%s.%s" % (base, os.path.basename(x))
-                    _compile_htmls(x, new_base, target=target, is_apps=is_apps)
-            elif os.path.isfile(x):
-                _compile_html(x, base=base, target=target, is_apps=is_apps)
-
-    if apps_list and apps_list_basedir:
-        for x in apps_list:
-            target_apps = apps_list[x]['compiled_folder']
-            _compile_htmls(
-                os.path.join(apps_list_basedir, x, "sources", "templates"),
-                "apps.{0}.sources.templates".format(x),
-                target=target_apps,
-                is_apps=True
-            )
+#     def _compile_html(file, base="", target=None, is_apps=False, check_mtime=False, app_name="", ignore=["__init__.py"]):
+#         if os.path.isfile(file) and os.path.basename(file) not in ignore and file[-3:] == ".py":
+#             i_mod = "%s" % (os.path.basename(file)[0:-3])
+#             if base:
+#                 i_mod = "%s.%s" % (base, i_mod)
+#             i = importlib.import_module(i_mod)
+#             importlib.reload(i)
+#             name = "".join([*i_mod.split(".")[-1], ".html"])
+#             f_parts = i_mod.split(".")[3:-1]
+#             files_www = os.path.join(target, *f_parts)
+#             bkp_folder = os.path.join(project_path, "temp", app_name, *f_parts)
+#             if is_apps:
+#                 bkp_folder = os.path.join(project_path, "temp", app_name, *f_parts[1:])
+#                 files_www = os.path.join(target, *f_parts[1:])
+#             if not os.path.exists(os.path.join(files_www)):
+#                 try:
+#                     os.makedirs(os.path.join(files_www), exist_ok=True)
+#                 except OSError as e:
+#                     raise e("Problem on create folder '{0}'.".format(os.path.join(files_www)))
+#             skip_file = False
+#             try:
+#                 os.makedirs(os.path.join(bkp_folder), exist_ok=True)
+#             except OSError as e:
+#                 raise e("Problem on create folder '{0}'.".format(os.path.join(bkp_folder)))
+#             bkp_file = os.path.join(bkp_folder, name)
+#             if check_mtime:
+#                 current_tm = os.path.getmtime(file)
+#                 new_reg_update[file] = current_tm
+#                 if file in reg_update:
+#                     if reg_update[file] == current_tm and os.path.exists(bkp_file) and debug:
+#                         skip_file = True
+#             if skip_file and debug:
+#                 print("compiling: skip '{0}'".format(
+#                         file,
+#                         bkp_file,
+#                         os.path.join(files_www, name)
+#                     )
+#                 )
 
 
-def compile_scripts(project_path, ignore=["__init__.py"]):
-    appConfig = config(project_path)
-    version = appConfig['PROJECT']['version']
-    python_env = appConfig['ENVIRONMENT']['python']
-    debug = appConfig['PROJECT']['debug']
-
-    apps_list = appConfig.get("APPS")
-    apps_list_basedir = os.path.join(appConfig['PROJECT']['path'], "apps")
-    if apps_list and apps_list_basedir:
-        for x in apps_list:
-            folder_script_apps_list = os.path.join(
-                apps_list[x]['compiled_folder'],
-                "static",
-                version,
-                "js",
-                "transcrypt"
-            )
-            os.makedirs(
-                os.path.join(
-                    folder_script_apps_list), exist_ok=True)
-            source = os.path.join(apps_list_basedir, x, "sources", "transcrypts", "__target__")
-            tar_apps = os.path.join(
-                apps_list_basedir, x, "sources", "transcrypts", "{0}.py".format(apps_list[x]['scrypts_main_file']))
-            print("compiling Python to Javascript: %s" % tar_apps)
-            if debug:
-                subprocess.run("%s -m transcrypt %s -n -m" % (python_env, tar_apps), shell=True)
-            else:
-                subprocess.run("%s -m transcrypt %s -m" % (python_env, tar_apps), shell=True)
-            list_all = glob(os.path.join(source, "*"))
-
-            for y in list_all:
-                if os.path.isfile(y):
-                    script_file = os.path.join(
-                        folder_script_apps_list, os.path.basename(y)
-                    )
-                    shutil.copy(
-                        y,
-                        script_file
-                    )
-
-    print("Finish compiling scripts")
+#             else:
+#                 print("compiling: (Convert Python ---> Html: {0})".format(file))
+#                 with open(
+#                     os.path.join(files_www, name),
+#                     "wt",
+#                     encoding="utf-8"
+#                 ) as f:
+#                     if debug:
+#                         f.write(i.html.humanize())
+#                     else:
+#                         f.write(i.html.xml())
 
 
-def generate_script_importing_transcrypt_module(project_path, script_main_file) -> list:
-    appConfig = config(project_path)
-    base = os.path.join(appConfig['PATH']['app'], "sources", "transcrypts")
-    main_files = appConfig['TRANSCRYPT']['main_files']
-    version = appConfig['PROJECT']['version']
-    targets = []
-    if isinstance(main_files, list):
-        t = set()
-        for x in set(main_files):
-            t.add(os.path.normpath(x))
-        targets = list(t)
-    else:
-        targets.append(os.path.normpath(main_files))
-    res = []
-    for x in targets:
-        p = PurePath(script_main_file)
-        p = p.relative_to(base)
-        p.parts
-        rel = "/".join(p.parts)
-        rel = rel.replace("\\", "/")
-        cod = interpolate(
-            "<script type=\"module\">import * as {{MODULE}} from '/static/{{VERSION}}/js/transcrypt/{{FILE}}'</script>",
-            context={'MODULE': os.path.basename(rel)[:-3], 'VERSION': version, 'FILE': "{0}.js".format(rel[:-3])}
-        )
-        res.append(cod)
-    return res
+#     def _compile_htmls(source, base="", target=None, is_apps=False, check_mtime=False, app_name=""):
+#         # htmls to www
+#         list_all = glob(os.path.join(source, "*"))
+#         for x in list_all:
+#             if os.path.isdir(x) and not os.path.basename(x) == "__pycache__":
+#                 if base:
+#                     new_base = "%s.%s" % (base, os.path.basename(x))
+#                     _compile_htmls(x, new_base, target=target, is_apps=is_apps, check_mtime=check_mtime, app_name=app_name)
+#             elif os.path.isfile(x):
+#                 _compile_html(x, base=base, target=target, is_apps=is_apps, check_mtime=check_mtime, app_name=app_name)
+
+#     if apps_list and apps_list_basedir:
+#         for x in apps_list:
+#             target_apps = apps_list[x]['build_folder']
+#             _compile_htmls(
+#                 os.path.join(apps_list_basedir, x, "sources", "templates"),
+#                 "apps.{0}.sources.templates".format(x),
+#                 target=target_apps,
+#                 is_apps=True,
+#                 check_mtime=True,
+#                 app_name=x
+#             )
+#         config(os.path.join(project_path, "temp", "python_templates_mtime.json"), new_reg_update)
 
 
-def app_folder_name_from_apps(project_path, file_or_folder_in_apps_path):
-    appConfig = config(project_path)
-    apps_list_basedir = os.path.join(appConfig['PROJECT']['path'], "apps")
+# def compile_scripts(project_path, ignore=["__init__.py"]):
+#     appConfig = config(project_path)
+#     version = appConfig['PROJECT']['version']
+#     python_env = appConfig['ENVIRONMENT']['python']
+#     debug = appConfig['PROJECT']['debug']
+
+#     apps_list = appConfig.get("APPS")
+#     apps_list_basedir = os.path.join(appConfig['PROJECT']['path'], "apps")
+#     if apps_list and apps_list_basedir:
+#         for x in apps_list:
+#             folder_script_apps_list = os.path.join(
+#                 apps_list[x]['build_folder'],
+#                 "static",
+#                 version,
+#                 "js",
+#                 "transcrypt"
+#             )
+#             os.makedirs(
+#                 os.path.join(
+#                     folder_script_apps_list), exist_ok=True)
+#             source = os.path.join(apps_list_basedir, x, "sources", "transcrypts", "__target__")
+#             tar_apps = os.path.join(
+#                 apps_list_basedir, x, "sources", "transcrypts", "{0}.py".format(apps_list[x]['transcrypt_main_file']))
+#             print("compiling Python to Javascript: %s" % tar_apps)
+#             if debug:
+#                 subprocess.run("%s -m transcrypt %s -n -m" % (python_env, tar_apps), shell=True)
+#             else:
+#                 subprocess.run("%s -m transcrypt %s -m" % (python_env, tar_apps), shell=True)
+#             list_all = glob(os.path.join(source, "*"))
+
+#             for y in list_all:
+#                 if os.path.isfile(y):
+#                     script_file = os.path.join(
+#                         folder_script_apps_list, os.path.basename(y)
+#                     )
+#                     shutil.copy(
+#                         y,
+#                         script_file
+#                     )
+
+#     print("Finish compiling scripts")
+
+
+# def generate_script_importing_transcrypt_module(project_path, script_main_file) -> list:
+#     appConfig = config(project_path)
+#     base = os.path.join(appConfig['PATH']['app'], "sources", "transcrypts")
+#     main_files = appConfig['TRANSCRYPT']['main_files']
+#     version = appConfig['PROJECT']['version']
+#     targets = []
+#     if isinstance(main_files, list):
+#         t = set()
+#         for x in set(main_files):
+#             t.add(os.path.normpath(x))
+#         targets = list(t)
+#     else:
+#         targets.append(os.path.normpath(main_files))
+#     res = []
+#     for x in targets:
+#         p = PurePath(script_main_file)
+#         p = p.relative_to(base)
+#         p.parts
+#         rel = "/".join(p.parts)
+#         rel = rel.replace("\\", "/")
+#         cod = interpolate(
+#             "<script type=\"module\">import * as {{MODULE}} from '/static/{{VERSION}}/js/transcrypt/{{FILE}}'</script>",
+#             context={'MODULE': os.path.basename(rel)[:-3], 'VERSION': version, 'FILE': "{0}.js".format(rel[:-3])}
+#         )
+#         res.append(cod)
+#     return res
+
+
+def app_name_from_relative_child(project_path, file_or_folder_in_apps_path):
+    apps_list_basedir = os.path.join(project_path, "apps")
     p = PurePath(file_or_folder_in_apps_path)
     r = p.relative_to(os.path.join(apps_list_basedir))
     return r.parts[0]
@@ -785,14 +813,17 @@ def package_project_app(project_path, target, reset_config=True):
         )
 
 
-def compiler(projectPath):
-    delete_compiled_app_folder(projectPath)
-    create_transcrypt_config(projectPath)
-    copy_statics(projectPath)
-    copy_languages(projectPath)
-    compile_styles(projectPath)
-    compile_views(projectPath)
-    compile_scripts(projectPath)
+# def compiler(projectPath):
+#     appConfig = config(projectPath)
+#     debug = appConfig['PROJECT']['debug']
+#     if not debug:
+#         delete_compiled_app_folder(projectPath)
+#     create_transcrypt_config(projectPath)
+#     copy_statics(projectPath)
+#     copy_languages(projectPath)
+#     compile_styles(projectPath)
+#     compile_views(projectPath)
+#     compile_scripts(projectPath)
 
 
 def generate_password_hash(password):
@@ -907,10 +938,9 @@ class DictArgsToDALFields(object):
             if not self.errors:
                 raise "The dbtable must be pydal.Objects.Set instance. given: {0}.".format(type(dbset))
 
-
 def text_normalize(text, upper=True):
     if upper:
-        return normalize('NFKD', text).upper()
+        return normalize('NFKD', text).encode('ascii', 'ignore').decode('ascii').upper()
     else:
         return normalize('NFKD', text).encode('ascii', 'ignore').decode('ascii')
 

@@ -1,4 +1,4 @@
-from phanterpwa.transcrypt import helpers
+from phanterpwa.apptools import helpers
 from org.transcrypt.stubs.browser import __pragma__
 
 __pragma__('alias', "jQuery", "$")
@@ -79,8 +79,9 @@ class GalleryInput():
                         img1.alt = img_name + " (" + img_type + ")"
                         if is_to_cut:
                             def onImageLoad(img):
-                                console.log(img.width)
-                                console.log(img.height)
+                                if window.PhaterPWA.DEBUG:
+                                    console.info(img.width)
+                                    console.info(img.height)
                             img1.onload = lambda: onImageLoad(this)
 
                             __new__(GalleryCutter(
@@ -468,8 +469,9 @@ class GalleryCutter():
         )
 
     def gestureMoving(self, event):
-        console.log(event.gesture.deltaX)
-        console.log(event.gesture.deltaY)
+        if window.PhaterPWA.DEBUG:
+            console.info(event.gesture.deltaX)
+            console.info(event.gesture.deltaY)
         self.deslocationPositionXBackground = event.gesture.deltaX * (-1)
         self.deslocationPositionYBackground = event.gesture.deltaY * (-1)
         self.deslocationPositionXImgToCut = event.gesture.deltaX * (-1)

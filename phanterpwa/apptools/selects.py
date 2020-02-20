@@ -1,4 +1,4 @@
-from phanterpwa.transcrypt import helpers
+from phanterpwa.apptools import helpers
 from org.transcrypt.stubs.browser import __pragma__
 
 __pragma__('alias', "jQuery", "$")

@@ -16,6 +16,8 @@ validators_list = {
     "IS_EMAIL",
 }
 
+__pragma__('kwargs')
+
 
 def zfill(number, size):
     number = int(number)
@@ -47,7 +49,9 @@ def format_iso_date_datetime(dvalue, dformat_out, dtype='datetime'):
     dformat_in = "yyyy-MM-dd"
     if dtype == "datetime":
         dformat_in = "yyyy-MM-dd HH:mm:ss"
-    if len(str(dvalue)) != len(dformat_in):
+    if dvalue is "":
+        return None
+    elif len(str(dvalue)) != len(dformat_in):
         console.error("The date/datetime value is invalid")
         return None
     day = None
@@ -76,7 +80,6 @@ def format_iso_date_datetime(dvalue, dformat_out, dtype='datetime'):
     if cdate.toJSON() is not None:
         result = True
     if result:
-        console.error(zfill(day, 2))
         dformat_out = dformat_out.replace("dd", zfill(day, 2))
         dformat_out = dformat_out.replace("MM", zfill(month, 2))
         dformat_out = dformat_out.replace("yyyy", zfill(year, 4))
@@ -130,3 +133,5 @@ def check_datetime(dvalue, dformat="yyyy-MM-dd HH:mm:ss", dtype="datetime"):
         result = True
     return result
 
+
+__pragma__('nokwargs')

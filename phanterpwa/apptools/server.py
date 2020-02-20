@@ -69,14 +69,34 @@ class ApiServer():
         window.PhanterPWA.ProgressBar.addEventProgressBar("GET_" + date_stamp)
         client_token = localStorage.getItem("phanterpwa-client-token")
         authorization = sessionStorage.getItem("phanterpwa-authorization")
-        url = "{0}/{1}{2}".format(self.remote_address, self._process_args(url_args), self._serialize_vars(url_vars))
+        all_args = self._process_args(url_args)
+        all_vars = self._serialize_vars(url_vars)
+        current_uri = "/{0}{1}".format(all_args, all_vars)
+        url = "{0}{1}".format(self.remote_address, current_uri)
+        if "get_cache" in parameters:
+            if callable(parameters["get_cache"]):
+                get_cache = parameters["get_cache"]
+                if current_uri in window.PhanterPWA.Cache:
+                    get_cache(window.PhanterPWA.Cache[current_uri])
+
+        def _after_sucess(data):
+            data_hash = data.hash
+            data_uri = data.uri
+            if data_hash is not js_undefined and data_uri is not js_undefined:
+                if data_uri not in window.PhanterPWA.Cache:
+                    window.PhanterPWA.Cache[data_uri] = data
+                else:
+                    if data_hash != window.PhanterPWA.Cache[data_uri].hash:
+                        window.PhanterPWA.Cache[data_uri] = data
+
+            window.PhanterPWA.ProgressBar.removeEventProgressBar("GET_" + date_stamp)
 
         __pragma__('jsiter')
         ajax_param = {
             'url': url,
             'type': "GET",
             'complete': onComplete,
-            'success': lambda: window.PhanterPWA.ProgressBar.removeEventProgressBar("GET_" + date_stamp),
+            'success': _after_sucess,
             'error': lambda: window.PhanterPWA.ProgressBar.removeEventProgressBar("GET_" + date_stamp),
             'datatype': 'json',
             'crossDomain': True,
@@ -264,10 +284,10 @@ class ApiServer():
                         callback(data, ajax_status)
             else:
                 if data.status == 0:
-                    console.log("Server Problem!")
+                    console.info("Server Problem!")
                 elif data.status == 400:
-                    sessionStorage.clear()
-                    localStorage.clear()
+                    sessionStorage.js_clear()
+                    localStorage.js_clear()
 
         client_token = localStorage.getItem("phanterpwa-client-token")
         session_authorization = sessionStorage.getItem("phanterpwa-authorization")
