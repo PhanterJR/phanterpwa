@@ -4,16 +4,13 @@
 ## Dependencies installed on setup
 
     psutil
+    tornado
     libsass
     transcrypt
-    livereload
-    flask
     pillow
-    flask_restful
-    flask_mail
-    flask_cors
     itsdangerous
     pyDAL
+    passlib
 
 ## Requeriments
     Python 3.6+
@@ -26,5 +23,4 @@
 
 ## Web Tecnologies
     jQuery
-    MaterializeCSS
     Font Awesome
