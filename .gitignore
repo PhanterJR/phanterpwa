@@ -107,3 +107,4 @@ setup.bat
 *.pid
 phanterpwa/interface/*.json
 
+apenas_enviar.bat

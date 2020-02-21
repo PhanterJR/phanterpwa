@@ -221,7 +221,7 @@ class XML(XmlConstructor):
                 html += c.xml()
             else:
                 html += c
-        self.__jquery_object = jQuery(html)
+        self.__jquery_object = html
         return html
 
     def jquery(self):

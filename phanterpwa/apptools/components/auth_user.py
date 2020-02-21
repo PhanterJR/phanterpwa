@@ -334,6 +334,7 @@ class AuthUser(application.Component):
 class ModalLogin(modal.Modal):
     def __init__(self, target_element):
         self.element_target = jQuery(target_element)
+
         AuthUserCmp = window.PhanterPWA.Components["auth_user"]
         self.AuthUser = None
         if AuthUserCmp is not None and AuthUserCmp is not js_undefined and not isinstance(AuthUserCmp, AuthUser):
@@ -508,7 +509,7 @@ class ModalLogin(modal.Modal):
         )
 
     def clear_errors(self):
-        jQuery(self.modal_wrapper).find(".phanterpwa-widget-error").removeClass("enabled").html("")
+        jQuery("#form-{0}".format(self._form)).find(".phanterpwa-widget-error").removeClass("enabled").html("")
 
     def after_submit(self, data, ajax_status):
         if ajax_status == "success":
@@ -521,7 +522,7 @@ class ModalLogin(modal.Modal):
                     if window.PhanterPWA.DEBUG:
                         console.error(json.used_temporary)
                     self.AuthUser.modal_change_password(temporary_password=json.used_temporary)
-            window.PhanterPWA.flash({'html': json.i18n.message})
+            window.PhanterPWA.flash(**{'html': json.i18n.message})
             LeftBar = window.PhanterPWA.Components['left_bar']
             if LeftBar is not None and LeftBar is not js_undefined:
                 LeftBar.reload()
@@ -529,14 +530,14 @@ class ModalLogin(modal.Modal):
         else:
             if data.status == 400:
                 json = data.responseJSON
-                window.PhanterPWA.flash({'html': json.i18n.message})
+                window.PhanterPWA.flash(**{'html': json.i18n.message})
                 forms.SignForm("#form-login", has_captcha=True)
                 errors = dict(json['errors'])
                 if errors is not js_undefined:
                     for x in errors.keys():
                         id_error = "#phanterpwa-widget-login-{0} .phanterpwa-widget-error".format(x)
                         message = SPAN(errors[x]).xml()
-                        self.modal_wrapper.find(id_error).html(message).addClass("enabled")
+                        jQuery("#form-{0}".format(self._form)).find(id_error).html(message).addClass("enabled")
 
     def submit(self):
         self.clear_errors()
@@ -595,9 +596,7 @@ class ModalRegister(modal.Modal):
                 **{
                     "type": "password",
                     "label": I18N("Password"),
-                    "phanterpwa": {
-                        "validators": ["IS_NOT_EMPTY", "IS_EQUALS:#phanterpwa-widget-input-register-password_repeat"],
-                    },
+                    "validators": ["IS_NOT_EMPTY", "IS_EQUALS:#phanterpwa-widget-input-input-register-password_repeat"],
                     "_class": "p-col w1p100 w3p50"
                 }
             ),
@@ -607,9 +606,7 @@ class ModalRegister(modal.Modal):
                 **{
                     "type": "password",
                     "label": I18N("Repeat Password"),
-                    "phanterpwa": {
-                        "validators": ["IS_NOT_EMPTY", "IS_EQUALS:#phanterpwa-widget-input-register-password"],
-                    },
+                    "validators": ["IS_NOT_EMPTY", "IS_EQUALS:#phanterpwa-widget-input-input-register-password"],
                     "_class": "p-col w1p100 w3p50"
                 }
             ),
@@ -667,6 +664,7 @@ class ModalRegister(modal.Modal):
         window.PhanterPWA.Components['auth_user'].modal_request_password()
 
     def binds(self):
+        self.element_target = jQuery(self.target_selector)
         self.element_target.find(
             "#phanterpwa-widget-form-form_button-login"
         ).off(
@@ -693,7 +691,7 @@ class ModalRegister(modal.Modal):
         )
 
     def clear_errors(self):
-        self.modal_wrapper.find(".phanterpwa-widget-error").removeClass("enabled").html("")
+        jQuery("#form-{0}".format(self._form)).find(".phanterpwa-widget-error").removeClass("enabled").html("")
 
     def after_submit(self, data, ajax_status):
         if ajax_status == "success":
@@ -701,7 +699,7 @@ class ModalRegister(modal.Modal):
             if self.AuthUser is not None and self.AuthUser is not js_undefined:
                 self.AuthUser.start()
             self.close()
-            window.PhanterPWA.flash({'html': json.i18n.message})
+            window.PhanterPWA.flash(**{'html': json.i18n.message})
             LeftBar = window.PhanterPWA.Components['left_bar']
             if LeftBar is not None and LeftBar is not js_undefined:
                 LeftBar.reload()
@@ -709,24 +707,24 @@ class ModalRegister(modal.Modal):
         else:
             if data.status == 400:
                 json = data.responseJSON
-                window.PhanterPWA.flash({'html': json.i18n.message})
+                window.PhanterPWA.flash(**{'html': json.i18n.message})
                 forms.SignForm("#form-register", has_captcha=True)
                 errors = dict(json['errors'])
                 if errors is not js_undefined:
                     for x in errors.keys():
                         id_error = "#phanterpwa-widget-register-{0} .phanterpwa-widget-error".format(x)
                         message = SPAN(errors[x]).xml()
-                        self.modal_wrapper.find(id_error).html(message).addClass("enabled")
+                        jQuery("#form-{0}".format(self._form)).find(id_error).html(message).addClass("enabled")
 
     def submit(self):
         self.clear_errors()
         window.PhanterPWA.register(
             jQuery("#phanterpwa-widget-input-register-csrf_token").val(),
-            jQuery("#phanterpwa-widget-input-register-first_name").val(),
-            jQuery("#phanterpwa-widget-input-register-last_name").val(),
-            jQuery("#phanterpwa-widget-input-register-email").val(),
-            jQuery("#phanterpwa-widget-input-register-password").val(),
-            jQuery("#phanterpwa-widget-input-register-password_repeat").val(),
+            jQuery("#phanterpwa-widget-input-input-register-first_name").val(),
+            jQuery("#phanterpwa-widget-input-input-register-last_name").val(),
+            jQuery("#phanterpwa-widget-input-input-register-email").val(),
+            jQuery("#phanterpwa-widget-input-input-register-password").val(),
+            jQuery("#phanterpwa-widget-input-input-register-password_repeat").val(),
             callback=self.after_submit
         )
 
@@ -841,33 +839,33 @@ class ModalRequestPassword(modal.Modal):
         )
 
     def clear_errors(self):
-        self.modal_wrapper.find(".phanterpwa-widget-error").removeClass("enabled").html("")
+        jQuery("#form-{0}".format(self._form)).find(".phanterpwa-widget-error").removeClass("enabled").html("")
 
     def after_submit(self, data, ajax_status):
         if ajax_status == "success":
             json = data.responseJSON
             self.close()
-            window.PhanterPWA.flash({'html': json.i18n.message})
+            window.PhanterPWA.flash(**{'html': json.i18n.message})
             LeftBar = window.PhanterPWA.Components['left_bar']
             if LeftBar is not None and LeftBar is not js_undefined:
                 LeftBar.reload()
         else:
             if data.status == 400:
                 json = data.responseJSON
-                window.PhanterPWA.flash({'html': json.i18n.message})
+                window.PhanterPWA.flash(**{'html': json.i18n.message})
                 forms.SignForm("#form-request_password", has_captcha=True)
                 errors = dict(json['errors'])
                 if errors is not js_undefined:
                     for x in errors.keys():
                         id_error = "#phanterpwa-widget-request_password-{0} .phanterpwa-widget-error".format(x)
                         message = SPAN(errors[x]).xml()
-                        self.modal_wrapper.find(id_error).html(message).addClass("enabled")
+                        jQuery("#form-{0}".format(self._form)).find(id_error).html(message).addClass("enabled")
 
     def submit(self):
         self.clear_errors()
         window.PhanterPWA.request_password(
-            jQuery("#phanterpwa-widget-input-request_password-csrf_token").val(),
-            jQuery("#phanterpwa-widget-input-request_password-email").val(),
+            jQuery("#phanterpwa-widget-input-input-request_password-csrf_token").val(),
+            jQuery("#phanterpwa-widget-input-input-request_password-email").val(),
             callback=self.after_submit
         )
 
@@ -875,6 +873,32 @@ class ModalRequestPassword(modal.Modal):
 class AlertActivationAccount(top_slide.TopSlide):
     def __init__(self, target_element):
         content = DIV(
+            _id="phanterpwa-top-slide-auth_user-activation-container",
+            _class="phanterpwa-auth_user-activation-container"
+        )
+        parameters = dict(after_open=self.binds)
+        top_slide.TopSlide.__init__(self, target_element, content, **parameters)
+
+    def binds(self):
+        self._process_alert_content()
+        forms.SignForm("#form-activation")
+        forms.ValidateForm("#form-activation")
+        self.element_target = jQuery(self.target_selector)
+        self.element_target.find("#phanterpwa-widget-form-submit_button-activation").off(
+            'click.modal_submit_activation'
+        ).on(
+            'click.modal_submit_activation',
+            lambda: self.submit()
+        )
+        self.element_target.find("#phanterpwa-widget-form-form_button-activation_new_code").off(
+            'click.modal_submit_activation_new_code'
+        ).on(
+            'click.modal_submit_activation_new_code',
+            lambda: self.request_new_activation_code_to_send_to_email()
+        )
+
+    def _process_alert_content(self):
+        html = CONCATENATE(
             DIV(
                 I18N(
                     "{0}{1}{2}".format("Your account has not yet been activated,",
@@ -898,9 +922,7 @@ class AlertActivationAccount(top_slide.TopSlide):
                             **{
                                 "type": "string",
                                 "label": I18N("Activation Code", **{"_pt-br": "Código de Ativação"}),
-                                "phanterpwa": {
-                                    "validators": ["IS_NOT_EMPTY", "IS_ACTIVATION_CODE"],
-                                }
+                                "validators": ["IS_NOT_EMPTY", "IS_ACTIVATION_CODE"],
                             }
                         ),
                         _class="phanterpwa-auth_user-activation-action-input"
@@ -925,37 +947,19 @@ class AlertActivationAccount(top_slide.TopSlide):
                     "_phanterpwa-form": "activation",
                     "_id": "form-activation"
                 }
-            ),
-            _class="phanterpwa-auth_user-activation-container"
+            )
         )
-        parameters = dict(after_open=self.binds)
-        top_slide.TopSlide.__init__(self, target_element, content, **parameters)
-
-    def binds(self):
-        forms.SignForm("#form-activation")
-        forms.ValidateForm("#form-activation")
-        self.element_target.find("#phanterpwa-widget-form-submit_button-activation").off(
-            'click.modal_submit_activation'
-        ).on(
-            'click.modal_submit_activation',
-            lambda: self.submit()
-        )
-        self.element_target.find("#phanterpwa-widget-form-form_button-activation_new_code").off(
-            'click.modal_submit_activation_new_code'
-        ).on(
-            'click.modal_submit_activation_new_code',
-            lambda: self.request_new_activation_code_to_send_to_email()
-        )
+        html.html_to("#phanterpwa-top-slide-auth_user-activation-container")
 
     def after_activation_code_send(self, data, ajax_status):
         if ajax_status == "success":
             json = data.responseJSON
             message = json.i18n.message
-            window.PhanterPWA.flash({'html': message})
+            window.PhanterPWA.flash(**{'html': message})
         else:
             if data.status == 400:
                 json = data.responseJSON
-                window.PhanterPWA.flash({'html': json.i18n.message})
+                window.PhanterPWA.flash(**{'html': json.i18n.message})
                 forms.SignForm("#form-activation", has_captcha=True)
                 errors = dict(json['errors'])
                 if errors is not js_undefined:
@@ -971,30 +975,32 @@ class AlertActivationAccount(top_slide.TopSlide):
         })
 
     def clear_errors(self):
+        self.element_target = jQuery(self.target_selector)
         self.element_target.find(".phanterpwa-widget-error").removeClass("enabled").html("")
 
     def after_submit(self, data, ajax_status):
         if ajax_status == "success":
             json = data.responseJSON
             self.close()
-            window.PhanterPWA.flash({'html': json.i18n.message})
+            window.PhanterPWA.flash(**{'html': json.i18n.message})
         else:
             if data.status == 400:
                 json = data.responseJSON
-                window.PhanterPWA.flash({'html': json.i18n.message})
+                window.PhanterPWA.flash(**{'html': json.i18n.message})
                 forms.SignForm("#form-activation")
                 errors = dict(json['errors'])
                 if errors is not js_undefined:
                     for x in errors.keys():
                         id_error = "#phanterpwa-widget-activation-{0} .phanterpwa-widget-error".format(x)
                         message = SPAN(errors[x]).xml()
-                        self.modal_wrapper.find(id_error).html(message).addClass("enabled")
+                        jQuery("#form-{0}".format(self._form)).find(id_error).html(message).addClass("enabled")
 
     def submit(self):
+        self.element_target = jQuery(self.target_selector)
         self.clear_errors()
         window.PhanterPWA.activation_account(
             self.element_target.find("#phanterpwa-widget-input-activation-csrf_token").val(),
-            self.element_target.find("#phanterpwa-widget-input-activation-activation_code").val(),
+            self.element_target.find("#phanterpwa-widget-input-input-activation-activation_code").val(),
             callback=self.after_submit
         )
 
@@ -1051,7 +1057,7 @@ class ModalChangePassword(modal.Modal):
                     "label": I18N("New password"),
                     "validators": [
                         "IS_NOT_EMPTY",
-                        "IS_EQUALS:#phanterpwa-widget-input-change_password-new_password_repeat"
+                        "IS_EQUALS:#phanterpwa-widget-input-input-change_password-new_password_repeat"
                     ],
                     "_class": "p-col w1p100"
                 }
@@ -1064,7 +1070,7 @@ class ModalChangePassword(modal.Modal):
                     "label": I18N("Password Repeat"),
                     "validators": [
                         "IS_NOT_EMPTY",
-                        "IS_EQUALS:#phanterpwa-widget-input-change_password-new_password"
+                        "IS_EQUALS:#phanterpwa-widget-input-input-change_password-new_password"
                     ],
                     "_class": "p-col w1p100"
                 }
@@ -1109,13 +1115,13 @@ class ModalChangePassword(modal.Modal):
         )
 
     def clear_errors(self):
-        self.modal_wrapper.find(".phanterpwa-widget-error").removeClass("enabled").html("")
+        jQuery("#form-{0}".format(self._form)).find(".phanterpwa-widget-error").removeClass("enabled").html("")
 
     def after_submit(self, data, ajax_status):
         if ajax_status == "success":
             json = data.responseJSON
             self.close()
-            window.PhanterPWA.flash({'html': json.i18n.message})
+            window.PhanterPWA.flash(**{'html': json.i18n.message})
             LeftBar = window.PhanterPWA.Components['left_bar']
             if LeftBar is not None and LeftBar is not js_undefined:
                 LeftBar.reload()
@@ -1123,22 +1129,22 @@ class ModalChangePassword(modal.Modal):
         else:
             if data.status == 400:
                 json = data.responseJSON
-                window.PhanterPWA.flash({'html': json.i18n.message})
+                window.PhanterPWA.flash(**{'html': json.i18n.message})
                 forms.SignForm("#form-change_password")
                 errors = dict(json['errors'])
                 if errors is not js_undefined:
                     for x in errors.keys():
                         id_error = "#phanterpwa-widget-change_password-{0} .phanterpwa-widget-error".format(x)
                         message = SPAN(errors[x]).xml()
-                        self.modal_wrapper.find(id_error).html(message).addClass("enabled")
+                        jQuery("#form-{0}".format(self._form)).find(id_error).html(message).addClass("enabled")
 
     def submit(self):
         self.clear_errors()
         window.PhanterPWA.change_password(
-            jQuery("#phanterpwa-widget-input-change_password-csrf_token").val(),
-            jQuery("#phanterpwa-widget-input-change_password-password").val(),
-            jQuery("#phanterpwa-widget-input-change_password-new_password").val(),
-            jQuery("#phanterpwa-widget-input-change_password-new_password_repeat").val(),
+            jQuery("#phanterpwa-widget-input-input-change_password-csrf_token").val(),
+            jQuery("#phanterpwa-widget-input-input-change_password-password").val(),
+            jQuery("#phanterpwa-widget-input-input-change_password-new_password").val(),
+            jQuery("#phanterpwa-widget-input-input-change_password-new_password_repeat").val(),
             callback=self.after_submit
         )
 
@@ -1437,7 +1443,7 @@ class Profile(handler.GateHandler):
             if ajax_status == "success":
                 json = data.responseJSON
                 message = json.i18n.message
-                window.PhanterPWA.flash({'html': message})
+                window.PhanterPWA.flash(**{'html': message})
                 if data.status == 200:
                     jQuery(".phanterpwa-gallery-upload-input-file").val('')
                     auth_user = json.auth_user
@@ -1448,7 +1454,7 @@ class Profile(handler.GateHandler):
                 forms.SignForm("#form-profile")
                 json = data.responseJSON
                 message = json.i18n.message
-                window.PhanterPWA.flash({'html': message})
+                window.PhanterPWA.flash(**{'html': message})
 
     def submit(self):
         formdata = __new__(FormData(jQuery("#form-profile")[0]))
@@ -1655,11 +1661,11 @@ class Lock(handler.GateHandler):
             if LeftBar is not None and LeftBar is not js_undefined:
                 LeftBar.reload()
             jQuery("body").removeClass("phanterpwa-lock")
-            window.PhanterPWA.flash({'html': json.i18n.message})
+            window.PhanterPWA.flash(**{'html': json.i18n.message})
         else:
             if data.status == 400:
                 json = data.responseJSON
-                window.PhanterPWA.flash({'html': json.i18n.message})
+                window.PhanterPWA.flash(**{'html': json.i18n.message})
                 forms.SignLockForm()
                 errors = dict(json['errors'])
                 if errors is not js_undefined:
@@ -1837,7 +1843,7 @@ class Lock(handler.GateHandler):
         else:
             self.on_other_user_click()
         json = data.responseJSON
-        window.PhanterPWA.flash({'html': json.i18n.message})
+        window.PhanterPWA.flash(**{'html': json.i18n.message})
 
     def start(self):
         request = self.request

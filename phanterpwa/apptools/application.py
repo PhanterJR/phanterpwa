@@ -108,8 +108,8 @@ class PhanterPWA():
                     _class="phanterpwa-flash-wrapper enabled",
                     _style="opacity: 0; margin-top:-20px"
                 )
-                html.append_to("#phanterpwa-flash-container").find(
-                    "#{0}".format(msg_id)).addClass("enabled").animate({'opacity': 1, 'margin-top': '0px'})
+                html.append_to("#phanterpwa-flash-container")
+                jQuery("#{0}".format(msg_id)).addClass("enabled").animate({'opacity': 1, 'margin-top': '0px'})
                 setTimeout(remove_msg, timeout)
         elif msg is not None and msg is not js_undefined:
             html = DIV(

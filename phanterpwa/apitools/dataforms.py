@@ -24,7 +24,7 @@ from pydal.validators import (
 
 from phanterpwa.apitools.pydal_extra_validations import IS_ACTIVATION_CODE
 
-ref_values = re.compile(r"\$[0-9]{13}:.*")
+ref_values = re.compile(r"\$[0-9]{13}\:.*")
 
 
 def datetime_formater(value):
@@ -304,7 +304,18 @@ class WidgetFromFieldDALFromTableDAL():
                     resultado = time.strftime(formato_saida, tempo)
                 json_field['formatted'] = resultado
             else:
+                if "validator_format" not in FieldInst.phanterpwa:
+                    if t == "datetime":
+                        json_field["validator_format"] = '%Y-%m-%d %H:%M:%S'
+                    elif t == "date":
+                        json_field["validator_format"] = '%Y-%m-%d'
+                    elif t == "time":
+                        json_field["validator_format"] = '%H:%M:%S'
+                else:
+                    formato_saida = FieldInst.phanterpwa["validator_format"]
+                    json_field["validator_format"] = formato_saida
                 json_field['formatted'] = default
+
             json_field['label'] = FieldInst.label
             json_field['value'] = default
             json_field['type'] = FieldInst.type
@@ -490,13 +501,17 @@ class FormFromTableDAL():
                         t = w["type"]
                         if dict_args[key]:
                             if t == "datetime":
-                                tempo = time.strptime(str(dict_args[key]), w["validator_format"])
+                                validator_format = w.get("validator_format", '%Y-%m-%d %H:%M:%S')
+                                tempo = time.strptime(str(dict_args[key]), validator_format)
                                 resultado = time.strftime('%Y-%m-%d %H:%M:%S', tempo)
                             elif t == "date":
-                                tempo = time.strptime(str(dict_args[key]), w["validator_format"])
+                                print(w)
+                                validator_format = w.get("validator_format", '%Y-%m-%d')
+                                tempo = time.strptime(str(dict_args[key]), validator_format)
                                 resultado = time.strftime('%Y-%m-%d', tempo)
                             elif t == "time":
-                                tempo = time.strptime(str(dict_args[key]), w["validator_format"])
+                                validator_format = w.get("validator_format", '%H:%M:%S')
+                                tempo = time.strptime(str(dict_args[key]), validator_format)
                                 resultado = time.strftime('%H:%M:%S', tempo)
                             self._verified[key] = resultado
                         else:
@@ -522,12 +537,11 @@ class FormFromTableDAL():
         if val:
             return val
         else:
-            print(self._verified)
             if self.record_id:
                 r = self._db(self._db[self.table._tablename]._id == self.record_id).update(**self._verified)
             else:
-                r = self._db(self.table).insert(**self._verified)
-
+                r = self.table.insert(**self._verified)
+            self.record_id = r
             for key in self._verified:
                 if key in self._widgets and key in self.fields:
                     if self._verified[key] and self._widgets[key]['value']:

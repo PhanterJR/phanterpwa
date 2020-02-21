@@ -938,6 +938,7 @@ class DictArgsToDALFields(object):
             if not self.errors:
                 raise "The dbtable must be pydal.Objects.Set instance. given: {0}.".format(type(dbset))
 
+
 def text_normalize(text, upper=True):
     if upper:
         return normalize('NFKD', text).encode('ascii', 'ignore').decode('ascii').upper()

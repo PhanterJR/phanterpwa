@@ -16,8 +16,9 @@ __pragma__('kwargs')
 
 
 class TopSlide(helpers.XmlConstructor):
-    def __init__(self, target_element, *content, **parameters):
-        self.target_element = jQuery(target_element)
+    def __init__(self, target_selector, *content, **parameters):
+        self.target_selector = target_selector
+        self.element_target = jQuery(self.target_selector)
         self._after_open = None
         if "after_open" in parameters:
             self._after_open = parameters["after_open"]
@@ -34,25 +35,29 @@ class TopSlide(helpers.XmlConstructor):
         helpers.XmlConstructor.__init__(self, "div", False, *content, **parameters)
 
     def switch(self):
-        if self.target_element.find("#phanterpwa-component-topslide-wrapper").hasClass("enabled"):
+        self.element_target = jQuery(self.target_selector)
+        if self.element_target.find("#phanterpwa-component-topslide-wrapper").hasClass("enabled"):
             self.close()
         else:
             self.open()
 
     def close(self):
-        self.target_element.find("#phanterpwa-component-topslide-wrapper").slideUp()
+        self.element_target = jQuery(self.target_selector)
+        self.element_target.find("#phanterpwa-component-topslide-wrapper").slideUp()
 
     def open(self):
+        self.element_target = jQuery(self.target_selector)
         self.start()
-        self.target_element.find("#phanterpwa-component-topslide-wrapper").slideDown()
+        self.element_target.find("#phanterpwa-component-topslide-wrapper").slideDown()
         if self._after_open is not None and self._after_open is not js_undefined:
-            self._after_open(self.target_element.find("#phanterpwa-component-topslide-wrapper"))
+            self._after_open(self.element_target.find("#phanterpwa-component-topslide-wrapper"))
 
     def start(self):
-        if self.target_element is not None and self.target_element is not js_undefined:
-            self.target_element.find('#phanterpwa-component-topslide-wrapper').remove()
-            self.target_element.append(self.jquery())
-            self.target_element.find(".phanterpwa-component-topslide-close").off(
+        self.element_target = jQuery(self.target_selector)
+        if self.element_target is not None and self.element_target is not js_undefined:
+            self.element_target.find('#phanterpwa-component-topslide-wrapper').remove()
+            self.append_to(self.element_target)
+            self.element_target.find(".phanterpwa-component-topslide-close").off(
                 "click.phanterpwa_component_topslide_close"
             ).on(
                 "click.phanterpwa_component_topslide_close",
