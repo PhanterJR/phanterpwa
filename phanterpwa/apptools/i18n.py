@@ -80,11 +80,12 @@ class I18NServer():
                 if t_elem[0].hasAttribute(self.userLang):
                     t_elem.text(t_elem.attr(self.userLang))
                 else:
-                    t_elem.attr(self.userLang, self.translate(word))
-                    t_elem.text(self.translate(word))
+                    translate = self.translate(word)
+                    t_elem.attr(self.userLang, translate)
+                    t_elem.text(translate)
 
         if self.target[0] is not js_undefined:
-            self.target.find("[phanterpwa-i18n]").each(lambda: eachElement(this))
+            self.target.find("span[phanterpwa-i18n]").each(lambda: eachElement(this))
         return self.target
 
 

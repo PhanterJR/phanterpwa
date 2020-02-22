@@ -303,6 +303,7 @@ class Datepickers():
         if "MMM" in value:
             value = value.replace("MMM", self._sanitize_i18ns(self.months[smonth][0:3]))
         if "MM" in value:
+            console.log(smonth)
             value = value.replace("MM", self._zfill(smonth + 1, 2))
         if "Mo" in value:
             if (smonth + 1) == 1:
@@ -337,6 +338,7 @@ class Datepickers():
         return self._unsanitize_str(value)
 
     def _zfill(self, number, size):
+        console.log(number)
         number = int(number)
         number = str(number)
         s = number
@@ -956,11 +958,6 @@ class Datepickers():
     def close(self):
         jQuery(self.target_selector).find(".phanterpwa-fixed-fulldisplay").removeClass("enabled")
 
-        setTimeout(
-            lambda: jQuery(self.target_selector).find(".phanterpwa-fixed-fulldisplay").remove(),
-            1000
-        )
-
     def start(self):
         cont = 0
         cmonth = self.current_date.getMonth()
@@ -1265,17 +1262,20 @@ class Datepickers():
         c_dt = ""
         if self.date_type == "date":
             c_dt = " phanterpwa_datetimepicker_is_not_datetime"
+
+        datetimepicker_container = DIV(
+            summary,
+            container,
+            _class="phanterpwa_datetimepicker_container{0}".format(c_dt)
+        )
+
         centralizer = DIV(
             DIV(
                 DIV(
                     DIV(
-
                         DIV(
-                            DIV(
-                                summary,
-                                container,
-                                _class="phanterpwa_datetimepicker_container{0}".format(c_dt)
-                            ),
+                            datetimepicker_container,
+                            _id="phanterpwa-centralizer-center-{0}".format(self.namespace),
                             _class="phanterpwa-centralizer-center"
                         ),
                         _class="phanterpwa-centralizer-horizontal"
@@ -1299,9 +1299,10 @@ class Datepickers():
             )
 
         if jQuery(self.target_selector).has(".phanterpwa-fixed-fulldisplay").length == 1:
-            jQuery(self.target_selector).find(".phanterpwa-fixed-fulldisplay").remove()
-            # jQuery(self.target_selector).append(centralizer.xml())
-            centralizer.append_to(self.target_selector)
+            # jQuery(self.target_selector).find(".phanterpwa-fixed-fulldisplay").remove()
+            # # jQuery(self.target_selector).append(centralizer.xml())
+            # centralizer.append_to(self.target_selector)
+            datetimepicker_container.html_to("#phanterpwa-centralizer-center-{0}".format(self.namespace))
             jQuery(self.target_selector).find(".phanterpwa-fixed-fulldisplay").addClass("enabled")
         else:
             # jQuery(self.target_selector).append(centralizer.xml())

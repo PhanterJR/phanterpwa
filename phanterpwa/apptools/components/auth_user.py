@@ -1448,7 +1448,7 @@ class Profile(handler.GateHandler):
                     jQuery(".phanterpwa-gallery-upload-input-file").val('')
                     auth_user = json.auth_user
                     window.PhanterPWA.update_auth_user(auth_user)
-                    self.js_update()
+                    self.reload()
 
             else:
                 forms.SignForm("#form-profile")
@@ -1486,7 +1486,7 @@ class Profile(handler.GateHandler):
             self.open_modal_change_password
         )
 
-    def js_update(self):
+    def reload(self):
         forms.SignForm("#form-profile")
         self.auth_user = window.PhanterPWA.get_last_auth_user()
         first_name = ""
@@ -1531,90 +1531,84 @@ class Profile(handler.GateHandler):
             ),
             DIV(
                 DIV(
-                    DIV(
+                    FORM(
                         DIV(
-                            FORM(
+                            DIV(
                                 DIV(
-                                    DIV(
-                                        DIV(
-                                            preloaders.android,
-                                            _style="text-align:center;"
-                                        ),
-                                        _id="profile-image-user-container",
-                                        _class='p-row'
-                                    ),
-                                    _class="p-col w1p100 l4"
+                                    preloaders.android,
+                                    _style="text-align:center;"
                                 ),
-                                DIV(
-                                    DIV(
-                                        forms.FormWidget(
-                                            "profile",
-                                            "first_name",
-                                            **{
-                                                "type": "string",
-                                                "label": I18N("First Name"),
-                                                "value": first_name,
-                                                "validators": ["IS_NOT_EMPTY"],
-                                                "_class": "p-col w1p100 w3p50"
-                                            },
-                                        ),
-                                        forms.FormWidget(
-                                            "profile",
-                                            "last_name",
-                                            **{
-                                                "type": "string",
-                                                "label": I18N("Last Name"),
-                                                "value": last_name,
-                                                "validators": ["IS_NOT_EMPTY"],
-                                                "_class": "p-col w1p100 w3p50"
-                                            },
-                                        ),
-                                        forms.FormWidget(
-                                            "profile",
-                                            "email",
-                                            **{
-                                                "type": "string",
-                                                "label": I18N("E-Mail"),
-                                                "value": email,
-                                                "validators": ["IS_EMAIL"],
-                                                "_class": "p-col w1p100"
-                                            }
-                                        ),
-                                        _class="p-row profile_inputs_container"
-                                    ),
-                                    DIV(
-                                        forms.SubmitButton(
-                                            "profile",
-                                            I18N("Save Changes", **{"_pt-br": "Salvar Mudanças"}),
-                                            _class="btn-autoresize wave_on_click waves-phanterpwa"
-                                        ),
-                                        forms.FormButton(
-                                            "change_password",
-                                            I18N("Change Password", **{"_pt-br": "Mudar Senha"}),
-                                            _class="btn-autoresize wave_on_click waves-phanterpwa"
-                                        ),
-                                        _class='phanterpwa-form-buttons-container'
-                                    ),
-                                    _class="p-col w1p100"
-                                ),
-                                **{
-                                    "_phanterpwa-form": "profile",
-                                    "_id": "form-profile",
-                                    "_class": "p-row",
-                                    "_autocomplete": "off"
-                                }
+                                _id="profile-image-user-container",
+                                _class='p-row'
                             ),
-                            _class='profile-container phanterpwa-card-container'
+                            _class="p-col w1p100 l4"
                         ),
-                        _class="card"
+                        DIV(
+                            DIV(
+                                forms.FormWidget(
+                                    "profile",
+                                    "first_name",
+                                    **{
+                                        "type": "string",
+                                        "label": I18N("First Name"),
+                                        "value": first_name,
+                                        "validators": ["IS_NOT_EMPTY"],
+                                        "_class": "p-col w1p100 w3p50"
+                                    },
+                                ),
+                                forms.FormWidget(
+                                    "profile",
+                                    "last_name",
+                                    **{
+                                        "type": "string",
+                                        "label": I18N("Last Name"),
+                                        "value": last_name,
+                                        "validators": ["IS_NOT_EMPTY"],
+                                        "_class": "p-col w1p100 w3p50"
+                                    },
+                                ),
+                                forms.FormWidget(
+                                    "profile",
+                                    "email",
+                                    **{
+                                        "type": "string",
+                                        "label": I18N("E-Mail"),
+                                        "value": email,
+                                        "validators": ["IS_EMAIL"],
+                                        "_class": "p-col w1p100"
+                                    }
+                                ),
+                                _class="p-row profile_inputs_container"
+                            ),
+                            DIV(
+                                forms.SubmitButton(
+                                    "profile",
+                                    I18N("Save Changes", **{"_pt-br": "Salvar Mudanças"}),
+                                    _class="btn-autoresize wave_on_click waves-phanterpwa"
+                                ),
+                                forms.FormButton(
+                                    "change_password",
+                                    I18N("Change Password", **{"_pt-br": "Mudar Senha"}),
+                                    _class="btn-autoresize wave_on_click waves-phanterpwa"
+                                ),
+                                _class='phanterpwa-form-buttons-container'
+                            ),
+                            _class="p-col w1p100"
+                        ),
+                        **{
+                            "_phanterpwa-form": "profile",
+                            "_id": "form-profile",
+                            "_class": "p-row",
+                            "_autocomplete": "off"
+                        }
                     ),
-                    _class="new-container"
+                    _class='e-margin_bottom_20 phanterpwa-card-container e-padding_20 card'
                 ),
                 _class="phanterpwa-container container"
             )
         )
         xml_content.html_to("#main-container")
-        self.js_update()
+        self.reload()
         self.binds()
 
 
