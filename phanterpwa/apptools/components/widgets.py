@@ -248,7 +248,7 @@ class Input(Widget):
             "change.phanterpwa-event-input_materialize",
             lambda: self._check_value(this)
         )
-        target.off("click.phanterpwa-event-input_materialize").on(
+        target.find("label").off("click.phanterpwa-event-input_materialize").on(
             "click.phanterpwa-event-input_materialize",
             lambda: self._on_click_label(this)
         )

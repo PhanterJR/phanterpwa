@@ -332,7 +332,7 @@ def check_url_token(projectConfig, db, i18n=None):
     return decorator
 
 
-def check_public_csrf_token(projectConfig, db, i18n=None):
+def check_public_csrf_token(projectConfig, db, i18n=None, form_identify=None):
     def decorator(f):
         @wraps(f)
         @check_client_token(projectConfig, db, i18n)
@@ -394,6 +394,42 @@ def check_public_csrf_token(projectConfig, db, i18n=None):
                             self.phanterpwa_csrf_token_content = token_content
                             q.delete_record()
                             db.commit()
+                            if form_identify:
+                                if isinstance(form_identify, str) and form_identify==token_content["form_identify"]:
+                                    return f(self, *args, **kargs)
+                                elif isinstance(form_identify, (list, tuple)) and \
+                                        token_content["form_identify"] in form_identify:
+                                    return f(self, *args, **kargs)
+                                else:
+                                    msg = "The crsf token is invalid! The client has an unstable address."
+                                    dict_response = {
+                                        'status': 'Bad Request',
+                                        'code': 400,
+                                        'message': msg,
+                                        'i18n': {
+                                            'message': i18n.T(msg) if i18n else msg
+                                        }
+                                    }
+                                    fi = getframeinfo(currentframe())
+                                    if not projectConfig['PROJECT']['debug']:
+                                        help_debug = "({0}){1}.{2}->({3})@{4}:{5}".format(
+                                            getfile(self.__class__),
+                                            self.__class__.__name__,
+                                            f.__name__,
+                                            fi.filename,
+                                            fi.function,
+                                            fi.lineno + 19
+                                        )
+                                    else:
+                                        help_debug = "{0}.{1}@{2}:{3}".format(
+                                            self.__class__.__name__,
+                                            f.__name__,
+                                            fi.function,
+                                            fi.lineno + 19
+                                        )
+                                    dict_response['help_debug'] = help_debug
+                                    self.set_status(400)
+                                    return self.write(dict_response)
                             return f(self, *args, **kargs)
                         else:
                             msg = "The crsf token is invalid! The client has an unstable address."
@@ -574,11 +610,11 @@ def check_user_token(projectConfig, db, i18n=None):
     return decorator
 
 
-def check_private_csrf_token(projectConfig, db, i18n=None):
+def check_private_csrf_token(projectConfig, db, i18n=None, form_identify=None):
     def decorator(f):
         @wraps(f)
-        @check_public_csrf_token(projectConfig, db, i18n)
         @check_user_token(projectConfig, db, i18n)
+        @check_public_csrf_token(projectConfig, db, i18n, form_identify)
         def check_csrf_token_decorator(self, *args, **kargs):
             current_user = self.phanterpwa_csrf_token_content.get("user", None)
             if current_user and current_user == self.phanterpwa_current_user.id:
@@ -616,12 +652,13 @@ def check_private_csrf_token(projectConfig, db, i18n=None):
         return check_csrf_token_decorator
     return decorator
 
+
 def requires_authentication(projectConfig, db, i18n=None, ids=None):
     def decorator(f):
         @wraps(f)
         @check_user_token(projectConfig, db, i18n)
         def requires_authenticatio_decorator(self, *args, **kargs):
-            if not ids:
+            if ids:
                 if self.phanterpwa_current_user.id in ids:
                     return f(self, *args, **kargs)
                 else:
@@ -672,14 +709,15 @@ def requires_authentication_group(projectConfig, db, i18n=None, roles=None, ids=
                     (db.auth_membership.auth_group == db.auth_group.id)
                 ).select(db.auth_group.id, db.auth_group.role, orderby=~db.auth_group.grade)
                 user_roles = set([x.role for x in q_user_groups if x.role in roles or x.id in ids])
-                if user_roles:
+                if user_roles and roles:
+
                     self.phanterpwa_current_user_groups = q_user_groups
                     return f(self, *args, **kargs)
                 else:
                     msg = "User does not have sufficient privileges!"
                     dict_response = {
                         'status': 'Unauthorized',
-                        'code': 401,
+                        'code': 403,
                         'message': msg,
                         'i18n': {
                             'message': i18n.T(msg) if i18n else msg
@@ -703,10 +741,38 @@ def requires_authentication_group(projectConfig, db, i18n=None, roles=None, ids=
                             fi.lineno + 19
                         )
                     dict_response['help_debug'] = help_debug
-                    self.set_status(401)
+                    self.set_status(403)
                     return self.write(dict_response)
             else:
-                return f(self, *args, **kargs)
+                msg = "User does not have sufficient privileges!"
+                dict_response = {
+                    'status': 'Bad Request',
+                    'code': 403,
+                    'message': msg,
+                    'i18n': {
+                        'message': i18n.T(msg) if i18n else msg
+                    }
+                }
+                fi = getframeinfo(currentframe())
+                if not projectConfig['PROJECT']['debug']:
+                    help_debug = "({0}){1}.{2}->({3})@{4}:{5}".format(
+                        getfile(self.__class__),
+                        self.__class__.__name__,
+                        f.__name__,
+                        fi.filename,
+                        fi.function,
+                        fi.lineno + 19
+                    )
+                else:
+                    help_debug = "{0}.{1}@{2}:{3}".format(
+                        self.__class__.__name__,
+                        f.__name__,
+                        fi.function,
+                        fi.lineno + 19
+                    )
+                dict_response['help_debug'] = help_debug
+                self.set_status(403)
+                return self.write(dict_response)
 
         return requires_authentication_group_decorator
     return decorator

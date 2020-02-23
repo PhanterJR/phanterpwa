@@ -27,8 +27,6 @@ H2 = helpers.XmlConstructor.tagger("h2")
 XML = helpers.XML
 TEXTAREA = helpers.XmlConstructor.tagger("textarea")
 
-window.PseudoModal = widgets.PseudoModal
-
 
 class PhanterPWA():
     def __init__(self, config, gates, **parameters):
@@ -132,9 +130,6 @@ class PhanterPWA():
                 if self.DEBUG:
                     console.info("Reload Components {0}".format(c))
                 self.Components[c].reload(**context)
-        # target = context.get("selector", None)
-        # if target is not None:
-        #     self.I18N.DOMTranslate(target)
 
     def reload_events(self, **context):
         for c in self.Events.keys():
@@ -776,12 +771,6 @@ class Developer_Toolbar(Component):
             "click.developer_toolbar_button",
             self._open_modal
         )
-        # if t.length > 0:
-        #     if t.find(".phanterpwa-developer_toolbar-objects").length > 0:
-        #         t.find(".phanterpwa-developer_toolbar-objects").remove()
-        #     self.append_to("#p-developer_toolbar")
-        #     t.find(".phanterpwa-developer_toolbar.phanterpwa-developer_toolbar-response").append(response)
-        #     t.find(".phanterpwa-developer_toolbar.phanterpwa-developer_toolbar-request").append(request)
         jQuery(window).resize(lambda: self._window_size())
         self.check_duplicates_ids()
         self._window_size()
