@@ -182,7 +182,6 @@ class Input(Widget):
         p = el.parent()
         if el.val() is not "":
             p.addClass("has_value").trigger("keyup")
-            el.focus()
         else:
             p.removeClass("has_value")
 

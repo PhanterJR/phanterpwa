@@ -108,9 +108,8 @@ class Datepickers():
 
             if jQuery(self.id_input_target).length > 0:
                 if validations.check_datetime(
-                        jQuery(self.id_input_target).val().replace("_", ""), self.format, self.date_type):
-                    self._read_formated(jQuery(self.id_input_target).val().replace("_", ""))
-                    # iso_format = self._apply_format(self.format)
+                        jQuery(self.id_input_target).val(), self.format, self.date_type):
+                    self._read_formated(jQuery(self.id_input_target).val())
                     iso_format = self._apply_format("yyyy-MM-dd HH:ss:mm")
                     jQuery(self.target_selector).attr("phanterpwa-datetimepicker-iso", iso_format)
 
@@ -129,7 +128,7 @@ class Datepickers():
             iso_format = self._apply_format("yyyy-MM-dd HH:ss:mm")
             jQuery(self.target_selector).attr("phanterpwa-datetimepicker-iso", iso_format)
             if jQuery(self.id_input_target).length > 0:
-                jQuery(self.id_input_target).val(self._apply_format(self.format))
+                jQuery(self.id_input_target).val(self._apply_format(self.format)).focus()
             if self.debug:
                 console.info(self._apply_format(self.format))
 
