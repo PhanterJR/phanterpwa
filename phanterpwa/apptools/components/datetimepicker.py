@@ -80,7 +80,11 @@ class Datepickers():
         self.current_date = __new__(Date(self.now.getFullYear(), self.now.getMonth(), 1))
         if jQuery(self.target_selector).length > 0:
             if jQuery(self.target_selector)[0].hasAttribute("phanterpwa-datetimepicker-iso"):
-                self.selected_date = __new__(Date(jQuery(self.target_selector).attr("phanterpwa-datetimepicker-iso")))
+                phanterpwa_datetimepicker_iso = jQuery(self.target_selector).attr("phanterpwa-datetimepicker-iso")
+                console.log(phanterpwa_datetimepicker_iso)
+
+                self.selected_date = __new__(Date(phanterpwa_datetimepicker_iso))
+                console.log(self.selected_date)
                 self.current_date = __new__(Date(self._apply_format("yyyy-MM-01 HH:ss:mm")))
         self.format = "yyyy-MM-dd"
         if self.date_type == "datetime":
@@ -103,9 +107,11 @@ class Datepickers():
             self.id_input_target = parameters['id_input_target']
 
             if jQuery(self.id_input_target).length > 0:
-                if validations.check_datetime(jQuery(self.id_input_target).val().replace("_", ""), self.format, self.date_type):
+                if validations.check_datetime(
+                        jQuery(self.id_input_target).val().replace("_", ""), self.format, self.date_type):
                     self._read_formated(jQuery(self.id_input_target).val().replace("_", ""))
-                    iso_format = self._apply_format(self.format)
+                    # iso_format = self._apply_format(self.format)
+                    iso_format = self._apply_format("yyyy-MM-dd HH:ss:mm")
                     jQuery(self.target_selector).attr("phanterpwa-datetimepicker-iso", iso_format)
 
     def _onChoice(self):
@@ -957,6 +963,14 @@ class Datepickers():
 
     def close(self):
         jQuery(self.target_selector).find(".phanterpwa-fixed-fulldisplay").removeClass("enabled")
+
+        def delete_datepicker():
+            if not jQuery(self.target_selector).find(".phanterpwa-fixed-fulldisplay").hasClass("enabled"):
+                jQuery(self.target_selector).find(".phanterpwa-fixed-fulldisplay").remove()
+        setTimeout(
+            delete_datepicker,
+            500
+        )
 
     def start(self):
         cont = 0
