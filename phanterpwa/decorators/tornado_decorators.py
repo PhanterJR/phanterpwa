@@ -395,13 +395,18 @@ def check_public_csrf_token(projectConfig, db, i18n=None, form_identify=None):
                             q.delete_record()
                             db.commit()
                             if form_identify:
-                                if isinstance(form_identify, str) and form_identify==token_content["form_identify"]:
+                                if isinstance(form_identify, str) and form_identify == token_content["form_identify"]:
                                     return f(self, *args, **kargs)
                                 elif isinstance(form_identify, (list, tuple)) and \
                                         token_content["form_identify"] in form_identify:
                                     return f(self, *args, **kargs)
                                 else:
-                                    msg = "The crsf token is invalid! The client has an unstable address."
+                                    msg = "".join(["The crsf token is invalid! ",
+                                        "The csrf token created for \"",
+                                        str(token_content["form_identify"]),
+                                        "\" is being used for a request that only accepts \"",
+                                        str(form_identify),
+                                        "\"."])
                                     dict_response = {
                                         'status': 'Bad Request',
                                         'code': 400,

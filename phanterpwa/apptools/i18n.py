@@ -24,7 +24,11 @@ class I18NServer():
                 t = JSON.parse(t)
                 result = t
             except Exception:
+                localStorage.removeItem("phanterpwa_i18n")
                 console.error("the phanterpwa_i18n is corrupted")
+        else:
+            localStorage.setItem("phanterpwa_i18n", JSON.stringify(window.PhanterPWA.CONFIG['I18N']))
+            result = window.PhanterPWA.CONFIG['I18N']
         return result
 
     def save_storage(self):

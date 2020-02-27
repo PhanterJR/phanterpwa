@@ -680,7 +680,7 @@ class Compiler():
     def _process_transcrypt_config(self, app):
         last_app_config = join(self.tempfolder, "project_config_{0}.json".format(app))
         path_app_config_file = self.path_app_config_file(app)
-        CONFIG = {'PROJECT': {}, 'CONFIGJS': {}}
+        CONFIG = {'PROJECT': {}, 'CONFIGJS': {}, 'I18N': {}}
         CONFIG['PROJECT'] = self.config['PROJECT']
         if self.config["PROJECT"]["debug"]:
             CONFIG['CONFIGJS']['api_server_address'] = self.config['API']['remote_address_on_development']
@@ -698,8 +698,18 @@ class Compiler():
             "# file for this.",
             "#\n\n",
         ])
+        i18n_files = join(self.projectpath, "apps", "languages")
+        files = glob(join(i18n_files, "*.json"))
+        i18n_languages = {}
+        for x in files:
+            if basename(x) != "entries.json":
+                lang = basename(x)[0:-5]
+                with open(x, encoding="utf-8") as f:
+                    translates = json.load(f)
+                i18n_languages[lang] = translates
+        CONFIG['I18N'] = i18n_languages
         end = "\n"
-        content = "".join([ini, "CONFIG = {0}".format(json.dumps(CONFIG, ensure_ascii=True, indent=4)), end])
+        content = "".join([ini, "CONFIG = {0}".format(json.dumps(CONFIG, ensure_ascii=False, indent=4)), end])
         content = re.sub(r"(:[\t\n\r ]{0,}true[\t\n\r ]{0,})[,}]", ": True,", content)
         content = re.sub(r"(:[\t\n\r ]{0,}false[\t\n\r ]{0,})[,}]", ": False,", content)
         content = re.sub(r"(:[\t\n\r ]{0,}null[\t\n\r ]{0,})[,}]", ": None", content)
@@ -710,14 +720,14 @@ class Compiler():
                 new_c = json.dumps(self.config)
                 new_c = json.loads(new_c)
                 new_c["APPS"] = {app: new_c["APPS"][app]}
-                json.dump(new_c, f, ensure_ascii=True, indent=2)
+                json.dump(new_c, f, ensure_ascii=False, indent=2)
             return True
         else:
             with open(last_app_config, "r", encoding="utf-8") as f:
                 v = json.load(f)
                 new_v = v
                 new_v['PROJECT']['compilation'] = self.config['PROJECT']['compilation']
-                new_c = json.dumps(self.config)
+                new_c = json.dumps(self.config, ensure_ascii=False)
                 new_c = json.loads(new_c)
                 new_c["APPS"] = {app: new_c["APPS"][app]}
                 new_v["APPS"] = {app: new_v["APPS"][app]}
@@ -731,13 +741,13 @@ class Compiler():
                             changes_register[path_app_config_file] = getmtime(path_app_config_file)
                         with open(join(self.tempfolder,
                                 "transcrypts_mtime_{0}.json".format(app)), "w", encoding="utf-8") as f:
-                            json.dump(changes_register, f, ensure_ascii=True, indent=2)
+                            json.dump(changes_register, f, ensure_ascii=False, indent=2)
                     return False
             with open(last_app_config, "w", encoding="utf-8") as f:
                 new_c = json.dumps(self.config)
                 new_c = json.loads(new_c)
                 new_c["APPS"] = {app: new_c["APPS"][app]}
-                json.dump(new_c, f, ensure_ascii=True, indent=2)
+                json.dump(new_c, f, ensure_ascii=False, indent=2)
             return True
 
     def _save_mtimes(self):

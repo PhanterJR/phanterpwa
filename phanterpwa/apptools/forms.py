@@ -531,7 +531,7 @@ class Form(helpers.XmlConstructor):
         self.table_name = json_form["table"]
         helpers.XmlConstructor.__init__(
             self,
-            'form',
+            'phanterpwa-form',
             False,
             CSRFInput(self.table_name),
             **parameters
