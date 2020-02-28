@@ -86,6 +86,10 @@ class PhanterPWA():
         return "{0}-{1}-{2}".format(salt, self.counter, timestamp)
 
     @staticmethod
+    def get_api_address(self):
+        return window.PhanterPWA.CONFIG["CONFIGJS"]["api_server_address"]
+
+    @staticmethod
     def flash(msg=None, **parameters):
         timeout = parameters.get("timeout", 3000)
         timestamp = __new__(Date().getTime())
@@ -642,7 +646,10 @@ class Loads():
         self.url_args = parameters.get("args", None)
         self.url_vars = parameters.get("vars", {})
         self.onComplete = parameters.get("onComplete", None)
-        url = self._process_args()
+        pro_args = self._process_args()
+        location = __new__(URL(window.location))
+        origin = location.origin
+        url = "{0}/{1}".format(origin, pro_args)
         jQuery.js_get(url, self._after_load)
 
     def _after_load(self, data, ajax_status):

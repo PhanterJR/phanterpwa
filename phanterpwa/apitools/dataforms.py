@@ -538,10 +538,12 @@ class FormFromTableDAL():
             return val
         else:
             if self.record_id:
-                r = self._db(self._db[self.table._tablename]._id == self.record_id).update(**self._verified)
+                r = self._db(self._db[self.table._tablename]._id == self.record_id).select(
+                    ).first().update_record(**self._verified)
+                self._record = r
             else:
                 r = self.table.insert(**self._verified)
-            self.record_id = r
+                self.record_id = r
             for key in self._verified:
                 if key in self._widgets and key in self.fields:
                     if self._verified[key] and self._widgets[key]['value']:

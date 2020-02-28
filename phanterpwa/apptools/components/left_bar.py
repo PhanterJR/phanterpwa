@@ -109,7 +109,7 @@ class LeftBar(application.Component):
                 auth_user = window.PhanterPWA.get_auth_user()
                 if auth_user is not None:
                     if isinstance(auth_user.roles, list) and isinstance(roles, list):
-                        if len(set(auth_user.roles) & set(roles)) > 0:
+                        if len(set(auth_user.roles).intersection(set(roles))) > 0:
                             return True
                 else:
                     if "anonymous" in roles:
