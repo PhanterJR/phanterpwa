@@ -75,9 +75,9 @@ class WebSocketPhanterPWA():
 
     def _onOpen(self, evt):
         self._opened = True
-        self.send("command_online")
         if window.PhanterPWA.DEBUG:
             console.log("Opening websocket")
+        self.send("command_online")
 
     def _binds(self):
         self._ws.onopen = lambda evt: self._onOpen(evt)

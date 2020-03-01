@@ -70,7 +70,7 @@ class Compiler():
 
         for app in list(self.config['APPS'].keys()):
             if not isdir(join(self.projectpath, "apps", app)):
-                del self.config['APPS'][app] 
+                del self.config['APPS'][app]
 
     @property
     def app_list(self):
@@ -154,7 +154,7 @@ class Compiler():
     def style_files(self, app):
         files = self.get_files_dir(
             self.path_styles_folder(app), ignore_files=["__init__.py"], ignore_paths=["__pycache__"])
-        return (x for x in files if x.endswith(".sass"))
+        return (normpath(x) for x in files if x.endswith(".sass"))
 
     @staticmethod
     def target_by_relative_path(src_path, tgt_path, ext_src=None, ext_tgt=None, ignore_files=[], ignore_paths=[]):
@@ -534,7 +534,7 @@ class Compiler():
                 txt = "/* SASS Source Code (MAIN FILE): {0} */\n\n{1}".format(main_file, txt)
                 has_import = False
                 for x in sass_files:
-                    if x is not main_file:
+                    if x != normpath(main_file):
                         c = "/* SASS Source Code: {0} */\n\n".format(x)
                         p = PurePath(x)
                         p = p.relative_to(dirname(main_file))
@@ -564,6 +564,12 @@ class Compiler():
                         r"^/\* start change programmatically[\W\w]*end change programmatically \*/$",
                         "",
                         new_css)
+                if isfile(join(self.projectpath, "temp", "_compiler_sass_temp_file.sass")):
+                    os.unlink(join(self.projectpath, "temp", "_compiler_sass_temp_file.sass"))
+                shutil.copy(
+                    join(dirname(main_file), "_compiler_sass_temp_file.sass"),
+                    join(self.projectpath, "temp", "_compiler_sass_temp_file.sass")
+                )
                 with open(target_css, "w") as o:
                     o.write(new_css)
                 os.unlink(join(dirname(main_file), "_compiler_sass_temp_file.sass"))
