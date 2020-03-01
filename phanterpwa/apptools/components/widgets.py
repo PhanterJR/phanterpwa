@@ -771,8 +771,10 @@ class ListString(Widget):
     def __init__(self, identifier, **parameters):
         self._label = parameters.get("label", None)
         self._placeholder = parameters.get("placeholder", None)
+        self._editable = parameters.get("editable", True)
         self._name = parameters.get("name", None)
         self._value = parameters.get("value", [])
+        self._data_set(parameters.get("data_set", []))
         self._icon = parameters.get("icon", None)
         self._message_error = parameters.get("message_error", None)
         self._can_empty = parameters.get("can_empty", False)
@@ -782,7 +784,7 @@ class ListString(Widget):
         self._form = parameters.get("form", None)
         self._on_click_new = parameters.get("on_click_new_button", None)
         self._xml_list_string = ""
-        self._input_value = "[]"
+        self._input_value = []
         wrapper_attr = {
             "_class": "phanterpwa-widget-wrapper {0} phanterpwa-widget-wear-{1}".format(
                 "phanterpwa-widget-list_string-wrapper",
@@ -814,6 +816,8 @@ class ListString(Widget):
         if self._mask is not "" and self._mask is not None:
             wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " has_mask")
         self._process_list_string()
+        self._process_list_predefinition_string()
+
         html = DIV(
             DIV(
                 self._xml_list_string,
@@ -825,13 +829,17 @@ class ListString(Widget):
                 "_id": "phanterpwa-widget-list_string-input-{0}".format(identifier),
                 "_class": "phanterpwa-widget-list_string-input",
                 "_name": self._name,
-                "_value": self._input_value,
+                "_value": JSON.stringify(self._input_value),
                 "_placeholder": self._placeholder,
                 "_type": "hidden",
                 "_data-validators": JSON.stringify(self._validator),
                 "_data-form": self._form,
             }),
             label,
+            DIV(
+                self._xml_list_predefinition_string,
+                _class="phanterpwa-widget-list_string-list_predefinitions_values"
+            ),
             DIV(
                 I(_class="fas fa-check"),
                 _class="phanterpwa-widget-check"
@@ -848,12 +856,14 @@ class ListString(Widget):
     def _process_list_string(self):
         new_value = []
         self._input_value = []
+        self._dict_input_value = {}
         if isinstance(self._value, (list, tuple, dict)):
             if isinstance(self._value, (list, tuple)):
                 xml = CONCATENATE()
                 for x in self._value:
                     if isinstance(x, (list, tuple)) and len(x) == 2:
                         self._input_value.append(x[0])
+                        self._dict_input_value[x[0]] = x[1]
                         new_value.append([x[0], x[1]])
                         xml.append(
                             DIV(
@@ -869,6 +879,7 @@ class ListString(Widget):
                         )
                     else:
                         self._input_value.append(x)
+                        self._dict_input_value[x] = x
                         new_value.append([x, x])
                         xml.append(
                             DIV(
@@ -886,6 +897,7 @@ class ListString(Widget):
                 for x in self._value:
                     self._input_value.append(x)
                     new_value.append([x, self._value[x]])
+                    self._dict_input_value[x] = self._value[x]
                     xml.append(
                         DIV(
                             self._value[x],
@@ -898,27 +910,85 @@ class ListString(Widget):
                             }
                         )
                     )
-            xml.append(DIV(
-                DIV(
-                    I(_class="fas fa-plus"),
-                    _class="icon_button wave_on_click phanterpwa-widget-list_string-value-icon_plus"
-                ),
-                _class="phanterpwa-widget-list_string-plus_icon-container",
-                _tabindex=0
-            ))
-            self._input_value = JSON.stringify(self._input_value)
+            if self._editable:
+                xml.append(DIV(
+                    DIV(
+                        I(_class="fas fa-plus"),
+                        _class="icon_button wave_on_click phanterpwa-widget-list_string-value-icon_plus"
+                    ),
+                    _class="phanterpwa-widget-list_string-plus_icon-container",
+                    _tabindex=0
+                ))
             self._xml_list_string = xml
         else:
-            self._input_value = "[]"
-            self._xml_list_string = DIV(
-                DIV(
-                    I(_class="fas fa-plus"),
-                    _class="icon_button wave_on_click phanterpwa-widget-list_string-value-icon_plus"
-                ),
-                _class="phanterpwa-widget-list_string-plus_icon-container",
-                _tabindex=0
-            )
+            self._input_value = []
+            if self._editable:
+                self._xml_list_string = DIV(
+                    DIV(
+                        I(_class="fas fa-plus"),
+                        _class="icon_button wave_on_click phanterpwa-widget-list_string-value-icon_plus"
+                    ),
+                    _class="phanterpwa-widget-list_string-plus_icon-container",
+                    _tabindex=0
+                )
+            else:
+                self._xml_list_string = CONCATENATE()
         self._value = new_value
+
+    def _data_set(self, data):
+        valid_data = True
+        self._data = []
+        self._data_dict = {}
+        if isinstance(data, list):
+            new_data = []
+            for vdata in data:
+                if isinstance(vdata, list) and len(vdata) == 2:
+                    self._data_dict[vdata[0]] = vdata[1]
+                    new_data.append([vdata[0], vdata[1]])
+                else:
+                    self._data_dict[vdata] = vdata
+                    new_data.append([vdata, vdata])
+                self._data = new_data
+        elif isinstance(data, dict):
+            new_data = []
+            for vdata in data.keys():
+                new_data.append([vdata, data[vdata]])
+                if self._value == vdata:
+                    self._alias_value = data[vdata]
+            self._data = new_data
+            self._data_dict = data
+
+    def _process_list_predefinition_string(self):
+        xml = CONCATENATE()
+        data_dict_keys = self._data_dict.keys()
+        for x in self._input_value:
+            if x not in data_dict_keys:
+                self._data_dict[x] = self._dict_input_value[x]
+                self._data.append([x, self._dict_input_value[x]])
+        data_dict_keys = self._data_dict.keys()
+        for x in data_dict_keys:
+            if x not in self._input_value:
+                xml.append(
+                    DIV(
+                        self._data_dict[x],
+                        DIV(I(_class="fas fa-plus"),
+                            _class="phanterpwa-widget-list_string-value-icon_plus_predifinition icon_button wave_on_click"),
+                        **{
+                            "_data-value": x,
+                            "_class": "phanterpwa-widget-list_string-value-predefinition-content",
+                            "_tabindex": "0"
+                        }
+                    )
+                )
+
+        self._xml_list_predefinition_string = xml
+
+    def _add_value_predefinition(self, el):
+        p = jQuery(el).parent()
+        val = p.data("value")
+        alias_val = p.text()
+        del self._data_dict[val]
+        self.add_new_value([val, alias_val])
 
     def get_message_error(self):
         if self._message_error is not None:
@@ -955,8 +1025,13 @@ class ListString(Widget):
         elif isinstance(value, str):
             self._value.append(["${0}:{1}".format(__new__(Date().getTime()), value), value])
         self._process_list_string()
-        self._process_list_string()
-        jQuery("#phanterpwa-widget-list_string-input-{0}".format(self.identifier)).val(self._input_value)
+        self._process_list_predefinition_string()
+        target = jQuery(self.target_selector)
+        self._xml_list_predefinition_string.html_to(
+            target.find(".phanterpwa-widget-list_string-list_predefinitions_values")
+        )
+        jQuery("#phanterpwa-widget-list_string-input-{0}".format(
+            self.identifier)).val(JSON.stringify(JSON.stringify(self._input_value)))
         jQuery("#phanterpwa-widget-list_string-list_values-{0}".format(self.identifier)).html(
             self._xml_list_string.jquery()
         ).find(".phanterpwa-widget-list_string-plus_icon-container").find(
@@ -1001,7 +1076,8 @@ class ListString(Widget):
             new_value = val
             self._value.append([key_value, new_value])
         self._process_list_string()
-        jQuery("#phanterpwa-widget-list_string-input-{0}".format(self.identifier)).val(self._input_value)
+        jQuery("#phanterpwa-widget-list_string-input-{0}".format(
+            self.identifier)).val(JSON.stringify(self._input_value))
         jQuery("#phanterpwa-widget-list_string-list_values-{0}".format(self.identifier)).html(
             self._xml_list_string.jquery()
         ).find(".phanterpwa-widget-list_string-plus_icon-container").find(
@@ -1031,12 +1107,28 @@ class ListString(Widget):
         p = jQuery(el).parent()
         val = p.data("value")
         new_value = []
+        self._dict_input_value = {}
         for x in self._value:
             if x[0] is not val:
+                self._dict_input_value[x[0]] = x[1]
                 new_value.append([x[0], x[1]])
+            else:
+                self._data_dict[x[0]] = x[1]
         self._value = new_value
         self._process_list_string()
-        jQuery("#phanterpwa-widget-list_string-input-{0}".format(self.identifier)).val(self._input_value)
+        self._process_list_predefinition_string()
+        target = jQuery(self.target_selector)
+        self._xml_list_predefinition_string.html_to(
+            target.find(".phanterpwa-widget-list_string-list_predefinitions_values")
+        )
+        target.find(".phanterpwa-widget-list_string-value-predefinition-content").find(
+            ".phanterpwa-widget-list_string-value-icon_plus_predifinition"
+        ).off("click.plus_predefinition_liststring").on(
+            "click.plus_predefinition_liststring",
+            lambda: self._add_value_predefinition(this)
+        )
+        jQuery("#phanterpwa-widget-list_string-input-{0}".format(
+            self.identifier)).val(JSON.stringify(self._input_value))
         jQuery("#phanterpwa-widget-list_string-list_values-{0}".format(self.identifier)).html(
             self._xml_list_string.jquery()
         ).find(
@@ -1156,6 +1248,12 @@ class ListString(Widget):
             ".phanterpwa-widget-list_string-value-icon_close").off("click.remove_lstr_item").on(
             "click.remove_lstr_item",
             lambda: self._on_click_remove(this)
+        )
+        target.find(".phanterpwa-widget-list_string-value-predefinition-content").find(
+            ".phanterpwa-widget-list_string-value-icon_plus_predifinition"
+        ).off("click.plus_predefinition_liststring").on(
+            "click.plus_predefinition_liststring",
+            lambda: self._add_value_predefinition(this)
         )
 
     def start(self):

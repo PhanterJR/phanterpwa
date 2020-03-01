@@ -8,6 +8,7 @@ import phanterpwa.apptools.components.widgets as widgets
 import phanterpwa.apptools.components.events as events
 import phanterpwa.apptools.handler as handler
 import phanterpwa.apptools.components.modal as modal
+import phanterpwa.apptools.websocket as websocket
 
 __pragma__('alias', "jQuery", "$")
 __pragma__('skip')
@@ -68,6 +69,7 @@ class PhanterPWA():
         self.ApiServer = server.ApiServer()
         self.ApiServer.getClientToken()
         self.I18N = i18n.I18NServer()
+        self.WS = websocket.WebSocketPhanterPWA(self.CONFIG["CONFIGJS"]["api_websocket_address"])
         if self.DEBUG:
             self.add_component(Developer_Toolbar())
 
@@ -84,6 +86,10 @@ class PhanterPWA():
             console.error("The salt of method get_id is invalid! given:", salt)
             salt = "phanterpwa"
         return "{0}-{1}-{2}".format(salt, self.counter, timestamp)
+
+    @staticmethod
+    def get_app_name(self):
+        return window.PhanterPWA.CONFIG["APP"]["name"]
 
     @staticmethod
     def get_api_address(self):
@@ -219,6 +225,7 @@ class PhanterPWA():
                     sessionStorage.setItem("auth_user", JSON.stringify(auth_user))
                     localStorage.removeItem("phanterpwa-authorization")
                     localStorage.removeItem("auth_user")
+                self.WS.send("command_online")
                 localStorage.setItem("last_auth_user", JSON.stringify(auth_user))
             window.PhanterPWA.open_current_way()
         if self.DEBUG:
@@ -275,6 +282,7 @@ class PhanterPWA():
                     sessionStorage.setItem("auth_user", JSON.stringify(auth_user))
                     localStorage.removeItem("phanterpwa-authorization")
                     localStorage.removeItem("auth_user")
+                self.WS.send("command_online")
                 localStorage.setItem("last_auth_user", JSON.stringify(auth_user))
         else:
             console.info(data.status)
@@ -415,6 +423,7 @@ class PhanterPWA():
         callback = None
         if "callback" in parameters:
             callback = parameters["callback"]
+        self.WS.send("command_offline")
         sessionStorage.removeItem("phanterpwa-authorization")
         sessionStorage.removeItem("auth_user")
         localStorage.removeItem("phanterpwa-authorization")
@@ -528,6 +537,7 @@ class PhanterPWA():
         if auth_user is not None and auth_user is not js_undefined:
             return JSON.parse(auth_user)
         else:
+            window.PhanterPWA.WS.send("command_offline")
             localStorage.removeItem("phanterpwa-authorization")
             sessionStorage.removeItem("phanterpwa-authorization")
             return None

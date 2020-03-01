@@ -59,7 +59,7 @@ class I18NServer():
         if window.PhanterPWA is not js_undefined:
             if window.PhanterPWA.DEBUG:
                 window.PhanterPWA.ApiServer.GET(**{
-                    'url_args': ["api", "i18n"],
+                    'url_args': ["api", "i18n", window.PhanterPWA.get_app_name()],
                     'url_vars': {
                         "lang": self.userLang,
                         "new_word": new_word

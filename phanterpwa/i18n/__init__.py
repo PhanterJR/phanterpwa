@@ -6,8 +6,9 @@ import glob
 
 class Translator(object):
     """docstring for Translator"""
+    instances = dict()
 
-    def __init__(self, path, debug=False):
+    def __init__(self, path, identifier, debug=False):
         super(Translator, self).__init__()
         if not os.path.exists(path):
             os.makedirs(path, exist_ok=True)
@@ -20,6 +21,15 @@ class Translator(object):
         self.path = path
         self.direct_translation = None
         self.load()
+        self.add_instance(identifier, self)
+
+    @classmethod
+    def get_instance(cls, identifier):
+        return cls.instances.get(identifier, None)
+
+    @classmethod
+    def add_instance(cls, identifier, obj):
+        cls.instances[identifier] = obj
 
     def add_language(self, lang):
         """Adds new dictionarie"""

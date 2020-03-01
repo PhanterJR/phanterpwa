@@ -37,6 +37,7 @@ class Compiler():
         self.projectpath = projectpath
         self.ProjectConfig = ProjectConfig(join(self.projectpath, "config.json"))
         self.config = self.ProjectConfig.config
+        self._check_app_list()
         self.build_apps_folder = build_apps_folder
         self.current_compilation = self.config['PROJECT'].get("compilation", 0)
         self.current_compilation += 1
@@ -52,7 +53,6 @@ class Compiler():
             self.minify = True
             self.full_compilation = True
             self.clear_builder_folder = True
-        self.app_list = [x for x in self.config['APPS'].keys()]
         self.ProjectConfig.save()
         self._templates_to_update = {}
         self._statics_to_update = {}
@@ -65,6 +65,17 @@ class Compiler():
         self._has_script_change = {}
         self._has_phanterpwa_modules_change = {}
         self._create_temp_folder()
+
+    def _check_app_list(self):
+
+        for app in list(self.config['APPS'].keys()):
+            if not isdir(join(self.projectpath, "apps", app)):
+                del self.config['APPS'][app] 
+
+    @property
+    def app_list(self):
+        self._check_app_list()
+        return self.config['APPS'].keys()
 
     @property
     def build_apps_folder(self):
@@ -689,6 +700,11 @@ class Compiler():
             CONFIG['CONFIGJS']['api_server_address'] = self.config['API']['remote_address_on_production']
             CONFIG['CONFIGJS']['api_websocket_address'] = self.config['API']['websocket_address_on_production']
         CONFIG['CONFIGJS']['timeout_to_resign'] = self.config["APPS"][app]['timeout_to_resign']
+        CONFIG['APP'] = {
+            'name': app,
+            'title': self.config["APPS"][app]['title']
+        }
+
         ini = "\n".join([
             "# Created automatically.",
             "#",
@@ -796,7 +812,7 @@ class Compiler():
 
     def compile(self, force_complete_compilation=False, minify=False):
         self.transcrypts_config()
-        for app in self.config["APPS"]:
+        for app in self.app_list:
             print("\n============ APP COMPILATION: {0} ==============".format(app))
             current_debug = self.config["PROJECT"]["debug"]
             if current_debug:
