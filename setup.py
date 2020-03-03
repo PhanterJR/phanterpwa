@@ -46,7 +46,7 @@ setuptools.setup(
     },
     install_requires=[
         'psutil', 'tornado', 'libsass', 'transcrypt',
-        'pillow', 'itsdangerous',
+        'pillow', 'itsdangerous', 'requests-oauthlib',
         'pydal>=19.04', 'passlib'
     ],
     dependency_links=[

@@ -662,7 +662,7 @@ def requires_authentication(projectConfig, db, i18n=None, ids=None):
     def decorator(f):
         @wraps(f)
         @check_user_token(projectConfig, db, i18n)
-        def requires_authenticatio_decorator(self, *args, **kargs):
+        def requires_authentication_decorator(self, *args, **kargs):
             if ids:
                 if self.phanterpwa_current_user.id in ids:
                     return f(self, *args, **kargs)
@@ -698,7 +698,7 @@ def requires_authentication(projectConfig, db, i18n=None, ids=None):
                     return self.write(dict_response)
             else:
                 return f(self, *args, **kargs)
-        return requires_authenticatio_decorator
+        return requires_authentication_decorator
     return decorator
 
 
@@ -780,4 +780,85 @@ def requires_authentication_group(projectConfig, db, i18n=None, roles=None, ids=
                 return self.write(dict_response)
 
         return requires_authentication_group_decorator
+    return decorator
+
+
+def requires_no_authentication(projectConfig, db, i18n=None, ids=None):
+    def decorator(f):
+        @wraps(f)
+        @check_client_token(projectConfig, db, i18n, ignore_locked=False)
+        def requires_no_authentication_decorator(self, *args, **kargs):
+            self.phanterpwa_current_user = None
+            self.phanterpwa_client_token = self.request.headers.get('phanterpwa-client-token')
+            self.phanterpwa_authorization = self.request.headers.get('phanterpwa-authorization')
+            id_user = None
+            if self.phanterpwa_client_token and self.phanterpwa_authorization:
+                t = Serialize(
+                    projectConfig['API']['secret_key'],
+                    projectConfig['API']['default_time_user_token_expire']
+                )
+                token_content = None
+                try:
+                    token_content = t.loads(self.phanterpwa_authorization)
+                except BadSignature:
+                    token_content = None
+                except SignatureExpired:
+                    token_content = None
+                if token_content and 'id' in token_content:
+                    id_user = token_content['id']
+                    self.phanterpwa_user_token_checked = token_content
+            if id_user:
+                db._adapter.reconnect()
+                q_user = db(db.auth_user.id == id_user).select().first()
+                self.phanterpwa_current_user = q_user
+                q_client = db(
+                    (db.client.auth_user == id_user) &
+                    (db.client.token == self.phanterpwa_client_token)
+                ).select().first()
+                if q_user and q_client:
+                    if not q_user.permit_mult_login:
+                        r_client = db(
+                            (db.client.auth_user == id_user) &
+                            (db.client.token != self.phanterpwa_client_token)
+                        ).select()
+                        if r_client:
+                            r_client = db(
+                                (db.client.auth_user == id_user) &
+                                (db.client.token != self.phanterpwa_client_token)
+                            ).remove()
+                    db.commit()
+                    msg = "The user must logout!"
+                    dict_response = {
+                        'status': 'Forbidden',
+                        'code': 403,
+                        'message': msg,
+                        'i18n': {
+                            'message': i18n.T(msg) if i18n else msg
+                        }
+                    }
+                    fi = getframeinfo(currentframe())
+                    if not projectConfig['PROJECT']['debug']:
+                        help_debug = "({0}){1}.{2}->({3})@{4}:{5}".format(
+                            getfile(self.__class__),
+                            self.__class__.__name__,
+                            f.__name__,
+                            fi.filename,
+                            fi.function,
+                            fi.lineno + 19
+                        )
+                    else:
+                        help_debug = "{0}.{1}@{2}:{3}".format(
+                            self.__class__.__name__,
+                            f.__name__,
+                            fi.function,
+                            fi.lineno + 19
+                        )
+                    dict_response['help_debug'] = help_debug
+                    self.set_status(403)
+                    return self.write(dict_response)
+                else:
+                    return f(self, *args, **kargs)
+            else:
+                return f(self, *args, **kargs)
+        return requires_no_authentication_decorator
     return decorator

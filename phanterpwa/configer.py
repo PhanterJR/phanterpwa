@@ -248,7 +248,6 @@ class ProjectConfig():
                                 else:
                                     cfg["APPS"][app_name]["CONFIGJS"][k] = v
 
-
                 required_on_ini = [
                     "server",
                     "username",
@@ -291,6 +290,9 @@ class ProjectConfig():
                     ini_project["CONTENT_EMAILS"][k] = str(cfg["CONTENT_EMAILS"][k])
                 with open(join(cfg["PROJECT"]["path"], 'project.ini'), 'w', encoding="utf-8") as configfile:
                     ini_project.write(configfile)
+                for p in sections_project:
+                    if p not in ["PROJECT", "EMAIL", "CONTENT_EMAILS"]:
+                        cfg[p] = dict(ini_project[p])
             else:
                 raise TypeError(
                     "The config file has incorrect content, expected dict type. Given: {0}".format(type(cfg)))
