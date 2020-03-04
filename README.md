@@ -11,6 +11,7 @@
     itsdangerous
     pyDAL
     passlib
+    requests-oauthlib
 
 ## Requeriments
     Python 3.6+
