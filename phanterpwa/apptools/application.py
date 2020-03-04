@@ -31,6 +31,7 @@ TEXTAREA = helpers.XmlConstructor.tagger("textarea")
 
 class PhanterPWA():
     def __init__(self, config, gates, **parameters):
+        self.get_inicial_config_uri()
         self.initialize()
         if config is js_undefined or config is None:
             raise ValueError("The config is required")
@@ -72,6 +73,37 @@ class PhanterPWA():
         self.WS = websocket.WebSocketPhanterPWA(self.CONFIG["CONFIGJS"]["api_websocket_address"])
         if self.DEBUG:
             self.add_component(Developer_Toolbar())
+        
+
+    def get_inicial_config_uri(self):
+        initial_config = __new__(URL(window.location.href))
+        params = initial_config.searchParams
+        authorization = params.js_get("authorization")
+        client_token = params.js_get("client_token")
+        url_token = params.js_get("url_token")
+        auth_user = params.js_get("auth_user")
+        redirect = params.js_get("redirect")
+        if auth_user is not None and auth_user is not js_undefined:
+            auth_user = JSON.parse(auth_user)
+
+        if (authorization is not None) and (url_token is not None) and\
+                (auth_user is not None) and (client_token is not None):
+            localStorage.setItem('phanterpwa-client-token', client_token)
+            localStorage.setItem('phanterpwa-url-token', url_token)
+            if auth_user["remember_me"] is True:
+                localStorage.setItem("phanterpwa-authorization", authorization)
+                localStorage.setItem("auth_user", JSON.stringify(auth_user))
+                sessionStorage.removeItem("phanterpwa-authorization")
+                sessionStorage.removeItem("auth_user")
+            else:
+                sessionStorage.setItem("phanterpwa-authorization", authorization)
+                sessionStorage.setItem("auth_user", JSON.stringify(auth_user))
+                localStorage.removeItem("phanterpwa-authorization")
+                localStorage.removeItem("auth_user")
+            localStorage.setItem("last_auth_user", JSON.stringify(auth_user))
+        if redirect is not None:
+            window.location = redirect
+
 
     def _after_ajax_complete(self, event, xhr, option):
         if option is not js_undefined:
