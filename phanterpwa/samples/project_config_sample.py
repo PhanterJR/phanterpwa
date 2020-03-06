@@ -31,9 +31,9 @@ project_config_sample = {
         "max_login_attempts": 5,
         "max_activation_attempts": 5,
         "remote_address_on_development": "http://127.0.0.1:8881",
-        "websocket_address_on_development": "ws://127.0.0.1:8881/websocket",
+        "websocket_address_on_development": "ws://127.0.0.1:8881/api/websocket",
         "remote_address_on_production": "https://your_domain.com",
-        "websocket_address_on_production": "wss://your_domain.com/websocket",
+        "websocket_address_on_production": "wss://your_domain.com/api/websocket",
         "host": "0.0.0.0",
         "port": 8881
     },
