@@ -290,9 +290,21 @@ class ProjectConfig():
                     ini_project["CONTENT_EMAILS"][k] = str(cfg["CONTENT_EMAILS"][k])
                 with open(join(cfg["PROJECT"]["path"], 'project.ini'), 'w', encoding="utf-8") as configfile:
                     ini_project.write(configfile)
+                exclude = []
+                if "SOCIAL_LOGIN" in sections_project:
+                    d = dict(ini_project["SOCIAL_LOGIN"])
+                    for k in d:
+                        check_has_key = d[k]
+                        if check_has_key in sections_project:
+                            d[k] = dict(ini_project[check_has_key])
+                            exclude.append(check_has_key)
+                        else:
+                            d[k] = None
+                    cfg["SOCIAL_LOGIN"] = d
                 for p in sections_project:
-                    if p not in ["PROJECT", "EMAIL", "CONTENT_EMAILS"]:
-                        cfg[p] = dict(ini_project[p])
+                    if p not in ["PROJECT", "EMAIL", "CONTENT_EMAILS", "SOCIAL_LOGIN", *exclude]:
+                        cfg[p] = self._dict_value(dict(ini_project[p]))
+
             else:
                 raise TypeError(
                     "The config file has incorrect content, expected dict type. Given: {0}".format(type(cfg)))
@@ -301,6 +313,25 @@ class ProjectConfig():
             self._file = value
         else:
             raise IOError("The config file is invalid!. Given: {0}".format(value))
+
+    def _dict_value(self, d):
+        if isinstance(d, dict):
+            for x in d:
+                d[x] = self._dict_value(d[x])
+            return d
+        elif isinstance(d, str):
+            if d.isdigit():
+                return int(d)
+            elif d.lower() == "false":
+                return False
+            elif d.lower() == "true":
+                return True
+            elif d.lower() == "none":
+                return None
+            else:
+                return d
+        else:
+            return d
 
     @property
     def config(self):

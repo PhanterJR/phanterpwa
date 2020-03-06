@@ -100,7 +100,8 @@ class AuthUser(application.Component):
     def modal_login(self):
         self.close_menu()
         self.Modal = ModalLogin(
-            "#modal-container"
+            "#modal-container",
+            social_logins = window.PhanterPWA.social_login_list()
         )
         self.Modal.open()
         forms.SignForm("#form-login", has_captcha=True)
@@ -332,9 +333,12 @@ class AuthUser(application.Component):
 
 
 class ModalLogin(modal.Modal):
-    def __init__(self, target_element):
+    def __init__(self, target_element, **parameters):
         self.element_target = jQuery(target_element)
-
+        self._social_logins = parameters.get("social_logins", [])
+        if not isinstance(self._social_logins, list):
+            self._social_logins = []
+        self._has_social_logins = True if len(self._social_logins) > 0 else False
         AuthUserCmp = window.PhanterPWA.Components["auth_user"]
         self.AuthUser = None
         if AuthUserCmp is not None and AuthUserCmp is not js_undefined and not isinstance(AuthUserCmp, AuthUser):
@@ -355,7 +359,31 @@ class ModalLogin(modal.Modal):
             remember_me = self.auth_user.remember_me
             role = I18N(self.auth_user.role)
 
+        self.xml_social_logins = DIV(_class='phanterpwa-modal-login-social-buttons-container')
+        if self._has_social_logins:
+            for x in self._social_logins:
+                icon = ""
+                social_name = x
+                if isinstance(x, list) and len(x) == 2:
+                    icon = x[1]
+                    social_name = x[0]
+                self.xml_social_logins.append(DIV(
+                    DIV(
+                        icon,
+                        I18N(
+                            "Login with {0}".format(str(social_name).capitalize()),
+                            **{"_pt-br": "Login com o {0}".format(str(social_name).capitalize())}
+                        ),
+                        **{
+                            "_class": "btn btn-social_login link",
+                            "_data-social_login": social_name
+                        }
+                    ),
+                    _class="btn-social_login-wrapper",
+                 ))
+
         tcontent = DIV(
+            self.xml_social_logins,
             DIV(
                 DIV(
                     DIV(
@@ -430,8 +458,25 @@ class ModalLogin(modal.Modal):
             ),
             _class="phanterpwa-auth_user-form-inputs"
         ).jquery()
+        if self._has_social_logins:
+            tcontent.addClass("has_social_logins")
+        button_login_by_social = ""
+
         if self.auth_user is not None and self.auth_user is not js_undefined:
             tcontent.addClass("has_auth_user")
+            if self.auth_user['social_login'] is not None and self.auth_user['social_login'] is not js_undefined:
+                tcontent.addClass("auth_user_logged_by_social_login")
+                button_login_by_social = forms.FormButton(
+                    "social_login-{0}".format(social_name),
+                    CONCATENATE(icon, I18N(
+                        "Continue using {0}".format(str(social_name).capitalize()),
+                        **{"_pt-br": "Continuar com {0}".format(str(social_name).capitalize())}
+                    )),
+                    **{
+                        "_class": "btn-social_login wave_on_click waves-phanterpwa",
+                        "_data-social_login": social_name
+                    }
+                )
 
         tfooter = DIV(
             forms.CaptchaContainer(
@@ -439,10 +484,17 @@ class ModalLogin(modal.Modal):
                 preloaders.android
             ),
             DIV(
-                forms.SubmitButton(
-                    "login",
-                    I18N("Login", **{"_pt-br": "Login"}),
-                    _class="btn-autoresize wave_on_click waves-phanterpwa"
+                DIV(
+                    forms.SubmitButton(
+                        "login",
+                        I18N("Login", **{"_pt-br": "Login"}),
+                        _class="btn-autoresize wave_on_click waves-phanterpwa"
+                    ),
+                    _class="hidden_on_its_social_login"
+                ),
+                DIV(
+                    button_login_by_social,
+                    _class="hidden_on_not_has_auth_user"
                 ),
                 forms.FormButton(
                     "register",
@@ -458,6 +510,10 @@ class ModalLogin(modal.Modal):
             ),
             _class="p-col w1p100"
         ).jquery()
+        if self.auth_user is not None and self.auth_user is not js_undefined:
+            tfooter.addClass("has_auth_user")
+            if self.auth_user['social_login'] is not None and self.auth_user['social_login'] is not js_undefined:
+                tfooter.addClass("its_social_login")
         modal.Modal.__init__(
             self,
             self.element_target,
@@ -475,6 +531,8 @@ class ModalLogin(modal.Modal):
 
     def other_account(self):
         self.element_target.find(".phanterpwa-auth_user-form-inputs").removeClass("has_auth_user")
+        self.element_target.find(
+            ".phanterpwa-component-modal-footer-container").find(".has_auth_user").removeClass("has_auth_user")
 
     def open_modal_register(self):
         self.close()
@@ -507,6 +565,18 @@ class ModalLogin(modal.Modal):
             "click.form_button_request_password",
             self.open_modal_request_password
         )
+        self.element_target.find(
+            ".btn-social_login"
+        ).off(
+            "click.social_button"
+        ).on(
+            "click.social_button",
+            lambda: self._on_click_social_button(this)
+        )
+
+    def _on_click_social_button(self, el):
+        social = jQuery(el).data("social_login")
+        window.PhanterPWA.social_login(social)
 
     def clear_errors(self):
         jQuery("#form-{0}".format(self._form)).find(".phanterpwa-widget-error").removeClass("enabled").html("")
@@ -1382,7 +1452,8 @@ class LeftBarAuthUserNoLogin(left_bar.LeftBarMenu):
     def modal_login(self):
         self.close_all()
         self.Modal = ModalLogin(
-            "#modal-container"
+            "#modal-container",
+            social_logins = window.PhanterPWA.social_login_list()
         )
         self.Modal.open()
         forms.SignForm("#form-login", has_captcha=True)

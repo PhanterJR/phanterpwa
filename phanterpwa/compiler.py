@@ -661,13 +661,13 @@ class Compiler():
                 print("    For minification it's necessary to have java installed, if compilation fail,",
                     " the compilation will try transcrypt on unminify format.")
                 try:
-                    subprocess.run("{0} -m transcrypt {1}".format(python_env, main_file), shell=True)
+                    subprocess.run("{0} -X utf8 -m transcrypt {1}".format(python_env, main_file), shell=True)
                 except Exception as e:
                     print("    Minification Fail!!! It's try unminify mode now, it's fast.",
                         " Check java instalation. Error:", e)
-                    subprocess.run("{0} -m transcrypt {1} -n".format(python_env, main_file), shell=True)
+                    subprocess.run("{0} -X utf8 -m transcrypt {1} -n".format(python_env, main_file), shell=True)
             else:
-                subprocess.run("{0} -m transcrypt {1} -n -m".format(python_env, main_file), shell=True)
+                subprocess.run("{0} -X utf8 -m transcrypt {1} -n -m".format(python_env, main_file), shell=True)
             list_all = glob(join(source, "*"))
             for y in list_all:
                 if isfile(y):
@@ -699,17 +699,28 @@ class Compiler():
         path_app_config_file = self.path_app_config_file(app)
         CONFIG = {'PROJECT': {}, 'CONFIGJS': {}, 'I18N': {}}
         CONFIG['PROJECT'] = self.config['PROJECT']
+
         if self.config["PROJECT"]["debug"]:
-            CONFIG['CONFIGJS']['api_server_address'] = self.config['API']['remote_address_on_development']
+            api_server_address = self.config['API']['remote_address_on_development']
+            CONFIG['CONFIGJS']['api_server_address'] = api_server_address
             CONFIG['CONFIGJS']['api_websocket_address'] = self.config['API']['websocket_address_on_development']
         else:
-            CONFIG['CONFIGJS']['api_server_address'] = self.config['API']['remote_address_on_production']
+            api_server_address = self.config['API']['remote_address_on_production']
+            CONFIG['CONFIGJS']['api_server_address'] = api_server_address
             CONFIG['CONFIGJS']['api_websocket_address'] = self.config['API']['websocket_address_on_production']
         CONFIG['CONFIGJS']['timeout_to_resign'] = self.config["APPS"][app]['timeout_to_resign']
+        social_logins = {}
+        if "SOCIAL_LOGIN" in self.config:
+            social_logins = {
+                x: "{0}/api/auth/{1}/prompt".format(api_server_address, x)
+                    for x in self.config['SOCIAL_LOGIN'].keys() if isinstance(self.config['SOCIAL_LOGIN'][x], dict)
+            }
+
         CONFIG['APP'] = {
             'name': app,
-            'title': self.config["APPS"][app]['title']
+            'title': self.config["APPS"][app]['title'],
         }
+        CONFIG['SOCIAL_LOGINS'] = social_logins
 
         ini = "\n".join([
             "# Created automatically.",
