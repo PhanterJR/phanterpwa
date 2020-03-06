@@ -22,12 +22,13 @@ __pragma__('kwargs')
 
 class WebSocketPhanterPWA():
     def __init__(self, api_websocket_address, **parameters):
-        self.api_websocket_address = api_websocket_address
-        self._ws = __new__(WebSocket(self.api_websocket_address))
-        self._authorization = window.PhanterPWA.get_authorization()
-        self._config = window.PhanterPWA.CONFIG
-        self._binds()
         self._opened = False
+        self.api_websocket_address = api_websocket_address
+        self.comulative_time = 300
+        self.last_ws = None
+        self.manual_connection = False
+        self.manual_close = False
+        setTimeout(lambda: self.start(), self.comulative_time)
 
     def send(self, message):
         if self._opened:
@@ -56,24 +57,35 @@ class WebSocketPhanterPWA():
                     console.log(msg)
                     self._ws.send(msg)
 
+    def close(self):
+        self.manual_close = True
+        self._ws.close()
+
     def _onClose(self, evt):
         self._opened = False
         if window.PhanterPWA.DEBUG:
             console.log("Closing websocket")
-            location.reload()
+        if not self.manual_close:
+            setTimeout(lambda: self.start(), self.comulative_time)
+        else:
+            self.manual_close = False
 
     def _onError(self, evt):
         if window.PhanterPWA.DEBUG:
-            console.log("Error on websocket")
-            r = confirm("Reload the page?")
-            if r:
-                location.reload()
+            console.log("Error on websocket", evt)
+        if self.comulative_time > 9000 and not self.manual_connection:
+                window.PhanterPWA.flash("Lost server connection!")
+                self.manual_connection = True
+        else:
+            self.comulative_time = self.comulative_time + 1000
+        console.log(self.comulative_time)
 
     def _onMessage(self, evt):
         if window.PhanterPWA.DEBUG:
             console.log(evt.data)
 
     def _onOpen(self, evt):
+        self.comulative_time = 0
         self._opened = True
         if window.PhanterPWA.DEBUG:
             console.log("Opening websocket")
@@ -84,6 +96,22 @@ class WebSocketPhanterPWA():
         self._ws.onmessage = lambda evt: self._onMessage(evt)
         self._ws.onerror = lambda evt: self._onError(evt)
         self._ws.onclose = lambda evt: self._onClose(evt)
+
+    def start(self):
+        if not self.manual_connection:
+            self._ws = __new__(WebSocket(self.api_websocket_address))
+            self._authorization = window.PhanterPWA.get_authorization()
+            self._config = window.PhanterPWA.CONFIG
+            self._binds()
+        else:
+            r = confirm("It's try connect again?")
+            if(r):
+                self.manual_connection = False
+                self.comulative_time = 0
+                self._ws = __new__(WebSocket(self.api_websocket_address))
+                self._authorization = window.PhanterPWA.get_authorization()
+                self._config = window.PhanterPWA.CONFIG
+                self._binds()
 
 
 __pragma__('nokwargs')
