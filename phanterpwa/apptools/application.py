@@ -27,6 +27,7 @@ DIV = helpers.XmlConstructor.tagger("div")
 H2 = helpers.XmlConstructor.tagger("h2")
 XML = helpers.XML
 TEXTAREA = helpers.XmlConstructor.tagger("textarea")
+I = helpers.XmlConstructor.tagger("i")
 
 
 class PhanterPWA():
@@ -55,6 +56,11 @@ class PhanterPWA():
         self._after_open_way = parameters.get("after_open_way", None)
         self.counter = 0
         self.states = dict()
+        self._social_login_icons = {
+            "google": I(_class="fab fa-google"),
+            "facebook": I(_class="fa-facebook"),
+            "twitter": I(_class="fab fa-twitter")
+        }        
 
         jQuery(document).ajaxComplete(
             lambda event, xhr, options: self._after_ajax_complete(event, xhr, options)
@@ -73,7 +79,6 @@ class PhanterPWA():
         self.WS = websocket.WebSocketPhanterPWA(self.CONFIG["CONFIGJS"]["api_websocket_address"])
         if self.DEBUG:
             self.add_component(Developer_Toolbar())
-        
 
     def get_inicial_config_uri(self):
         initial_config = __new__(URL(window.location.href))
@@ -104,7 +109,6 @@ class PhanterPWA():
         if redirect is not None:
             window.location = redirect
 
-
     def _after_ajax_complete(self, event, xhr, option):
         if option is not js_undefined:
             p_url = self.parse_url(option.url)
@@ -118,6 +122,20 @@ class PhanterPWA():
             console.error("The salt of method get_id is invalid! given:", salt)
             salt = "phanterpwa"
         return "{0}-{1}-{2}".format(salt, self.counter, timestamp)
+
+    def social_login_list(self):
+        social_logins = window.PhanterPWA["CONFIG"]["SOCIAL_LOGINS"]
+        s_logins = dict()
+        if social_logins is not None and social_logins is not js_undefined:
+            s_logins = dict(social_logins)
+        list_login = social_logins.keys()
+        l = []
+        for x in list_login:
+            if x in self._social_login_icons:
+                l.append([x, self._social_login_icons[x]])
+            else:
+                l.append([x, I(_class="fas fa-at")])
+        return l
 
     @staticmethod
     def get_app_name(self):
@@ -292,6 +310,22 @@ class PhanterPWA():
             'onComplete': lambda data, ajax_status: self._after_submit_login(
                 data, ajax_status, callback)
         })
+
+    def social_login(self, social_name, callback=None):
+        window.PhanterPWA.ApiServer.GET(**{
+            'url_args': ['api', 'oauth', 'prompt', social_name],
+            'onComplete': lambda data, ajax_status: self._after_get_social_login(
+                data, ajax_status, callback
+            )
+        })
+
+    def _after_get_social_login(self, data, ajax_status, callback=None):
+        json = data.responseJSON
+        if ajax_status == "success":
+            console.log(json)
+            window.location = json.redirect
+        if callable(callback):
+            callback(data, ajax_status)
 
     def _after_submit_register(self, data, ajax_status, callback=None):
         json = data.responseJSON
