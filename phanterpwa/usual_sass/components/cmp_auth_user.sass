@@ -1,0 +1,447 @@
+
+body
+    .cmp_user_login-container
+        opacity: 1
+        max-width: 300px
+        min-width: 100px
+        transition: opacity ease 1s, max-width ease-in 1s,  min-width ease-in 1s
+    &.phanterpwa-lock
+        .cmp_user_login-container
+            cursor: none
+            opacity: 0
+            max-width: 0
+            min-width: 0
+            transition: opacity ease 1s, max-width ease-in 1s,  min-width ease-in 1s
+
+#layout-auth_user-container
+    text-align: center
+    .container_preloader_button_auth_user
+        min-width: 200px
+        text-align: center
+        height: 64px
+        padding-top: 20px
+        .preloader-wrapper
+            width: 50px
+            height: 17px
+
+
+.cmd-bar_user-expands
+    position: absolute
+
+.cmp-bar_user-name-role-container 
+    float: left
+    margin-left: 10px
+
+.cmp-bar_user-name
+    font-size: 0.9rem
+
+.cmp-bar_user-name-role
+    line-height: 60px
+    padding-top: 16px
+    div 
+        line-height: 1.2rem
+    .cmp-bar_user-role 
+        font-size: 0.8rem
+        color: grey
+
+@keyframes fadeInFromNoneAndMargin 
+    0% 
+        display: block
+        opacity: 0
+        margin-top: 20px
+    1% 
+        display: block
+        opacity: 0
+        margin-top: 20px
+    100% 
+        display: block
+        opacity: 1
+        margin-top: 0px
+
+#phanterpwa-component-auth_user-container
+    min-width: 175px
+    #toggle-cmp-bar_user
+        min-height: 64px
+        max-height: 64px
+    .cmp-bar_user-name-role
+
+        #user_role_login
+            text-transform: uppercase
+            font-size: 0.5rem
+
+    .phanterpwa-component-auth_user-button-toggle
+        min-height: 64px
+        max-height: 64px
+        min-width: 200px
+        .phanterpwa-component-auth_user-nologin-wrapper
+            text-align: center
+            color: $warning
+            display: block
+            min-height: 64px
+            max-height: 64px
+            padding-left: 20px
+            padding-right: 20px
+            transition: background-color 0.3s ease
+            .phanterpwa-component-auth_user-nologin-led_and_start-wrapper
+                display: inline-block
+                .phanterpwa-component-auth_user-nologin-led_and_start
+                    display: table
+                    padding-top: 20px
+                    .phanterpwa-component-auth_user-nologin-led
+                        float: left
+                        .led 
+                            width: 0.5rem
+                            height: 0.5rem
+                            background-color: $grey06
+                            border-radius: 100%
+                            margin: 7px 12px 7px 0px
+                            transition: box-shadow 0.2s ease-in
+                    .phanterpwa-component-auth_user-nologin-start
+                        float: left
+
+
+
+        #user_first_and_last_name_login
+            color: $white
+        &.enabled 
+            background-color: $black
+        &.link
+            &:hover 
+                #user_role_login
+                    color: $warning
+                #user_first_and_last_name_login
+                    color: $attention
+                background-color: $black
+                color: $white
+    .phanterpwa-component-auth_user-button-toggle-options
+        display: none
+        box-shadow: 0px 1px 3px $grey07
+        color: $grey07
+        background-color: $white
+        line-height: 3rem
+        margin-top: 20px
+        opacity: 0
+    &.enabled
+        .phanterpwa-component-auth_user-button-toggle
+            background-color: $black
+            color: $material_level05
+        >.phanterpwa-component-auth_user-button-toggle-options
+            display: block
+            margin-top: 0px
+            opacity: 1
+            animation-name: fadeInFromNoneAndMargin
+            animation-iteration-count: 1
+            animation-timing-function: ease-in
+            animation-duration: 0.5s
+        .led 
+            background-color: $ok !important
+            box-shadow: 0px 0px 10px $ok
+
+    .cmd-bar_user-expand-icon
+        position: absolute
+        top: 2px
+        left: 0
+        line-height: 1rem !important
+        height: 1rem !important
+    .led 
+        width: 0.5rem
+        height: 0.5rem
+        background-color: $grey06
+        border-radius: 100%
+        margin-top: 10px
+        margin-left: 10px
+        transition: box-shadow 0.2s ease-in
+    .cmd-bar-start 
+        float: left
+        margin-left: 0px
+        padding: 20px 0 0 0
+        min-width: 140px
+    @media #{$width1}
+        display: none !important
+    @media #{$width2}
+        display: none !important
+    @media #{$width3}
+        display: none !important
+.cmd-bar_user-expand-container
+    display: inline-block
+    position: relative
+    width: 19px
+    padding: 20px 0 0 3px
+    float: left
+
+.component-auth_user-option
+    padding-left: 20px
+    padding-right: 20px
+    display: block
+    &.link
+        &:hover 
+            background-color: $grey06
+            color: $white
+            transition: background-color 0.2s ease-in
+
+.cmp-bar_user-info-container
+    display: inline-block
+    max-height: 64px
+
+.cmp-bar_user-info
+    display: inline-block
+    padding-left: 6px
+    padding-right: 1px
+    line-height: normal
+
+.cmp-bar_user-img-container
+    float: left
+    padding-top: 15px
+    height: 64px
+
+.cmp-bar_user-img
+    width: 34px
+    height: 34px
+    padding: 0px
+    line-height: unset
+    background-color: $grey06
+    border-radius: 34px
+    overflow: hidden
+    img 
+        width: 100%
+        height: auto
+        display: block
+        z-index: auto
+
+.option-label-menu
+    text-align: left
+    position: relative
+    padding-left: 30px
+    i 
+        font-size: 1rem
+        padding: 0
+        line-height: 3rem
+        height: auto
+        position: absolute
+        left: 0
+
+.phanterpwa-component-left_bar-image-user-container
+    border-radius: 100%
+    width: 40px
+    height: 40px   
+    padding: 4px
+    float: left
+
+.phanterpwa-component-left_bar-image-user
+    width: 100%
+    height: 100%
+    background-color: $grey06
+     border-radius: 100%
+    overflow: hidden
+    img
+        width: 100%
+        height: auto
+body
+    &.p-lock
+        #phanterpwa-component-left_bar
+            width: 0
+            transition: width 1s ease
+        #phanterpwa-component-left_bar-main_button
+            &.enabled
+                text-shadow: 0px 0px 4px $ok
+                color: $ok
+
+#phanterpwa-component-left_bar-main_button
+    min-height: 64px
+    max-height: 64px
+    float: left
+    padding: 0 10px 0 10px
+    width: 50px
+    text-align: center
+    i
+        font-size: 20pt
+        padding-top: 18px
+    &.enabled
+        text-shadow: 0px 0px 4px $ok
+        color: $ok
+    &.enabled_submenu
+        @media #{$width1}
+            text-shadow: 0px 0px 4px $ok
+            color: $ok
+        @media #{$width2}
+            text-shadow: 0px 0px 4px $ok
+            color: $ok
+        @media #{$width3}
+            text-shadow: 0px 0px 4px $ok
+            color: $ok
+        @media #{$width4}
+            text-shadow: 0px 0px 4px $ok
+            color: $ok
+.phanterpwa-component-left_bar-menu_button-wrapper
+    &:hover
+        .phanterpwa-component-left_bar-icon-container
+            color: $attention
+        .phanterpwa-component-left_bar-label
+            color: $attention
+
+.main-and-left_bar
+    flex: 1 0 auto
+    padding-left: 50px
+    position: relative
+    transition: padding-left 1s ease
+    min-height: 450px
+    @media #{$width1}
+        padding-left: 0px
+    @media #{$width2}
+        padding-left: 0px
+
+.phanterpwa-component-left_bar-wrapper
+    width: 50px
+    flex: 1 0 auto
+    height: 100%
+    background-color: $grey12
+    position: fixed
+    left: 0
+    max-width: 200px
+    z-index: 20
+    top: 64px
+    text-overflow: ellipsis
+    white-space: nowrap
+    transition: box-shadow 1s, -webkit-box-shadow 1s, width 1s ease, left 1s ease
+    line-height: 1.2rem
+    overflow-y: auto
+    overflow-x: hidden
+    .phanterpwa-component-left_bar-menu, .phanterpwa-component-left_bar-button
+        display: table
+        i
+            font-size: 1.5rem
+            margin-top: 0.25rem
+        &:hover
+            color: $attention
+    .phanterpwa-component-left_bar-menu_button-wrapper-auth_user
+        display: none
+    .phanterpwa-component-left_bar-label
+        float: left
+        margin-top: 11px
+        margin-left: 10px
+        width: 127px
+        max-width: 127px
+        text-align: left
+        opacity: 0
+        transition: opacity 1s ease
+        overflow: hidden
+        color: $grey07
+    .phanterpwa-component-left_bar-image-user
+        border-radius: 100%
+        margin-left: 5px
+        transition: margin-left 1s ease
+    .phanterpwa-component-left_bar-icon-container
+        border-radius: 100%
+        height: 40px
+        width: 40px
+        padding: 4px
+        margin-left: 5px
+        color: $grey07
+        float: left
+        text-align: center
+        transition: margin-left 1s ease, color 0.3s ease
+    .phanterpwa-component-left_bar-submenu-button
+        margin-bottom: 5px
+        margin-left: 0px
+        transition: margin-left 1s ease, margin-bottom 1s ease
+    &.enabled
+        overflow-x: auto
+        width: 90%
+        box-shadow: 0 2px 2px 0 rgba($black, 0.14), 0 3px 1px -2px rgba($black, 0.12), 0 1px 5px 0 rgba($black, 0.2)
+        transition: box-shadow 1s, -webkit-box-shadow 1s, width 1s ease
+        .phanterpwa-component-left_bar-label
+            opacity: 1
+            width: 127px
+            max-width: 127px
+        .phanterpwa-component-left_bar-image-user
+            margin-left: 0px
+        .phanterpwa-component-left_bar-icon-container
+            margin-left: 0px
+    &.enabled_submenu
+        .phanterpwa-component-left_bar-submenu-button
+            margin-bottom: 11px
+            margin-left: 15px
+    .phanterpwa-component-left_bar-submenu-button
+        &:hover
+            color: $attention
+
+    @media #{$width1}
+        .phanterpwa-component-left_bar-menu_button-wrapper-auth_user
+            display: block
+        left: -50px
+        &.enabled
+            left: 0px
+        &.enabled_submenu
+            left: 0px
+            overflow-x: auto
+            width: 90%
+            box-shadow: 0 2px 2px 0 rgba($black, 0.14), 0 3px 1px -2px rgba($black, 0.12), 0 1px 5px 0 rgba($black, 0.2)
+            transition: box-shadow 1s, -webkit-box-shadow 1s, width 1s ease
+            .phanterpwa-component-left_bar-label
+                opacity: 1
+                width: 127px
+                max-width: 127px
+            .phanterpwa-component-left_bar-icon-container
+                margin-left: 0px
+    @media #{$width2}
+        .phanterpwa-component-left_bar-menu_button-wrapper-auth_user
+            display: block
+        left: -50px
+        &.enabled
+            left: 0px
+        &.enabled_submenu
+            left: 0px
+            overflow-x: auto
+            width: 90%
+            box-shadow: 0 2px 2px 0 rgba($black, 0.14), 0 3px 1px -2px rgba($black, 0.12), 0 1px 5px 0 rgba($black, 0.2)
+            transition: box-shadow 1s, -webkit-box-shadow 1s, width 1s ease
+            .phanterpwa-component-left_bar-label
+                opacity: 1
+                width: 127px
+                max-width: 127px
+            .phanterpwa-component-left_bar-icon-container
+                margin-left: 0px
+    @media #{$width3}
+        .phanterpwa-component-left_bar-menu_button-wrapper-auth_user
+            display: block
+        &.enabled_submenu
+            overflow-x: auto
+            width: 90%
+            box-shadow: 0 2px 2px 0 rgba($black, 0.14), 0 3px 1px -2px rgba($black, 0.12), 0 1px 5px 0 rgba($black, 0.2)
+            transition: box-shadow 1s, -webkit-box-shadow 1s, width 1s ease
+            .phanterpwa-component-left_bar-label
+                opacity: 1
+                width: 127px
+                max-width: 127px
+            .phanterpwa-component-left_bar-icon-container
+                margin-left: 0px
+
+
+.phanterpwa-component-left_bar-menu_button-wrapper
+    width: 200px
+    .phanterpwa-component-left_bar-submenu-container
+        overflow: hidden
+        transition: max-height 1s ease
+        height: auto
+        max-height: 0
+    &.enabled
+        .phanterpwa-component-left_bar-submenu-container
+            max-height: 80px
+.phanterpwa-component-left_bar-submenu-button
+
+    .phanterpwa-component-left_bar-submenu-icon-container
+        padding: 0px 0px 0px 16px
+        color: $grey07
+        float: left
+        margin: 0
+        margin-right: 5px
+        &.enabled
+            background-color: $white
+            color: $black
+           
+    .phanterpwa-component-left_bar-submenu-label
+        color: $grey07
+      
+    &:hover
+        .phanterpwa-component-left_bar-submenu-icon-container, .phanterpwa-component-left_bar-submenu-label 
+            color: $attention

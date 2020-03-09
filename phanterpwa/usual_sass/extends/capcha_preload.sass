@@ -1,0 +1,315 @@
+// phanterpwa-components
+
+$STROKEWIDTH: 10px
+$CONTAINERWIDTH: 200px
+$COLOR1: blue
+$COLOR2: red
+$COLOR3: #f4b400
+$COLOR4: green
+
+.phanterpwa-components-preloaders-android
+
+  *
+    box-sizing: border-box
+  .left
+      float: left !important
+  .right
+      float: right !important
+  .preloader-wrapper
+    display: inline-block
+    position: relative
+    width: $CONTAINERWIDTH
+    height: $CONTAINERWIDTH
+    .phanterpwa_android
+      width: 100%
+      height: 100%
+    .spinner-layer
+      position: absolute
+      width: 100%
+      height: 100%
+      opacity: 0
+      border-color: $COLOR1
+
+    .spinner-one,
+    .spinner-one-only
+      border-color: $COLOR1
+
+    .spinner-two,
+    .spinner-two-only
+      border-color: $COLOR2
+
+    .spinner-three,
+    .spinner-three-only
+      border-color: $COLOR3
+
+    .spinner-four,
+    .spinner-four-only
+      border-color: $COLOR4
+
+
+
+    .phanterpwa_gap-patch
+      position: absolute
+      top: 0
+      left: 45%
+      width: 10%
+      height: 100%
+      overflow: hidden
+      border-color: inherit
+      .phanterpwa_circle 
+        width: 1000%
+        left: -450%
+
+    .phanterpwa_circle_clipper
+      display: inline-block
+      position: relative
+      width: 50%
+      height: 100%
+      overflow: hidden
+      border-color: inherit
+
+      .phanterpwa_circle
+        width: 200%
+        height: 100%
+        border-width: $STROKEWIDTH
+        border-style: solid
+        border-color: inherit
+        border-bottom-color: transparent !important
+        border-radius: 50%
+        -webkit-animation: none
+        animation: none
+        position: absolute
+        top: 0
+        right: 0
+        bottom: 0
+      &.left
+        .phanterpwa_circle
+          left: 0
+          border-right-color: transparent !important
+          -webkit-transform: rotate(129deg)
+          transform: rotate(129deg)
+      &.right
+        .phanterpwa_circle
+          left: -100%
+          border-left-color: transparent !important
+          -webkit-transform: rotate(-129deg)
+          transform: rotate(-129deg)
+
+
+
+
+    &.enabled
+      .phanterpwa_android
+        opacity: 1
+        -webkit-animation: container-rotate 1568ms linear infinite
+        animation: container-rotate 1568ms linear infinite
+      .spinner-layer.spinner-one
+        -webkit-animation: phanterpwa_android_rotate_animate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both, phanterpwa_android_one_fade 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both
+        animation: phanterpwa_android_rotate_animate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both, phanterpwa_android_one_fade 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both
+
+      .spinner-layer.spinner-two
+        -webkit-animation: phanterpwa_android_rotate_animate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both, phanterpwa_android_two_fade 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both
+        animation: phanterpwa_android_rotate_animate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both, phanterpwa_android_two_fade 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both
+
+      .spinner-layer.spinner-three
+        -webkit-animation: phanterpwa_android_rotate_animate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both, phanterpwa_android_three_fade 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both
+        animation: phanterpwa_android_rotate_animate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both, phanterpwa_android_three_fade 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both
+
+      .spinner-layer.spinner-four
+        -webkit-animation: phanterpwa_android_rotate_animate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both, phanterpwa_android_four_fade 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both
+        animation: phanterpwa_android_rotate_animate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both, phanterpwa_android_four_fade 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both
+
+      .spinner-layer,
+      .spinner-layer.spinner-one-only,
+      .spinner-layer.spinner-two-only,
+      .spinner-layer.spinner-three-only,
+      .spinner-layer.spinner-four-only
+        opacity: 1
+        -webkit-animation: phanterpwa_android_rotate_animate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both
+        animation: phanterpwa_android_rotate_animate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both
+
+      .phanterpwa_circle_clipper
+        &.left
+          .phanterpwa_circle
+            -webkit-animation: left-spin 1333ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both
+            animation: left-spin 1333ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both
+        &.right
+          .phanterpwa_circle
+            -webkit-animation: right-spin 1333ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both
+            animation: right-spin 1333ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both
+
+@-webkit-keyframes container-rotate
+  to
+    -webkit-transform: rotate(360deg)
+
+@keyframes container-rotate
+  to 
+    transform: rotate(360deg)
+
+@-webkit-keyframes phanterpwa_android_rotate_animate
+  12.5% 
+    webkit-transform: rotate(135deg) /* 0.5 * ARCSIZE */
+  25%   
+    webkit-transform: rotate(270deg) /* 1   * ARCSIZE */
+  37.5% 
+    webkit-transform: rotate(405deg) /* 1.5 * ARCSIZE */
+  50%   
+    webkit-transform: rotate(540deg) /* 2   * ARCSIZE */
+  62.5% 
+    webkit-transform: rotate(675deg) /* 2.5 * ARCSIZE */
+  75%   
+    webkit-transform: rotate(810deg) /* 3   * ARCSIZE */
+  87.5% 
+    webkit-transform: rotate(945deg) /* 3.5 * ARCSIZE */
+  to    
+    webkit-transform: rotate(1080deg) /* 4   * ARCSIZE */
+
+@keyframes phanterpwa_android_rotate_animate
+  12.5% 
+    transform: rotate(135deg) /* 0.5 * ARCSIZE */
+  25%   
+    transform: rotate(270deg) /* 1   * ARCSIZE */
+  37.5% 
+    transform: rotate(405deg) /* 1.5 * ARCSIZE */
+  50%   
+    transform: rotate(540deg) /* 2   * ARCSIZE */
+  62.5% 
+    transform: rotate(675deg) /* 2.5 * ARCSIZE */
+  75%   
+    transform: rotate(810deg) /* 3   * ARCSIZE */
+  87.5% 
+    transform: rotate(945deg) /* 3.5 * ARCSIZE */
+  to    
+    transform: rotate(1080deg) /* 4   * ARCSIZE */
+
+@-webkit-keyframes phanterpwa_android_one_fade
+  from
+    opacity: 1
+  25%
+    opacity: 1
+  26%
+    opacity: 0
+  89%
+    opacity: 0
+  90%
+    opacity: 1
+  100%
+    opacity: 1
+
+@keyframes phanterpwa_android_one_fade
+  from
+    opacity: 1
+  25%
+    opacity: 1
+  26%
+    opacity: 0
+  89%
+    opacity: 0
+  90%
+    opacity: 1
+  100%
+    opacity: 1
+
+@-webkit-keyframes phanterpwa_android_two_fade
+  from
+    opacity: 0
+  15%
+    opacity: 0
+  25%
+    opacity: 1
+  50%
+    opacity: 1
+  51%
+    opacity: 0
+
+@keyframes phanterpwa_android_two_fade
+  from
+    opacity: 0
+  15%
+    opacity: 0
+  25%
+    opacity: 1
+  50%
+    opacity: 1
+  51%
+    opacity: 0
+
+@-webkit-keyframes phanterpwa_android_three_fade
+  from
+    opacity: 0
+  40%
+    opacity: 0
+  50%
+    opacity: 1
+  75%
+    opacity: 1
+  76%
+    opacity: 0
+
+@keyframes phanterpwa_android_three_fade
+  from
+    opacity: 0
+  40%
+    opacity: 0
+  50%
+    opacity: 1
+  75%
+    opacity: 1
+  76%
+    opacity: 0
+
+@-webkit-keyframes phanterpwa_android_four_fade
+  from
+    opacity: 0
+  65%
+    opacity: 0
+  75%
+    opacity: 1
+  90%
+    opacity: 1
+  100%
+    opacity: 0
+
+@keyframes phanterpwa_android_four_fade
+  from
+    opacity: 0
+  65%
+    opacity: 0
+  75%
+    opacity: 1
+  90%
+    opacity: 1
+  100%
+    opacity: 0
+
+@-webkit-keyframes left-spin
+  from
+    -webkit-transform: rotate(130deg)
+  50%
+    -webkit-transform: rotate(-5deg)
+  to
+    -webkit-transform: rotate(130deg)
+
+@keyframes left-spin
+  from
+    transform: rotate(130deg)
+  50%
+    transform: rotate(-5deg)
+  to
+    transform: rotate(130deg)
+
+@-webkit-keyframes right-spin
+  from
+    -webkit-transform: rotate(-130deg)
+  50%
+    -webkit-transform: rotate(5deg)
+  to
+    -webkit-transform: rotate(-130deg)
+
+@keyframes right-spin
+  from
+    transform: rotate(-130deg)
+  50%
+    transform: rotate(5deg)
+  to
+    transform: rotate(-130deg)

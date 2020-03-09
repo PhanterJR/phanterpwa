@@ -1,0 +1,64 @@
+#p-developer_toolbar
+    width: 100%
+    .phanterpwa-developer_toolbar-objects
+
+        width: 100%
+
+        .phanterpwa-developer_toolbar
+            color: $components
+            padding: 20px
+            margin-bottom: 5px
+            overflow: auto
+            h2
+                margin: 0px
+                color: gray
+            textarea
+                width: 100%
+                min-height: 300px
+    .button_developer
+        position: fixed
+        width: 300px
+        right: auto
+        left: calc(50% - 150px)
+        background-color: red
+        color:white
+        border-radius: 10px 10px 0 0
+        margin: auto
+        margin-bottom: 0
+        bottom: 0
+        padding: 5px
+        text-align: center
+        z-index: 2000
+        cursor: pointer
+        &:hover
+            color: orange
+        .current-size
+            display: inline-block
+        .current-grid-width
+            display: inline-block
+            &::before
+                content: "width\+"
+            @media #{$width1}
+                &::before
+                    content: "width1"
+            @media #{$width2}
+                &::before
+                    content: "width2"
+            @media #{$width3}
+                &::before
+                    content: "width3"
+            @media #{$width4}
+                &::before
+                    content: "width4"
+            @media #{$width5}
+                &::before
+                    content: "width5"
+            @media #{$width6}
+                &::before
+                    content: "width6"
+            @media #{$width7}
+                &::before
+                    content: "width7"
+            @media #{$width8}
+                &::before
+                    content: "width8"

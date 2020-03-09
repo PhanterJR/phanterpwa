@@ -26,7 +26,12 @@ from tkinter import (
 )
 import re
 from zipfile import ZipFile
-from phanterpwa import __version__ as PHANTERPWA_VERSION
+from phanterpwa import (
+    __version__ as PHANTERPWA_VERSION
+)
+from phanterpwa.compiler import (
+    Compiler as compiler
+)
 from phanterpwa.tools import (
     check_valid_project_config,
     list_installed_projects,
@@ -36,8 +41,7 @@ from phanterpwa.tools import (
     splits_seconds,
     join_seconds,
     interpolate,
-    package_project_app,
-    compiler
+    package_project_app
 )
 from phanterpwa.i18n import Translator
 ENV_PYTHON = os.path.normpath(sys.executable)
@@ -78,7 +82,7 @@ if os.path.exists("phanterpwa.pid"):
 
 print("PhanterPWA PID: {0}".format(PID))
 CONFIG = config(CURRENT_DIR)
-Trans = Translator(os.path.join(CURRENT_DIR, "langs"), debug=True)
+Trans = Translator(os.path.join(CURRENT_DIR, "langs"), "grafics", debug=True)
 if "language" in CONFIG:
     Trans.direct_translation = CONFIG["language"]
 T = Trans.T

@@ -1,0 +1,53 @@
+.phanterpwa-breadcrumb-wrapper
+    display: block
+    line-height: 2rem
+    font-size: 1rem
+    @media #{$width1}
+        font-size: 1rem
+        padding-top: 2px
+    @media #{$width2}
+        font-size: 1rem
+        padding-top: 2px
+    .phanterpwa-breadcrumb
+        &.link
+            color: $components
+            &:hover
+                color: $attention
+        float: left
+        line-height: 2rem
+        &::before
+            content: '\f054'
+            color: black
+            vertical-align: top
+            display: inline-block
+            font-family: 'Font Awesome 5 Free'
+            font-weight: 900
+            font-style: normal
+            margin: 1px 5px 0 5px
+            font-size: 1.1rem
+            -webkit-font-smoothing: antialiased
+            @media #{$width1}
+                font-size: 1.1rem
+                display: none
+            @media #{$width2}
+                font-size: 1.1rem
+                display: none
+        &:first-child::before
+            display: none
+        @media #{$width1}
+            display: none
+        @media #{$width2}
+            display: none
+        &:last-child
+            display: block
+            color: $components
+            font-size: 2rem
+            line-height: 2rem
+            @media #{$width1}
+                font-size: 1.5rem
+                line-height: 1.5rem
+                margin-top: -5px
+            @media #{$width2}
+                font-size: 1.5rem
+                line-height: 1.5rem
+                margin-top: -5px

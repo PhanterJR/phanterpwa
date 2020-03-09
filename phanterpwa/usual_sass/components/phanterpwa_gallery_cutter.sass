@@ -1,0 +1,221 @@
+/*PhanterGallery*/
+
+.phanterpwa-gallery-container-main
+  width: 100%
+
+
+@keyframes fadeInFromNone 
+  0%
+    display: none
+    opacity: 0
+  1%
+    display: block
+    opacity: 0
+  100%
+    display: block
+    opacity: 1
+.phanterpwa-gallery-object
+  width: 170px
+  margin-left: auto
+  margin-right: auto
+  text-align: center
+  padding: 10px
+  background-color: orange
+  border-radius: 12px
+  text-transform: uppercase
+  cursor: pointer
+  min-height: 103px
+  display: none
+  opacity: 0
+  animation: fadeInFromNone 0.5s
+  &.enable
+    display: block
+    opacity: 1
+    transition: opacity 0.5s
+
+.phanterpwa-gallery-upload-image-button .phanterwebsvg.upload-cloud
+  font-size: 50px
+  color: red
+
+.phanterpwa-gallery-panel-cutter-container 
+  display: none
+  position: fixed
+  top: -20px
+  left: 0
+  width: 100%
+  height: 100%
+  overflow: hidden
+  &.enable 
+    display: block
+    position: fixed
+    top: 0
+    opacity: 1
+    animation-name: fadeInOpacity
+    animation-iteration-count: 1
+    animation-timing-function: ease-in
+    animation-duration: 0.5s
+
+@keyframes fadeInOpacity 
+  0% 
+    opacity: 0
+    top: -20px
+
+  100% 
+    opacity: 1
+    top: 0px
+
+
+.phanterpwa-gallery-panel-cutter-container.close 
+  display: block
+  position: fixed
+  top: 0
+  height: 0
+  transition: height 1s cubic-bezier(1,.04,.38,.82)
+
+
+.phanterpwa-gallery-cutter-background 
+  position: absolute
+  width: 100%
+  height: 100%
+
+.phanterpwa-gallery-cutter-pad 
+  position: absolute
+  width: 100%
+  height: 100%
+
+.phanterpwa-gallery-cutter-shadow 
+  position: absolute
+  width: 100%
+  height: 100%
+  background-color: rgba(0,0,0,0.7)
+
+.phanterpwa-gallery-panel-cutter
+  position: absolute
+  width: 100%
+  height: 100%
+
+.phanterpwa-gallery-cutter-zoom-container 
+  background-color: rgba(255, 252, 252, 0.8)
+  width: 100%
+  height: 50px
+  position: absolute
+  bottom: 0
+
+.phanterpwa-gallery-cutter-zoom-controls 
+  width: 300px
+  margin-left: auto
+  margin-right: auto
+  height: 50px
+  padding: 10px 36px 10px 36px
+  position: relative
+  .image-decrease
+    position: absolute
+    left: 11px
+    top: 16px
+    font-size: 1.2rem
+  .image-increase
+    position: absolute
+    right: -1px
+    top: 11px
+    font-size: 2rem
+
+.phanterwebsvg.image-increase
+  position: absolute
+  right: 0
+  font-size: 30px
+  top: 10px
+
+.phanterwebsvg.image-decrease 
+  position: absolute
+  left: 0
+  font-size: 30px
+  top: 10px
+
+.phanterpwa-gallery-cutter-zoom-control-container
+  width: 100%
+  height: 30px
+  background: grey
+  border-radius: 15px
+  overflow: hidden
+  position: relative
+
+.phanterpwa-gallery-cutter-zoom-control
+  width: 50px
+  height: 30px
+  background-color: black
+  border-radius: 30px
+  left: 89px
+  position: absolute
+  &:hover
+    background-color: orange
+  &:active
+    background-color: red
+
+.phanterpwa-gallery-cutter-control
+  text-align: center
+  i
+    font-size: 40px
+    cursor: pointer
+  &.enable
+    color: red
+  &:hover
+    color: orange
+
+.phanterpwa-gallery-cutter-shadow
+  &.enable
+    background-color: black
+.phanterpwa-gallery-cutter-controls-container
+  position: absolute
+  right: 5px
+  top: 5px
+  background-color: rgba(255, 255, 255, 0.8)
+  padding: 10px
+
+.phanterpwa-gallery-panel-cutter-size-container
+  position: absolute
+  box-shadow: 0px 0px 5px #b0b0b0, 0px 0px 10px #323232
+
+.phanterpwa-gallery-panel-cutter-image
+  position: absolute
+
+
+.phanterpwa-gallery-upload-area-progress
+  display: none
+  &.enable
+    display: block
+
+
+.phanterpwa-gallery-upload-messages
+  text-transform: uppercase
+  text-align: center
+  color: red
+
+.phanterpwa-gallery-target-view-container
+  display: none
+  box-shadow: 1px 1px 8px grey
+  margin-left: auto
+  margin-right: auto
+  position: relative
+  background-color: black
+  opacity: 0
+  animation: fadeInFromNone
+  &.enable
+    display: block
+    opacity: 1
+    transition: opacity 0.5s
+
+.phanterpwa-gallery-imagecuted-controls
+  position: absolute
+  background-color: rgba(255, 255, 255, 0.71)
+  top: 5px
+  right: 5px
+  padding: 5px
+
+.phanterpwa-gallery-imagecuted-control i
+  font-size: 18pt
+
+.phanterpwa-gallery-imagecuted-control
+  &:hover
+    i
+      color:orange
+      cursor: pointer

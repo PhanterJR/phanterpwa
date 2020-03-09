@@ -10,6 +10,7 @@ from pathlib import PurePath
 from pydal.objects import (Set, Table, Field)
 from urllib.parse import quote
 from unicodedata import normalize
+from phanterpwa.samples import project_config_sample
 
 
 def file_name(name, encoding="utf-8"):
@@ -108,26 +109,26 @@ def check_activation_code(code, size=6):
                 return code
 
 
-# def check_valid_project_config(config_file) -> dict:
-#     if os.path.exists(config_file) and os.path.isfile(config_file):
-#         try:
-#             with open(config_file, 'r', encoding="utf-8") as f:
-#                 cfg = json.load(f)
-#         except json.JSONDecodeError as e:
-#             raise e("Error on json decode the '{0}' config file. Error: {1}".format(config_file, e))
-#         else:
-#             for x in project_config_sample:
-#                 if x not in cfg:
-#                     raise KeyError("The config file not is valid, not found the '{0}' key, it's required".format(x))
-#                     for y in project_config_sample[x]:
-#                         if y not in cfg[x]:
-#                             raise KeyError("".join(["The config file not is valid,",
-#                                 " not found the '{0}' subkey of key '{1}' , it's required".format(y, x)]))
-#             else:
-#                 return config_file
-#     else:
-#         raise RuntimeError("The '{0}' is not valid config file! Not exists or not is file.".format(config_file))
-#     return {}
+def check_valid_project_config(config_file) -> dict:
+    if os.path.exists(config_file) and os.path.isfile(config_file):
+        try:
+            with open(config_file, 'r', encoding="utf-8") as f:
+                cfg = json.load(f)
+        except json.JSONDecodeError as e:
+            raise e("Error on json decode the '{0}' config file. Error: {1}".format(config_file, e))
+        else:
+            for x in project_config_sample:
+                if x not in cfg:
+                    raise KeyError("The config file not is valid, not found the '{0}' key, it's required".format(x))
+                    for y in project_config_sample[x]:
+                        if y not in cfg[x]:
+                            raise KeyError("".join(["The config file not is valid,",
+                                " not found the '{0}' subkey of key '{1}' , it's required".format(y, x)]))
+            else:
+                return config_file
+    else:
+        raise RuntimeError("The '{0}' is not valid config file! Not exists or not is file.".format(config_file))
+    return {}
 
 
 def list_installed_projects(path_project):
@@ -196,48 +197,48 @@ def list_installed_apps(path_project):
     return apps
 
 
-# def config(cfg_file, dict_cfg={}, rewrite=False):
-#     if isinstance(cfg_file, str):
-#         if len(cfg_file) > 5:
-#             if cfg_file[-5:] != ".json":
-#                 if os.path.exists(cfg_file) and os.path.isdir(cfg_file):
-#                     cfg_file = os.path.join(cfg_file, "config.json")
-#                 else:
-#                     cfg_file = "".join([cfg_file, ".json"])
-#         else:
-#             if os.path.exists(cfg_file) and os.path.isdir(cfg_file):
-#                 cfg_file = os.path.join(cfg_file, "config.json")
-#             else:
-#                 cfg_file = "".join(cfg_file, ".json")
-#     else:
-#         raise ValueError("The arg 'cfg_file' must be strig. Given: {0}".format(type(cfg_file)))
-#     if os.path.exists(cfg_file) and not rewrite:
-#         cfg = None
-#         with open(cfg_file, 'r', encoding="utf-8") as f:
-#             cfg = json.load(f)
-#         if cfg and isinstance(cfg, dict):
-#             for x in dict_cfg:
-#                 cfg[x] = dict_cfg[x]
-#         else:
-#             cfg = dict_cfg
-#     else:
-#         basedir = os.path.dirname(cfg_file)
-#         cfg = dict_cfg
-#         if basedir:
-#             os.makedirs(basedir, exist_ok=True)
-#     with open(cfg_file, "w", encoding="utf-8") as f:
-#         json.dump(cfg, f, ensure_ascii=True, indent=2)
-#     if "CONFIG_INDENTIFY" in cfg and cfg["CONFIG_INDENTIFY"] == "project_config":
-#         if cfg["PROJECT"]["packaged"] is True:
-#             path_app = os.path.normpath(os.path.join(os.path.dirname(cfg_file)))
-#             with open(cfg_file, "r", encoding="utf-8") as n:
-#                 string_file = n.read()
-#                 string_file = interpolate(string_file, context={"PROJECT_FOLDER": re.escape(path_app)})
-#                 cfg = json.loads(string_file)
-#                 cfg["PROJECT"]["packaged"] = False
-#             with open(cfg_file, "w", encoding="utf-8") as f:
-#                 json.dump(cfg, f, ensure_ascii=True, indent=2)
-#     return cfg
+def config(cfg_file, dict_cfg={}, rewrite=False):
+    if isinstance(cfg_file, str):
+        if len(cfg_file) > 5:
+            if cfg_file[-5:] != ".json":
+                if os.path.exists(cfg_file) and os.path.isdir(cfg_file):
+                    cfg_file = os.path.join(cfg_file, "config.json")
+                else:
+                    cfg_file = "".join([cfg_file, ".json"])
+        else:
+            if os.path.exists(cfg_file) and os.path.isdir(cfg_file):
+                cfg_file = os.path.join(cfg_file, "config.json")
+            else:
+                cfg_file = "".join(cfg_file, ".json")
+    else:
+        raise ValueError("The arg 'cfg_file' must be strig. Given: {0}".format(type(cfg_file)))
+    if os.path.exists(cfg_file) and not rewrite:
+        cfg = None
+        with open(cfg_file, 'r', encoding="utf-8") as f:
+            cfg = json.load(f)
+        if cfg and isinstance(cfg, dict):
+            for x in dict_cfg:
+                cfg[x] = dict_cfg[x]
+        else:
+            cfg = dict_cfg
+    else:
+        basedir = os.path.dirname(cfg_file)
+        cfg = dict_cfg
+        if basedir:
+            os.makedirs(basedir, exist_ok=True)
+    with open(cfg_file, "w", encoding="utf-8") as f:
+        json.dump(cfg, f, ensure_ascii=True, indent=2)
+    if "CONFIG_INDENTIFY" in cfg and cfg["CONFIG_INDENTIFY"] == "project_config":
+        if cfg["PROJECT"]["packaged"] is True:
+            path_app = os.path.normpath(os.path.join(os.path.dirname(cfg_file)))
+            with open(cfg_file, "r", encoding="utf-8") as n:
+                string_file = n.read()
+                string_file = interpolate(string_file, context={"PROJECT_FOLDER": re.escape(path_app)})
+                cfg = json.loads(string_file)
+                cfg["PROJECT"]["packaged"] = False
+            with open(cfg_file, "w", encoding="utf-8") as f:
+                json.dump(cfg, f, ensure_ascii=True, indent=2)
+    return cfg
 
 
 def url_pattern_relative_paths(path_base, file_search="*.html"):

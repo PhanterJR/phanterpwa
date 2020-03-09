@@ -20,7 +20,7 @@ DIV = helpers.XmlConstructor.tagger("div")
 FORM = helpers.XmlConstructor.tagger("form")
 SPAN = helpers.XmlConstructor.tagger("span")
 IMG = helpers.XmlConstructor.tagger("img", True)
-I = helpers.XmlConstructor.tagger("I")
+I = helpers.XmlConstructor.tagger("i")
 I18N = helpers.I18N
 CONCATENATE = helpers.CONCATENATE
 
@@ -101,7 +101,7 @@ class AuthUser(application.Component):
         self.close_menu()
         self.Modal = ModalLogin(
             "#modal-container",
-            social_logins = window.PhanterPWA.social_login_list()
+            social_logins=window.PhanterPWA.social_login_list()
         )
         self.Modal.open()
         forms.SignForm("#form-login", has_captcha=True)
@@ -345,19 +345,19 @@ class ModalLogin(modal.Modal):
             console.error("Need AuthUser instance on window.PhanterPWA.Components")
         else:
             self.AuthUser = AuthUserCmp
-        self.auth_user = window.PhanterPWA.get_last_auth_user()
+        self.last_auth_user = window.PhanterPWA.get_last_auth_user()
         first_name = ""
         last_name = ""
         email = ""
         role = I18N("User")
         user_image = window.PhanterPWA.get_last_auth_user_image()
         remember_me = False
-        if self.auth_user is not None and self.auth_user is not js_undefined:
-            first_name = self.auth_user.first_name
-            last_name = self.auth_user.last_name
-            email = self.auth_user.email
-            remember_me = self.auth_user.remember_me
-            role = I18N(self.auth_user.role)
+        if self.last_auth_user is not None and self.last_auth_user is not js_undefined:
+            first_name = self.last_auth_user.first_name
+            last_name = self.last_auth_user.last_name
+            email = self.last_auth_user.email
+            remember_me = self.last_auth_user.remember_me
+            role = I18N(self.last_auth_user.role)
 
         self.xml_social_logins = DIV(_class='phanterpwa-modal-login-social-buttons-container')
         if self._has_social_logins:
@@ -462,19 +462,20 @@ class ModalLogin(modal.Modal):
             tcontent.addClass("has_social_logins")
         button_login_by_social = ""
 
-        if self.auth_user is not None and self.auth_user is not js_undefined:
+        if self.last_auth_user is not None and self.last_auth_user is not js_undefined:
             tcontent.addClass("has_auth_user")
-            if self.auth_user['social_login'] is not None and self.auth_user['social_login'] is not js_undefined:
+            if self.last_auth_user['social_login'] is not None and self.last_auth_user['social_login'] is not js_undefined:
                 tcontent.addClass("auth_user_logged_by_social_login")
+                current_social_name = self.last_auth_user['social_login']
                 button_login_by_social = forms.FormButton(
-                    "social_login-{0}".format(social_name),
+                    "social_login-{0}".format(current_social_name),
                     CONCATENATE(icon, I18N(
-                        "Continue using {0}".format(str(social_name).capitalize()),
-                        **{"_pt-br": "Continuar com {0}".format(str(social_name).capitalize())}
+                        "Continue using {0}".format(str(current_social_name).capitalize()),
+                        **{"_pt-br": "Continuar com {0}".format(str(current_social_name).capitalize())}
                     )),
                     **{
                         "_class": "btn-social_login wave_on_click waves-phanterpwa",
-                        "_data-social_login": social_name
+                        "_data-social_login": current_social_name
                     }
                 )
 
@@ -510,9 +511,10 @@ class ModalLogin(modal.Modal):
             ),
             _class="p-col w1p100"
         ).jquery()
-        if self.auth_user is not None and self.auth_user is not js_undefined:
+        if self.last_auth_user is not None and self.last_auth_user is not js_undefined:
             tfooter.addClass("has_auth_user")
-            if self.auth_user['social_login'] is not None and self.auth_user['social_login'] is not js_undefined:
+            if self.last_auth_user['social_login'] is not None and \
+                    self.last_auth_user['social_login'] is not js_undefined:
                 tfooter.addClass("its_social_login")
         modal.Modal.__init__(
             self,
@@ -1333,12 +1335,8 @@ class LeftBarAuthUserLogin(left_bar.LeftBarUserMenu):
         self._close_menu()
 
     def logout(self):
-        sessionStorage.removeItem("phanterpwa-authorization")
-        sessionStorage.removeItem("auth_user")
-        window.PhanterPWA.open_default_way()
-        LeftBar = window.PhanterPWA.Components['left_bar']
-        if LeftBar is not None and LeftBar is not js_undefined:
-            LeftBar.reload()
+        window.PhanterPWA.logout()
+        self.start()
         window.PhanterPWA.Components['auth_user'].start()
 
     def start(self):
@@ -1510,6 +1508,9 @@ class LeftBarAuthUserNoLogin(left_bar.LeftBarMenu):
 
 
 class Profile(handler.GateHandler):
+    def initialize(self):
+        self.requires_login = True
+
     def after_submit(self, data, ajax_status):
             if ajax_status == "success":
                 json = data.responseJSON

@@ -1,0 +1,41 @@
+.phanterpwa-component-modal-content-container
+    .phanterpwa-auth_user-form-inputs
+        #form-login-image-user-container
+            display: none
+        #form-login-button-other-user-container
+            display: none
+        .phanterpwa-modal-login-social-buttons-container
+            text-align: center
+            display: block
+            .btn-social_login-wrapper
+                display: inline-block
+        &.has_auth_user
+            #phanterpwa-widget-login-email
+                display: none
+            #form-login-image-user-container
+                display: block
+            #form-login-button-other-user-container
+                display: block
+            .phanterpwa-modal-login-social-buttons-container
+                display: none
+            .phanterpwa-modal-login-auth_user_logged_by_social_login-buttons-container
+                display: none
+            &.auth_user_logged_by_social_login
+                #phanterpwa-widget-wrapper-login-password, #phanterpwa-widget-wrapper-login-remember_me
+                    display: none
+                .phanterpwa-modal-login-auth_user_logged_by_social_login-buttons-container
+                    display: block
+.phanterpwa-component-modal-footer-container
+    .hidden_on_not_has_auth_user
+        display: none
+    .hidden_on_its_social_login
+        display: unset
+    .has_auth_user
+        &.its_social_login
+            #phanterpwa-widget-login-captcha-container
+                display: none
+            .hidden_on_its_social_login
+                display: none
+            .hidden_on_not_has_auth_user
+                display: unset
+

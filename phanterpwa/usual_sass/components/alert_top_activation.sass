@@ -1,0 +1,55 @@
+#phanterpwa-component-topslide-wrapper
+    display: none
+    position: fixed
+    width: 100%
+    left: 0
+    padding-left: 50px
+    z-index: 2
+    box-shadow: 0px 0px 6px $black
+    transition: padding-left 1s ease
+    background-color: $material_level04
+    .phanterpwa-component-topslide-close.link
+        text-align: right
+        margin: 5px 12px
+        &:hover
+            color: $attention
+
+    .phanterpwa-auth_user-activation-container
+        text-align: center
+        padding: 20px
+        position: relative
+    .phanterpwa-auth_user-activation-text
+        color: $alert
+    .phanterpwa-auth_user-activation-phone-center
+        display: block
+        width: 100%
+        .phanterpwa-auth_user-activation-action-activate, .phanterpwa-auth_user-activation-action-send
+            width: 50%
+            float: left
+            text-align: center
+            .phanterpwa-materialize-button-form-container
+                width: auto
+    @media #{$width2}  
+        padding-left: 0px
+        .phanterpwa-auth_user-activation-phone-center
+            display: block
+            width: 100%
+            .phanterpwa-auth_user-activation-action-activate, .phanterpwa-auth_user-activation-action-send
+                float: none
+                width: 100%
+                .phanterpwa-materialize-button-form-container
+                    width: 100% !important
+
+    @media #{$width1}
+        padding-left: 0px
+        .phanterpwa-auth_user-activation-phone-center
+            display: block
+            width: 100%
+            .phanterpwa-auth_user-activation-action-activate, .phanterpwa-auth_user-activation-action-send
+                float: none
+                width: 100%
+                .phanterpwa-materialize-button-form-container
+                    width: 100% !important
+
+
+

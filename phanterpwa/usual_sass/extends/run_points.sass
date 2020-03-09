@@ -1,0 +1,133 @@
+// phanterpwa-components
+
+$CONTAINERWIDTH: 100px
+$_CONTAINERHEIGHT: $CONTAINERWIDTH/5
+$_CONTAINERHEIGHTNEGATIVE: $CONTAINERWIDTH/-5
+$_RATE: $_CONTAINERHEIGHT * 1
+$_CONTAINERWIDTHSPEED: $_CONTAINERHEIGHT+$_RATE
+$COLOR1: red
+$COLOR2: blue
+$COLOR3: yellow
+$COLOR4: pink
+$COLOR5: green
+$BORDERRADIUS: 100%
+.phanterpwa-components-preloaders-run_points
+
+  *
+    box-sizing: border-box
+  .left
+      float: left !important
+  .right
+      float: right !important
+  .preloader-wrapper
+    display: inline-block
+    position: relative
+    width: $CONTAINERWIDTH
+    height: $_CONTAINERHEIGHT*2
+    .phanterpwa_run_points_container
+      width: 100%
+      height: 100%
+      position: relative
+    .phanterpwa_run_points
+      width: 20%
+      height: 50%
+      -moz-border-radius: $BORDERRADIUS
+      -webkit-border-radius: $BORDERRADIUS
+      border-radius: $BORDERRADIUS
+      position: absolute
+    &.enabled
+      .phanterpwa_run_points_one_content
+        -webkit-animation: phanterpwa_run_points 2s linear infinite
+        animation: phanterpwa_run_points 2s linear infinite
+        .phanterpwa_run_points_one
+          background-color: $COLOR1
+          left: 10%
+          top: 10%
+          border-radius: $BORDERRADIUS
+          width: 80%
+          height: 80%
+          position: absolute
+
+      .phanterpwa_run_points_two_content
+        -webkit-animation: phanterpwa_run_points 2s linear infinite -.4s
+        animation: phanterpwa_run_points 2s linear infinite -.4s
+        .phanterpwa_run_points_two
+          background-color: $COLOR2
+          left: 10%
+          top: 10%
+          border-radius: $BORDERRADIUS
+          width: 80%
+          height: 80%
+          position: absolute
+         
+      .phanterpwa_run_points_three_content
+        -webkit-animation: phanterpwa_run_points 2s linear infinite -.8s 
+        animation: phanterpwa_run_points 2s linear infinite -.8s 
+        .phanterpwa_run_points_three
+          background-color: $COLOR3
+          left: 10%
+          top: 10%
+          border-radius: $BORDERRADIUS
+          width: 80%
+          height: 80%
+          position: absolute
+        
+      .phanterpwa_run_points_four_content
+        -webkit-animation: phanterpwa_run_points 2s linear infinite -1.2s
+        animation: phanterpwa_run_points 2s linear infinite -1.2s 
+        .phanterpwa_run_points_four
+          background-color: $COLOR4
+          left: 10%
+          top: 10%
+          border-radius: $BORDERRADIUS
+          width: 80%
+          height: 80%
+          position: absolute
+         
+      .phanterpwa_run_points_five_content
+        -webkit-animation: phanterpwa_run_points 2s linear infinite -1.6s 
+        animation: phanterpwa_run_points 2s linear infinite -1.6s 
+        .phanterpwa_run_points_five
+          background-color: $COLOR5
+          left: 10%
+          top: 10%
+          border-radius: $BORDERRADIUS
+          width: 80%
+          height: 80%
+          position: absolute
+        
+
+  
+@keyframes phanterpwa_run_points
+  0%
+    width: 20%
+    left: 80%
+    top: 50%
+  80%
+    width: 20%
+    left: 0
+    top: 50%
+  85%
+    left: 0
+    top: 10%
+    width: 20%
+    height: 50%
+  88%
+    top: 20%
+    width: 40%
+    height: 30%
+  92.5%
+    top: 20%
+    width: 40%
+    height: 30%
+  97%
+    top: 20%
+    left: 80%
+    width: 20%
+    height: 30%
+  100%
+    width: 20%
+    left: 80%
+    top: 50%
+ 
+  

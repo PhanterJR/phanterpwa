@@ -35,6 +35,7 @@ setuptools.setup(
         'phanterpwa/interface',
         'phanterpwa/samples',
         'phanterpwa/scaffolds',
+        'phanterpwa/usual_sass',
         'phanterpwa/apitools',
         'phanterpwa/apptools',
         'phanterpwa/apptools/components'

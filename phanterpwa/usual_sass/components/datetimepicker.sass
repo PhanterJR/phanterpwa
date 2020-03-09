@@ -1,0 +1,218 @@
+.phanterpwa-fixed-fulldisplay
+    transition: box-shadow 0.5s, -webkit-box-shadow 0.5s, width 0.5s ease, opacity 0.5s ease
+    opacity: 0
+    overflow: auto
+    &.enabled
+        opacity: 1
+        box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.12), 0 1px 5px 0 rgba(0, 0, 0, 0.2)
+        .phanterpwa_datetimepicker_container
+            margin-top: 0px
+
+.phanterpwa_datetimepicker_container
+    margin: auto
+    width: 600px
+    background-color: $components
+    position: relative
+    margin-top: -30px
+    transition: margin-top 0.5s ease
+    @media #{$width1}
+        width: 300px
+    @media #{$width2}
+        width: 300px
+
+    .phanterpwa_datetimepicker_summary_container
+        position: absolute
+        right: 0
+        top: 0
+        width: 280px
+        padding: 10px
+        color: white
+        font-size: 2.5rem
+        text-align: center
+        .phanterpwa-models-close
+            font-size: 1rem
+            width: 30px
+            height: 30px
+            padding-right: 0px
+            padding-top: 3px
+            position: absolute
+            top: 6px
+            right: 6px
+            cursor: pointer
+            &:hover
+                color: orange
+        .phanterpwa_datetimepicker_summary_year
+            font-size: 6rem
+            line-height: 6rem
+            text-align: center
+        .phanterpwa_datetimepicker_summary_hour, .phanterpwa_datetimepicker_summary_week
+            font-size: 1.5rem
+
+        @media #{$width1}
+            width: 300px
+            position: relative
+            .phanterpwa_datetimepicker_summary_year, .phanterpwa_datetimepicker_summary_day_and_month
+                font-size: 2rem
+                line-height: 2rem
+            .phanterpwa_datetimepicker_summary_hour
+                font-size: 0.9rem
+            .phanterpwa_datetimepicker_summary_week
+                display: none
+
+        @media #{$width2}
+            width: 300px
+            position: relative 
+            .phanterpwa_datetimepicker_summary_year, .phanterpwa_datetimepicker_summary_day_and_month
+                font-size: 2rem
+                line-height: 2rem
+            .phanterpwa_datetimepicker_summary_hour
+                font-size: 0.9rem
+            .phanterpwa_datetimepicker_summary_week
+                display: none
+
+.phanterpwa_datetimepicker_wrapper
+    width: 320px
+    height: 400px
+    padding: 10px
+    position: relative
+    background-color: white
+    @media #{$width1}
+        width: 300px
+    @media #{$width2}
+        width: 300px
+    .phanterpwa_datetimepicker_button
+        cursor: pointer
+        height: 30px
+        margin: auto
+        padding-top: 4px
+        &:hover
+            color: orange
+    .phanterpwa_datetimepicker_previusnext
+        float: left
+        width: 15%
+        text-align: center
+    .phanterpwa_datetimepicker_secondlist_second, .phanterpwa_datetimepicker_minutelist_minute
+        &.selected
+            color: #d1d1d1
+        float: left
+        width: 16.66666%
+        text-align: center
+        height: 34px
+
+    .phanterpwa_datetimepicker_hourlist_hour
+        &.selected
+            color: #d1d1d1
+        width: 33.33333%
+        float: left
+        text-align: center
+        height: 42px
+        padding-top: 12px
+
+    .phanterpwa_datetimepicker_time_container
+        display: block
+        width: 100%
+        position: absolute
+        bottom: 10px
+        left: 0
+        hr
+            border: 1px solid #e8e8e8
+            width: 95%
+            margin: auto
+        .phanterpwa_datetimepicker_time_col
+            width: 33.33333%
+            padding-left: 5px
+            padding-right: 5px
+            float: left
+            text-align: center
+            &.label
+                font-size: 0.7rem
+                margin-top: -8px
+                color: gray
+            .phanterpwa_datetimepicker_previusnext
+                width: 30%
+            .phanterpwa_datetimepicker_hour, .phanterpwa_datetimepicker_minute, .phanterpwa_datetimepicker_second
+                width: 40%
+                float: left
+                text-align: center
+
+    .phanterpwa_datetimepicker_year, .phanterpwa_datetimepicker_month
+        float: left
+        width: 70%
+        text-align: center
+
+    .phanterpwa_datetimepicker_row
+        width: 100%
+        display: block
+
+    .phanterpwa_datetimepicker_weekday, .phanterpwa_datetimepicker_day_empty, .phanterpwa_datetimepicker_day
+        float: left
+        width: 14.285714285714285714285714285714%
+        text-align: center
+        min-height: 30px
+
+    .phanterpwa_datetimepicker_weekday, .phanterpwa_datetimepicker_day
+        .phanterpwa_datetimepicker_unit
+            width: 42px
+            height: 42px
+            margin: auto
+            padding-top: 9px
+            transition: width 0.5s ease
+            @media #{$width1}
+                width: 42px
+                height: 42px
+                transition: width 0.5s ease
+            @media #{$width2}
+                width: 40px
+                height: 40px
+                transition: width 0.5s ease           
+
+    .phanterpwa_datetimepicker_day
+        .phanterpwa_datetimepicker_unit
+            border-radius: 100%
+            cursor: pointer
+
+        &.phanterpwa_datetimepicker_its_now
+            .phanterpwa_datetimepicker_unit
+                border: solid 2px #d1d1d1
+                padding-top: 7px
+
+
+        &.phanterpwa_datetimepicker_selected
+            .phanterpwa_datetimepicker_unit
+                background-color: $components
+                color: white
+        &:hover
+            .phanterpwa_datetimepicker_unit
+                border: solid 2px orange
+                padding-top: 7px
+    .phanterpwa_datetimepicker_monthlist_container
+        text-align: center
+
+        .phanterpwa_datetimepicker_monthlist_month
+            width: 33.333333%
+            float: left
+            height: 70px
+            padding-top: 25px
+            &.selected
+                color: #d1d1d1
+
+    .phanterpwa_datetimepicker_yearlist_container
+        text-align: center
+
+        .phanterpwa_datetimepicker_yearlist_year
+            width: 20%
+            float: left
+            height: 44px
+            padding-top: 13px
+            &.selected
+                color: #d1d1d1
+.phanterpwa_datetimepicker_container
+    .phanterpwa_datetimepicker_wrapper
+        height: 400px
+    &.phanterpwa_datetimepicker_is_not_datetime
+        .phanterpwa_datetimepicker_summary_hour
+            display: none
+        .phanterpwa_datetimepicker_wrapper
+            height: 380px
+            .phanterpwa_datetimepicker_time_container
+                display: none

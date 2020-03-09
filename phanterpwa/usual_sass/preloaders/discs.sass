@@ -1,0 +1,122 @@
+// phanterpwa-components
+
+$CONTAINERWIDTH: 60px
+$COLOR1TOP: red
+$COLOR1LEFT: $COLOR1TOP
+$COLOR1BOTTOM: transparent
+$COLOR1RIGHT: transparent
+$COLOR2TOP: blue
+$COLOR2LEFT: $COLOR2TOP
+$COLOR2BOTTOM: transparent
+$COLOR2RIGHT: transparent
+$COLOR3TOP: orange
+$COLOR3LEFT: $COLOR3TOP
+$COLOR3BOTTOM: transparent
+$COLOR3RIGHT: transparent
+$COLOR4TOP: green
+$COLOR4LEFT: $COLOR4TOP
+$COLOR4BOTTOM: transparent
+$COLOR4RIGHT: transparent
+$COLOR5TOP: black
+$COLOR5LEFT: $COLOR5TOP
+$COLOR5BOTTOM: transparent
+$COLOR5RIGHT: transparent
+$BORDERRADIUS: 100%
+$BORDER: 5px
+$_BASESIZE: 100%
+.phanterpwa-components-preloaders-discs
+
+  *
+    box-sizing: border-box
+
+  .preloader-wrapper
+    display: inline-block
+    position: relative
+    width: $CONTAINERWIDTH
+    height: $CONTAINERWIDTH
+    .phanterpwa_discs
+        -moz-border-radius: $BORDERRADIUS
+        -webkit-border-radius: $BORDERRADIUS
+        border-radius: $BORDERRADIUS
+        position: absolute
+    .phanterpwa_discs_one
+      border-top: $BORDER solid $COLOR1TOP
+      border-left: $BORDER solid $COLOR1LEFT
+      border-bottom: $BORDER solid $COLOR1BOTTOM
+      border-right: $BORDER solid $COLOR1RIGHT
+      left: $_BASESIZE * 0.4
+      top: $_BASESIZE * 0.4
+      width: $_BASESIZE * 0.2
+      height: $_BASESIZE * 0.2
+                  
+    .phanterpwa_discs_two
+      border-top: $BORDER solid $COLOR2TOP
+      border-left: $BORDER solid $COLOR2LEFT
+      border-bottom: $BORDER solid $COLOR2BOTTOM
+      border-right: $BORDER solid $COLOR2RIGHT
+      left: $_BASESIZE * 0.3
+      top: $_BASESIZE * 0.3
+      width: $_BASESIZE * 0.4
+      height: $_BASESIZE * 0.4
+
+    .phanterpwa_discs_three
+      border-top: $BORDER solid $COLOR3TOP
+      border-left: $BORDER solid $COLOR3LEFT
+      border-bottom: $BORDER solid $COLOR3BOTTOM
+      border-right: $BORDER solid $COLOR3RIGHT
+      left: $_BASESIZE * 0.2
+      top: $_BASESIZE * 0.2
+      width: $_BASESIZE * 0.6
+      height: $_BASESIZE * 0.6
+
+    .phanterpwa_discs_four
+      border-top: $BORDER solid $COLOR4TOP
+      border-left: $BORDER solid $COLOR4LEFT
+      border-bottom: $BORDER solid $COLOR4BOTTOM
+      border-right: $BORDER solid $COLOR4RIGHT
+      left: $_BASESIZE * 0.1
+      top: $_BASESIZE * 0.1
+      width: $_BASESIZE * 0.8
+      height: $_BASESIZE * 0.8
+
+    .phanterpwa_discs_five
+      border-top: $BORDER solid $COLOR5TOP
+      border-left: $BORDER solid $COLOR5LEFT
+      border-bottom: $BORDER solid $COLOR5BOTTOM
+      border-right: $BORDER solid $COLOR5RIGHT
+      left: 0
+      top: 0
+      width: $_BASESIZE
+      height: $_BASESIZE
+
+    &.enabled
+      .phanterpwa_discs
+        -webkit-animation: phanterpwa_discs_animate 2s infinite
+        animation: phanterpwa_discs_animate 2s infinite 
+      .phanterpwa_discs_two
+        -webkit-animation-delay: 0.2s       
+        animation-delay: 0.2s
+      .phanterpwa_discs_three
+        -webkit-animation-delay: 0.4s        
+        animation-delay: 0.4s
+      .phanterpwa_discs_four
+        -webkit-animation-delay: 0.6s        
+        animation-delay: 0.6s
+      .phanterpwa_discs_five
+        -webkit-animation-delay: 0.8s        
+        animation-delay: 0.8s
+
+@-webkit-keyframes phanterpwa_discs_animate
+  50%
+    -ms-transform: rotate(360deg)
+    -webkit-transform: rotate(360deg)
+    transform: rotate(360deg)
+
+@keyframes phanterpwa_discs_animate
+  50%
+    -ms-transform: rotate(360deg)
+    -webkit-transform: rotate(360deg) 
+    transform: rotate(360deg)
+
+
+  

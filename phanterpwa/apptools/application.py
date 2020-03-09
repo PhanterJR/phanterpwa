@@ -58,9 +58,9 @@ class PhanterPWA():
         self.states = dict()
         self._social_login_icons = {
             "google": I(_class="fab fa-google"),
-            "facebook": I(_class="fa-facebook"),
+            "facebook": I(_class="fab fa-facebook"),
             "twitter": I(_class="fab fa-twitter")
-        }        
+        }
 
         jQuery(document).ajaxComplete(
             lambda event, xhr, options: self._after_ajax_complete(event, xhr, options)

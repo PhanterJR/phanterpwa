@@ -156,6 +156,82 @@ class Compiler():
             self.path_styles_folder(app), ignore_files=["__init__.py"], ignore_paths=["__pycache__"])
         return (normpath(x) for x in files if x.endswith(".sass"))
 
+    def phanterpwa_usual_sass(self, app):
+        print("\nProcess PhanterPWA usual sass...")
+        main_file = join(PATH_PHANTERPWA, "usual_sass", "phanterpwa.sass")
+        if exists(join(dirname(main_file), "_compiler_sass_temp_file.sass")):
+            os.unlink(join(dirname(main_file), "_compiler_sass_temp_file.sass"))
+        target_css = join(self.projectpath, "apps", app, "statics", "css", "phanterpwa.css")
+        sfiles = self.get_files_dir(
+            join(PATH_PHANTERPWA, "usual_sass"), ignore_files=["__init__.py"], ignore_paths=["__pycache__"])
+        sass_files = (normpath(x) for x in sfiles if x.endswith(".sass"))
+
+        with open(main_file, 'r', encoding="utf-8") as f:
+            txt = f.read()
+            txt = re.sub(
+                r"/\* start change programmatically[\W\w]*end change programmatically \*[\r\n]?/",
+                "",
+                txt
+            )
+            if re.search(r"\$app-version: [\"\'][0-9]{0, 3}\.[0-9]{0, 3}\.[0-9]{0, }\"", txt):
+                new_text_to_save = re.sub(
+                    r"\$app-version: [\"\'][0-9]{0, 3}\.[0-9]{0, 3}\.[0-9]{0, }\"",
+                    "$app-version: \"{0}\"".format(self.version),
+                    txt
+                )
+            else:
+                new_text_to_save = "".join([
+                    "/* start change programmatically */\n",
+                    "$app-version: \"{0}\"\n".format(self.version),
+                    "/* end change programmatically */",
+                    txt
+                ])
+            txt = new_text_to_save
+            txt = "/* SASS Source Code (MAIN FILE): {0} */\n\n{1}".format(main_file, txt)
+            has_import = False
+            for x in sass_files:
+                if x != normpath(main_file):
+                    c = "/* SASS Source Code: {0} */\n\n".format(x)
+                    p = PurePath(x)
+                    p = p.relative_to(dirname(main_file))
+                    l = [*p.parts]
+                    l[-1] = l[-1][0:-5]
+                    patter = "@import '{0}'".format("/".join(l))
+                    txt = "".join(["\n", txt, c, patter, "\n\n"])
+                    has_import = True
+            if has_import:
+                print("    Creating imports and adding in temp file",
+                    dirname(main_file), "_compiler_sass_temp_file.sass")
+
+            with open(join(dirname(main_file), "_compiler_sass_temp_file.sass"), "w", encoding="utf-8") as f2:
+                f2.write(txt)
+            print("    Convert sass to css: {0}".format(target_css))
+            if self.minify:
+                new_css = sass.compile(
+                    filename=join(dirname(main_file), "_compiler_sass_temp_file.sass"),
+                    output_style="compressed"
+                )
+            else:
+                new_css = sass.compile(
+                    filename=join(dirname(main_file), "_compiler_sass_temp_file.sass"),
+                    output_style="expanded"
+                )
+                new_css = re.sub(
+                    r"^/\* start change programmatically[\W\w]*end change programmatically \*/$",
+                    "",
+                    new_css)
+            if isfile(join(self.projectpath, "temp", "_compiler_sass_temp_file.sass")):
+                os.unlink(join(self.projectpath, "temp", "_compiler_sass_temp_file.sass"))
+            shutil.copy(
+                join(dirname(main_file), "_compiler_sass_temp_file.sass"),
+                join(self.projectpath, "temp", "_compiler_sass_temp_file.sass")
+            )
+            with open(target_css, "w") as o:
+                o.write(new_css)
+            os.unlink(join(dirname(main_file), "_compiler_sass_temp_file.sass"))
+        with open(main_file, "w", encoding="utf-8") as fw:
+            fw.write(new_text_to_save)
+
     @staticmethod
     def target_by_relative_path(src_path, tgt_path, ext_src=None, ext_tgt=None, ignore_files=[], ignore_paths=[]):
 
@@ -295,7 +371,6 @@ class Compiler():
                                 self._templates_to_update[app].append(x)
                         else:
                             self._templates_to_update[app].append(x)
-
             else:
                 self._templates_to_update[app] = self.templates_files(app)
 
@@ -451,7 +526,7 @@ class Compiler():
                     except OSError as e:
                         print("Error: %s - %s." % (e.filename, e.strerror))
                         pass
-                    while os.path.exists(target):
+                    while exists(target):
                         pass
                     print("Deleted ({0})".format(target))
 
@@ -844,6 +919,8 @@ class Compiler():
             if minify is True:
                 self.minify = True
             self.delete_compiled_app_folder(app)
+            if current_debug or not exists(join(self.projectpath, "apps", app, "statics", "css", "phanterpwa.css")):
+                self.phanterpwa_usual_sass(app)
             self.copy_statics(app)
             self.copy_languages(app)
             self.compile_styles(app)

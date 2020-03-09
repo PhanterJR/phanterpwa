@@ -1,0 +1,40 @@
+body
+    #phanterpwa-flash-container
+        position: fixed
+        z-index: 3000
+        right: 10%
+        top: 74px
+        @media #{$width1}
+            width: 100%
+            top: auto
+            bottom: 0px
+            right: auto
+        @media #{$width2}
+            width: 100%
+            top: auto
+            bottom: 0px
+            right: auto
+            text-align: center
+        @media #{$width3}
+            top: auto
+            bottom: 30px
+            text-align: center
+
+        .phanterpwa-flash-wrapper
+            background-color: $grey11
+            color: $warning
+            padding: 10px 20px
+            border-radius: 5px
+            margin-bottom: 5px
+            @media #{$width1}
+                width: 100%
+                text-align: center
+                float: none
+                margin: auto
+                border-radius: 0px
+            @media #{$width2}
+                width: 100%
+                text-align: center
+                float: none
+                margin: auto
+                border-radius: 0px        

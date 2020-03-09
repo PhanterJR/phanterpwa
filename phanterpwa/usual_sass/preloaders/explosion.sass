@@ -1,0 +1,202 @@
+// phanterpwa-components
+
+$COLOR0: red
+$COLOR1: $COLOR0
+$COLOR2: $COLOR1
+$COLOR3: $COLOR1
+$COLOR4: $COLOR1
+$COLOR5: $COLOR1
+$COLOR6: $COLOR1
+$COLOR7: $COLOR1
+$COLOR8: $COLOR1
+$COLOR9: $COLOR1
+$CONTAINERWIDTH: 60px
+$BORDERRADIUS: 100%
+
+.phanterpwa-components-preloaders-explosion
+
+  *
+    box-sizing: border-box
+  .left
+      float: left !important
+  .right
+      float: right !important
+  .preloader-wrapper
+    display: inline-block
+    position: relative
+    width: $CONTAINERWIDTH
+    height: $CONTAINERWIDTH
+    .phanterpwa_explosion
+      width: 16%
+      height: 16%
+      background-color: $COLOR0
+      position: absolute
+      left: 40%
+      top: 40%
+      border-radius: $BORDERRADIUS
+    .phanterpwa_explosion:nth-child(2n+0)
+      margin-right: 0px
+    .phanterpwa_explosion_container
+      width: 100%
+      height: 100%
+      position: relative
+      transform: rotate(45deg)
+    &.enabled
+      .phanterpwa_explosion_one
+        background-color: $COLOR1
+        -webkit-animation: phanterpwa_explosion_one_animate 2s infinite
+        animation: phanterpwa_explosion_one_animate 2s infinite
+        -webkit-animation-delay: 0.2s
+        animation-delay: 0.2s
+
+      .phanterpwa_explosion_two
+        background-color: $COLOR2
+        -webkit-animation: phanterpwa_explosion_two_animate 2s infinite
+        animation: phanterpwa_explosion_two_animate 2s infinite
+        -webkit-animation-delay: 0.3s
+        animation-delay: 0.3s
+
+      .phanterpwa_explosion_three
+        background-color: $COLOR3
+        -webkit-animation: phanterpwa_explosion_three_animate 2s infinite
+        animation: phanterpwa_explosion_three_animate 2s infinite
+        -webkit-animation-delay: 0.4s
+        animation-delay: 0.4s 
+
+      .phanterpwa_explosion_four
+        background-color: $COLOR4
+        -webkit-animation: phanterpwa_explosion_four_animate 2s infinite
+        animation: phanterpwa_explosion_four_animate 2s infinite
+        -webkit-animation-delay: 0.5s 
+        animation-delay: 0.5s 
+
+      .phanterpwa_explosion_five
+        background-color: $COLOR5
+        -webkit-animation: phanterpwa_explosion_five_animate 2s infinite
+        animation: phanterpwa_explosion_five_animate 2s infinite
+        -webkit-animation-delay: 0.6s 
+        animation-delay: 0.6s 
+
+      .phanterpwa_explosion_six
+        background-color: $COLOR6
+        -webkit-animation: phanterpwa_explosion_six_animate 2s infinite
+        animation: phanterpwa_explosion_six_animate 2s infinite
+        -webkit-animation-delay: 0.7s 
+        animation-delay: 0.7s 
+
+      .phanterpwa_explosion_seven
+        background-color: $COLOR7
+        -webkit-animation: phanterpwa_explosion_seven_animate 2s infinite
+        animation: phanterpwa_explosion_seven_animate 2s infinite
+        -webkit-animation-delay: 0.8s 
+        animation-delay: 0.8s 
+
+      .phanterpwa_explosion_eight
+        background-color: $COLOR8
+        -webkit-animation: phanterpwa_explosion_eight_animate 2s infinite
+        animation: phanterpwa_explosion_eight_animate 2s infinite
+         -webkit-animation-delay: 0.9s 
+        animation-delay: 0.9s 
+
+      .phanterpwa_explosion_big
+        background-color: $COLOR0
+        position: absolute
+        width: 16%
+        height: 16%
+        left: 40%
+        top: 40%
+        -webkit-animation: phanterpwa_explosion_big_animate 2s infinite
+        animation: phanterpwa_explosion_big_animate 2s infinite
+        -webkit-animation-delay: 0.5s
+        animation-delay: 1.5s
+
+@-webkit-keyframes phanterpwa_explosion_big_animate
+  40%
+    width: 50%
+    height: 50%
+    top: 27%
+    left: 27%
+
+@-webkit-keyframes phanterpwa_explosion_one_animate
+  60%
+    top: 42%
+    left: 0%
+
+@-webkit-keyframes phanterpwa_explosion_two_animate
+  60%
+    top: 0
+    left: 0
+
+@-webkit-keyframes phanterpwa_explosion_three_animate
+ 60%
+    top: 0%
+    left: 42%
+
+@-webkit-keyframes phanterpwa_explosion_four_animate
+  60%
+    top: 0%
+    left: 84%
+
+@-webkit-keyframes phanterpwa_explosion_five_animate
+  60%
+    top: 42%
+    left: 84%
+@-webkit-keyframes phanterpwa_explosion_six_animate
+  60%
+    top: 84%
+    left: 84%
+@-webkit-keyframes phanterpwa_explosion_seven_animate
+  60%
+    top: 84%
+    left: 42%
+@-webkit-keyframes phanterpwa_explosion_eight_animate
+  60%
+    top: 84%
+    left: 0%
+
+
+
+@keyframes phanterpwa_explosion_big_animate
+  40%
+    width: 50%
+    height: 50%
+    top: 27%
+    left: 27%
+
+@keyframes phanterpwa_explosion_one_animate
+  60%
+    top: 42%
+    left: 0%
+
+@keyframes phanterpwa_explosion_two_animate
+  60%
+    top: 0
+    left: 0
+
+@keyframes phanterpwa_explosion_three_animate
+ 60%
+    top: 0%
+    left: 42%
+
+@keyframes phanterpwa_explosion_four_animate
+  60%
+    top: 0%
+    left: 84%
+
+@keyframes phanterpwa_explosion_five_animate
+  60%
+    top: 42%
+    left: 84%
+@keyframes phanterpwa_explosion_six_animate
+  60%
+    top: 84%
+    left: 84%
+@keyframes phanterpwa_explosion_seven_animate
+  60%
+    top: 84%
+    left: 42%
+@keyframes phanterpwa_explosion_eight_animate
+  60%
+    top: 84%
+    left: 0%
+

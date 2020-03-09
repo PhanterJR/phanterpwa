@@ -1,0 +1,117 @@
+.phanterpwa-widget
+    &.phanterpwa-widget-table-container
+        padding: 0
+        overflow: auto
+        width: 100%
+        border: solid 1px rgba(51,51,51,0.12)
+        border-radius: 10px
+        .phanterpwa-widget-table
+            display: table
+            min-width: 100%
+            margin: 0
+            padding: 0
+            border-collapse: collapse
+            border-spacing: 0
+            td, th, tr, table, thead, tbody, tfoot
+                margin: 0
+                padding: 0
+                background: none
+                border-collapse: collapse
+                border-spacing: 0
+            tr[draggable="true"]
+                cursor: grab
+                &:hover
+                    background: rgb(240, 240, 240)
+                &:active
+                    cursor: grabbing
+            tr
+                &.phanterpwa-widget-table-head, &.phanterpwa-widget-table-data, &.phanterpwa-widget-table-pagination
+                    display: table-row
+                    position: static
+            td, th
+                text-align: left
+                padding: 5px 10px
+                height: 40px
+            td:first-child, th:first-child
+                padding-left: 20px
+            td:last-child, th:last-child
+                padding-right: 20px
+            td
+                border-top: solid 1px rgba(51,51,51,0.12)
+                &.phanterpwa-widget-table-head-td
+                    display: table-cell
+            th
+                &.phanterpwa-widget-table-head-th
+                    display: table-cell
+                    .icon_button
+                        color: $components
+                    .phanterpwa-widget-table-head-th-sortable
+                        position: relative
+                        display: table
+                        width: max-content
+                        cursor: pointer
+                        color: $components
+                    &.enabled
+                        text-shadow: 0px 0px 5px $components
+                        &.asc
+                            .phanterpwa-widget-table-head-th-sortable
+                                &::after
+                                    content: "\f0d8"
+                                    font-family: "Font Awesome 5 Free"
+                                    font-weight: 900
+                                    position: absolute
+                                    width: 100%
+                                    bottom: -15px
+                                    left: 0
+                                    text-align: center
+                        &.desc
+                            .phanterpwa-widget-table-head-th-sortable
+                                &::after
+                                    content: "\f0d7"
+                                    font-family: "Font Awesome 5 Free"
+                                    font-weight: 900
+                                    position: absolute
+                                    width: 100%
+                                    bottom: -15px
+                                    left: 0
+                                    text-align: center
+                    .phanterpwa-widget-table-head-th-sortable
+                        &::hover
+                            color: $attention
+
+
+.phanterpwa-widget-pagination-container
+    min-width: 210px
+    text-align: center
+    margin: auto
+    display: table
+    color: $components
+
+    .phanterpwa-widget-pagination-first_button, .phanterpwa-widget-pagination-previous_button, .phanterpwa-widget-pagination-next_button, .phanterpwa-widget-pagination-last_button
+        display: inline-block
+        width: 30px
+        height: 30px
+        line-height: 30px
+        text-align: center
+        cursor: pointer
+        &:hover
+            color: $attention
+        &.disabled
+            color: $grey03
+            &:hover
+                color: $grey03
+
+    .phanterpwa-widget-pagination-status_button
+        display: inline-block
+        line-height: 30px
+        height: 30px
+        padding: 0 5px
+        cursor: pointer
+        &:hover
+            color: $attention
+
+.phanterpwa-widget-pagination-pages_panel
+    padding: 5px
+
+
+
