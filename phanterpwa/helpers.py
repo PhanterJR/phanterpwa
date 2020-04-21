@@ -1,6 +1,38 @@
-# -*- coding: utf-8 -*-
+"""
+Title: helpers
+
+Author: PhanterJR<junior.conex@gmail.com>
+
+License: MIT
+
+Coding: utf-8
+
+In this module are gathered all the TAGs currently used for the creation of HTML5 pages.
+TAG objects inherited the functionality of their parent class, the XmlConstructor
+
+You can import all with.
+
+    >>> from phanterpwa.helpers import *
+
+Or just what you want.
+
+    >>> from phanterpwa.helpers import (HTML, HEAD, BODY, DIV, SPAN)
+    >>> HTML(HEAD(), BODY(DIV(SPAN())))
+    <!DOCTYPE html><head><head><body><div><span></span></div></boby></html>
+
+The complete list can be obtained with.
+
+    >>> from phanterpwa.helpers import ALL_TAGS
+    >>> print(ALL_TAGS)
+    ['CONCATENATE', 'XML', 'XCOMMENT', 'AREA', 'BASE', 'COL', 'EMBED', 'HR', 'IMG', 'INPUT', 'LINK', 'META', 'PARAM', 'SOURCE', 'TRACK', 'WBR', 'BR', 'A', 'ABBR', 'ADDRESS', 'ARTICLE', 'ASIDE', 'AUDIO', 'B', 'BDI', 'BDO', 'BLOCKQUOTE', 'BODY', 'BUTTON', 'CANVAS', 'CAPTION', 'CITE', 'CODE', 'COLGROUP', 'DATA', 'DATALIST', 'DD', 'DEL', 'DETAILS', 'DFN', 'DIALOG', 'DIV', 'DL', 'DT', 'EM', 'FIELDSET', 'FIGCAPTION', 'FIGURE', 'FOOTER', 'FORM', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'HEAD', 'HEADER', 'HTML', 'I', 'IFRAME', 'INS', 'KBD', 'LABEL', 'LEGEND', 'LI', 'MAIN', 'MAP', 'MARK', 'METER', 'NAV', 'NOSCRIPT', 'OBJECT', 'OL', 'OPTGROUP', 'OPTION', 'OUTPUT', 'P', 'PICTURE', 'PRE', 'PROGRESS', 'Q', 'RP', 'RT', 'RUBY', 'S', 'SAMP', 'SCRIPT', 'SECTION', 'SELECT', 'SMALL', 'SPAN', 'STRONG', 'STYLE', 'SUB', 'SUMMARY', 'SUP', 'SVG', 'TABLE', 'TBODY', 'TD', 'TEMPLATE', 'TEXTAREA', 'TFOOT', 'TH', 'THEAD', 'TIME', 'TITLE', 'TR', 'U', 'UL', 'VAR', 'VIDEO']
+
+There is also a separate list by categories: NORMAL_TAGS, VOID_TAGS,
+and SPECIAL_TAGS.
+"""
+
 from .xmlconstructor import XmlConstructor
-from .xss import XssCleaner
+from .third_parties.xss import XssCleaner
+
 
 SPECIAL_TAGS = [
     'CONCATENATE',
@@ -24,7 +56,6 @@ VOID_TAGS = [
     'BR'
 ]
 NORMAL_TAGS = [
-
     'A',
     'ABBR',
     'ADDRESS',
@@ -126,12 +157,43 @@ ALL_TAGS = __all__ = SPECIAL_TAGS + VOID_TAGS + NORMAL_TAGS
 
 
 class CONCATENATE(XmlConstructor):
+    """With CONCATENATE it is possible to concatenate several objects to create the html.
+
+    Example:
+        >>> from phanterpwa.helpers import DIV, CONCATENATE
+        >>> my_instance = CONCATENATE(
+        ...     DIV("This is a div"),
+        ...     "this is a string",
+        ...     DIV("this is other div")
+        ... )
+        >>> print(my_instance)
+        <div>This is a div</div>this is a string<div>this is other div</div>
+    """
+
     def __init__(self, *content):
         XmlConstructor.__init__(self, "", False, *content)
         self.alternative_tag = "concatenate"
 
 
 class XML(XmlConstructor, XssCleaner):
+    """With XML it is possible to apply an optional sanitization, it is disabled by default, so that every string will
+    be treated as html.
+
+    Example:
+        >>> from phanterpwa.helpers import SPAN, DIV, XML
+        >>> instanceDIV = DIV("<span>escaped</span>")
+        >>> print(instanceDIV)
+        <div>&lt;span&gt;escaped&lt;/span&gt;</div>
+        >>> instanceDIV_with_XML = DIV(XML("<span>not escaped</span>"))
+        >>> print(instanceDIV_with_XML)
+        <div><span>not escaped</span></div>
+        >>> instanceSPAN = SPAN("<evil>I will destroy you.</evil>")
+        >>> print(instanceSPAN)
+        <span>&lt;evil&gt;I will destroy you.&lt;/evil&gt;</span>
+        >>> print(DIV("<other_evil>", XML("<evil>I will destroy you.</evil>"), "</other_evil>"))
+        <div>&lt;other_evil&gt;<evil>I will destroy you.</evil>&lt;/other_evil&gt;</div>
+    """
+
     def __init__(self,
             *content,
             sanitize=False,
@@ -165,6 +227,9 @@ class XML(XmlConstructor, XssCleaner):
         self.escape_string = False
 
     def xml(self) -> str:
+        """With this method a string is converted to html with an optional sanitization (predefined tags, predefined
+        attributes, escape or not strings), by default sanitization is disabled (False).
+        """
         if self.minify:
             xml = self._minified(
                 close_void=self.close_void,
@@ -183,6 +248,15 @@ class XML(XmlConstructor, XssCleaner):
 
 
 class XCOMMENT(XmlConstructor):
+    """With XCOMMENT it is possible to create html comments.
+
+        Example:
+            >>> from phanterpwa.helpers import XCOMMENT
+            >>> print(XCOMMENT("thit is a comment"))
+            <!--this is a comment-->
+
+    """
+
     def __init__(self, *content):
         XmlConstructor.__init__(self, "", False, *content)
         self.alternative_tag = "xcomment"

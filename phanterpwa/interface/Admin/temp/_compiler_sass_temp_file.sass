@@ -1,0 +1,760 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* SASS Source Code (MAIN FILE): C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\phanterpwa.sass */
+
+/* start change programmatically */
+$app-version: "0.0.1"
+/* end change programmatically */
+
+$base-url: "/static/#{$app-version}/fonts/"
+
+@font-face
+    font-family: "Segoe UI Mono W01 Regular"
+    src: url("#{$base-url}88bdc70ec292cc29451932f9875b378a.eot")
+    src: url("#{$base-url}88bdc70ec292cc29451932f9875b378a.eot?#iefix") format("embedded-opentype"), url("#{$base-url}88bdc70ec292cc29451932f9875b378a.woff2") format("woff2"), url("#{$base-url}88bdc70ec292cc29451932f9875b378a.woff") format("woff"), url("#{$base-url}88bdc70ec292cc29451932f9875b378a.ttf") format("truetype"), url("#{$base-url}88bdc70ec292cc29451932f9875b378a.svg#Segoe UI Mono W01 Regular") format("svg")
+
+@font-face
+    font-family: "Segoe UI"
+    font-style: normal
+    font-weight: normal
+    src: local("Segoe UI Regular"), url("#{$base-url}Segoe UI.woff") format("woff")
+
+@font-face
+    font-family: "Segoe UI Italic"
+    font-style: normal
+    font-weight: normal
+    src: local("Segoe UI Italic"), url("#{$base-url}Segoe UI Italic.woff") format("woff")
+
+@font-face
+    font-family: "Segoe UI Bold"
+    font-style: normal
+    font-weight: normal
+    src: local("Segoe UI Bold"), url("#{$base-url}Segoe UI Bold.woff") format("woff")
+
+@font-face
+    font-family: "Segoe UI Bold Italic"
+    font-style: normal
+    font-weight: normal
+    src: local("Segoe UI Bold Italic"), url("#{$base-url}Segoe UI Bold Italic.woff") format("woff")
+
+/* roboto-thin - latin */
+@font-face
+    font-family: "Roboto Thin";
+    font-style: normal
+    font-weight: 400
+    src: url("#{$base-url}Roboto-Thin.eot")
+    src: local("Roboto Thin"), local("Roboto-Regular"), url("#{$base-url}Roboto-Thin.eot?#iefix") format("embedded-opentype"), url("#{$base-url}Roboto-Thin.woff2") format("woff2"), url("#{$base-url}Roboto-Thin.woff") format("woff"), url("#{$base-url}Roboto-Thin.ttf") format("truetype")
+
+
+/* roboto-regular - latin */
+@font-face
+    font-family: "Roboto";
+    font-style: normal
+    font-weight: 400
+    src: url("#{$base-url}roboto-v20-latin-regular.eot")
+    src: local("Roboto"), local("Roboto-Regular"), url("#{$base-url}roboto-v20-latin-regular.eot?#iefix") format("embedded-opentype"), url("#{$base-url}roboto-v20-latin-regular.woff2") format("woff2"), url("#{$base-url}roboto-v20-latin-regular.woff") format("woff"), url("#{$base-url}roboto-v20-latin-regular.ttf") format("truetype"), url("#{$base-url}roboto-v20-latin-regular.svg#Roboto") format("svg")
+
+/* latin-ext */
+@font-face
+    font-family: "Roboto Mono"
+    font-style: normal
+    font-weight: 400
+    src: url("#{$base-url}L0x5DF4xlVMF-BfR8bXMIjhFq3-OXg.woff2") format("woff2")
+    unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF
+
+/* latin */
+@font-face
+    font-family: "Roboto Mono"
+    font-style: normal
+    font-weight: 400
+    src: url("#{$base-url}L0x5DF4xlVMF-BfR8bXMIjhLq38.woff2") format("woff2")
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD
+
+/* latin-ext */
+@font-face
+    font-family: "Cousine"
+    font-style: normal
+    font-weight: 400
+    src: url("#{$base-url}d6lIkaiiRdih4SpP_SovzAbt.woff2") format("woff2")
+    unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF
+
+/* latin */
+@font-face
+    font-family: "Cousine"
+    font-style: normal
+    font-weight: 400
+    src: url("#{$base-url}d6lIkaiiRdih4SpP_SQvzA.woff2") format("woff2")
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD
+
+
+
+$black: #000000
+$white: #ffffff
+$red_lighten_5: #ffebee
+$red_lighten_4: #ffcdd2
+$red_lighten_3: #ef9a9a
+$red_lighten_2: #e57373
+$red_lighten_1: #ef5350
+$red: #f44336
+$red_darken_1: #e53935
+$red_darken_2: #d32f2f
+$red_darken_3: #c62828
+$red_darken_4: #b71c1c
+$red_accent_1: #ff8a80
+$red_accent_2: #ff5252
+$red_accent_3: #ff1744
+$red_accent_4: #d50000
+$pink_lighten_5: #fce4ec
+$pink_lighten_4: #f8bbd0
+$pink_lighten_3: #f48fb1
+$pink_lighten_2: #f06292
+$pink_lighten_1: #ec407a
+$pink: #e91e63
+$pink_darken_1: #d81b60
+$pink_darken_2: #c2185b
+$pink_darken_3: #ad1457
+$pink_darken_4: #880e4f
+$pink_accent_1: #ff80ab
+$pink_accent_2: #ff4081
+$pink_accent_3: #f50057
+$pink_accent_4: #c51162
+$purple_lighten_5: #f3e5f5
+$purple_lighten_4: #e1bee7
+$purple_lighten_3: #ce93d8
+$purple_lighten_2: #ba68c8
+$purple_lighten_1: #ab47bc
+$purple: #9c27b0
+$purple_darken_1: #8e24aa
+$purple_darken_2: #7b1fa2
+$purple_darken_3: #6a1b9a
+$purple_darken_4: #4a148c
+$purple_accent_1: #ea80fc
+$purple_accent_2: #e040fb
+$purple_accent_3: #d500f9
+$purple_accent_4: #aa00ff
+$deep_purple_lighten_5: #ede7f6
+$deep_purple_lighten_4: #d1c4e9
+$deep_purple_lighten_3: #b39ddb
+$deep_purple_lighten_2: #9575cd
+$deep_purple_lighten_1: #7e57c2
+$deep_purple: #673ab7
+$deep_purple_darken_1: #5e35b1
+$deep_purple_darken_2: #512da8
+$deep_purple_darken_3: #4527a0
+$deep_purple_darken_4: #311b92
+$deep_purple_accent_1: #b388ff
+$deep_purple_accent_2: #7c4dff
+$deep_purple_accent_3: #651fff
+$deep_purple_accent_4: #6200ea
+$indigo_lighten_5: #e8eaf6
+$indigo_lighten_4: #c5cae9
+$indigo_lighten_3: #9fa8da
+$indigo_lighten_2: #7986cb
+$indigo_lighten_1: #5c6bc0
+$indigo: #3f51b5
+$indigo_darken_1: #3949ab
+$indigo_darken_2: #303f9f
+$indigo_darken_3: #283593
+$indigo_darken_4: #1a237e
+$indigo_accent_1: #8c9eff
+$indigo_accent_2: #536dfe
+$indigo_accent_3: #3d5afe
+$indigo_accent_4: #304ffe
+$blue_lighten_5: #e3f2fd
+$blue_lighten_4: #bbdefb
+$blue_lighten_3: #90caf9
+$blue_lighten_2: #64b5f6
+$blue_lighten_1: #42a5f5
+$blue: #2196f3
+$blue_darken_1: #1e88e5
+$blue_darken_2: #1976d2
+$blue_darken_3: #1565c0
+$blue_darken_4: #0d47a1
+$blue_accent_1: #82b1ff
+$blue_accent_2: #448aff
+$blue_accent_3: #2979ff
+$blue_accent_4: #2962ff
+$light_blue_lighten_5: #e1f5fe
+$light_blue_lighten_4: #b3e5fc
+$light_blue_lighten_3: #81d4fa
+$light_blue_lighten_2: #4fc3f7
+$light_blue_lighten_1: #29b6f6
+$light_blue: #03a9f4
+$light_blue_darken_1: #039be5
+$light_blue_darken_2: #0288d1
+$light_blue_darken_3: #0277bd
+$light_blue_darken_4: #01579b
+$light_blue_accent_1: #80d8ff
+$light_blue_accent_2: #40c4ff
+$light_blue_accent_3: #00b0ff
+$light_blue_accent_4: #0091ea
+$cyan_lighten_5: #e0f7fa
+$cyan_lighten_4: #b2ebf2
+$cyan_lighten_3: #80deea
+$cyan_lighten_2: #4dd0e1
+$cyan_lighten_1: #26c6da
+$cyan: #00bcd4
+$cyan_darken_1: #00acc1
+$cyan_darken_2: #0097a7
+$cyan_darken_3: #00838f
+$cyan_darken_4: #006064
+$cyan_accent_1: #84ffff
+$cyan_accent_2: #18ffff
+$cyan_accent_3: #00e5ff
+$cyan_accent_4: #00b8d4
+$teal_lighten_5: #e0f2f1
+$teal_lighten_4: #b2dfdb
+$teal_lighten_3: #80cbc4
+$teal_lighten_2: #4db6ac
+$teal_lighten_1: #26a69a
+$teal: #009688
+$teal_darken_1: #00897b
+$teal_darken_2: #00796b
+$teal_darken_3: #00695c
+$teal_darken_4: #004d40
+$teal_accent_1: #a7ffeb
+$teal_accent_2: #64ffda
+$teal_accent_3: #1de9b6
+$teal_accent_4: #00bfa5
+$green_lighten_5: #e8f5e9
+$green_lighten_4: #c8e6c9
+$green_lighten_3: #a5d6a7
+$green_lighten_2: #81c784
+$green_lighten_1: #66bb6a
+$green: #4caf50
+$green_darken_1: #43a047
+$green_darken_2: #388e3c
+$green_darken_3: #2e7d32
+$green_darken_4: #1b5e20
+$green_accent_1: #b9f6ca
+$green_accent_2: #69f0ae
+$green_accent_3: #00e676
+$green_accent_4: #00c853
+$light_green_lighten_5: #f1f8e9
+$light_green_lighten_4: #dcedc8
+$light_green_lighten_3: #c5e1a5
+$light_green_lighten_2: #aed581
+$light_green_lighten_1: #9ccc65
+$light_green: #8bc34a
+$light_green_darken_1: #7cb342
+$light_green_darken_2: #689f38
+$light_green_darken_3: #558b2f
+$light_green_darken_4: #33691e
+$light_green_accent_1: #ccff90
+$light_green_accent_2: #b2ff59
+$light_green_accent_3: #76ff03
+$light_green_accent_4: #64dd17
+$lime_lighten_5: #f9fbe7
+$lime_lighten_4: #f0f4c3
+$lime_lighten_3: #e6ee9c
+$lime_lighten_2: #dce775
+$lime_lighten_1: #d4e157
+$lime: #cddc39
+$lime_darken_1: #c0ca33
+$lime_darken_2: #afb42b
+$lime_darken_3: #9e9d24
+$lime_darken_4: #827717
+$lime_accent_1: #f4ff81
+$lime_accent_2: #eeff41
+$lime_accent_3: #c6ff00
+$lime_accent_4: #aeea00
+$yellow_lighten_5: #fffde7
+$yellow_lighten_4: #fff9c4
+$yellow_lighten_3: #fff59d
+$yellow_lighten_2: #fff176
+$yellow_lighten_1: #ffee58
+$yellow: #ffeb3b
+$yellow_darken_1: #fdd835
+$yellow_darken_2: #fbc02d
+$yellow_darken_3: #f9a825
+$yellow_darken_4: #f57f17
+$yellow_accent_1: #ffff8d
+$yellow_accent_2: #ffff00
+$yellow_accent_3: #ffea00
+$yellow_accent_4: #ffd600
+$amber_lighten_5: #fff8e1
+$amber_lighten_4: #ffecb3
+$amber_lighten_3: #ffe082
+$amber_lighten_2: #ffd54f
+$amber_lighten_1: #ffca28
+$amber: #ffc107
+$amber_darken_1: #ffb300
+$amber_darken_2: #ffa000
+$amber_darken_3: #ff8f00
+$amber_darken_4: #ff6f00
+$amber_accent_1: #ffe57f
+$amber_accent_2: #ffd740
+$amber_accent_3: #ffc400
+$amber_accent_4: #ffab00
+$orange_lighten_5: #fff3e0
+$orange_lighten_4: #ffe0b2
+$orange_lighten_3: #ffcc80
+$orange_lighten_2: #ffb74d
+$orange_lighten_1: #ffa726
+$orange: #ff9800
+$orange_darken_1: #fb8c00
+$orange_darken_2: #f57c00
+$orange_darken_3: #ef6c00
+$orange_darken_4: #e65100
+$orange_accent_1: #ffd180
+$orange_accent_2: #ffab40
+$orange_accent_3: #ff9100
+$orange_accent_4: #ff6d00
+$deep_orange_lighten_5: #fbe9e7
+$deep_orange_lighten_4: #ffccbc
+$deep_orange_lighten_3: #ffab91
+$deep_orange_lighten_2: #ff8a65
+$deep_orange_lighten_1: #ff7043
+$deep_orange: #ff5722
+$deep_orange_darken_1: #f4511e
+$deep_orange_darken_2: #e64a19
+$deep_orange_darken_3: #d84315
+$deep_orange_darken_4: #bf360c
+$deep_orange_accent_1: #ff9e80
+$deep_orange_accent_2: #ff6e40
+$deep_orange_accent_3: #ff3d00
+$deep_orange_accent_4: #dd2c00
+$brown_lighten_5: #efebe9
+$brown_lighten_4: #d7ccc8
+$brown_lighten_3: #bcaaa4
+$brown_lighten_2: #a1887f
+$brown_lighten_1: #8d6e63
+$brown: #795548
+$brown_darken_1: #6d4c41
+$brown_darken_2: #5d4037
+$brown_darken_3: #4e342e
+$brown_darken_4: #3e2723
+$grey_lighten_5: #fafafa
+$grey_lighten_4: #f5f5f5
+$grey_lighten_3: #eeeeee
+$grey_lighten_2: #e0e0e0
+$grey_lighten_1: #bdbdbd
+$grey: #9e9e9e
+$grey_darken_1: #757575
+$grey_darken_2: #616161
+$grey_darken_3: #424242
+$grey_darken_4: #212121
+$blue_grey_lighten_5: #eceff1
+$blue_grey_lighten_4: #cfd8dc
+$blue_grey_lighten_3: #b0bec5
+$blue_grey_lighten_2: #90a4ae
+$blue_grey_lighten_1: #78909c
+$blue_grey: #607d8b
+$blue_grey_darken_1: #546e7a
+$blue_grey_darken_2: #455a64
+$blue_grey_darken_3: #37474f
+$blue_grey_darken_4: #263238
+
+$default_font_color: rgba(0, 0, 0, 0.8)
+
+$white: white
+$material_level00: $white
+$material_level01: #F8F8F8
+$material_level02: #F5F5F5
+$material_level03: #F0F0F0
+$material_level04: #E8E8E8
+$material_level05: #E0E0E0
+$grey01: #F5F5F5
+$grey02: #E0E0E0
+$grey03: #D3D3D3
+$grey04: #C0C0C0
+$grey05: #B0B0B0
+$grey06: #A0A0A0
+$grey07: #888888
+$grey08: #707070
+$grey09: #606060
+$grey10: #484848
+$grey11: #303030
+$grey12: #181818
+$black: black
+
+$alert: red
+$warning: #c8c364
+$attention: orange
+$components: #4e6eaa
+$fg_components: white
+$ok: #62d062
+
+$waves: rgba(200, 200, 200, 0.5)
+
+
+*
+    -webkit-box-sizing: border-box
+    -moz-box-sizing: border-box
+    box-sizing: border-box
+
+$width1: "screen and (min-width: 0) and (max-width: 301px)"
+$width2: "screen and (min-width: 300px) and (max-width: 601px)"
+$width3: "screen and (min-width: 600px) and (max-width: 901px)"
+$width4: "screen and (min-width: 900px) and (max-width: 1201px)"
+$width5: "screen and (min-width: 1200px) and (max-width: 1501px)"
+$width6: "screen and (min-width: 1500px) and (max-width: 1801px)"
+$width7: "screen and (min-width: 1800px) and (max-width: 2100px)"
+$width8: "screen and (min-width: 2100px)"
+
+$width2_col: "screen and (min-width: 300px)"
+$width3_col: "screen and (min-width: 600px)"
+$width4_col: "screen and (min-width: 900px)"
+$width5_col: "screen and (min-width: 1200px)"
+$width6_col: "screen and (min-width: 1500px)"
+$width7_col: "screen and (min-width: 1800px)"
+$width8_col: "screen and (min-width: 2100px)"
+
+.p-logo
+    float: left
+    @media #{$width1}
+        width: 70%
+        text-align: center
+        float: none
+        margin: auto
+    @media #{$width2}
+        width: 70%
+        text-align: center
+        float: none
+        margin: auto        
+    @media #{$width3}
+        width: 70%
+        text-align: center
+        float: none
+        margin: auto  
+
+.hidden_on_all_width, .hidden
+    display: none
+
+body
+    background-color: $grey_lighten_2
+    transition: background-color 1s
+    display: flex
+    min-height: 100vh
+    height: 100vh
+    flex-direction: column
+    padding-top: 64px
+    color: rgba(0, 0, 0, 0.8)
+    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif
+    &.p-lock
+        background-color: $grey_darken_3
+
+h1, h2, h3, h4, h5, h6
+    font-family: "Roboto Thin","Segoe UI Italic",-apple-system,BlinkMacSystemFont,Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif
+
+nav
+    width: 100%
+    background-color: $grey12
+    color: $material_level04
+    height: 64px
+
+main
+    flex: 1 0 auto
+
+hr
+    width: 100%
+    border: transparent
+    color: $components
+    border-bottom: 1px solid
+    margin: 20px 0 20px 0
+
+.card
+    h1, h2, h3, h4, h4, h5, h6
+        text-align: center
+        color: $components
+
+.link
+    cursor: pointer
+    &:hover
+        color: $attention
+
+#main-container
+    flex: 1 0 auto
+    height: 100%
+    overflow: auto
+    > h2
+        text-align: center
+
+.main-nav
+    position: fixed
+    z-index: 1005
+    top: 0
+    box-shadow: 0px 2px 5px black
+
+.masked_input, .p-monospace, .phanterpwa-monospace
+    font-family: Cousine
+    letter-spacing: -1px
+
+.background-empresa
+    background-image: url('/static/#{$app-version}/images/background.jpg')
+    width: 100%
+    min-height: 450px
+    height: 100%
+    background-size: 100% auto
+    background-position: center
+    @media #{$width1}
+        background-size: auto 100%
+        background-repeat: repeat
+    @media #{$width2}
+        background-size: auto 110%
+        background-repeat: repeat
+
+.container, .p-container, .phanterpwa-container
+    width: 70%
+    max-width: 1366px
+    margin: auto
+    @media #{$width1}
+        width: 95%
+    @media #{$width2}
+        width: 95%
+    @media #{$width3}
+        width: 90%
+    @media #{$width4}
+        width: 80%
+    @media #{$width5}
+        width: 80%
+    @media #{$width6}
+        width: 70%
+    @media #{$width7}
+        width: 70%
+    @media #{$width8}
+        width: 70%
+
+
+.phanterpwa-fixed-fulldisplay
+    position: fixed
+    height: 100%
+    width: 100%
+    top: 0
+    left: 0
+    background-color: rgba(0,0,0, 0.7)
+    z-index: 900
+
+.phanterpwa-centralizer-wrapper
+    display: table
+    height: 100%
+    width: 100%
+    margin: auto
+    .phanterpwa-centralizer-vertical
+        display: table-row
+        .phanterpwa-centralizer-horizontal
+            display: table-cell
+            vertical-align: middle
+            .phanterpwa-centralizer-center
+                text-align: center
+                position: relative
+
+.phanterpwa-container
+    .warnings-container
+        min-height: 429px
+        padding: 50px 20px
+        text-align: center
+        margin-bottom: 30px
+        .button-container
+            margin-top: 20px
+    .content-warnings
+        text-align: center
+        color: $alert
+        font-size: 2rem
+    .image-warnings-container
+        max-width: 256px
+        height: 227px
+        margin: auto
+        img
+            width: 100%
+
+.main-footer, .p-footer, .phanterpwa-footer
+    padding: 0
+    z-index: 1003
+    background-color: rgb(33, 33, 33)
+    padding-top: 20px
+    .footer-copyright
+        line-height: 3rem
+        background-color: rgb(66, 65, 65)
+        padding: 0 20px
+        a
+            text-decoration: none
+            color: $warning
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\components\alert_top_activation.sass */
+
+@import 'components/alert_top_activation'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\components\breascrumbs.sass */
+
+@import 'components/breascrumbs'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\components\buttons.sass */
+
+@import 'components/buttons'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\components\capcha_preload.sass */
+
+@import 'components/capcha_preload'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\components\captcha.sass */
+
+@import 'components/captcha'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\components\captcha_preload_image_3x4.sass */
+
+@import 'components/captcha_preload_image_3x4'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\components\card.sass */
+
+@import 'components/card'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\components\cmp_auth_user.sass */
+
+@import 'components/cmp_auth_user'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\components\datetimepicker.sass */
+
+@import 'components/datetimepicker'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\components\developer.sass */
+
+@import 'components/developer'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\components\easy.sass */
+
+@import 'components/easy'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\components\flash.sass */
+
+@import 'components/flash'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\components\forms.sass */
+
+@import 'components/forms'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\components\modal.sass */
+
+@import 'components/modal'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\components\modal_login.sass */
+
+@import 'components/modal_login'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\components\phanterpwa_gallery.sass */
+
+@import 'components/phanterpwa_gallery'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\components\phanterpwa_gallery_cutter.sass */
+
+@import 'components/phanterpwa_gallery_cutter'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\components\progressbar.sass */
+
+@import 'components/progressbar'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\components\pseudomodal.sass */
+
+@import 'components/pseudomodal'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\components\run_points.sass */
+
+@import 'components/run_points'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\components\sections.sass */
+
+@import 'components/sections'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\components\snippet.sass */
+
+@import 'components/snippet'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\components\widgets.sass */
+
+@import 'components/widgets'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\components\xtable.sass */
+
+@import 'components/xtable'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\display\grid.sass */
+
+@import 'display/grid'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\events\waves.sass */
+
+@import 'events/waves'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\extends\capcha_preload.sass */
+
+@import 'extends/capcha_preload'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\extends\logo.sass */
+
+@import 'extends/logo'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\extends\run_points.sass */
+
+@import 'extends/run_points'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\gates\componentes.sass */
+
+@import 'gates/componentes'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\gates\main.sass */
+
+@import 'gates/main'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\plugins\codemirror.sass */
+
+@import 'plugins/codemirror'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\preloaders\android.sass */
+
+@import 'preloaders/android'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\preloaders\discs.sass */
+
+@import 'preloaders/discs'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\preloaders\explosion.sass */
+
+@import 'preloaders/explosion'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\preloaders\run_points.sass */
+
+@import 'preloaders/run_points'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\preloaders\square.sass */
+
+@import 'preloaders/square'
+
+/* SASS Source Code: C:\virtualenv\py37\phanterpwadeveloper\lib\site-packages\phanterpwa\usual_sass\preloaders\squares.sass */
+
+@import 'preloaders/squares'
+

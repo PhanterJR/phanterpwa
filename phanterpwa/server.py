@@ -1,21 +1,16 @@
 import os
 import sys
 import importlib
-import logging
-from phanterpwa.tools import (
-    url_pattern_relative_paths,
-    interpolate
-)
+import subprocess
+import threading
+import psutil
 from tornado import (
     web,
     ioloop,
-    httpserver,
-    autoreload
+    httpserver
 )
 from phanterpwa import compiler
 from phanterpwa import configer
-
-
 
 CURRENT_DIR = os.path.join(os.path.dirname(__file__))
 
@@ -58,12 +53,6 @@ class PhanterPWATornado(object):
         c.compile()
 
     def run(self):
-        if self.oncli:
-            with open(os.path.join(CURRENT_DIR, "samples", "art_cli"), "r") as f:
-                logging.warning(f.read())
-        else:
-            with open(os.path.join(CURRENT_DIR, "samples", "art"), "r") as f:
-                logging.warning(f.read())
         sys.path.append(self.projectPath)
         os.chdir(self.projectPath)
         handlers_api = importlib.import_module("api.handlers")
@@ -106,6 +95,113 @@ class PhanterPWATornado(object):
             )
         )
         print("comando stop")
+
+
+class ProjectRunner():
+    def __init__(self):
+        self.path_phanterpwa = CURRENT_DIR
+        self.env_python = os.path.normpath(sys.executable)
+        self._projects_dict = {}
+
+    @property
+    def projects(self):
+        self._projects()
+        return self._projects_dict
+
+    def run(self, project_path, compile=False, thread=False):
+        if compile:
+            from phanterpwa import compiler
+            c = compiler.Compiler(project_path)
+            c.compile()
+        target = os.path.normpath(os.path.join(self.path_phanterpwa, "server.py {0}".format(project_path)))
+        self.stop(project_path)
+        command = " ".join([self.env_python, "-X utf8", target])
+        print()
+        print("=" * 79)
+        print("Starting server....")
+        cfg = configer.ProjectConfig(project_path)
+        print('API')
+        print("  HOST:", cfg['API']['host'])
+        print("  PORT:", cfg['API']['port'])
+        if cfg['APPS']:
+            print('APPS')
+            for a in cfg['APPS']:
+                print(" ", a)
+                print("    HOST:", cfg['APPS'][a]['host'])
+                print("    PORT:", cfg['APPS'][a]['port'])
+        print()
+        with open(os.path.join(self.path_phanterpwa, "samples", "art"), "r") as f:
+            print(f.read())
+        print()
+        print("=" * 79)
+        if thread:
+            t = threading.Thread(target=lambda: subprocess.call(command, cwd=project_path, shell=True))
+            t.start()
+            return t
+        else:
+            try:
+                subprocess.call(command, cwd=project_path, shell=True)
+            except KeyboardInterrupt:
+                self.stop(project_path)
+
+    def stop_all(self):
+        all_p = self.projects
+        for p in all_p:
+            for x in all_p[p]:
+                x.terminate()
+
+    def stop(self, project_path):
+        has_running = False
+        for x in self._project(project_path):
+            has_running = True
+            x.terminate()
+        self._projects()
+        if has_running:
+            print("=" * 79)
+            print("Stoping server....")
+            cfg = configer.ProjectConfig(project_path)
+            print('API')
+            print("  HOST:", cfg['API']['host'])
+            print("  PORT:", cfg['API']['port'])
+            if cfg['APPS']:
+                print('APPS')
+                for a in cfg['APPS']:
+                    print(" ", a)
+                    print("    HOST:", cfg['APPS'][a]['host'])
+                    print("    PORT:", cfg['APPS'][a]['port'])
+            print()
+            print("Goodbye!")
+
+    def check(self, project_path):
+        self._projects()
+        if project_path in self._projects_dict:
+            return True
+        else:
+            return False
+
+    def _project(self, project_path):
+        self._projects()
+        if project_path in self._projects_dict:
+            return self._projects_dict[project_path]
+        else:
+            return []
+
+    def _projects(self):
+        target = os.path.normpath(os.path.join(self.path_phanterpwa, "server.py"))
+        self._projects_dict = {}
+        for p in psutil.process_iter():
+            cmd_line = None
+            try:
+                cmd_line = p.cmdline()
+            except Exception:
+                pass
+            if cmd_line:
+                if self.env_python == cmd_line[0]:
+                    if len(cmd_line) > 1 and target in cmd_line:
+                        if cmd_line[-1] in self._projects_dict:
+                            self._projects_dict[cmd_line[-1]].append(p)
+                        else:
+                            self._projects_dict[cmd_line[-1]] = [p]
 
 
 if __name__ == "__main__":

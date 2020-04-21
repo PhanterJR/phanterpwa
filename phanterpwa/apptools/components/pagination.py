@@ -18,6 +18,7 @@ __pragma__('kwargs')
 
 class Pagination(object):
     """docstring for Pagination"""
+
     def __init__(self, target_element, **paramaters):
         self.target_element = jQuery(target_element)
         self._current_page = 1

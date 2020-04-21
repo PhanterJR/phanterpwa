@@ -1,29 +1,53 @@
+"""
+Title: XmlConstructor
+
+Author: PhanterJR<junior.conex@gmail.com>
+
+License: MIT
+
+Coding: utf-8
+
+Send emails
+"""
+
 import smtplib
 from pydal.validators import IS_EMAIL
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 
-class PhanterPWAMailSender(object):
-    """docstring for PhanterPWAMailSender"""
+class MailSender(object):
+    """
+    :param email_sender: Email used in sending
+    :param password_sender: Email password used when sending
+    :param email_receiver: Recipient email
+    :param subject: Email title
+    :param text_mensage: Plain text message
+    :param html_mensage: Html format message
+    :param alternative_sender: Reply email
+    :param server: Server address
+    :param port: Used port
+    :param use_tls: Used tls
+    :param use_ssl: Used ssl
+    """
 
     def __init__(
             self,
-            sender_email,
-            password_sender,
-            receiver_email,
-            subject="Test",
-            text_mensage="Test",
-            html_mensage="<html><b>Test</b></html>",
-            alternative_sender=None,
-            server='127.0.0.1',
-            port=25,
-            use_tls=False,
-            use_ssl=False):
-        super(PhanterPWAMailSender, self).__init__()
-        self.sender_email = sender_email
+            email_sender: str,
+            password_sender: str,
+            email_receiver: str,
+            subject: str="Test",
+            text_mensage: str="Test",
+            html_mensage: str="<html><b>Test</b></html>",
+            alternative_sender: (str, None)=None,
+            server: str='127.0.0.1',
+            port: int=25,
+            use_tls: bool=False,
+            use_ssl: bool=False):
+        super(MailSender, self).__init__()
+        self.email_sender = email_sender
         self.password_sender = password_sender
-        self.receiver_email = receiver_email
+        self.email_receiver = email_receiver
         self.subject = subject
         self.text_mensage = text_mensage
         self.html_mensage = html_mensage
@@ -34,34 +58,96 @@ class PhanterPWAMailSender(object):
         self.use_ssl = use_ssl
 
     @property
-    def sender_email(self):
-        return self._sender_email
+    def email_sender(self) -> str:
+        """Get ot Set the email sender.
 
-    @sender_email.setter
-    def sender_email(self, value):
+        :GET:
 
+            Get the email sender
+
+        :SET:
+            When adding an email, it is validated, if it is not a valid email it returns a ValueError
+
+        Example:
+            >>> my_instance = MailSender(
+            ...     "sender@email.com",
+            ...     "pass_sender",
+            ...     "receiver@email.com",
+            ...     "subject",
+            ...     "text_message",
+            ...     "<div>html_mesage<div>",
+            ... )
+            >>> print(my_instance.email_sender)
+            sender@email.com
+            >>> my_instance.email_sender = "new_email_valid@email.com"
+            >>> print(my_instance.email_sender)
+            new_email_valid@email.com
+            >>> my_instance.email_sender = "invalid_email"
+            Traceback:
+                ValueError: The sender mail is not valid mail. Given: invalid_email
+        """
+        return self._email_sender
+
+    @email_sender.setter
+    def email_sender(self, value: str):
         if IS_EMAIL()(value)[1] is None:
-            self._sender_email = value
+            self._email_sender = value
         else:
             raise ValueError("The sender mail is not valid mail. Given: {0}".format(value))
 
     @property
-    def receiver_email(self):
-        return self._receiver_email
+    def email_receiver(self) -> str:
+        """Get ot Set the email receiver.
 
-    @receiver_email.setter
-    def receiver_email(self, value):
+        :GET:
+
+            Get the email receiver
+
+        :SET:
+            When adding an email, it is validated, if it is not a valid email it returns a ValueError
+
+        Example:
+            >>> my_instance = MailSender(
+            ...     "sender@email.com",
+            ...     "pass_sender",
+            ...     "receiver@email.com",
+            ...     "subject",
+            ...     "text_message",
+            ...     "<div>html_mesage<div>",
+            ... )
+            >>> print(my_instance.email_receiver)
+            receiver@email.com
+            >>> my_instance.email_receiver = "new_email_valid@email.com"
+            >>> print(my_instance.email_sender)
+            new_email_valid@email.com
+            >>> my_instance.email_sender = "invalid_email"
+            Traceback:
+                ValueError: The receiver mail is not valid mail. Given: invalid_email
+        """
+        return self._email_receiver
+
+    @email_receiver.setter
+    def email_receiver(self, value: str):
         if IS_EMAIL()(value)[1] is None:
-            self._receiver_email = value
+            self._email_receiver = value
         else:
             raise ValueError("The receiver mail is not valid mail. Given: {0}".format(value))
 
     @property
-    def alternative_sender(self):
+    def alternative_sender(self) -> str:
+        """The alternative sender is optional, it is the reply email.
+        :GET:
+
+            Get the alternative sender
+
+        :SET:
+
+            When adding an email, it is validated, if it is not a valid email it returns a ValueError
+        """
         return self._alternative_sender
 
     @alternative_sender.setter
-    def alternative_sender(self, value):
+    def alternative_sender(self, value: str):
         if value is not None:
             if IS_EMAIL()(value)[1] is None:
                 self._alternative_sender = value
@@ -71,10 +157,12 @@ class PhanterPWAMailSender(object):
             self._alternative_sender = None
 
     def send(self):
+        """This method sends the email that was generated.
+        """
         message = MIMEMultipart("alternative")
         message["Subject"] = self.subject
-        message["From"] = self.alternative_sender or self.sender_email
-        message["To"] = self.receiver_email
+        message["From"] = self.alternative_sender or self.email_sender
+        message["To"] = self.email_receiver
         text = MIMEText(self.text_mensage, "plain")
         html = MIMEText(self.html_mensage, "html")
         message.attach(text)
@@ -86,7 +174,7 @@ class PhanterPWAMailSender(object):
         if self.use_tls:
             host.starttls()
 
-        host.login(self.sender_email, self.password_sender)
+        host.login(self.email_sender, self.password_sender)
         host.sendmail(
-            self.sender_email, self.receiver_email, message.as_string()
+            self.email_sender, self.email_receiver, message.as_string()
         )

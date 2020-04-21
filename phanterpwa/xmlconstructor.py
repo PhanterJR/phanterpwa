@@ -1,12 +1,26 @@
-# -*- coding: utf-8 -*-
+"""
+Title: XmlConstructor
+
+Author: PhanterJR<junior.conex@gmail.com>
+
+License: MIT
+
+Coding: utf-8
+
+XmlConstructor is for writing html using the python language. With it you can minify, save to file, sanitize,
+translate (i18n), generate python code from html, etc.
+"""
+
 from phanterpwa.tools import interpolate, sass_change_vars, sass_map_vars
-from phanterpwa.xss import xssescape
+from phanterpwa.third_parties.xss import xssescape
 from phanterpwa.i18n import Translator
 from xml.sax import saxutils
 import json
 from copy import copy
 import os
 import re
+
+__all__ = ["XmlConstructor"]
 
 XML_SAMPLE = '''class XML(XmlConstructor, XssCleaner):
     def __init__(self,
@@ -92,13 +106,19 @@ class FrozenAttributes(dict):
 
 
 class XmlConstructor(object):
-    r"""
-    @author: PhanterJR<junior.conex@gmail.com>
-    @license: MIT
+    r"""XmlConstructor is for writing html using the python language.
 
-    Helper to constroi html tags.
-    With this class you can create other predefined tags.
-    Example:
+    When instantiating we use the following parameters
+
+    :param tag: Name of tag. Example: div, img, br
+    :param void:  If True, the tag does not has content
+    :param content: Content of element. exemple: ``>>> XmlConstructor.tagger("this is", " my content")``
+    :param attributes: Element attributes. Each key of the attribute
+        must begin with underline (_) (because of the keyword class
+        and id), keys without underline will store on
+        yourInstance.kargs
+
+    Examples:
         >>> class DIV(XmlConstructor):
                 def __init__(self, *content, **attributes):
                     XmlConstructor.__init__(self,
@@ -109,78 +129,54 @@ class XmlConstructor(object):
         >>> print(DIV())
         <div></div>
 
-    Or you can (recommended). Using the tagger method you can create a
-    metaclass of class XmlConstructor.
+        Or you can (recommended). Using the tagger method you can create a
+        metaclass of class XmlConstructor.
 
-        >>> DIV = XmlConstructor.tagger("div")
-        >>> print(DIV())
-        <div></div>
-        >>> print(DIV("My content", _class="my_atribute_class"))
-        <div class="my_atribute_class">My content</div>
+            >>> DIV = XmlConstructor.tagger("div")
+            >>> print(DIV())
+            <div></div>
+            >>> print(DIV("My content", _class="my_atribute_class"))
+            <div class="my_atribute_class">My content</div>
 
-    IMPORTANT, Use the xml (or html) method to capture the results you
-    can see in the print command
+        IMPORTANT, Use the xml (or html) method to capture the results you
+        can see in the print command
 
-        >>> DIV = XmlConstructor.tagger("div")
-        >>> print(DIV("My content", _class="my_atribute_class"))
-        <div class="my_atribute_class">My content</div>
-        >>> DIV("My content", _class="my_atribute_class").xml()
-        '<div class="my_atribute_class">My content</div>'
-        >>> instanceDIV = DIV("My content", _class="my_atribute_class")
-        >>> instanceDIV.xml()
-        '<div class="my_atribute_class">My content</div>'
-        >>> print(instanceDIV)
-        <div class="my_atribute_class">My content</div>
-        >>> new_instance = DIV("line0", "\nline1")
-        >>> new_instance.xml()
-        '<div>line0\nline1</div>'
-        >>> print(new_instance)  # the print command convert "\n" to breaklines
-        <div>line0
-        line1</div>
+            >>> DIV = XmlConstructor.tagger("div")
+            >>> print(DIV("My content", _class="my_atribute_class"))
+            <div class="my_atribute_class">My content</div>
+            >>> DIV("My content", _class="my_atribute_class").xml()
+            '<div class="my_atribute_class">My content</div>'
+            >>> instanceDIV = DIV("My content", _class="my_atribute_class")
+            >>> instanceDIV.xml()
+            '<div class="my_atribute_class">My content</div>'
+            >>> print(instanceDIV)
+            <div class="my_atribute_class">My content</div>
+            >>> new_instance = DIV("line0", "\nline1")
+            >>> new_instance.xml()
+            '<div>line0\nline1</div>'
+            >>> print(new_instance)  # the print command convert "\n" to breaklines
+            <div>line0
+            line1</div>
 
-    We already have tags ready to use, no need to reinvent the wheel. In
-    the package module helpers of the phanterpwa package contains all
-    tags used for html5, just import with.
+        We already have tags ready to use, no need to reinvent the wheel. In
+        the package module helpers of the phanterpwa package contains all
+        tags used for html5, just import with.
 
-        >>> from phanterpwa.helpers import *
+            >>> from phanterpwa.helpers import *
 
-    Or just what you want.
+        Or just what you want.
 
-        >>> from phanterpwa.helpers import (HTML, HEAD, BODY, DIV, SPAN)
+            >>> from phanterpwa.helpers import (HTML, HEAD, BODY, DIV, SPAN)
 
-    The complete list can be obtained with.
+        The complete list can be obtained with.
 
-        >>> from phanterpwa.helpers import ALL_TAGS
-        >>> print (ALL_TAGS)
+            >>> from phanterpwa.helpers import ALL_TAGS
+            >>> print (ALL_TAGS)
 
-    There is also a separate list by categories: NORMAL_TAGS, VOID_TAGS,
-    and SPECIAL_TAGS.
-    """
-    __author__ = "PhanterJR<junior.conex@gmail.com>"
-    __license__ = "MIT"
-    _indent_size = 2
-    _all_instances = {}
-    _tag_list = []
-    _close_void = False
-    _minify = True
-    _interpolate = interpolate
+        There is also a separate list by categories: NORMAL_TAGS, VOID_TAGS,
+        and SPECIAL_TAGS.
 
-    def __init__(self, tag: str, void: bool=False, *content, **attributes):
-        """
-        Constructor of the class
-
-        Args:
-
-            @tag: Name of tag. Example: div, img, br.
-            @void: If True, the tag does not has content.
-            @content = Content of element. exemple:
-                >>> XmlConstructor.tagger("this is", " my content")
-            @attributes = Element attributes. Each key of the attribute
-            must begin with underline (_) (because of the keyword class
-            and id), keys without underline will store on
-            yourInstance.kargs
-
-        Examples with void is True.
+        Examples with **void** True/False
 
             >>> instenceBR = XmlConstructor.tagger("br", True)()
             <br>
@@ -189,28 +185,7 @@ class XmlConstructor(object):
             >>> print(XmlConstructor.tagger("img", True)(_href="#my_url"))
             <img href="#my_url">
 
-        Same example, with best practices, creating a metaclass with the
-        tagger method:
-
-            >>> BR = XmlConstructor.tagger("br", True)
-            >>> HR = XmlConstructor.tagger("hr", True)
-            >>> IMG = XmlConstructor.tagger("img", True)
-            >>> instanceBR = BR()
-            >>> print(instanceBR)
-            <br>
-            >>> instanceBR.close_void = True  # If True, the tag of void elements are closed with "/".
-            >>> print(instanceBR)
-            <br />
-            >>> instanceHR = HR(_class="especial_hr")
-            >>> print(instanceHR)  # This close_void uses a classmethod, so a change reflects on all instances
-            <hr class="especial_hr" />
-            >>> instanceBR.close_void = False
-            >>> print(instanceHR)  # The close_void is False
-            <hr class="especial_hr">
-            >>> print(IMG(_href="#my_url"))
-            <img href="#my_url">
-
-        if @void is False, the tag will be close tag:
+        if **void** is False, the tag will be close tag:
 
             >>> print(XmlConstructor.tagger("div")())
             <div></div>
@@ -237,7 +212,33 @@ class XmlConstructor(object):
             <img class="images">
             >>> print(BR())
             <br>
-        """
+            >>> HR = XmlConstructor.tagger("hr", True)
+            >>> instanceBR = BR()
+            >>> print(instanceBR)
+            <br>
+            >>> instanceBR.close_void = True  # If True, the tag of void elements are closed with "/".
+            >>> print(instanceBR)
+            <br />
+            >>> instanceHR = HR(_class="especial_hr")
+            >>> print(instanceHR)  # This close_void uses a classmethod, so a change reflects on all instances
+            <hr class="especial_hr" />
+            >>> instanceBR.close_void = False
+            >>> print(instanceHR)  # The close_void is False
+            <hr class="especial_hr">
+            >>> print(IMG(_href="#my_url"))
+            <img href="#my_url">
+
+    """
+    __author__ = "PhanterJR<junior.conex@gmail.com>"
+    __license__ = "MIT"
+    _indent_size = 2
+    _all_instances = {}
+    _tag_list = []
+    _close_void = False
+    _minify = True
+    _interpolate = interpolate
+
+    def __init__(self, tag: str, void: bool=False, *content, **attributes):
 
         super(XmlConstructor, self).__init__()
         self.alternative_tag = "empty_tag"
@@ -274,19 +275,18 @@ class XmlConstructor(object):
     @property
     def id(self) -> int:
         """
-        GET:
+        :GET:
 
             Get element id
 
-        Usage:
-
-            >>> UL = XmlConstructor.tagger("div")
-            >>> instanceUL = UL()
-            >>> other_instanceUL = UL()
-            >>> print(instanceUL.id)
-            32344567
-            >>> print(other_instanceUL.id)
-            234678454
+            Example:
+                >>> UL = XmlConstructor.tagger("div")
+                >>> instanceUL = UL()
+                >>> other_instanceUL = UL()
+                >>> print(instanceUL.id)
+                32344567
+                >>> print(other_instanceUL.id)
+                234678454
         """
 
         return id(self)
@@ -294,17 +294,16 @@ class XmlConstructor(object):
     @property
     def introspect(self):
         """
-        GET:
+        :GET:
 
             This property returns a representation of the instance, with
             the class, id, and tag information.
 
-        Example:
-
-            from phanterpwa.helpers import DIV
-            >>> instanceDIV = DIV()
-            >>> print(instanceDIV.introspect)
-            <class 'phanterpwa.xmlconstructor.XmlConstructor.tagger.<locals>.TAGGER'> {id: 46269904, tag: div}
+            Example:
+                >>> from phanterpwa.helpers import DIV
+                >>> instanceDIV = DIV()
+                >>> print(instanceDIV.introspect)
+                <class 'phanterpwa.xmlconstructor.XmlConstructor.tagger.<locals>.TAGGER'> {id: 46269904, tag: div}
         """
         str_repr = "{0} {{id: {1}, tag: {2}}}".format(self.__class__, self.id, self.tag)
         return str_repr
@@ -312,37 +311,35 @@ class XmlConstructor(object):
     @property
     def all_instances(self):
         """
-        GET:
+        :GET:
 
             This property returns a dict with all instances created
             The key is the id and the value is the instance
 
-        Example:
-
-            from phanterpwa.helpers import DIV, SPAN
-            >>> instanceDIV = DIV(SPAN() * 3)
-            >>> print(instanceDIV.all_instances)
-            {2384912: <class 'phanterpwa.xmlconstructor.XmlConstructor.tagger.<locals>.TAGGER'> {id: 2384912, tag: span},
-            47221040: <class 'phanterpwa.xmlconstructor.XmlConstructor.tagger.<locals>.TAGGER'> {id: 47221040, tag: span},
-            47221136: <class 'phanterpwa.xmlconstructor.XmlConstructor.tagger.<locals>.TAGGER'> {id: 47221136, tag: span},
-            2387280: <class 'phanterpwa.xmlconstructor.XmlConstructor.tagger.<locals>.TAGGER'> {id: 2387280, tag: div}
+            Example:
+                >>> from phanterpwa.helpers import DIV, SPAN
+                >>> instanceDIV = DIV(SPAN() * 3)
+                >>> print(instanceDIV.all_instances)
+                {2384912: <class 'phanterpwa.xmlconstructor.XmlConstructor.tagger.<locals>.TAGGER'> {id: 2384912, tag: span},
+                47221040: <class 'phanterpwa.xmlconstructor.XmlConstructor.tagger.<locals>.TAGGER'> {id: 47221040, tag: span},
+                47221136: <class 'phanterpwa.xmlconstructor.XmlConstructor.tagger.<locals>.TAGGER'> {id: 47221136, tag: span},
+                2387280: <class 'phanterpwa.xmlconstructor.XmlConstructor.tagger.<locals>.TAGGER'> {id: 2387280, tag: div}
         """
         return self._all_instances
 
     @property
     def tag_list(self) -> list:
         """
-        GET:
+        :GET:
 
             list all tags used in instance creation
 
-        Example:
-
-            >>> DIV = XmlConstructor.tagger("div")
-            >>> SPAN = XmlConstructor.tagger("span")
-            >>> instanceDIV = DIV(SPAN() * 3)
-            >>> print(instanceDIV.tag_list)
-            ['span', 'div']
+            Example:
+                >>> DIV = XmlConstructor.tagger("div")
+                >>> SPAN = XmlConstructor.tagger("span")
+                >>> instanceDIV = DIV(SPAN() * 3)
+                >>> print(instanceDIV.tag_list)
+                ['span', 'div']
         """
 
         return self._tag_list
@@ -357,27 +354,26 @@ class XmlConstructor(object):
         add a parent different, the list of copies is stored in this
         property.
 
-        GET:
+        :GET:
 
             Returns a set with all instances copied
 
-        Example:
+            Example:
+                >>> from phanterpwa.helpers import DIV, SPAN
+                >>> sourceInstance = SPAN("Is this the same instance? get id")
+                >>> containerDIV = DIV(sourceInstance, sourceInstance, sourceInstance)
+                >>> print(containerDIV)
+                <div><span>Is this the same instance? get id</span><span>Is this the same instance? get id</span><span>Is this the same instance? get id</span></div>
+                >>> sourceInstance.content = "changed!"
+                >>> print(containerDIV)
+                <div><span>changed!</span><span>Is this the same instance? get id</span><span>Is this the same instance? get id</span></div>
 
-            >>> from phanterpwa.helpers import DIV, SPAN
-            >>> sourceInstance = SPAN("Is this the same instance? get id")
-            >>> containerDIV = DIV(sourceInstance, sourceInstance, sourceInstance)
-            >>> print(containerDIV)
-            <div><span>Is this the same instance? get id</span><span>Is this the same instance? get id</span><span>Is this the same instance? get id</span></div>
-            >>> sourceInstance.content = "changed!"
-            >>> print(containerDIV)
-            <div><span>changed!</span><span>Is this the same instance? get id</span><span>Is this the same instance? get id</span></div>
+                If you want to access the copies just use this property (was_copied):
 
-        If you want to access the copies just use this property (was_copied):
-
-            >>> for x in sourceInstance.was_copied:
-                    x.content = "changed!"
-            >>> print(containerDIV)
-            <div><span>changed!</span><span>changed!</span><span>changed!</span></div>
+                >>> for x in sourceInstance.was_copied:
+                        x.content = "changed!"
+                >>> print(containerDIV)
+                <div><span>changed!</span><span>changed!</span><span>changed!</span></div>
 
         """
         return self._was_copied
@@ -388,24 +384,23 @@ class XmlConstructor(object):
         This property returns the main instance (root), in which the other
         instances are introduced.
 
-        GET:
+        :GET:
 
             returns the main instance (root)
 
-        Usage:
-
-            >>> DIV = XmlConstructor.tagger("div")
-            >>> SPAN = XmlConstructor.tagger("span")
-            >>> child_instance = DIV("I am a child")
-            >>> root_parent = DIV(SPAN(child_instance), SPAN())
-            >>> print(root_parent)  # the root_parent
-            <div><span><div>I am a child</div></span><span></span></div>
-            >>> print(child_instance)  # the child_instance
-            <div>I am a child</div>
-            >>> print(child_instance.parent)  # parent of child_instance
-            <span><div>I am a child</div></span>
-            >>> print(child_instance.root_parent)  # The root instance called from child instance
-            <div><span><div>I am a child</div></span><span></span></div>
+            Example:
+                >>> DIV = XmlConstructor.tagger("div")
+                >>> SPAN = XmlConstructor.tagger("span")
+                >>> child_instance = DIV("I am a child")
+                >>> root_parent = DIV(SPAN(child_instance), SPAN())
+                >>> print(root_parent)  # the root_parent
+                <div><span><div>I am a child</div></span><span></span></div>
+                >>> print(child_instance)  # the child_instance
+                <div>I am a child</div>
+                >>> print(child_instance.parent)  # parent of child_instance
+                <span><div>I am a child</div></span>
+                >>> print(child_instance.root_parent)  # The root instance called from child instance
+                <div><span><div>I am a child</div></span><span></span></div>
 
         """
         if self.parent is None:
@@ -421,22 +416,21 @@ class XmlConstructor(object):
         This property returns the parent of the instance.
         If the instance is main element (root), it returns None
 
-        GET:
+        :GET:
 
             Returns the parent of the instance.
 
-        Usage:
-
-            >>> DIV = XmlConstructor.tagger("div")
-            >>> SPAN = XmlConstructor.tagger("span")
-            >>> child_instance = DIV("I am a child")
-            >>> root_parent = DIV(SPAN(child_instance), SPAN())
-            >>> print(root_parent)  # the root_parent
-            <div><span><div>I am a child</div></span><span></span></div>
-            >>> print(child_instance)  # the child_instance
-            <div>I am a child</div>
-            >>> print(child_instance.parent)  # parent of child_instance (SPAN)
-            <span><div>I am a child</div></span>
+            Example:
+                >>> DIV = XmlConstructor.tagger("div")
+                >>> SPAN = XmlConstructor.tagger("span")
+                >>> child_instance = DIV("I am a child")
+                >>> root_parent = DIV(SPAN(child_instance), SPAN())
+                >>> print(root_parent)  # the root_parent
+                <div><span><div>I am a child</div></span><span></span></div>
+                >>> print(child_instance)  # the child_instance
+                <div>I am a child</div>
+                >>> print(child_instance.parent)  # parent of child_instance (SPAN)
+                <span><div>I am a child</div></span>
 
         """
         return self._parent
@@ -444,19 +438,18 @@ class XmlConstructor(object):
     @property
     def tag_begin(self) -> str:
         """
-        GET
+        :GET:
 
             Get begin tag.
 
-        Example:
-
-            >>> DIV = XmlConstructor.tagger('div', False)
-            >>> instance_element = DIV()
-            >>> print(instance_element)
-            <div class="my_class" id="my_id"></div>
-            >>> instance_element.attributes = {"_class": "my_class", "_id": "my_id"}
-            >>> print(instance_element.tag_begin)
-            <div class="my_class" id="my_id">
+            Example:
+                >>> DIV = XmlConstructor.tagger('div', False)
+                >>> instance_element = DIV()
+                >>> print(instance_element)
+                <div class="my_class" id="my_id"></div>
+                >>> instance_element.attributes = {"_class": "my_class", "_id": "my_id"}
+                >>> print(instance_element.tag_begin)
+                <div class="my_class" id="my_id">
         """
         self._tag_begin = self._tag_begin_cmp(self.close_void)
         return self._tag_begin
@@ -464,22 +457,20 @@ class XmlConstructor(object):
     @property
     def tag_end(self) -> str:
         """
-        GET:
+        :GET:
 
             Get end tag.
 
-        Example:
-
-            >>> DIV = XmlConstructor.tagger('div', False)
-            >>> instance_element = DIV()
-            >>> instance_element.attributes = {"_class": "my_class", "_id": "my_id"}
-            >>> print(instance_element.tag_end)
-            '</div>'
-            >>> HR = XmlConstructor.tagger('hr', True)
-            >>> instance_element = HR()
-            >>> print(instance_element.tag_end)
-
-            >>>
+            Example:
+                >>> DIV = XmlConstructor.tagger('div', False)
+                >>> instance_element = DIV()
+                >>> instance_element.attributes = {"_class": "my_class", "_id": "my_id"}
+                >>> print(instance_element.tag_end)
+                '</div>'
+                >>> HR = XmlConstructor.tagger('hr', True)
+                >>> instance_element = HR()
+                >>> print(instance_element.tag_end)
+                >>>
         """
         if self._tag and not self.void:
             self._tag_end = "</{0}>".format(self.tag)
@@ -493,19 +484,18 @@ class XmlConstructor(object):
         With the xml_content property you can view the generated xml of
         the elements that are in the content of the main element.
 
-        GET:
+        :GET:
 
             gets xml generated from content elements
 
-        Usage:
-
-            >>> DIV = XmlConstructor.tagger("div")
-            >>> SPAN = XmlConstructor.tagger("span")
-            >>> html = DIV(SPAN(DIV()), SPAN())
-            >>> print(html)
-            <div><span><div></div></span><span></span></div>
-            >>> print(html.xml_content) # Only the xml of the elements contained in the root element
-            <span><div></div></span><span></span>
+            Example:
+                >>> DIV = XmlConstructor.tagger("div")
+                >>> SPAN = XmlConstructor.tagger("span")
+                >>> html = DIV(SPAN(DIV()), SPAN())
+                >>> print(html)
+                <div><span><div></div></span><span></span></div>
+                >>> print(html.xml_content) # Only the xml of the elements contained in the root element
+                <span><div></div></span><span></span>
         """
         if self.minify:
             self._xml_content = self._minified_content(
@@ -532,16 +522,15 @@ class XmlConstructor(object):
         With the xml_attributes property you can view the generated
          string of the attribute from element.
 
-        GET:
+        :GET:
 
             gets string generated from element
 
-        Usage:
-
-            >>> DIV = XmlConstructor.tagger("div")
-            >>> instanceDIV = DIV(_id="my_id", _class="my_class")
-            >>> print(instanceDIV.xml_attributes)
-            id="my_id" class="my_class"
+            Example:
+                >>> DIV = XmlConstructor.tagger("div")
+                >>> instanceDIV = DIV(_id="my_id", _class="my_class")
+                >>> print(instanceDIV.xml_attributes)
+                id="my_id" class="my_class"
         """
         self.attributes = self._attributes
         return self._xml_attributes
@@ -552,23 +541,21 @@ class XmlConstructor(object):
         With the xml_humanized_content property you can view the
         generated string of the content from element indented.
 
-        GET:
+        :GET:
 
             gets string indented of the content from element
 
-        Usage:
-
-            >>> DIV = XmlConstructor.tagger("div")
-            >>> SPAN = XmlConstructor.tagger("div")
-            >>> instanceDIV = DIV(SPAN("My content"), DIV("Other content"))
-            >>> print(instanceDIV.xml_humanized_content)
-
-              <span>
-                My content
-              </span>
-              <div>
-                Other content
-              </div>
+            Example:
+                >>> DIV = XmlConstructor.tagger("div")
+                >>> SPAN = XmlConstructor.tagger("div")
+                >>> instanceDIV = DIV(SPAN("My content"), DIV("Other content"))
+                >>> print(instanceDIV.xml_humanized_content)
+                  <span>
+                    My content
+                  </span>
+                  <div>
+                    Other content
+                  </div>
         """
         self._xml_humanized_content = self._humanized_content(
             indent_size=self.indent_size,
@@ -583,23 +570,22 @@ class XmlConstructor(object):
     @property
     def all_children(self) -> dict:
         """
-        GET:
+        :GET:
 
             Returns a dict with all direct and indirect children, the
             keys are the index and the value is the instance.
             This option only affects the instance to which it is
             applied.
 
-        Example:
-
-            >>> from phanterpwa import (DIV, SPAN, A, BUTTON)
-            >>> instanceDIV = DIV(SPAN(A(BUTTON("the direct parent is button"))))
-            >>> for x in instanceDIV.all_children:
-                    print('index:', x, '- xml:', instanceDIV.all_children[x])
-            index: [0] - xml: <span><a><button>the direct parent is button</button></a></span>
-            index: [0][0] - xml: <a><button>the direct parent is button</button></a>
-            index: [0][0][0] - xml: <button>the direct parent is button</button>
-            index: [0][0][0][0] - xml: the direct parent is button
+            Example:
+                >>> from phanterpwa.helpers import (DIV, SPAN, A, BUTTON)
+                >>> instanceDIV = DIV(SPAN(A(BUTTON("the direct parent is button"))))
+                >>> for x in instanceDIV.all_children:
+                        print('index:', x, '- xml:', instanceDIV.all_children[x])
+                index: [0] - xml: <span><a><button>the direct parent is button</button></a></span>
+                index: [0][0] - xml: <a><button>the direct parent is button</button></a>
+                index: [0][0][0] - xml: <button>the direct parent is button</button>
+                index: [0][0][0][0] - xml: the direct parent is button
         """
         self._all_children = {}
         idx = 0
@@ -622,31 +608,31 @@ class XmlConstructor(object):
     @property
     def tag(self) -> str:
         """
-        GET:
+        :GET:
 
             Get the tag name of instance
 
-        SET:
+            Example:
+                >>> DIV = XmlConstructor.tagger('div')
+                >>> instanceDIV = DIV()
+                >>> print(instanceDIV.tag)
+                div
+
+        :SET:
 
             Set the tag of element
-            @tag_name: Name of tag
 
-        Example GET:
+            :Parameter:
+                - **tag_name** - Name of tag
 
-            >>> DIV = XmlConstructor.tagger('div')
-            >>> instanceDIV = DIV()
-            >>> print(instanceDIV.tag)
-            div
-
-        Example SET:
-
-            >>> DIV = XmlConstructor.tagger('div')
-            >>> my_instance = DIV()
-            >>> print(my_instance)
-            <div></div>
-            >>> my_instance.tag = 'button'
-            >>> print(my_instance)
-            <button></button>
+            Example:
+                >>> DIV = XmlConstructor.tagger('div')
+                >>> my_instance = DIV()
+                >>> print(my_instance)
+                <div></div>
+                >>> my_instance.tag = 'button'
+                >>> print(my_instance)
+                <button></button>
 
         """
         return self._tag
@@ -669,52 +655,50 @@ class XmlConstructor(object):
         possible to set this.
         This property can be set by using the tagger method.
 
-        GET:
+        :GET:
 
             Get the void parameter
 
-        SET:
+            Example:
+                >>> my_instance = XmlConstructor.tagger("button")() # The default is False
+                >>> print(my_instance.void)
+                False
+
+        :SET:
 
             Set a void parameter.
             So by setting the void parameter False, automatically the
             close_void parameter will also be set to False.
-            @value: True or False to set if element is void or not.
 
-        Example GET:
+            :Parameter:
+                - **value** - True or False to set if element is void or not.
 
-            >>> my_instance = XmlConstructor.tagger("button")() # The default is False
-            >>> print(my_instance.void)
-            False
+            Example (True) using the tagger method:
+                >>> my_instance = XmlConstructor.tagger("br", void=True)()
+                >>> print(my_instance)
+                <br>
+                >>> my_instance = XmlConstructor.tagger("hr", True)()
+                >>> print(my_instance)
+                <hr>
 
-        Example SET (True) using the tagger method:
+            Example (False) using the tagger method:
+                >>> my_instance = XmlConstructor.tagger("div")()
+                >>> print(my_instance)
+                <div></div>
+                >>> my_instance = XmlConstructor.tagger("h1", False)
+                >>> print(my_instance("My title"))
+                <h1>My title</h1>
 
-            >>> my_instance = XmlConstructor.tagger("br", void=True)()
-            >>> print(my_instance)
-            <br>
-            >>> my_instance = XmlConstructor.tagger("hr", True)()
-            >>> print(my_instance)
-            <hr>
-
-        Example SET (Set False) using the tagger method:
-
-            >>> my_instance = XmlConstructor.tagger("div")()
-            >>> print(my_instance)
-            <div></div>
-            >>> my_instance = XmlConstructor.tagger("h1", False)
-            >>> print(my_instance("My title"))
-            <h1>My title</h1>
-
-        Example SET change instance:
-
-            >>> my_instance = XmlConstructor.tagger("mypersonal_tag")()
-            >>> print(my_instance)
-            <mypersonal_tag></mypersonal_tag>
-            >>> my_instance.void = True
-            >>> print(my_instance)
-            <mypersonal_tag>
-            >>> my_instance.void = False
-            >>> print(my_instance)
-            <mypersonal_tag></mypersonal_tag>
+            :Example change instance:
+                >>> my_instance = XmlConstructor.tagger("mypersonal_tag")()
+                >>> print(my_instance)
+                <mypersonal_tag></mypersonal_tag>
+                >>> my_instance.void = True
+                >>> print(my_instance)
+                <mypersonal_tag>
+                >>> my_instance.void = False
+                >>> print(my_instance)
+                <mypersonal_tag></mypersonal_tag>
         """
         return self._void
 
@@ -733,62 +717,61 @@ class XmlConstructor(object):
         if you are writing a html legacy (xhtml) with this property you
         can configure the closing of the tag.
 
-        GET:
+        :GET:
 
             Get the close_void parameter
 
-        SET:
+            Example:
+                >>> my_instance = XmlConstructor.tagger("meta", void=True)(_charset="utf-8")
+                >>> print(my_instance)
+                <meta charset="utf-8">
+                >>> print(my_instance.close_void)
+                False
+
+        :SET:
 
             Set a close_void parameter
             The change is only effective if the void parameter is also True.
-            @value: True or False to set if the void element is closed or not
 
-        Example GET:
+            :Parameter:
+                - **value** - True or False to set if the void element is closed or not
 
-            >>> my_instance = XmlConstructor.tagger("meta", void=True)(_charset="utf-8")
-            >>> print(my_instance)
-            <meta charset="utf-8">
-            >>> print(my_instance.close_void)
-            False
 
-        Example SET (Set False) using the tagger method:
+            Example (False) using the tagger method:
+                >>> my_instance = XmlConstructor.tagger("hr", void=True)  # The default is False
+                >>> print(my_instance().close_void)
+                False
+                >>> print(my_instance())
+                <hr>
 
-            >>> my_instance = XmlConstructor.tagger("hr", void=True)  # The default is False
-            >>> print(my_instance().close_void)
-            False
-            >>> print(my_instance())
-            <hr>
+            Example (True) using the tagger method:
+                >>> my_instance = XmlConstructor.tagger("div", void=False)()
+                >>> print(my_instance.close_void)  # Is False because the void is False
+                False
+                >>> print(my_instance())
+                <div></div>
+                >>> my_instance = XmlConstructor.tagger("br", void=True)()
+                >>> my_instance.close_void = True
+                >>> print(my_instance)
+                <br />
+                >>> my_instance2 = XmlConstructor.tagger("hr", True, True)()
+                >>> my_instance.attributes = {"_class": "has_class"}
+                >>> print(my_instance)
+                <hr class="has_class" />
 
-        Example SET (True) using the tagger method:
-
-            >>> my_instance = XmlConstructor.tagger("div", void=False)()
-            >>> print(my_instance.close_void)  # Is False because the void is False
-            False
-            >>> print(my_instance())
-            <div></div>
-            >>> my_instance = XmlConstructor.tagger("br", void=True)()
-            >>> my_instance.close_void = True
-            >>> print(my_instance)
-            <br />
-            >>> my_instance2 = XmlConstructor.tagger("hr", True, True)()
-            >>> my_instance.attributes = {"_class": "has_class"}
-            >>> print(my_instance)
-            <hr class="has_class" />
-
-        Example SET change instance:
-
-            >>> my_instance = XmlConstructor.tagger("hr")()
-            >>> print(my_instance)
-            <hr></hr>
-            >>> my_instance.close_void = True
-            >>> print(my_instance)  # The change is only effective if the void parameter is also True
-            <hr></hr>
-            >>> my_instance.void = False
-            >>> print(my_instance)
-            <hr />
-            >>> my_instance.close_void = False
-            >>> print(my_instance)
-            <hr>
+            Example change instance:
+                >>> my_instance = XmlConstructor.tagger("hr")()
+                >>> print(my_instance)
+                <hr></hr>
+                >>> my_instance.close_void = True
+                >>> print(my_instance)  # The change is only effective if the void parameter is also True
+                <hr></hr>
+                >>> my_instance.void = False
+                >>> print(my_instance)
+                <hr />
+                >>> my_instance.close_void = False
+                >>> print(my_instance)
+                <hr>
         """
         return XmlConstructor.get_close_void()
 
@@ -808,40 +791,41 @@ class XmlConstructor(object):
         By changing an attribute of the Class the change reflects in all
         instances.
 
-        GET:
+        :GET:
 
             Get the minify parameter. (default is True)
 
-        SET:
+        :SET:
+            Set the minify parameter.
 
-            Set the minify parameter. (True or False)
+            :Parameter:
+                - **value** - True or False
 
-        Example:
-
-        >>> from phanterpwa.helpers import DIV
-        >>> instanceDIV = DIV(DIV("content", _id="id_child"), _id="id_parent", _class="my_div")
-        >>> otherInstanceDIV = DIV("other_instance", _id="id_other")
-        >>> print(otherInstanceDIV.minify)
-        True
-        >>> print(instanceDIV.minify)
-        True
-        >>> print(instanceDIV)
-        <div id="id_parent" class="my_div"><div id="id_child">content</div></div>
-        >>> print(otherInstanceDIV)
-        <div id="id_other">other_instance</div>
-        >>> instanceDIV.minify = False  # change minify from instanceDIV
-        >>> print(otherInstanceDIV.minify)  # reflects in all instances
-        False
-        >>> print(instanceDIV)
-        <div id="id_parent" class="my_div">
-          <div id="id_child">
-            content
-          </div>
-        </div>
-        >>> print(otherInstanceDIV)
-        <div id="id_other">
-          other_instance
-        </div>
+            Example:
+                >>> from phanterpwa.helpers import DIV
+                >>> instanceDIV = DIV(DIV("content", _id="id_child"), _id="id_parent", _class="my_div")
+                >>> otherInstanceDIV = DIV("other_instance", _id="id_other")
+                >>> print(otherInstanceDIV.minify)
+                True
+                >>> print(instanceDIV.minify)
+                True
+                >>> print(instanceDIV)
+                <div id="id_parent" class="my_div"><div id="id_child">content</div></div>
+                >>> print(otherInstanceDIV)
+                <div id="id_other">other_instance</div>
+                >>> instanceDIV.minify = False  # change minify from instanceDIV
+                >>> print(otherInstanceDIV.minify)  # reflects in all instances
+                False
+                >>> print(instanceDIV)
+                <div id="id_parent" class="my_div">
+                  <div id="id_child">
+                    content
+                  </div>
+                </div>
+                >>> print(otherInstanceDIV)
+                <div id="id_other">
+                  other_instance
+                </div>
         """
         return XmlConstructor.get_minify()
 
@@ -857,11 +841,16 @@ class XmlConstructor(object):
     @property
     def indent_size(self) -> int:
         """
-        GET:
+        :GET:
 
             Get current indentation of the class
 
-        SET:
+            Example:
+                >>> DIV = XmlConstructor.tagger("div")
+                >>> DIV.indent_size
+                2
+
+        :SET:
 
             Set the indentation of the xml method when the minification
             (minify attribute) is False and also the indentation of the
@@ -869,45 +858,34 @@ class XmlConstructor(object):
             This property uses a classmethod, so a change reflects on
             all instances.
 
-            @size: indentation size (2 is default).
+            :Parameter:
+                - **size** - indentation size (2 is default, type int).
 
-        GET usage:
-
-            >>> DIV = XmlConstructor.tagger("div")
-            >>> DIV.indent_size
-            2
-
-        SET usage:
-
-            >>> DIV = XmlConstructor.tagger("div")
-            >>> DIV.indent_size = 4 #  default is 2
-
-        SET example:
-
-            >>> DIV = XmlConstructor.tagger("div")
-            >>> instanceDIV = DIV("my content", _id="my_id")
-            >>> otherInstance = DIV("my other content", _id="my_other_id")
-            >>> print(instanceDIV)
-            <div id="my_id">my content</div>
-            >>> print(otherInstance)
-            <div id="my_other_id">my other content</div>
-            >>> instanceDIV.minify = False # minify is classmethod, this reflect all instances
-            >>> print(instanceDIV)
-            <div id="my_id">
-              my content
-            </div>
-            >>> print(otherInstance)
-            <div id="my_other_id">
-              my other content
-            </div>
-            >>> otherInstance.indent_size = 4  # indent_size is classmethod, this reflect all instances
-            >>> print(instanceDIV)
-            <div id="my_id">
-                my content
-            </div>
-            >>> instanceDIV.minify = True
-            >>> print(otherInstance) # the indent_size is effective if the minify parameter is False
-            <div id="my_other_id">my other content</div>
+            Example:
+                >>> DIV = XmlConstructor.tagger("div")
+                >>> instanceDIV = DIV("my content", _id="my_id")
+                >>> otherInstance = DIV("my other content", _id="my_other_id")
+                >>> print(instanceDIV)
+                <div id="my_id">my content</div>
+                >>> print(otherInstance)
+                <div id="my_other_id">my other content</div>
+                >>> instanceDIV.minify = False # minify is classmethod, this reflect all instances
+                >>> print(instanceDIV)
+                <div id="my_id">
+                  my content
+                </div>
+                >>> print(otherInstance)
+                <div id="my_other_id">
+                  my other content
+                </div>
+                >>> otherInstance.indent_size = 4  # indent_size is classmethod, this reflect all instances
+                >>> print(instanceDIV)
+                <div id="my_id">
+                    my content
+                </div>
+                >>> instanceDIV.minify = True
+                >>> print(otherInstance) # the indent_size is effective if the minify parameter is False
+                <div id="my_other_id">my other content</div>
         """
         return XmlConstructor.get_indent_size()
 
@@ -923,26 +901,27 @@ class XmlConstructor(object):
         setting this property to False strings will no longer be
         escaped.
 
-        GET:
+        :GET:
 
             Get current setting (default is True)
 
-        SET:
+        :SET:
 
             Set the setting to True or False
-            @value: True or False
+            
+            :Parameter:
+                - **value** - True or False
 
-        Example:
-
-            >>> from phanterpwa import SPAN, DIV
-            >>> instanceSPAN = SPAN("<evil>I will destroy you.</evil>")
-            >>> print(instanceSPAN)
-            <span>&lt;evil&gt;I will destroy you.&lt;/evil&gt;</span>
-            >>> instanceSPAN.escape_string=False
-            >>> print(instanceSPAN)
-            <span><evil>I will destroy you.</evil></span>
-            >>> print(DIV("<other_evil>", instanceSPAN, "</other_evil>"))
-            <div>&lt;other_evil&gt;<span><evil>I will destroy you.</evil></span>&lt;/other_evil&gt;</div>
+            Example:
+                >>> from phanterpwa.helpers import SPAN, DIV
+                >>> instanceSPAN = SPAN("<evil>I will destroy you.</evil>")
+                >>> print(instanceSPAN)
+                <span>&lt;evil&gt;I will destroy you.&lt;/evil&gt;</span>
+                >>> instanceSPAN.escape_string=False
+                >>> print(instanceSPAN)
+                <span><evil>I will destroy you.</evil></span>
+                >>> print(DIV("<other_evil>", instanceSPAN, "</other_evil>"))
+                <div>&lt;other_evil&gt;<span><evil>I will destroy you.</evil></span>&lt;/other_evil&gt;</div>
         """
         return self._escape_string
 
@@ -961,59 +940,59 @@ class XmlConstructor(object):
         In some cases it is necessary to have containers without a tag,
         but a tag is necessary for the methods mentioned (source_code and children_indexes).
 
-        GET:
+        :GET:
 
             Get alternative tag. By default the tag name is used if no new name is defined.
             If in the metaclass definition the tag is not assigned, the name "empty_tag" is used by default
 
-        SET:
+            Example:
+
+                >>> DIV = XmlConstructor.tagger('div')
+                >>> instanceDIV = DIV()
+                >>> print(instanceDIV.alternative_tag)
+                div
+                >>> METACLASS_WITHOUT_TAG = XmlConstructor.tagger('')
+                >>> instanceEmptyTag = METACLASS_WITHOUT_TAG("content")
+                >>> print(instanceEmptyTag.alternative_tag)
+                empty_tag
+                >>> print(instanceEmptyTag.source_code())
+                EMPTY_TAG(
+                    'content'
+                )
+                >>> print(instanceEmptyTag.children_indexes())
+                [ROOT_PARENT]<empty_tag> {}
+                    [0]"content"
+                }
+
+        :SET:
 
             Set the alternative tag of element
-            @tag_name: Name of tag
 
-        Example GET:
+            :Parameter:
+                - **tag_name** - Name of tag (type: str)
 
-            >>> DIV = XmlConstructor.tagger('div')
-            >>> instanceDIV = DIV()
-            >>> print(instanceDIV.alternative_tag)
-            div
-            >>> METACLASS_WITHOUT_TAG = XmlConstructor.tagger('')
-            >>> instanceEmptyTag = METACLASS_WITHOUT_TAG("content")
-            >>> print(instanceEmptyTag.alternative_tag)
-            empty_tag
-            >>> print(instanceEmptyTag.source_code())
-            EMPTY_TAG(
-                'content'
-            )
-            >>> print(instanceEmptyTag.children_indexes())
-            [ROOT_PARENT]<empty_tag> {}
-                [0]"content"
-            }
-
-
-        Example SET:
-
-            >>> METACLASS_WITHOUT_TAG = XmlConstructor.tagger('')
-            >>> instanceEmptyTag = METACLASS_WITHOUT_TAG("content")
-            >>> print(instanceEmptyTag.alternative_tag)
-            empty_tag
-            >>> print(instanceEmptyTag.source_code())
-            EMPTY_TAG(
-                'content'
-            )
-            >>> print(instanceEmptyTag.children_indexes())
-            [ROOT_PARENT]<empty_tag> {}
-                [0]"content"
-            }
-            >>> instanceEmptyTag.alternative_tag = "new_alternative_name_to_tag"
-            >>> print(instanceEmptyTag.source_code())
-            NEW_ALTERNATIVE_NAME_TO_TAG(
-                'content'
-            )
-            >>> print(instanceEmptyTag.children_indexes())
-            [ROOT_PARENT]<new_alternative_name_to_tag> {}
-                [0]"content"
-            }
+            Example:
+                >>> METACLASS_WITHOUT_TAG = XmlConstructor.tagger('')
+                >>> instanceEmptyTag = METACLASS_WITHOUT_TAG("content")
+                >>> print(instanceEmptyTag.alternative_tag)
+                empty_tag
+                >>> print(instanceEmptyTag.source_code())
+                EMPTY_TAG(
+                    'content'
+                )
+                >>> print(instanceEmptyTag.children_indexes())
+                [ROOT_PARENT]<empty_tag> {}
+                    [0]"content"
+                }
+                >>> instanceEmptyTag.alternative_tag = "new_alternative_name_to_tag"
+                >>> print(instanceEmptyTag.source_code())
+                NEW_ALTERNATIVE_NAME_TO_TAG(
+                    'content'
+                )
+                >>> print(instanceEmptyTag.children_indexes())
+                [ROOT_PARENT]<new_alternative_name_to_tag> {}
+                    [0]"content"
+                }
         """
         return self._alternative_tag
 
@@ -1028,24 +1007,25 @@ class XmlConstructor(object):
         generated xml, such as opening a comment, this is possible with
         this property
 
-        GET:
+        :GET:
 
             Get before_xml
 
-        SET:
+        :SET:
 
             Set a string to be inserted before the generated xml.
-            @value: string to be insert
+            
+            :Parameter:
+                - **value** - string to be insert
 
         Examples:
-
             >>> HTML = XmlConstructor.tagger('html')
             >>> P = XmlConstructor.tagger('p')
             >>> my_comment = P("My comment")
             >>> print(my_comment)
             <p>My comment</p>
             >>> print(my_comment.before_xml) # The default is empty
-
+            
             >>> my_comment.before_xml = '<!--This is a comment.-->' #  Set a value in before_xml
             >>> my_comment.before_xml
             <!--This is a comment.-->
@@ -1071,17 +1051,18 @@ class XmlConstructor(object):
         generated html, such as closing a comment, this is possible with
         this property.
 
-        GET:
+        :GET:
 
             Get after_xml
 
-        SET:
+        :SET:
 
             Set a string to be inserted after the generated xml.
-            @value: string to be insert
+            
+            :Parameter:
+                - **value** - string to be insert
 
         Examples:
-
             >>> HTML = XmlConstructor.tagger('html')
             >>> P = XmlConstructor.tagger('p')
             >>> is_comment = P("This is a comment")
@@ -1090,7 +1071,7 @@ class XmlConstructor(object):
             >>> print(html)
             <html><p>This is a comment</p><p>This is not a comment</p></html>
             >>> print(is_comment.after_xml) # The default is empty
-
+            
             >>> is_comment.before_xml = '<!--'
             >>> is_comment.after_xml = '-->' #  Set a value in after_xml
             >>> print(is_comment.after_xml)
@@ -1121,40 +1102,37 @@ class XmlConstructor(object):
         You can also add a function that returns any of the types
         mentioned above.
 
-        GET:
+        :GET:
 
             Gets a FrozenConten(tuple) with all elements
 
-        SET:
+            Example:
+                >>> DIV = XmlConstructor.tagger("div")
+                >>> Instance = DIV("This", "is", DIV("content")) # Set is triggered when the element is instantiated
+                >>> print(Instance)
+                <div>Thisis<div>content</div></div>
+                >>> print(Instance.content)
+                ('This', 'is', <class 'phanterpwa.xmlconstructor.XmlConstructor.tagger.
+                <locals>.TAGGER'> {id: 14811344, tag: div})
+
+        :SET:
 
             Adds new elements to the content. In it, String, Other
             instances (XmlConstructor), List, Tuple and Set are accepted.
             You can also add a dict, but it will be treated by the
             attributes of the parent instance.
-            @contents: Elements to be added of type String, Other
-                XmlConstructor instances or insterable objects of the
-                type List, Tuple and Set (dict in special case).
 
+            :Parameter:
 
-        Example GET:
+                - **contents** - Elements to be added of type String, Other XmlConstructor instances or insterable objects of the type List, Tuple and Set (dict in special case).
 
-            >>> DIV = XmlConstructor.tagger("div")
-            >>> Instance = DIV("This", "is", DIV("content")) # Set is triggered when the element is instantiated
-            >>> print(Instance)
-            <div>Thisis<div>content</div></div>
-            >>> print(Instance.content)
-            ('This', 'is', <class 'phanterpwa.xmlconstructor.XmlConstructor.tagger.
-            <locals>.TAGGER'> {id: 14811344, tag: div})
-
-        Example SET, String:
-
+        Example (String):
             >>> instanceDIV = XmlConstructor.tagger("div")()
             >>> instanceDIV.content = "my new content"
             >>> print(instanceDIV)
             <div>my new content</div>
 
-        Example SET, XmlConstructor instance:
-
+        Example (XmlConstructor instance):
             >>> DIV = XmlConstructor.tagger("div")
             >>> STRONG = XmlConstructor.tagger("strong")
             >>> instanceDIV = DIV()
@@ -1164,8 +1142,7 @@ class XmlConstructor(object):
             >>> print(instanceDIV)
             <div><a href="#my_url">click <strong>here</strong></a></div>
 
-        Example SET, using interable (List, Tuple, Set):
-
+        Example using interable (List, Tuple, Set):
             >>> DIV = XmlConstructor.tagger("div")
             >>> SPAN = XmlConstructor.tagger("span")
             >>> HR = XmlConstructor.tagger("hr", True)
@@ -1207,16 +1184,14 @@ class XmlConstructor(object):
               final string
             </div>
 
-        Example SET, function:
-
+        Example using function:
             >>> DIV = XmlConstructor.tagger("div")
             >>> SPAN = XmlConstructor.tagger("span")
             >>> instanceDIV.content = lambda: (SPAN("span * 3") * 3) + DIV("plus")
             >>> print(instanceDIV)
             <div><span>span * 3</span><span>span * 3</span><span>span * 3</span><div>plus</div></div>
 
-        Example SET, special case, using dict:
-
+        Example using dict (special case):
             >>> DIV = XmlConstructor.tagger("div")
             >>> instanceDIV1 = DIV("content")
             >>> instanceDIV1.content = dict(_id="my_id")
@@ -1252,11 +1227,17 @@ class XmlConstructor(object):
         example), keys that do not start with underline are stored in
         the Kargs attribute.
 
-        GET:
+        :GET:
 
             Returns an instance of FrozenAttributes (dict)
 
-        SET:
+            Example:
+                >>> instanceDIV = XmlConstructor.tagger('div')
+                >>> instanceDIV.attributes = {"_class": "my_class", "_id": "my_id"}
+                >>> instanceDIV.attributes
+                {"_class": "my_class", "_id": "my_id"}
+
+        :SET:
 
             To add attributes it is recommended to use a dict, when a
             string is used a dict is created with the string as key and
@@ -1265,57 +1246,48 @@ class XmlConstructor(object):
             are ignored. If True is assigned, it will be an attribute
             with no content. With a function you can add values that
             would normally be ignored or modified.
-            @attrs: Attributes to be added in the instance, can be a
-            dict or string in special case.
 
-        Example GET:
+            :Parameter:
+                - **attrs** - Attributes to be added in the instance, can be a dict or string in special case.
 
-            >>> instanceDIV = XmlConstructor.tagger('div')
-            >>> instanceDIV.attributes = {"_class": "my_class", "_id": "my_id"}
-            >>> instanceDIV.attributes
-            {"_class": "my_class", "_id": "my_id"}
+            Example string:
+                >>> BUTTON = XmlConstructor.tagger('button')
+                >>> instanceBUTTON = BUTTON("Disabled Button")
+                >>> instanceBUTTON.attributes = 'disabled'
+                >>> print(instanceBUTTON)
+                <button disabled>Disabled Button</button>
 
-        Example SET string:
+            Example dict:
+                Each key of the attribute must begin with underline (_)
+                (because of the keyword class and id), keys without underline
+                will store in Kargs attribute.
 
-            >>> BUTTON = XmlConstructor.tagger('button')
-            >>> instanceBUTTON = BUTTON("Disabled Button")
-            >>> instanceBUTTON.attributes = 'disabled'
-            >>> print(instanceBUTTON)
-            <button disabled>Disabled Button</button>
+                >>> DIV = XmlConstructor.tagger('div')
+                >>> instanceDIV = DIV("My Content", _class="this will be replaced", go_to_kargs="go_to_kargs")
+                >>> instanceDIV.attributes = {"_class": "my_class", "_id": "my_id"}
+                >>> print(instanceDIV)
+                <div class="my_class" id="my_id">My Content</div>
 
-        Example SET dict:
-
-            Each key of the attribute must begin with underline (_)
-            (because of the keyword class and id), keys without underline
-            will store in Kargs attribute.
-
-            >>> DIV = XmlConstructor.tagger('div')
-            >>> instanceDIV = DIV("My Content", _class="this will be replaced", go_to_kargs="go_to_kargs")
-            >>> instanceDIV.attributes = {"_class": "my_class", "_id": "my_id"}
-            >>> print(instanceDIV)
-            <div class="my_class" id="my_id">My Content</div>
-
-        Example SET dict, value None, False, True and Function:
-
-            >>> DIV = XmlConstructor.tagger("div")
-            >>> SPAN = XmlConstructor.tagger("span")
-            >>> instanceDIV = DIV(_class="my_class", _underline="_underline", without_underline="without_underline")
-            >>> print(instanceDIV)
-            <div class="my_class" underline="_underline"></div>
-            >>> print(instanceDIV.attributes)
-            {'_class': 'my_class', '_underline': '_underline'}
-            >>> print(instanceDIV.kargs)
-            {'without_underline': 'without_underline'}
-            >>> instanceDIV.attributes = {"_teste": lambda: "false"}
-            >>> print(instanceDIV)
-            <div teste=false></div>
-            >>> print(instanceDIV.attributes)
-            {'_teste': <function <lambda> at 0x02CD7858>}
-            >>> instanceDIV = DIV(_id="my_class", _bye=None, _class=False)
-            >>> print(instanceDIV)
-            <div id="my_class"></div>
-            >>> print(instanceDIV.attributes)
-            {'_id': 'my_class'}
+            Example dict, value None, False, True and Function:
+                >>> DIV = XmlConstructor.tagger("div")
+                >>> SPAN = XmlConstructor.tagger("span")
+                >>> instanceDIV = DIV(_class="my_class", _underline="_underline", without_underline="without_underline")
+                >>> print(instanceDIV)
+                <div class="my_class" underline="_underline"></div>
+                >>> print(instanceDIV.attributes)
+                {'_class': 'my_class', '_underline': '_underline'}
+                >>> print(instanceDIV.kargs)
+                {'without_underline': 'without_underline'}
+                >>> instanceDIV.attributes = {"_teste": lambda: "false"}
+                >>> print(instanceDIV)
+                <div teste=false></div>
+                >>> print(instanceDIV.attributes)
+                {'_teste': <function <lambda> at 0x02CD7858>}
+                >>> instanceDIV = DIV(_id="my_class", _bye=None, _class=False)
+                >>> print(instanceDIV)
+                <div id="my_class"></div>
+                >>> print(instanceDIV.attributes)
+                {'_id': 'my_class'}
         """
         return FrozenAttributes(self._attributes)
 
@@ -1366,84 +1338,84 @@ class XmlConstructor(object):
         This property affects the souce_code method, You can put 3 values,
         None for automatic, False for disabled, and True for enabled.
 
-        GET:
+        :GET:
 
             Gets the current state of this property. None is default
 
-        SET:
+            Example:
+                >>> DIV = XmlConstructor.tagger("div")
+                >>> instanceDIV = DIV()
+                >>> instanceDIV.src_attr_dict
+                None
+
+        :SET:
 
             Sets the value for this property
-            @value: Sets here None, True or False
+
+            :Parameter:
+                - **value** - Sets here None, True or False
+
             In html, the elements attribute keys accept the minus
             character (-) in their name, in python no, we can
             define the attributes using arguments when
             instantiating, but this character can not be used, so
             we use a dict to get around the problem.
 
-        Example GET
-
-            >>> DIV = XmlConstructor.tagger("div")
-            >>> instanceDIV = DIV()
-            >>> instanceDIV.src_attr_dict
-            None
-
-        Example SET, None (default).
-
-            >>> from phanterpwa.helpers import (DIV, HR, SPAN)
-            >>> instanceDIV = DIV(HR(), SPAN(_class="the valid karg"))
-            >>> instanceDIV.attributes = {"_invalid-attr-in-karg": "the_key_is_valis_in_html5"}
-            >>> print(instanceDIV.source_code())
-            DIV(
-                HR(
-                ),
-                SPAN(
-                    _class='the valid karg'
-                ),
-                **{
-                    '_invalid-attr-in-karg': 'the_key_is_valis_in_html5'
-                }
-            )
-
-        Note that in the DIV element a dictionary was used to add
-        the attributes and in the SPAN element an argument.
-
-        Example SET, True
-
-            >>> from phanterpwa.helpers import (DIV, HR, SPAN)
-            >>> instanceDIV = DIV(HR(), SPAN(_class="the valid karg"))
-            >>> instanceDIV.attributes = {"_invalid-attr-in-karg": "the_key_is_valis_in_html5"}
-            >>> print(instanceDIV.source_code())
-            DIV(
-                HR(
-                ),
-                SPAN(
+            Example None (default):
+                >>> from phanterpwa.helpers import (DIV, HR, SPAN)
+                >>> instanceDIV = DIV(HR(), SPAN(_class="the valid karg"))
+                >>> instanceDIV.attributes = {"_invalid-attr-in-karg": "the_key_is_valis_in_html5"}
+                >>> print(instanceDIV.source_code())
+                DIV(
+                    HR(
+                    ),
+                    SPAN(
+                        _class='the valid karg'
+                    ),
                     **{
-                        '_class': 'the valid karg'
+                        '_invalid-attr-in-karg': 'the_key_is_valis_in_html5'
                     }
-                ),
-                **{
-                    '_invalid-attr-in-karg': 'the_key_is_valis_in_html5'
-                }
-            )
+                )
+                >>>
 
-        Note that in all elements a dictionary was used to add the
-        attributes.
+            Note that in the DIV element a dictionary was used to add
+            the attributes and in the SPAN element an argument.
 
-        Example SET, False (Not recommended)
+            Example True:
+                >>> from phanterpwa.helpers import (DIV, HR, SPAN)
+                >>> instanceDIV = DIV(HR(), SPAN(_class="the valid karg"))
+                >>> instanceDIV.attributes = {"_invalid-attr-in-karg": "the_key_is_valis_in_html5"}
+                >>> print(instanceDIV.source_code())
+                DIV(
+                    HR(
+                    ),
+                    SPAN(
+                        **{
+                            '_class': 'the valid karg'
+                        }
+                    ),
+                    **{
+                        '_invalid-attr-in-karg': 'the_key_is_valis_in_html5'
+                    }
+                )
 
-            >>> from phanterpwa.helpers import (DIV, HR, SPAN)
-            >>> instanceDIV = DIV(HR(), SPAN(_class="the valid karg"))
-            >>> instanceDIV.attributes = {"_invalid-attr-in-karg": "the_key_is_valis_in_html5"}
-            >>> print(instanceDIV.source_code())
-            Traceback (most recent call last):
-              ...
-            ValueError: The argument name is invalid, given: _invalid-attr-in-karg
+            Note that in all elements a dictionary was used to add the
+            attributes.
+            Example False (Not recommended):
 
-        It generates an error because the '_invalid-attr-in-karg' value
-        can not be used as argument name in python.
-        This option should only be used when you are sure that the keys
-        of the html attributes are values that can be used as name
-        identifier.
+                >>> from phanterpwa.helpers import (DIV, HR, SPAN)
+                >>> instanceDIV = DIV(HR(), SPAN(_class="the valid karg"))
+                >>> instanceDIV.attributes = {"_invalid-attr-in-karg": "the_key_is_valis_in_html5"}
+                >>> print(instanceDIV.source_code())
+                Traceback (most recent call last):
+                  ...
+                ValueError: The argument name is invalid, given: _invalid-attr-in-karg
+
+            It generates an error because the '_invalid-attr-in-karg' value
+            can not be used as argument name in python.
+            This option should only be used when you are sure that the keys
+            of the html attributes are values that can be used as name
+            identifier.
         """
         return self._src_attr_dict
 
@@ -1463,17 +1435,18 @@ class XmlConstructor(object):
         For more details see the documentation for the i18n method and
         the dictionary and tag_translation properties.
 
-        GET:
+        :GET:
 
             Get the current phanterpwa.i18n.Translator instance
 
-        SET:
+        :SET:
 
             Set the instance of object phanterpwa.i18n.Translator
-            @value: Instance of phanterpwa.i18n.Translator object
+            
+            :Parameter:
+                - **value** - Instance of phanterpwa.i18n.Translator object
 
         Example:
-
             >>> from phanterpwa.helpers import DIV, P
             >>> from phanterpwa.i18n import Translator
             >>> instanceDIV = DIV(P("Monkey"))
@@ -1529,18 +1502,19 @@ class XmlConstructor(object):
         For more details read the documentation on the i18n method and
         dictionary and i18nInstance properties.
 
-        GET:
+        :GET:
 
             get current tag. (default is "span")
 
-        SET:
+        :SET:
 
             Set a new tag_translation. When you set a new valid tag name
             the dictionary property is automatically changed to None.
-            @value: new tag name
+            
+            :Parameter:
+                - **value** - new tag name
 
         Example:
-
             >>> from phanterpwa.helpers import DIV, P
             >>> from phanterpwa.i18n import Translator
             >>> i18nMyInstance = Translator("path_of_languages", debug=True)
@@ -1622,18 +1596,19 @@ class XmlConstructor(object):
         For more details read the documentation on the i18n method and
         tag_translation and i18nInstance properties.
 
-        GET:
+        :GET:
 
             Set the current dictionary. (default is None)
 
-        SET:
+        :SET:
 
             Set a dictionary. When setting a dictionary the
             tag_translation property automatically changes to None.
-            @value: dictionary name
+            
+            :Parameter:
+                - **value** - dictionary name
 
         Example:
-
             >>> from phanterpwa.helpers import DIV, P
             >>> from phanterpwa.i18n import Translator
             >>> instanceDIV = DIV(P("The book is on the table"))
@@ -1688,17 +1663,18 @@ class XmlConstructor(object):
         phanterpwa.i18n.Translator on i18nInstance and a valid parameter
         in the tag_translation or dictionary property.
 
-        GET:
+        :GET:
 
             Get the current list string. (default is empty list [])
 
-        SET:
+        :SET:
 
             Set the list string that should be ignored.
-            @value: list string
+            
+            :Parameter:
+                - **value** - list string
 
         Example:
-
             >>> from phanterpwa.helpers import DIV, P
             >>> from phanterpwa.i18n import Translator
             >>> instanceDIV = DIV(P("The colors ", " Blue ", "and", " Green ", "are not translated."))
@@ -1772,18 +1748,19 @@ class XmlConstructor(object):
         """
         This property changes the delimiters of the formatter method.
 
-        GET:
+        :GET:
 
             returns the current pair of delimiters.
 
-        SET:
+        :SET:
 
             For a new pair of delimiters two strings are required in a list or
             tuple, the left string will be the left delimiter and vice versa.
-            @value: Pair of de delimiters.
+            
+            :Parameter:
+                - **value** - Pair of de delimiters.
 
         Example:
-
             >>> from phanterpwa.helpers import DIV
             >>> instanceDIV = DIV("{{Change_this}} or not ", "[[change]]")
             >>> print(instanceDIV)
@@ -1812,26 +1789,25 @@ class XmlConstructor(object):
     @property
     def formatter_list_keys(self):
         """
-        GET:
+        :GET:
 
             This property lists all the keys in the generated xml that are within
             the delimiters (see the delimiters property documentation), keys can be
             converted to values with the formatter method (see the formatter
             documentation too)
 
-        Example:
-
-            >>> from phanterpwa.helpers import DIV, SPAN, A
-            >>> instanceDIV = DIV(
-                    SPAN(
-                        "This is value one: {{value-one}}",
-                        "{this is ignored}"
-                    ),
-                    A("{{message_link}}", _href="{{attr_indefined}}"),
-                    SPAN("I want repeat: {{repeat}} {{repeat}} {{repeat}}.")
-                )
-            >>> print(instanceDIV.formatter_list_keys)
-            ['value-one', 'message_link', 'attr_indefined', 'repeat']
+            Example:
+                >>> from phanterpwa.helpers import DIV, SPAN, A
+                >>> instanceDIV = DIV(
+                        SPAN(
+                            "This is value one: {{value-one}}",
+                            "{this is ignored}"
+                        ),
+                        A("{{message_link}}", _href="{{attr_indefined}}"),
+                        SPAN("I want repeat: {{repeat}} {{repeat}} {{repeat}}.")
+                    )
+                >>> print(instanceDIV.formatter_list_keys)
+                ['value-one', 'message_link', 'attr_indefined', 'repeat']
         """
         e = self.xml()
         r = "".join([re.escape(self.delimiters[0]), r"([_a-zA-Z][\w-]+)", re.escape(self.delimiters[1])])
@@ -1850,19 +1826,20 @@ class XmlConstructor(object):
         target is detected in the sass_file method the change reflects in its
         content.
 
-        GET:
+        :GET:
             You can view the variables contained in the sass file applied in the
             sass_file method.
 
-        SET:
+        :SET:
             You can change the values of the variables contained in the sass
             file applied in the sass_file method
-            @value: Dictionary with keys referencing variables and values
-                changing current value.
+            
+            :Parameter:
+                - **value** - Dictionary with keys referencing variables and values changing current value.
 
         Examples:
-
             Consider the sass file (my_sass.sass) with the following content:
+            ::
                 '''
                 $COLOR: red
                 $CONTAINERWIDTH: 60px
@@ -1882,6 +1859,7 @@ class XmlConstructor(object):
                       border-radius: $BORDERRADIUS
 
                 '''
+
             >>> from phanterpwa.helpers import DIV
             >>> instanceDIV = DIV(DIV(DIV(_class="other_square"), _class="my_square"), _class="example_container")
             >>> instanceDIV.sass_file("my_sass.sass")
@@ -1911,6 +1889,7 @@ class XmlConstructor(object):
                   width: 100%
                   height: 100%
                   border-radius: $BORDERRADIUS
+            >>>
         """
         if self._sass:
             self._sass_vars = sass_map_vars(self._sass)
@@ -1941,7 +1920,7 @@ class XmlConstructor(object):
     @property
     def sass(self):
         """
-        GET:
+        :GET:
             With this property you can view the current sass applied to the
             sass_file method.
         """
@@ -1954,19 +1933,18 @@ class XmlConstructor(object):
         file_name: "path of sass file",
         variables: dict=None,
         target: "path of target file"=None) -> str:
-        """
-        With this method it is possible to associate a file sass to the
+        """With this method it is possible to associate a file sass to the
         instance, so with the method css can be generated a minified or not with
         the associated sass. You can also change the values of the variables in
         the code read from the sass file.
-        @file_name: sass file
-        @variables: Dictionary with the name of the variables and the new values.
-            (Default is None)
-        @target: defines a file to which the generated content will be saved.
+
+        :param file_name: sass file
+        :param variables: Dictionary with the name of the variables and the new values. (Default is None)
+        :param target: defines a file to which the generated content will be saved.
 
         Example:
-
             Consider the sass file (my_sass.sass) with the following content:
+            ::
                 '''
                 $COLOR: red
                 $CONTAINERWIDTH: 60px
@@ -1986,6 +1964,7 @@ class XmlConstructor(object):
                       border-radius: $BORDERRADIUS
 
                 '''
+
             >>> from phanterpwa.helpers import DIV
             >>> instanceDIV = DIV(DIV(DIV(_class="other_square"), _class="my_square"), _class="example_container")
             >>> print(instanceDIV.sass_file("my_sass.sass"))
@@ -2056,14 +2035,15 @@ class XmlConstructor(object):
             raise IOError("The file not exist. Given: {0}".format(file_name))
 
     def css(self, minify=True, target=None):
-        """
-        After defining a sass file in the sass method, a css can be generated
+        """After defining a sass file in the sass method, a css can be generated
         with this method.
-        @minify: With minify active css will be minified.
-        @target: defines a file to which the generated content will be saved.
+
+        :param minify: With minify active css will be minified.
+        :param target: defines a file to which the generated content will be saved.
 
         Example:
             Consider the sass file (my_sass.sass) with the following content:
+            ::
                 '''
                 $COLOR: red
                 $CONTAINERWIDTH: 60px
@@ -2074,7 +2054,7 @@ class XmlConstructor(object):
                     box-sizing: border-box
                   .my_square
                     display: inline-block
-                    position: relative
+                   position: relative
                     width: $CONTAINERWIDTH
                     height: $CONTAINERHEIGHT
                     .other_square
@@ -2082,6 +2062,7 @@ class XmlConstructor(object):
                       height: 100%
                       border-radius: $BORDERRADIUS
                 '''
+
             >>> from phanterpwa.helpers import DIV
             >>> instanceDIV = DIV(DIV(DIV(_class="other_square"), _class="my_square"), _class="example_container")
             >>> instanceDIV.sass_file("my_sass.sass")
@@ -2089,19 +2070,18 @@ class XmlConstructor(object):
             .example_container * {
               box-sizing: border-box;
             }
-
             .example_container .my_square {
               display: inline-block;
               position: relative;
               width: 60px;
               height: 60px;
             }
-
             .example_container .my_square .other_square {
               width: 100%;
               height: 100%;
               border-radius: 100%;
             }
+            >>>
         """
 
         self._minify_css = minify
@@ -2129,19 +2109,15 @@ class XmlConstructor(object):
             raise SyntaxError("A sass file must be defined in the sass method to use this property.")
 
     def formatter(self, value=None, **kvalue):
-        """
-        This method uses the format method used in strings, it is applied over
+        """This method uses the format method used in strings, it is applied over
         the xml generated in the xml and humanized methods. The difference with
         the format method is that it accepts as its first argument a dictionary
         or a series of arguments with identifiers (kargs).
 
-            @value: Dictionary with the identifier to be found with their
-            respective values.
-            @Kvalue: Arguments with their respective identifiers and
-            values.
+        :param value: Dictionary with the identifier to be found with their respective values.
+        :param Kvalue: Arguments with their respective identifiers and values.
 
         Example:
-
             >>> from phanterpwa.helpers import DIV, SPAN, A
             >>> instanceDIV = DIV(
                     SPAN(
@@ -2185,52 +2161,52 @@ class XmlConstructor(object):
               </span>
             </div>
 
-        The value-one name cannot be used as an argument identifier, so a
-        dictionary was used to pass the arguments, it is possible to merge,
-        see:
-            >>> instanceDIV.formatter(
-                    {"value-one": "1", "this is ignored": "is it works?"},
-                    repeat="Ha",
-                    message_link="click here!",
-                    attr_indefined="http://localhost"
-                )
-            >>> print(instanceDIV.humanize())
-            <div>
-              <span>
-                This is value one&#58; 1
-                {this is ignored}
-              </span>
-              <a href="http://localhost">
-                click here!
-              </a>
-              <span>
-                I want repeat&#58; Ha Ha Ha.
-              </span>
-            </div>
+            The value-one name cannot be used as an argument identifier, so a
+            dictionary was used to pass the arguments, it is possible to merge,
+            see:
+                >>> instanceDIV.formatter(
+                        {"value-one": "1", "this is ignored": "is it works?"},
+                        repeat="Ha",
+                        message_link="click here!",
+                        attr_indefined="http://localhost"
+                    )
+                >>> print(instanceDIV.humanize())
+                <div>
+                  <span>
+                    This is value one&#58; 1
+                    {this is ignored}
+                  </span>
+                  <a href="http://localhost">
+                    click here!
+                  </a>
+                  <span>
+                    I want repeat&#58; Ha Ha Ha.
+                  </span>
+                </div>
+                >>>
 
-        Or you can put it all in one dictionary and unpack with **. Note that in
-        the first example the dictionary was passed as the first argument.
-
-            >>> instanceDIV.formatter(**{
-                    "value-one": "1",
-                    "repeat": "Ha",
-                    "message_link": "click here!",
-                    "attr_indefined": "http://localhost",
-                    "this is ignored": "is it works?"
-                })
-            >>> print(instanceDIV.humanize())
-            <div>
-              <span>
-                This is value one&#58; 1
-                {this is ignored}
-              </span>
-              <a href="http://localhost">
-                click here!
-              </a>
-              <span>
-                I want repeat&#58; Ha Ha Ha.
-              </span>
-            </div>
+            Or you can put it all in one dictionary and unpack with ``**``. Note that in
+            the first example the dictionary was passed as the first argument:
+                >>> instanceDIV.formatter(**{
+                        "value-one": "1",
+                        "repeat": "Ha",
+                        "message_link": "click here!",
+                        "attr_indefined": "http://localhost",
+                        "this is ignored": "is it works?"
+                    })
+                >>> print(instanceDIV.humanize())
+                <div>
+                  <span>
+                    This is value one&#58; 1
+                    {this is ignored}
+                  </span>
+                  <a href="http://localhost">
+                    click here!
+                  </a>
+                  <span>
+                    I want repeat&#58; Ha Ha Ha.
+                  </span>
+                </div>
         """
         if value:
             if isinstance(value, dict):
@@ -2253,7 +2229,6 @@ class XmlConstructor(object):
         easily access each element.
 
         Example:
-
             >>> from phanterpwa.helpers import (HTML, HEAD, META, TITLE, BODY, MAIN, XML, FOOTER)
             >>> instanceHTML = HTML(
                 HEAD(
@@ -2328,8 +2303,7 @@ class XmlConstructor(object):
         phanterpwa_helpers: bool=False,
         instance_name: str="html",
         translate: bool=False) -> str:
-        """
-        With this method it is possible to generate static source code
+        """With this method it is possible to generate static source code
         of the instance, it is useful to reverse engineer when used in
         conjunction with the HtmlToXmlConstructor object located in the
         reversexml module of the phanterpwa package. Another advantage
@@ -2339,18 +2313,15 @@ class XmlConstructor(object):
         It is important to read the documentation of the src_attr_dict
         property.
 
-        Args:
-
-            @add_imports: add necessary imports in code This arguments
+        :param add_imports: add necessary imports in code This arguments
             will take effect if add_imports is true.
-            @phanterpwa_helpers: user phanter.helpers import.
-            @instance_name: The generated code is assigned to a variable
+        :param phanterpwa_helpers: user phanter.helpers import.
+        :param instance_name: The generated code is assigned to a variable
             with the name assigned here.
-            @translate: If True, the generated source_code strings will
+        :param translate: If True, the generated source_code strings will
             be translated.
 
         Examples:
-
             >>> from phanterpwa.helpers import (DIV, HR, SPAN)
             >>> instanceDIV = DIV(XML("<strong>not escape</strong>"), HR(), SPAN("without xml?", _class="the valid karg"))
             >>> instanceDIV.attributes = {"_invalid-attr-in-karg": "the_key_is_valis_in_html5"}
@@ -2376,8 +2347,8 @@ class XmlConstructor(object):
                 SPAN,
                 DIV
             )
-
-
+            .
+            .
             html = DIV(
                 XML(
                     '<strong>not escape</strong>'
@@ -2395,9 +2366,9 @@ class XmlConstructor(object):
             >>> instanceDIV.close_void = True
             >>> print(instanceDIV.source_code(add_imports=True, instance_name="MY_INSTANCE"))
             from phanterpwa.xmlconstructor import XmlConstructor
-            from phanterpwa.xss import XssCleaner
-
-
+            from phanterpwa.third_parties.xss import XssCleaner
+            .
+            .
             class XML(XmlConstructor, XssCleaner):
                 def __init__(self,
                         content,
@@ -2430,7 +2401,7 @@ class XmlConstructor(object):
                     self.allowed_attributes = allowed_attributes
                     self.strip_disallowed = False
                     self.escape_string = False
-
+            .
                 def xml(self):
                     xml = ""
                     if self.content:
@@ -2440,13 +2411,13 @@ class XmlConstructor(object):
                         return self.strip(xml)
                     xml = "".join([self.before_xml, xml, self.after_xml])
                     return xml
-
-
+            .
+            .
             HR = XmlConstructor.tagger('hr', True)
             SPAN = XmlConstructor.tagger('span')
             DIV = XmlConstructor.tagger('div')
-
-
+            .
+            .
             MY_INSTANCE = DIV(
                 XML(
                     '<strong>not escape</strong>'
@@ -2461,8 +2432,9 @@ class XmlConstructor(object):
                     '_invalid-attr-in-karg': 'the_key_is_valis_in_html5'
                 }
             )
-
+            .
             MY_INSTANCE.close_void = True
+            >>>
         """
         if not instance_name.isidentifier():
             raise ValueError("The name '{0}' in instance_name can not be used as identifier".format(instance_name))
@@ -2484,7 +2456,8 @@ class XmlConstructor(object):
                 self._src_attr(space + "    "),
                 "\n",
                 space,
-                ")" if self._indent_level == 0 else "),"])
+                ")" if self._indent_level == 0 else "),"
+            ])
         src = "".join(["\n" if self._indent_level != 0 else "", space, src])
         if add_imports and self._indent_level == 0:
             str_imp = ""
@@ -2598,9 +2571,9 @@ class XmlConstructor(object):
                         if inst.alternative_tag == "xml":
                             xml_import = "".join([
                                 xml_import,
-                                "from phanterpwa.xss import XssCleaner\n"
+                                "from phanterpwa.third_parties.xss import XssCleaner\n"
                             ])
-                            if not inst.alternative_tag in unics_alt:
+                            if inst.alternative_tag not in unics_alt:
                                 str_class = "".join([
                                     str_class,
                                     "\n\n",
@@ -2609,7 +2582,7 @@ class XmlConstructor(object):
                                 ])
                             unics_alt.append(inst.alternative_tag)
                         elif inst.alternative_tag == "xcomment":
-                            if not inst.alternative_tag in unics_alt:
+                            if inst.alternative_tag not in unics_alt:
                                 str_class = "".join([
                                     str_class,
                                     "\n\n",
@@ -2662,44 +2635,40 @@ class XmlConstructor(object):
         escape_string=True,
         file=None,
         encoding="utf-8") -> str:
-        """
-        With this method it is possible to generate an xml with
+        """With this method it is possible to generate an xml with
         different formats, with minimized indentation, with closed void
         elements without changing any other instance property. You can
         also write the generated xml to a file.
 
-        Args:
-
-            @minify: If True the generated xml will be minified, if
+        :param minify: If True the generated xml will be minified, if
             False will be indented. (default: True).
-            @indent_size: Only has effect with minify False, determines
+        :param indent_size: Only has effect with minify False, determines
             the size of the indentation. (default: 2).
-            @close_void: The xml of the void elements will be closed.
+        :param close_void: The xml of the void elements will be closed.
             (default: False).
-            @translate: With the translate True the translation will be
+        :param translate: With the translate True the translation will be
             applied (see more details in the i18n method). (default:
             False).
-            @formatter: Adds the Format String Syntax (str.format()) in
+        :param formatter: Adds the Format String Syntax (str.format()) in
             the generated xml. (default: None).
-            @i18nInstance: Set phanterpwa.i18n.Translator instance to
+        :param i18nInstance: Set phanterpwa.i18n.Translator instance to
             translate, dictionary or tag_translation must be valid
             argument.
-            @tag_translation: Set the tag used on translation on client
+        :param tag_translation: Set the tag used on translation on client
             side.
-            @dictionary: Specifics the dictionary that be used. Need a
+        :param dictionary: Specifics the dictionary that be used. Need a
             valid parameter on i18nTranslate.
-            @do_not_translate: List with the Words that be ignored in
+        :param do_not_translate: List with the Words that be ignored in
             translation.
-            @escape_string: The strings aren't be scaped if
+        :param escape_string: The strings aren't be scaped if
             escape_string is False. True is default.
-            @file: Name of the file that will be written to the
+        :param file: Name of the file that will be written to the
             generated xml. (default: None).
-            @encoding: It only takes effect if the file argument is
+        :param encoding: It only takes effect if the file argument is
             other than None, here determines the encoding used in the
             xml script in the file.
 
-        example:
-
+        Example:
             >>> from phanterpwa.helpers import (DIV, BR, HR, SPAN)
             >>> instanceDIV = DIV(DIV(BR(), HR(), SPAN()), _class="my_class", _underline="_underline", without_underline="without_underline")
             >>> # The method html is not affected by these attributes
@@ -2794,7 +2763,6 @@ class XmlConstructor(object):
         indent_size attributes of the class.
 
         Example:
-
             >>> from phanterpwa.helpers import (DIV, BR, HR, SPAN)
             >>> instanceDIV = DIV(
                     DIV(
@@ -2855,8 +2823,7 @@ class XmlConstructor(object):
         and indent_size (indent size will only take effect if minify for
         False) properties that change class attributes XmlConstructor.
 
-        example:
-
+        Example:
             >>> from phanterpwa.helpers import (DIV, BR, HR, SPAN)
             >>> instanceDIV = DIV(
                     DIV(
@@ -2908,30 +2875,29 @@ class XmlConstructor(object):
         return xml
 
     def json(self, **kargs) -> str:
-        """
-        In some cases, it is necessary to pass the generated XML from
+        """In some cases, it is necessary to pass the generated XML from
         the instance to an argument from some javascript library, such
         as jquery for example, so this method converts xml (multiline)
         to json string (quotted).
-        @kargs: to kargs json.dumps.
+
+        :param kargs: to kargs json.dumps.
 
         Example:
-
-            from phanterpwa.helpers import (DIV, HR, SPAN, SCRIPT)
+            >>> from phanterpwa.helpers import (DIV, HR, SPAN, SCRIPT)
             >>> instanceDIV = DIV(
-                    DIV("multline\nline01\nline02"),
-                    SPAN("it's red", _style="color:red;"),
-                    HR()
-                )
+            ...     DIV("multline\\nline01\\nline02"),
+            ...     SPAN("it's red", _style="color:red;"),
+            ...     HR()
+            ... )
             >>> print(instanceDIV)
             <div><div>multline
             line01
             line02</div><span style="color:red;">it&#x27;s red</span><hr></div>
             >>> print(instanceDIV.json())
-            "<div><div>multline\nline01\nline02</div><span style=\"color:red;\">it&#x27;s red</span><hr></div>"
+            "<div><div>multline\\nline01\\nline02</div><span style=\\"color:red;\\">it&#x27;s red</span><hr></div>"
             >>> instanceSCRIPT = SCRIPT('$("#my_id").html({0});'.format(instanceDIV.json()))
             >>> print(instanceSCRIPT)
-            <script>$("#my_id").html("<div><div>multline\nline01\nline02</div><span style=\"color:red;\">it&#x27;s red</span><hr></div>");</script>
+            <script>$("#my_id").html("<div><div>multline\\nline01\\nline02</div><span style=\\"color:red;\\">it&#x27;s red</span><hr></div>");</script>
         """
         return json.dumps(self.xml(), **kargs)
 
@@ -2941,7 +2907,7 @@ class XmlConstructor(object):
         instance by giving it some parameters such as: string, dict,
         other instances and integers. Each type will be treated
         differently, as we will see below.
-        @search: Search Parameter, must be string, XmlConstructor, dict,
+        :param search: Search Parameter, must be string, XmlConstructor, dict,
         int, list, set or tuple.
         It will always return a list with the result, if not found it
         will be empty.
@@ -2953,31 +2919,31 @@ class XmlConstructor(object):
             >>> id_to_search = instanceHR.id
             >>> print(id_to_search)
             >>> sampleSEARCH = HTML(
-                DIV(
-                    DIV(
-                        "content",
-                        _class="two",
-                        _style="color:   white;  display   : none;"
-                    ),
-                    SPAN(
-                        "content",
-                        HR(
-                            _class="one two"
-                        )
-                    ),
-                    instanceHR,
-                    DIV(
-                        "long_content",
-                        SPAN(
-                            "long_content"
-                        ),
-                        _class="one",
-                        _style="color:   white"
-                    ),
-                    _style="display:none;"
-                ),
-                DIV("multiple")
-            )
+            ...     DIV(
+            ...         DIV(
+            ...             "content",
+            ...             _class="two",
+            ...             _style="color:   white;  display   : none;"
+            ...         ),
+            ...         SPAN(
+            ...             "content",
+            ...             HR(
+            ...                 _class="one two"
+            ...             )
+            ...         ),
+            ...         instanceHR,
+            ...         DIV(
+            ...             "long_content",
+            ...             SPAN(
+            ...                 "long_content"
+            ...             ),
+            ...             _class="one",
+            ...             _style="color:   white"
+            ...         ),
+            ...         _style="display:none;"
+            ...     ),
+            ...     DIV("multiple")
+            ... )
 
         Let's find using another instance, this way the method will look
         inside the contents of the main instance for all instances that
@@ -2988,8 +2954,8 @@ class XmlConstructor(object):
             >>> print("located", len(result))
             located 1
             >>> for x in result:
-                    print("instance:", x.introspect)
-                    print("xml:", x)
+            ...     print("instance:", x.introspect)
+            ...     print("xml:", x)
             instance: <class 'phanterpwa.xmlconstructor.XmlConstructor.tagger.<locals>.TAGGER'> {id: 47216592, tag: span}
             xml: <span>long_content</span>
 
@@ -3002,7 +2968,7 @@ class XmlConstructor(object):
             >>> print("located", len(result))
             located 2
             >>> for x in result:
-                    print("It has the string 'long_content'?", x)
+            ...     print("It has the string 'long_content'?", x)
             It has the string 'long_content'? <div class="one" style="color:   white">long_content<span>long_content</span></div>
             It has the string 'long_content'? <span>long_content</span>
             >>> search = "content"
@@ -3010,7 +2976,7 @@ class XmlConstructor(object):
             >>> print("located", len(result))
             located 4
             >>> for x in result:
-                    print("It has the string 'content'?", x)
+            ...     print("It has the string 'content'?", x)
             It has the string 'content'? <div class="one" style="color:   white">long_content<span>long_content</span></div>
             It has the string 'content'? <span>content<hr class="one two"></span>
             It has the string 'content'? <div class="two" style="color:   white;  display   : none;">content</div>
@@ -3025,20 +2991,20 @@ class XmlConstructor(object):
             >>> print("located", len(result))
             located 2
             >>> for x in result:
-                    print("xml:", x)
+            ...     print("xml:", x)
             xml: <div class="two" style="color:   white;  display   : none;">content</div>
             xml: <div style="display:none;"><div class="two" style="color:   white;  display   : none;">content</div><span>content<hr class="one two"></span><hr class="one two"><div class="one" style="color:   white">long_content<span>long_content</span></div></div>
             >>> result = sampleSEARCH.search({'_style':"  display:   none;", '_class': 'two'})
             >>> print("located", len(result))
             located 1
             >>> for x in result:
-                    print("xml:", x)
+            ...     print("xml:", x)
             xml: <div class="two" style="color:   white;  display   : none;">content</div>
             >>> result = sampleSEARCH.search({'_class': 'two'})
             >>> print("located", len(result))
             located 3
             >>> for x in result:
-                    print("xml:", x)
+            ...     print("xml:", x)
             xml: <hr class="one two">
             xml: <hr class="one two">
             xml: <div class="two" style="color:   white;  display   : none;">content</div>
@@ -3046,7 +3012,7 @@ class XmlConstructor(object):
             >>> print("located", len(result))
             located 2
             >>> for x in result:
-                    print("xml:", x)
+            ...     print("xml:", x)
             xml: <hr class="one two">
             xml: <hr class="one two">
 
@@ -3056,19 +3022,19 @@ class XmlConstructor(object):
             >>> print("located", len(result))
             located 1
             >>> for x in result:
-                    print("xml:", x)
+            ...     print("xml:", x)
             xml: <hr class="one two">
 
         When we add a list, a set or a tuple, it will do multiple
         searches returning a list with all the instances found.
 
             >>> result = sampleSEARCH.search([
-                id_to_search, SPAN("long_content"), "multiple"
-            ])
+            ...     id_to_search, SPAN("long_content"), "multiple"
+            ... ])
             >>> print("located", len(result))
             located 3
             >>> for x in result:
-                    print("xml:", x)
+            ...     print("xml:", x)
             xml: <div>multiple</div>
             xml: <span>long_content</span>
             xml: <hr class="one two">
@@ -3174,8 +3140,7 @@ class XmlConstructor(object):
         the tag_translation argument and with an attribute called
         "phanterpwa_i18n" in which a dictionary with all dictionaries
         with that specific translation is stored, on the client side
-        you can use a Jquery plug-in, example:
-            $("#id_parent_element").phanterpwa_i18n();
+        you can use a Jquery plug-in, example: ``$("#id_parent_element").phanterpwa_i18n();``
         This plug-in from phanterpwa.js replace the element content with the
         attribute value of a specific dictionary, which may even be the
         browser language. Remember that nothing prevents the server
@@ -3184,17 +3149,16 @@ class XmlConstructor(object):
 
         Args:
 
-            @i18nInstance: phanterpwa.i18n.Translator instance.
-            @dictionary: A dictionary disponible on phanterpwa.i18n.Translator.
+            :param i18nInstance: phanterpwa.i18n.Translator instance.
+            :param dictionary: A dictionary disponible on phanterpwa.i18n.Translator.
                 When setting a dictionary the tag_translation automatically
                 changes to None.
-            @tag_translation: New tag_translation name. When you set a new
+            :param tag_translation: New tag_translation name. When you set a new
                 valid tag name the dictionary is automatically changed to None.
-            @do_not_translate: list of strings that should be ignored in the
+            :param do_not_translate: list of strings that should be ignored in the
                 translation
 
         Example:
-
             >>> from phanterpwa.helpers import DIV, P
             >>> from phanterpwa.i18n import Translator
             >>> instanceDIV = DIV(
@@ -3421,10 +3385,11 @@ class XmlConstructor(object):
         """
         Add a new element in the content of the current element in the
         last position.
-        @value: Element to be added
+        
+        :Parameter:
+            - **value** - Element to be added
 
-        usage:
-
+        Example:
             >>> DIV = XmlConstructor.tagger("div")
             >>> my_instance = DIV()
             >>> print(my_instance)
@@ -3443,11 +3408,12 @@ class XmlConstructor(object):
     def insert(self, position, value: "String or XmlConstructor instance"):
         """
         Add a new element in specific position of the content.
-        @position: position of the content
-        @value: Element to be added
+        :param position: position of the content
+        
+        :Parameter:
+            - **value** - Element to be added
 
-        usage:
-
+        Example:
             >>> DIV = XmlConstructor.tagger("div")
             >>> my_instance = DIV()
             >>> print(my_instance)
@@ -3469,11 +3435,12 @@ class XmlConstructor(object):
     def replace(self, position, value: "String or XmlConstructor instance"):
         """
         Replace a element in specific position in the content.
-        @position: position of the element in the content to be replaced
-        @value: Element to be added
+        :param position: position of the element in the content to be replaced
+        
+        :Parameter:
+            - **value** - Element to be added
 
-        usage:
-
+        Example:
             >>> DIV = XmlConstructor.tagger("div")
             >>> SPAN = XmlConstructor.tagger("span")
             >>> HR = XmlConstructor.tagger("hr", True)
@@ -3542,7 +3509,8 @@ class XmlConstructor(object):
         return cls._close_void
 
     @classmethod
-    def tagger(cls, tag: str, void: bool=False, escape_string: bool=True, never_translate: bool=False) -> 'XmlConstructor':
+    def tagger(cls, tag: str, void: bool=False,
+            escape_string: bool=True, never_translate: bool=False) -> 'XmlConstructor':
         """
         Using the tagger method you can create a metaclass of class
         XmlConstructor
@@ -3805,7 +3773,8 @@ class XmlConstructor(object):
             else:
                 if all([dictionary, i18nInstance, x not in do_not_translate, translate, not self.never_translate]):
                     x = i18nInstance.translator(x, dictionary)
-                elif all([i18nInstance, x not in do_not_translate, translate, tag_translation, not self.never_translate]):
+                elif all([i18nInstance, x not in do_not_translate,
+                        translate, tag_translation, not self.never_translate]):
                     attr_i18n = i18nInstance.phanterpwa_i18n(x)
                     if attr_i18n:
                         x = XmlConstructor.tagger(tag_translation)(x, {'_phanterpwa_i18n': attr_i18n})

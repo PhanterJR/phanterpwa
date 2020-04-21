@@ -1,3 +1,4 @@
 """
-    All modules must be compiled by transpiler (transcrypt)
+    All modules contained in apptools were written to be compiled bythe transpiler (transcrypt), they were not tested
+    in Cpython.
 """

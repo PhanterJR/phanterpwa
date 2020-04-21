@@ -6,14 +6,14 @@ import sys
 import psutil
 import subprocess
 import argparse
-import logging
 import traceback
+
 from phanterpwa.tools import (
-    config,
-    compiler
+    config
 )
+from phanterpwa.compiler import Compiler
 from phanterpwa.interface.graphic import start
-from phanterpwa.interface.cli import start as start_cli
+from phanterpwa.interface.cli import Cli
 CURRENT_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__)))
 CWD = os.path.join(CURRENT_DIR, "interface")
 CONFIG = config(CWD)
@@ -34,15 +34,10 @@ def CLEAR_CONSOLE():
 
 if not len(sys.argv) > 1:
     def main():
-        try:
-            start()
-        except Exception as e:
-            print("Error trying to run graphical version of phanterpwa")
-            traceback.print_tb(e.__traceback__)
-            parser.print_help()
+        Cli()
 else:
-    parser.add_argument('-c', '--cli', action="store_true", default=False,
-                        help='CLI interface')
+    parser.add_argument('-g', '--gui', action="store_true", default=False,
+                        help='Grafical interface')
 
     parser.add_argument('-r', '--compile_and_server_last_project', action="store_true", default=False,
                         help='Compile and server of last running project')
@@ -52,43 +47,26 @@ else:
 
     def main():
         args = parser.parse_args()
-        if args.cli:
-            start_cli()
+        if args.gui:
+            start()
         elif args.compile_and_server_last_project or args.server_last_project:
             if 'last_application' in CONFIG:
-                configApp = config(CONFIG['last_application'])
+                configProject = config(CONFIG['last_application'])
                 projectPath = CONFIG['last_application']
-                formatter = logging.Formatter(
-                    '%(asctime)s - %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S'
-                )
-                formatter_out_app = logging.Formatter(
-                    '%(asctime)s - %(name)s.app -  %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S'
-                )
-                fh = logging.FileHandler(os.path.join(projectPath, 'logs', 'app.log'))
-                fh.setFormatter(formatter)
-                logger = logging.getLogger(os.path.basename(projectPath))
-                logger.setLevel(logging.ERROR)
-                logger.addHandler(fh)
-                sh = logging.StreamHandler(sys.stdout)
-                sh.setLevel(logging.ERROR)
-                sh.setFormatter(formatter_out_app)
-                logger.addHandler(sh)
+
                 if args.compile_and_server_last_project:
                     try:
-                        compiler(projectPath)
+                        Compiler(projectPath).compile()
                     except Exception as e:
-                        logger.error("Compile error", exc_info=True)
                         traceback.print_tb(e.__traceback__)
 
                 print("API Server running in http://{0}:{1}".format(
-                    configApp['API_SERVER']['host'], configApp['API_SERVER']['port']))
+                    configProject['API_SERVER']['host'], configProject['API_SERVER']['port']))
                 print("APP Server running in http://{0}:{1}".format(
-                    configApp['APP_SERVER']['host'], configApp['APP_SERVER']['port']))
+                    configProject['APP_SERVER']['host'], configProject['APP_SERVER']['port']))
                 try:
                     print("Press CTRL+C to stop server!")
-                    config(CWD, {'last_application': configApp['PATH']['project']})
+                    config(CWD, {'last_application': configProject['PATH']['project']})
                     start_server(projectPath)
                 except KeyboardInterrupt:
                     target = os.path.abspath(os.path.join("..", "server.py"))
@@ -105,8 +83,8 @@ else:
                     CLEAR_CONSOLE()
                     input("Server Stoped""! Press <enter> key to exit.")
                     CLEAR_CONSOLE()
-                except Exception:
-                    logger.error("Server error", exc_info=True)
+                except Exception as e:
+                    traceback.print_tb(e.__traceback__)
                     input("Server error, check the log file to learn more. Press <enter> key to exit.")
                     CLEAR_CONSOLE()
         else:

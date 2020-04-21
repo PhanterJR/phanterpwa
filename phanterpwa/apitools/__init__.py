@@ -1,1 +1,1 @@
-__all__=["dataforms", "pydal"]
+__all__ = ["dataforms", "decorators"]

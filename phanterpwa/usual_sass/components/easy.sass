@@ -97,3 +97,28 @@
 
 .e-margin_right_10
     margin-right: 10px !important
+
+.e-tagger-wrapper
+    overflow: hidden
+    text-overflow: ellipsis
+    border: 1px solid $components
+    margin: 2px
+    border-radius: 5px
+    line-height: 2rem
+    strong
+        background-color: $components
+        padding: 0px 10px
+        color: white
+        height: 2rem
+        display: block
+        float: left
+    span
+        padding: 6px
+        white-space: nowrap
+
+    @media #{$width2}
+        strong
+            float: none
+    @media #{$width1}
+        strong
+            float: none

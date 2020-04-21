@@ -9,7 +9,7 @@
     transcrypt
     pillow
     itsdangerous
-    pyDAL
+    pydal
     passlib
     requests-oauthlib
 

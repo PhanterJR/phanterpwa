@@ -108,3 +108,10 @@ setup.bat
 phanterpwa/interface/*.json
 
 apenas_enviar.bat
+*.table
+*secret.ini
+phanterpwa/interface/Admin/apps/admin/statics*
+phanterpwa/interface/Admin/apps/admin/sources*
+*.sublime-project
+*.sublime-workspace
+phanterpwa/interface/Admin/config.json

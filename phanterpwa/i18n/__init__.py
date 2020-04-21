@@ -8,7 +8,7 @@ class Translator(object):
     """docstring for Translator"""
     instances = dict()
 
-    def __init__(self, path, identifier, debug=False):
+    def __init__(self, path, identifier, debug=False, direct_translation=None):
         super(Translator, self).__init__()
         if not os.path.exists(path):
             os.makedirs(path, exist_ok=True)
@@ -19,7 +19,7 @@ class Translator(object):
         self._languages = {}
         self.debug = debug
         self.path = path
-        self.direct_translation = None
+        self.direct_translation = direct_translation
         self.load()
         self.add_instance(identifier, self)
 
@@ -208,6 +208,7 @@ class Translator(object):
     def __bool__(self):
         return os.path.exists(os.path.join(self.path, "entries.json"))
 
+
 def browser_language(header_langugage, default="en-US"):
     if header_langugage:
         languages = header_langugage.split(",")
@@ -227,5 +228,4 @@ def browser_language(header_langugage, default="en-US"):
             codes = [l[0] for l in locales]
             if len(codes) > 1:
                 return codes[0]
-    
     return default

@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import phanterpwa
 import re
+import traceback
 from pathlib import PurePath
 from glob import glob, iglob
 from phanterpwa.configer import ProjectConfig
@@ -34,8 +35,8 @@ class Compiler():
     """
 
     def __init__(self, projectpath, build_apps_folder=None):
+        self.ProjectConfig = ProjectConfig(projectpath)
         self.projectpath = projectpath
-        self.ProjectConfig = ProjectConfig(join(self.projectpath, "config.json"))
         self.config = self.ProjectConfig.config
         self._check_app_list()
         self.build_apps_folder = build_apps_folder
@@ -74,6 +75,9 @@ class Compiler():
 
     @property
     def app_list(self):
+        """
+            lista os aplicativos
+        """
         self._check_app_list()
         return self.config['APPS'].keys()
 
@@ -241,7 +245,7 @@ class Compiler():
             target_file = join(tgt_path, *p.parts)
             if ext_tgt is not None:
                 target_file = "".join([target_file[0:-len(ext_src)], ext_tgt])
-            return target_file
+            return [file_path, target_file]
 
         if ext_tgt is not None:
             if ext_src is None:
@@ -756,18 +760,22 @@ class Compiler():
                     if self.minify and not self.debug:
                         with open(script_file, "r", encoding="utf-8") as f:
                             lines_script = f.readlines()
-                        with open(script_file, "w", encoding="utf-8") as f:
+                        if lines_script:
                             if lines_script[-1].startswith("//# sourceMappingURL"):
-                                f.write("".join([*lines_script[0:-1]]))
+                                with open(script_file, "w", encoding="utf-8") as f:
+                                    f.write("".join(lines_script[0:-1]))
 
             print("Finish!!!\n\n\n")
         else:
             print("    Skiping scripts...")
             pass
 
-    def transcrypts_config(self):
-        for app in self.app_list:
+    def transcrypts_config(self, app=None):
+        if app:
             self._has_config_changed[app] = self._process_transcrypt_config(app)
+        else:
+            for app in self.app_list:
+                self._has_config_changed[app] = self._process_transcrypt_config(app)
 
     def _process_transcrypt_config(self, app):
         last_app_config = join(self.tempfolder, "project_config_{0}.json".format(app))
@@ -776,19 +784,23 @@ class Compiler():
         CONFIG['PROJECT'] = self.config['PROJECT']
 
         if self.config["PROJECT"]["debug"]:
-            api_server_address = self.config['API']['remote_address_on_development']
+            api_server_address = self.config['API']['remote_address_debug']
             CONFIG['CONFIGJS']['api_server_address'] = api_server_address
-            CONFIG['CONFIGJS']['api_websocket_address'] = self.config['API']['websocket_address_on_development']
+            CONFIG['CONFIGJS']['api_websocket_address'] = self.config['API']['websocket_address_debug']
         else:
-            api_server_address = self.config['API']['remote_address_on_production']
+            api_server_address = self.config['API']['remote_address']
             CONFIG['CONFIGJS']['api_server_address'] = api_server_address
-            CONFIG['CONFIGJS']['api_websocket_address'] = self.config['API']['websocket_address_on_production']
+            CONFIG['CONFIGJS']['api_websocket_address'] = self.config['API']['websocket_address']
         CONFIG['CONFIGJS']['timeout_to_resign'] = self.config["APPS"][app]['timeout_to_resign']
         social_logins = {}
+        social_list = []
+        for x in self.config.keys():
+            if x.startswith("OAUTH_"):
+                social_list.append(x[6:].lower())
         if "SOCIAL_LOGIN" in self.config:
             social_logins = {
                 x: "{0}/api/auth/{1}/prompt".format(api_server_address, x)
-                    for x in self.config['SOCIAL_LOGIN'].keys() if isinstance(self.config['SOCIAL_LOGIN'][x], dict)
+                    for x in social_list
             }
 
         CONFIG['APP'] = {
@@ -902,9 +914,81 @@ class Compiler():
                     "phanterpwa_modules_mtime.json"), "w", encoding="utf-8") as f:
                 json.dump(content, f, ensure_ascii=True, indent=2)
 
-    def compile(self, force_complete_compilation=False, minify=False):
-        self.transcrypts_config()
-        for app in self.app_list:
+    def compile_by_step(self, app=None, force_complete_compilation=False, minify=False):
+        app_list = self.app_list
+        if app:
+            app_list = [app]
+        for app in app_list:
+            msg = "Transcrypt config"
+            try:
+                self.transcrypt_config(app)
+                yield [msg, True, "Pass"]
+            except Exception as e:
+                yield [msg, False, traceback.format_tb(e.__traceback__)]
+            current_debug = self.config["PROJECT"]["debug"]
+            if current_debug:
+                self.minify = False
+                self.full_compilation = False
+            else:
+                self.minify = True
+                self.full_compilation = True
+            self._check_phanterpwa_modules()
+            if force_complete_compilation:
+                self.full_compilation = True
+            if minify is True:
+                self.minify = True
+            msg = "Delete compiled app folder"
+            try:
+                self.delete_compiled_app_folder(app)
+                yield [msg, True, "Pass"]
+            except Exception as e:
+                yield [msg, True, "".join(traceback.format_tb(e.__traceback__))]
+            if current_debug or not exists(join(self.projectpath, "apps", app, "statics", "css", "phanterpwa.css")):
+                msg = "Creating phanterpwa.css"
+                try:
+                    self.phanterpwa_usual_sass(app)
+                    yield [msg, True, "Pass"]
+                except Exception as e:
+                    yield [msg, True, "".join(traceback.format_tb(e.__traceback__))]
+
+            msg = "Copy statics"
+            try:
+                self.copy_statics(app)
+                yield [msg, True, "Pass"]
+            except Exception as e:
+                yield [msg, True, "".join(traceback.format_tb(e.__traceback__))]
+            msg = "Copy languages"
+            try:
+                self.copy_languages(app)
+                yield [msg, True, "Pass"]
+            except Exception as e:
+                yield [msg, True, "".join(traceback.format_tb(e.__traceback__))]
+            msg = "Compile styles"
+            try:
+                self.compile_styles(app)
+                yield [msg, True, "Pass"]
+            except Exception as e:
+                yield [msg, True, "".join(traceback.format_tb(e.__traceback__))]
+            msg = "Compile templates"
+            try:
+                self.compile_templates(app)
+                yield [msg, True, "Pass"]
+            except Exception as e:
+                yield [msg, True, "".join(traceback.format_tb(e.__traceback__))]
+            msg = "Compile transcrypts"
+            try:
+                self.compile_transcrypts(app)
+                yield [msg, True, "Pass"]
+            except Exception as e:
+                yield [msg, True, "".join(traceback.format_tb(e.__traceback__))]
+        self._save_mtimes()
+
+    def compile(self, app=None, force_complete_compilation=False, minify=False):
+        app_list = self.app_list
+        if app:
+            app_list = [app]
+        for app in app_list:
+            self.transcrypts_config(app)
             print("\n============ APP COMPILATION: {0} ==============".format(app))
             current_debug = self.config["PROJECT"]["debug"]
             if current_debug:

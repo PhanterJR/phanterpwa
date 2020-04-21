@@ -1,6 +1,9 @@
 import setuptools
 
-from phanterpwa import __version__
+from phanterpwa import (
+    __version__,
+    __install_requeriments__
+)
 
 with open("README.md", "r") as f:
     long_description = f.read()
@@ -37,6 +40,7 @@ setuptools.setup(
         'phanterpwa/scaffolds',
         'phanterpwa/usual_sass',
         'phanterpwa/apitools',
+        'phanterpwa/apitools/request_handlers',
         'phanterpwa/apptools',
         'phanterpwa/apptools/components'
     ],
@@ -45,11 +49,7 @@ setuptools.setup(
             "phanterpwa = phanterpwa.__main__:main",
         ],
     },
-    install_requires=[
-        'psutil', 'tornado', 'libsass', 'transcrypt',
-        'pillow', 'itsdangerous', 'requests-oauthlib',
-        'pydal>=19.04', 'passlib'
-    ],
+    install_requires=__install_requeriments__,
     dependency_links=[
         'git+https://github.com/web2py/pydal.git',
     ],

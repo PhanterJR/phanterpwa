@@ -1,4 +1,6 @@
 import os
+import glob
+import json
 import sys
 import tkinter as tk
 import webbrowser
@@ -30,19 +32,17 @@ from phanterpwa import (
     __version__ as PHANTERPWA_VERSION
 )
 from phanterpwa.compiler import (
-    Compiler as compiler
+    Compiler
 )
 from phanterpwa.tools import (
-    check_valid_project_config,
-    list_installed_projects,
-    list_installed_apps,
     config,
     humanize_seconds,
-    splits_seconds,
+    split_seconds,
     join_seconds,
-    interpolate,
-    package_project_app
+    interpolate
 )
+from phanterpwa.interface.cli import package_project_app
+from phanterpwa.samples import project_config_sample
 from phanterpwa.i18n import Translator
 ENV_PYTHON = os.path.normpath(sys.executable)
 ENV_PATH = os.path.normpath(os.path.dirname(ENV_PYTHON))
@@ -51,7 +51,8 @@ if sys.version_info[0] < 3:
 PY_VERSION = "{0}.{1}.{2}".format(sys.version_info[0], sys.version_info[1], sys.version_info[2])
 
 CURRENT_DIR = os.path.dirname(__file__)
-
+Tra = Translator(CURRENT_DIR, "langs")
+T = Tra.T
 PID = os.getpid()
 with open("phanterpwa.pid", "w") as f:
     f.write(str(PID))
@@ -81,15 +82,100 @@ if os.path.exists("phanterpwa.pid"):
 
 
 print("PhanterPWA PID: {0}".format(PID))
-CONFIG = config(CURRENT_DIR)
 Trans = Translator(os.path.join(CURRENT_DIR, "langs"), "grafics", debug=True)
-if "language" in CONFIG:
-    Trans.direct_translation = CONFIG["language"]
-T = Trans.T
+
 
 _About = ""
 with open(os.path.join(CURRENT_DIR, "..", "samples", "about_graphic"), 'r', encoding='utf-8') as f:
     _About = f.read()
+
+
+def check_valid_project_config(config_file) -> dict:
+    if os.path.exists(config_file) and os.path.isfile(config_file):
+        try:
+            with open(config_file, 'r', encoding="utf-8") as f:
+                cfg = json.load(f)
+        except json.JSONDecodeError as e:
+            raise e("Error on json decode the '{0}' config file. Error: {1}".format(config_file, e))
+        else:
+            for x in project_config_sample:
+                if x not in cfg:
+                    raise KeyError("The config file not is valid, not found the '{0}' key, it's required".format(x))
+                    for y in project_config_sample[x]:
+                        if y not in cfg[x]:
+                            raise KeyError("".join(["The config file not is valid,",
+                                " not found the '{0}' subkey of key '{1}' , it's required".format(y, x)]))
+            else:
+                return config_file
+    else:
+        raise RuntimeError("The '{0}' is not valid config file! Not exists or not is file.".format(config_file))
+    return {}
+
+
+def list_installed_projects(path_project):
+    g = glob(os.path.join(path_project, "*"))
+    apps = {}
+    for y in [x for x in g if os.path.isdir(x)]:
+        cfg = os.path.join(y, "config.json")
+        try:
+            check_valid_project_config(cfg)
+        except Exception:
+            print("Not a valid project folder:", y)
+        else:
+            print(y, "pass")
+            n = os.path.basename(y)
+            j = ""
+            with open(cfg, 'r', encoding='utf-8') as f:
+                j = json.load(f)
+            if j:
+                j['PROJECT']['path'] = y
+                with open(cfg, 'w', encoding='utf-8') as fw:
+                    json.dump(j, fw, ensure_ascii=False, indent=2)
+                apps[n] = j
+    if not apps:
+        print("Don't find installed projects on {0}".format(path_project))
+    return apps
+
+
+def list_installed_apps(path_project):
+    apps = {}
+    cfg = os.path.join(path_project, "config.json")
+    try:
+        check_valid_project_config(cfg)
+    except Exception:
+        print("Not a valid project folder:", path_project)
+    else:
+        print(path_project, "pass")
+        j = ""
+        with open(cfg, 'r', encoding='utf-8') as f:
+            j = json.load(f)
+        if j and j["APPS"]:
+            change = False
+            for p in glob(os.path.join(j['PROJECT']['path'], "apps", "*")):
+                app_name = os.path.split(p)[-1]
+                if all([os.path.isdir(p),
+                        os.path.isdir(os.path.join(p, "sources", "styles")),
+                        os.path.isdir(os.path.join(p, "sources", "templates")),
+                        os.path.isdir(os.path.join(p, "sources", "transcrypts")),
+                        os.path.isdir(os.path.join(p, "statics"))]):
+                    if not j["APPS"].get(app_name, None):
+                        change = True
+                        j["APPS"][app_name] = {
+                            "build_folder": os.path.join(p, "www"),
+                            "timeout_to_resign": 600,
+                            "host": "0.0.0.0",
+                            "port": j["API"]["port"] + 1,
+                            "transcrypt_main_file": "application",
+                            "styles_main_file": "application",
+                            "views_main_file": "application"
+                        }
+                    apps[app_name] = j["APPS"][app_name]
+            if change:
+                with open(cfg, 'w', encoding='utf-8') as fw:
+                    json.dump(j, fw, ensure_ascii=False, indent=2)
+    if not apps:
+        print("Don't find installed apps on {0}".format(os.path.join(path_project, "apps")))
+    return apps
 
 
 class Root():
@@ -183,16 +269,17 @@ class Root():
         )
 
     def open_window_projects(self):
-        if self.app_folder_input.get():
-            self.CONFIG = config(CURRENT_DIR, {"projects_folder": os.path.normpath(self.projects_folder)})
-            self.tkInstance.withdraw()
-            if not self.ProjectsPWA:
-                tkInstance = tk.Toplevel(self.tkInstance)
-                self.ProjectsPWA = ProjectsPWA(tkInstance, self)
-            else:
-                self.ProjectsPWA.tkInstance.destroy()
-                tkInstance = tk.Toplevel(self.tkInstance)
-                self.ProjectsPWA = ProjectsPWA(tkInstance, self)
+        # if self.app_folder_input.get():
+        #     self.CONFIG = config(CURRENT_DIR, {"projects_folder": os.path.normpath(self.projects_folder)})
+        #     self.tkInstance.withdraw()
+        #     if not self.ProjectsPWA:
+        #         tkInstance = tk.Toplevel(self.tkInstance)
+        #         self.ProjectsPWA = ProjectsPWA(tkInstance, self)
+        #     else:
+        #         self.ProjectsPWA.tkInstance.destroy()
+        #         tkInstance = tk.Toplevel(self.tkInstance)
+        #         self.ProjectsPWA = ProjectsPWA(tkInstance, self)
+        pass
 
     def open_window_project(self, project_path):
         self.tkInstance.withdraw()
@@ -940,7 +1027,7 @@ class ProjectPWA():
                 button_4.update()
                 time.sleep(1)
                 try:
-                    compiler(projectPath)
+                    Compiler(projectPath).compile()
                 except Exception as e:
                     logger_app = logging.getLogger(name_dir)
                     logger_app.error("Problem in compilation", exc_info=True)
@@ -974,7 +1061,7 @@ class ProjectPWA():
                 button_1.configure(state=DISABLED)
                 time.sleep(1)
                 try:
-                    compiler(projectPath)
+                    Compiler(projectPath).compile()
                 except Exception as e:
                     logger_app = logging.getLogger(name_dir)
                     logger_app.error("Problem in compilation", exc_info=True)
@@ -2294,7 +2381,7 @@ class ConfigAPP():
 #                 b2.update()
 #                 time.sleep(1)
 #                 try:
-#                     compiler(projectPath)
+#                     Compiler(projectPath).compile()
 #                 except Exception as e:
 #                     logger_app = logging.getLogger(name_dir)
 #                     logger_app.error("Problem on packing", exc_info=True)
@@ -2327,7 +2414,7 @@ class ConfigAPP():
 #                 b1.configure(state=DISABLED)
 #                 time.sleep(1)
 #                 try:
-#                     compiler(projectPath)
+#                     Compiler(projectPath).compile()
 #                 except Exception as e:
 #                     logger_app = logging.getLogger(name_dir)
 #                     logger_app.error("Problem on packing", exc_info=True)
@@ -2602,7 +2689,7 @@ class ConfigAPP():
 
 class TimeCombox():
     def __init__(self, tkinterInstance, seconds, Entry, AppsPWA, key_api=None):
-        self.splits_seconds = splits_seconds(seconds)
+        self.split_seconds = split_seconds(seconds)
         self.entry_seconds = Entry
         self.initial_value = seconds
         self.tkInstance = tkinterInstance
@@ -2635,7 +2722,7 @@ class TimeCombox():
         year_label.grid(column=0, row=row, padx=(10, 5), pady=(5, 5))
         year_values = [0, 1, 2, 3, 4]
         self.yearCombox = ttk.Combobox(frame, width=10, values=year_values)
-        self.yearCombox.current(year_values.index(self.splits_seconds['year'] if 'year' in self.splits_seconds else 0))
+        self.yearCombox.current(year_values.index(self.split_seconds['year'] if 'year' in self.split_seconds else 0))
         self.yearCombox.grid(column=1, row=row, padx=(5, 10), pady=(5, 5))
         self.yearCombox.bind("<<ComboboxSelected>>", self.comboxChange)
 
@@ -2644,7 +2731,7 @@ class TimeCombox():
         month_label.grid(column=2, row=row, padx=(10, 5), pady=(5, 5))
         month_values = [f for f in range(0, 12)]
         self.monthCombox = ttk.Combobox(frame, width=10, values=month_values)
-        self.monthCombox.current(month_values.index(self.splits_seconds['month'] if 'month' in self.splits_seconds else 0))
+        self.monthCombox.current(month_values.index(self.split_seconds['month'] if 'month' in self.split_seconds else 0))
         self.monthCombox.grid(column=3, row=row, padx=(5, 10), pady=(5, 5))
         self.monthCombox.bind("<<ComboboxSelected>>", self.comboxChange)
 
@@ -2653,7 +2740,7 @@ class TimeCombox():
         day_label.grid(column=4, row=row, padx=(10, 5), pady=(5, 5))
         day_values = [f for f in range(0, 30)]
         self.dayCombox = ttk.Combobox(frame, width=10, values=day_values)
-        self.dayCombox.current(day_values.index(self.splits_seconds['day'] if 'day' in self.splits_seconds else 0))
+        self.dayCombox.current(day_values.index(self.split_seconds['day'] if 'day' in self.split_seconds else 0))
         self.dayCombox.grid(column=5, row=row, padx=(5, 10), pady=(5, 5))
         self.dayCombox.bind("<<ComboboxSelected>>", self.comboxChange)
 
@@ -2662,7 +2749,7 @@ class TimeCombox():
         hour_label.grid(column=0, row=row, padx=(10, 5), pady=(5, 5))
         hour_values = [f for f in range(0, 24)]
         self.hourCombox = ttk.Combobox(frame, width=10, values=hour_values)
-        self.hourCombox.current(hour_values.index(self.splits_seconds['hour'] if 'hour' in self.splits_seconds else 0))
+        self.hourCombox.current(hour_values.index(self.split_seconds['hour'] if 'hour' in self.split_seconds else 0))
         self.hourCombox.grid(column=1, row=row, padx=(5, 10), pady=(5, 5))
         self.hourCombox.bind("<<ComboboxSelected>>", self.comboxChange)
 
@@ -2670,7 +2757,7 @@ class TimeCombox():
         minute_label.grid(column=2, row=row, padx=(10, 5), pady=(5, 5))
         minute_values = [f for f in range(0, 60)]
         self.minuteCombox = ttk.Combobox(frame, width=10, values=minute_values)
-        self.minuteCombox.current(minute_values.index(self.splits_seconds['minute'] if 'minute' in self.splits_seconds else 0))
+        self.minuteCombox.current(minute_values.index(self.split_seconds['minute'] if 'minute' in self.split_seconds else 0))
         self.minuteCombox.grid(column=3, row=row, padx=(5, 10), pady=(5, 5))
         self.minuteCombox.bind("<<ComboboxSelected>>", self.comboxChange)
 
@@ -2679,7 +2766,7 @@ class TimeCombox():
         second_label.grid(column=4, row=row, padx=(10, 5), pady=(5, 5))
         second_values = [f for f in range(0, 60)]
         self.secondCombox = ttk.Combobox(frame, width=10, values=second_values)
-        self.secondCombox.current(second_values.index(self.splits_seconds['second'] if 'second' in self.splits_seconds else 0))
+        self.secondCombox.current(second_values.index(self.split_seconds['second'] if 'second' in self.split_seconds else 0))
         self.secondCombox.grid(column=5, row=row, padx=(5, 10), pady=(5, 5))
         self.secondCombox.bind("<<ComboboxSelected>>", self.comboxChange)
 
@@ -2744,7 +2831,7 @@ class TimeCombox():
 
 class TimeComboxAPP():
     def __init__(self, tkinterInstance, seconds, Entry, AppsPWA, APP, key_app=None):
-        self.splits_seconds = splits_seconds(seconds)
+        self.split_seconds = split_seconds(seconds)
         self.entry_seconds = Entry
         self.APP = APP
         self.initial_value = seconds
@@ -2778,7 +2865,7 @@ class TimeComboxAPP():
         year_label.grid(column=0, row=row, padx=(10, 5), pady=(5, 5))
         year_values = [0, 1, 2, 3, 4]
         self.yearCombox = ttk.Combobox(frame, width=10, values=year_values)
-        self.yearCombox.current(year_values.index(self.splits_seconds['year'] if 'year' in self.splits_seconds else 0))
+        self.yearCombox.current(year_values.index(self.split_seconds['year'] if 'year' in self.split_seconds else 0))
         self.yearCombox.grid(column=1, row=row, padx=(5, 10), pady=(5, 5))
         self.yearCombox.bind("<<ComboboxSelected>>", self.comboxChange)
 
@@ -2787,7 +2874,7 @@ class TimeComboxAPP():
         month_label.grid(column=2, row=row, padx=(10, 5), pady=(5, 5))
         month_values = [f for f in range(0, 12)]
         self.monthCombox = ttk.Combobox(frame, width=10, values=month_values)
-        self.monthCombox.current(month_values.index(self.splits_seconds['month'] if 'month' in self.splits_seconds else 0))
+        self.monthCombox.current(month_values.index(self.split_seconds['month'] if 'month' in self.split_seconds else 0))
         self.monthCombox.grid(column=3, row=row, padx=(5, 10), pady=(5, 5))
         self.monthCombox.bind("<<ComboboxSelected>>", self.comboxChange)
 
@@ -2796,7 +2883,7 @@ class TimeComboxAPP():
         day_label.grid(column=4, row=row, padx=(10, 5), pady=(5, 5))
         day_values = [f for f in range(0, 30)]
         self.dayCombox = ttk.Combobox(frame, width=10, values=day_values)
-        self.dayCombox.current(day_values.index(self.splits_seconds['day'] if 'day' in self.splits_seconds else 0))
+        self.dayCombox.current(day_values.index(self.split_seconds['day'] if 'day' in self.split_seconds else 0))
         self.dayCombox.grid(column=5, row=row, padx=(5, 10), pady=(5, 5))
         self.dayCombox.bind("<<ComboboxSelected>>", self.comboxChange)
 
@@ -2805,7 +2892,7 @@ class TimeComboxAPP():
         hour_label.grid(column=0, row=row, padx=(10, 5), pady=(5, 5))
         hour_values = [f for f in range(0, 24)]
         self.hourCombox = ttk.Combobox(frame, width=10, values=hour_values)
-        self.hourCombox.current(hour_values.index(self.splits_seconds['hour'] if 'hour' in self.splits_seconds else 0))
+        self.hourCombox.current(hour_values.index(self.split_seconds['hour'] if 'hour' in self.split_seconds else 0))
         self.hourCombox.grid(column=1, row=row, padx=(5, 10), pady=(5, 5))
         self.hourCombox.bind("<<ComboboxSelected>>", self.comboxChange)
 
@@ -2813,7 +2900,7 @@ class TimeComboxAPP():
         minute_label.grid(column=2, row=row, padx=(10, 5), pady=(5, 5))
         minute_values = [f for f in range(0, 60)]
         self.minuteCombox = ttk.Combobox(frame, width=10, values=minute_values)
-        self.minuteCombox.current(minute_values.index(self.splits_seconds['minute'] if 'minute' in self.splits_seconds else 0))
+        self.minuteCombox.current(minute_values.index(self.split_seconds['minute'] if 'minute' in self.split_seconds else 0))
         self.minuteCombox.grid(column=3, row=row, padx=(5, 10), pady=(5, 5))
         self.minuteCombox.bind("<<ComboboxSelected>>", self.comboxChange)
 
@@ -2822,7 +2909,7 @@ class TimeComboxAPP():
         second_label.grid(column=4, row=row, padx=(10, 5), pady=(5, 5))
         second_values = [f for f in range(0, 60)]
         self.secondCombox = ttk.Combobox(frame, width=10, values=second_values)
-        self.secondCombox.current(second_values.index(self.splits_seconds['second'] if 'second' in self.splits_seconds else 0))
+        self.secondCombox.current(second_values.index(self.split_seconds['second'] if 'second' in self.split_seconds else 0))
         self.secondCombox.grid(column=5, row=row, padx=(5, 10), pady=(5, 5))
         self.secondCombox.bind("<<ComboboxSelected>>", self.comboxChange)
 

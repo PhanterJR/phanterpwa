@@ -22,7 +22,7 @@ from pydal.validators import (
     IS_IN_DB
 )
 
-from phanterpwa.apitools.pydal_extra_validations import IS_ACTIVATION_CODE
+from phanterpwa.apitools.pydal.extra_validations import IS_ACTIVATION_CODE
 
 ref_values = re.compile(r"\$[0-9]{13}\:.*")
 
@@ -714,7 +714,7 @@ class FieldsDALValidateDictArgs(object):
         if self._errors:
             return self._errors
 
-    def insert_on(self, dbtable, commit=True):
+    def validate_and_insert(self, dbtable, commit=True):
         self.validate()
         if not self.errors and isinstance(dbtable, Table):
             rep = dbtable.validate_and_insert(**self.verified)
@@ -726,9 +726,9 @@ class FieldsDALValidateDictArgs(object):
             return rep
         else:
             if not self.errors:
-                raise "The dbtable must be pydal.DAL.Table object. given: {0}.".format(type(dbtable))
+                raise "The dbtable must be pydal.DAL.Table instance. given: {0}.".format(type(dbtable))
 
-    def update_on(self, dbset, commit=True):
+    def validate_and_update(self, dbset, commit=True):
         self.validate()
         if not self.errors and isinstance(dbset, Set):
             rep = dbset.validate_and_update(**self.verified)
@@ -740,131 +740,7 @@ class FieldsDALValidateDictArgs(object):
             return rep
         else:
             if not self.errors:
-                raise "The dbtable must be pydal.Objects.Set object. given: {0}.".format(type(dbset))
-
-
-# class DictArgsToDALFields(object):
-
-#     def __init__(self, dict_args, *fields, **parameters):
-#         super(DictArgsToDALFields, self).__init__()
-#         self.dict_args = dict_args
-#         self.fields = fields
-#         self._errors = {}
-#         self._verified = {}
-#         self._ignored = {}
-#         self.current_id = dict_args.get("id", None)
-#         self.custom_validates = parameters.get("custom_validates", {})
-
-#     @property
-#     def errors(self):
-#         self.validate()
-#         return self._errors
-
-#     @property
-#     def dict_args(self):
-#         return self._dict_args
-
-#     @dict_args.setter
-#     def dict_args(self, dict_args):
-#         if isinstance(dict_args, dict):
-#             self._dict_args = dict_args
-#         else:
-#             raise TypeError(
-#                 "The dict_args must be dict object. given: %s" % type(dict_args)
-#             )
-
-#     @property
-#     def fields(self):
-#         return self._fields
-
-#     @fields.setter
-#     def fields(self, list_fields):
-#         n_l = list()
-#         for x in list_fields:
-#             if isinstance(x, Field):
-#                 n_l.append(x)
-#             else:
-#                 if x is not None:
-#                     raise TypeError(
-#                         "The fields must be pydal.Field object. given: %s" % type(x)
-#                     )
-#         self._fields = n_l
-
-#     @property
-#     def verified(self):
-#         self.validate()
-#         return self._verified
-
-#     @property
-#     def ignored(self):
-#         self.validate()
-#         return self._ignored
-
-#     def _process_reference_value_dict_args(self, value):
-#         if ref_values.match(value):
-#             v_splited = "".join(dict_arguments[key].split(":")[1:])
-#             return v_splited
-
-#     def _process_Field_value(self, value, field):
-#         if field.name in custom_validates and callable(custom_validates[field.name]):
-#             return custom_validates[field.name](value)
-#         else:
-#             if field.type.startswith("reference"):
-#                 if "phanterpwa" in field:
-#                     ppwa = field.phanterpwa
-#                     if "editable" in ppwa and ppwa['editable'] and 'reference_field' in ppwa:
-#                         q = db(db.nacionalidades.nacionalidade==v_splited).select().first()
-#                         if q:
-
-#                         return (self._process_reference_value_dict_args(value), )
-
-#     def validate(self):
-#         self._errors = {}
-#         self._verified = {}
-#         self._ignored = {}
-#         for f in self.dict_args:
-#             ig = True
-#             for F in self.fields:
-#                 if F.name == f:
-#                     ig = False
-#                     result = F.validate(self.dict_args[f])
-#                     if result[1] is not None:
-#                         self._errors[f] = result[1]
-#                     else:
-#                         self._verified[f] = self.dict_args[f]
-#             if ig:
-#                 self._ignored[f] = self.dict_args[f]
-
-#         if self._errors:
-#             return self._errors
-
-#     def validate_and_insert(self, dbtable, commit=True):
-#         self.validate()
-#         if not self.errors and isinstance(dbtable, Table):
-#             rep = dbtable.validate_and_insert(**self.verified)
-#             dbtable._db._adapter.reconnect()
-#             if rep.errors:
-#                 dbtable._db.rollback()
-#             elif rep.id and commit:
-#                 dbtable._db.commit()
-#             return rep
-#         else:
-#             if not self.errors:
-#                 raise "The dbtable must be pydal.DAL.Table instance. given: {0}.".format(type(dbtable))
-
-#     def validate_and_update(self, dbset, commit=True):
-#         self.validate()
-#         if not self.errors and isinstance(dbset, Set):
-#             rep = dbset.validate_and_update(**self.verified)
-#             dbset._db._adapter.reconnect()
-#             if rep.errors:
-#                 dbset._db.rollback
-#             elif rep.id and commit:
-#                 dbset._db.commit()
-#             return rep
-#         else:
-#             if not self.errors:
-#                 raise "The dbtable must be pydal.Objects.Set instance. given: {0}.".format(type(dbset))
+                raise "The dbtable must be pydal.Objects.Set instance. given: {0}.".format(type(dbset))
 
 
 if __name__ == '__main__':
@@ -874,5 +750,4 @@ if __name__ == '__main__':
     os.chdir(os.path.join("D:\\GitHub\\PhanterEDU"))
 
     from api.models import *
-    
     print(dir(Field))
