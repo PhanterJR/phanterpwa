@@ -6,7 +6,7 @@ import gatehandlers.developer as developer
 import gatehandlers.project as project
 import gatehandlers.testsp as testsp
 import gatehandlers.reqs as reqs
-import gatehandlers.examples as examples
+
 
 from org.transcrypt.stubs.browser import __pragma__
 

@@ -1,0 +1,8 @@
+{
+	"version": 3,
+	"file": "gatehandlers.ext_examples.inputs.js",
+	"sources": [
+		"gatehandlers.ext_examples.inputs.py"
+	],
+	"mappings": "AAAA;AAAA;AAEA;AADA;AADA;AAAA;AAWA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AAIA;AAGA;AAGA;AA+BA;AAgBA;AAiBA;AAiBA;AAcA;AAaA;AAcA;AAeA;AAaA;AAcA;AAcA;AAgBA;AAAA;AACA;AACA;AA2MA;AACA;AAiFA;AAgBA;AAAA;AAAA;AAxhBA"
+}

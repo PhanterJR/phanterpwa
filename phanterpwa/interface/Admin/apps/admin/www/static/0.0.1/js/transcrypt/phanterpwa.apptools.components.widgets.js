@@ -1,4 +1,4 @@
-// Transcrypt'ed from Python, 2020-04-20 10:36:22
+// Transcrypt'ed from Python, 2020-04-22 07:01:16
 import {AssertionError, AttributeError, BaseException, DeprecationWarning, Exception, IndexError, IterableError, KeyError, NotImplementedError, RuntimeWarning, StopIteration, UserWarning, ValueError, Warning, __JsIterator__, __PyIterator__, __Terminal__, __add__, __and__, __call__, __class__, __envir__, __eq__, __floordiv__, __ge__, __get__, __getcm__, __getitem__, __getslice__, __getsm__, __gt__, __i__, __iadd__, __iand__, __idiv__, __ijsmod__, __ilshift__, __imatmul__, __imod__, __imul__, __in__, __init__, __ior__, __ipow__, __irshift__, __isub__, __ixor__, __jsUsePyNext__, __jsmod__, __k__, __kwargtrans__, __le__, __lshift__, __lt__, __matmul__, __mergefields__, __mergekwargtrans__, __mod__, __mul__, __ne__, __neg__, __nest__, __or__, __pow__, __pragma__, __proxy__, __pyUseJsNext__, __rshift__, __setitem__, __setproperty__, __setslice__, __sort__, __specialattrib__, __sub__, __super__, __t__, __terminal__, __truediv__, __withblock__, __xor__, abs, all, any, assert, bool, bytearray, bytes, callable, chr, copy, deepcopy, delattr, dict, dir, divmod, enumerate, filter, float, getattr, hasattr, input, int, isinstance, issubclass, len, list, map, max, min, object, ord, pow, print, property, py_TypeError, py_iter, py_metatype, py_next, py_reversed, py_typeof, range, repr, round, set, setattr, sorted, str, sum, tuple, zip} from './org.transcrypt.__runtime__.js';
 import * as datetimepicker from './phanterpwa.apptools.components.datetimepicker.js';
 import * as masks from './phanterpwa.apptools.fmasks.js';
@@ -4230,16 +4230,24 @@ export var MenuBox =  __class__ ('MenuBox', [Widget], {
 				}
 				delete parameters.__kwargtrans__;
 			}
+			var options = tuple ([].slice.apply (arguments).slice (2, __ilastarg0__ + 1));
 		}
 		else {
+			var options = tuple ();
 		}
 		self._icon = parameters.py_get ('icon', I (__kwargtrans__ ({_class: 'fas fa-ellipsis-v'})));
+		self._label = parameters.py_get ('label', null);
 		self._xml_menu = parameters.py_get ('xml_menu', I (__kwargtrans__ ({_class: 'fas fa-ellipsis-v'})));
 		self._onreload = parameters.py_get ('onReload', null);
 		self._onopen = parameters.py_get ('onOpen', null);
 		self.set_z_index (parameters.py_get ('z_index', null));
+		self._close_after_click_in = parameters.py_get ('close_after_click_in', true);
 		self.set_recalc_on_scroll (parameters.py_get ('recalc_on_scroll', false));
-		var html = DIV (self._icon, __kwargtrans__ ({_class: 'phanterpwa-widget-menubox-icon wave_on_click icon_button', _phanterpwa_dowpdown_target: 'drop_{0}'.format (identifier)}));
+		var label = '';
+		if (self._label !== null) {
+			var label = LABEL (self._label);
+		}
+		var html = DIV (self._icon, label, __kwargtrans__ ({_class: 'phanterpwa-widget-menubox-icon wave_on_click{0}'.format ((label === null ? ' icon_button' : '')), _phanterpwa_dowpdown_target: 'drop_{0}'.format (identifier)}));
 		if (__in__ ('_class', parameters)) {
 			parameters ['_class'] = '{0}{1}'.format (parameters ['_class'], ' phanterpwa-widget-menubox');
 		}
@@ -4266,6 +4274,21 @@ export var MenuBox =  __class__ ('MenuBox', [Widget], {
 		$ (el);
 		self.modal = PseudoModal (self.target_selector, DIV (self._xml_menu, __kwargtrans__ ({_id: 'phanterpwa-widget-menubox-options-content-{0}'.format (self.identifier), _class: 'phanterpwa-widget-menubox-options-content'})), __kwargtrans__ ({vertical: true, z_index: self._z_index, recalc_on_scroll: self._recalc_on_scroll, on_open: self._onopen}));
 		self.modal.start ();
+		if (self._close_after_click_in === true) {
+			$ ('#phanterpwa-widget-menubox-options-content-{0}'.format (self.identifier)).find ('.phanterpwa-widget-menubox-option').off ('click.close_pseudo_modal').on ('click.close_pseudo_modal', (function __lambda__ () {
+				if (arguments.length) {
+					var __ilastarg0__ = arguments.length - 1;
+					if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+						var __allkwargs0__ = arguments [__ilastarg0__--];
+						for (var __attrib0__ in __allkwargs0__) {
+						}
+					}
+				}
+				else {
+				}
+				return self.modal.close ();
+			}));
+		}
 	});},
 	get set_recalc_on_scroll () {return __get__ (this, function (self, value) {
 		if (arguments.length) {
@@ -4362,6 +4385,36 @@ export var MenuBox =  __class__ ('MenuBox', [Widget], {
 		if (callable (self._onreload)) {
 			self._onreload (target);
 		}
+	});}
+});
+export var MenuOption =  __class__ ('MenuOption', [helpers.XmlConstructor], {
+	__module__: __name__,
+	get __init__ () {return __get__ (this, function (self) {
+		var attributes = dict ();
+		if (arguments.length) {
+			var __ilastarg0__ = arguments.length - 1;
+			if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+				var __allkwargs0__ = arguments [__ilastarg0__--];
+				for (var __attrib0__ in __allkwargs0__) {
+					switch (__attrib0__) {
+						case 'self': var self = __allkwargs0__ [__attrib0__]; break;
+						default: attributes [__attrib0__] = __allkwargs0__ [__attrib0__];
+					}
+				}
+				delete attributes.__kwargtrans__;
+			}
+			var content = tuple ([].slice.apply (arguments).slice (1, __ilastarg0__ + 1));
+		}
+		else {
+			var content = tuple ();
+		}
+		if (__in__ ('_class', attributes)) {
+			attributes ['_class'] = 'phanterpwa-widget-menubox-option {0}'.format (attributes ['_class']);
+		}
+		else {
+			attributes ['_class'] = 'phanterpwa-widget-menubox-option';
+		}
+		helpers.XmlConstructor.__init__ (self, 'div', false, ...content, __kwargtrans__ (attributes));
 	});}
 });
 export var PseudoModal =  __class__ ('PseudoModal', [object], {

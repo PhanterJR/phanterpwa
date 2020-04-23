@@ -16,6 +16,3 @@ __install_requeriments__ = [
     "passlib",
     "appdirs>=1.4.3"
 ]
-# __tecnologies__ = [
-#     ""
-# ]

@@ -2201,16 +2201,23 @@ class CheckBox(Widget):
 
 
 class MenuBox(Widget):
-    def __init__(self, identifier, **parameters):
+    def __init__(self, identifier, *options, **parameters):
         self._icon = parameters.get("icon", I(_class="fas fa-ellipsis-v"))
+        self._label = parameters.get("label", None)
         self._xml_menu = parameters.get("xml_menu", I(_class="fas fa-ellipsis-v"))
         self._onreload = parameters.get('onReload', None)
         self._onopen = parameters.get('onOpen', None)
         self.set_z_index(parameters.get("z_index", None))
+        self._close_after_click_in = parameters.get("close_after_click_in", True)
         self.set_recalc_on_scroll(parameters.get("recalc_on_scroll", False))
+        label = ""
+        if self._label is not None:
+            label = LABEL(self._label)
+
         html = DIV(
             self._icon,
-            _class="phanterpwa-widget-menubox-icon wave_on_click icon_button",
+            label,
+            _class="phanterpwa-widget-menubox-icon wave_on_click{0}".format(" icon_button" if label is None else ""),
             _phanterpwa_dowpdown_target="drop_{0}".format(identifier)
         )
         if "_class" in parameters:
@@ -2234,20 +2241,14 @@ class MenuBox(Widget):
             on_open=self._onopen
         )
         self.modal.start()
-        # jQuery("#phanterpwa-widget-menubox-options-content-{0}".format(
-        #     self.identifier)).find("li").off(
-        #     "click.close_pseudo_modal"
-        # ).on(
-        #     "click.close_pseudo_modal",
-        #     lambda: self.modal.close()
-        # )
-        # jQuery("#phanterpwa-widget-menubox-options-content-{0}".format(
-        #     self.identifier)).find("span").off(
-        #     "click.close_pseudo_modal"
-        # ).on(
-        #     "click.close_pseudo_modal",
-        #     lambda: self.modal.close()
-        # )
+        if self._close_after_click_in is True:
+            jQuery("#phanterpwa-widget-menubox-options-content-{0}".format(
+                self.identifier)).find(".phanterpwa-widget-menubox-option").off(
+                "click.close_pseudo_modal"
+            ).on(
+                "click.close_pseudo_modal",
+                lambda: self.modal.close()
+            )
 
     def set_recalc_on_scroll(self, value):
         if isinstance(value, bool):
@@ -2275,6 +2276,15 @@ class MenuBox(Widget):
         )
         if callable(self._onreload):
             self._onreload(target)
+
+
+class MenuOption(helpers.XmlConstructor):
+    def __init__(self, *content, **attributes):
+        if "_class" in attributes:
+            attributes['_class'] = "phanterpwa-widget-menubox-option {0}".format(attributes['_class'])
+        else:
+            attributes['_class'] = "phanterpwa-widget-menubox-option"
+        helpers.XmlConstructor.__init__(self, 'div', False, *content, **attributes)
 
 
 class PseudoModal():

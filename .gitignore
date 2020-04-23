@@ -114,4 +114,8 @@ phanterpwa/interface/Admin/apps/admin/statics*
 phanterpwa/interface/Admin/apps/admin/sources*
 *.sublime-project
 *.sublime-workspace
+phanterpwa.sublime-project
+phanterpwa.sublime-workspace
 phanterpwa/interface/Admin/config.json
+.apenas_enviar.bat
+.setup.bat
