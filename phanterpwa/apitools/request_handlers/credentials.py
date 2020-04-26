@@ -578,6 +578,8 @@ class SignCaptchaForms(web.RequestHandler):
             self.phanterpwa_language = browser_language(self.request.headers.get("Accept-Language"))
         if self.i18nTranslator:
             self.i18nTranslator.direct_translation = self.phanterpwa_language
+        if self.Translator_captcha:
+            self.Translator_captcha.direct_translation = self.phanterpwa_language
         self.phanterpwa_user_agent = str(self.request.headers.get('User-Agent'))
         self.phanterpwa_remote_ip = str(self.request.remote_ip)
         self.list_forms = [*{

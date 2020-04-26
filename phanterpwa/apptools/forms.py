@@ -99,6 +99,7 @@ class SignForm():
             ),
             _class="captcha_reload_conection_container"
         ).jquery())
+        window.PhanterPWA.I18N.DOMTranslate(self.element_captcha_container)
         self.element_captcha_container.find(".captcha_reload_conection_button").off(
             "click.captcha_reload_conection_button_{0}".format(self.table_name)
         ).on(
@@ -108,6 +109,7 @@ class SignForm():
                 self.signCaptchaForm()
             )
         )
+
 
     def after_get_captcha_html(self, data, ajax_status):
         if ajax_status == "success":
@@ -129,6 +131,7 @@ class SignForm():
             "click.captcha-option-{0}".format(self.table_name),
             lambda: self.on_click_captcha_option(this, signature)
         )
+        window.PhanterPWA.I18N.DOMTranslate(self.element_captcha_container)
 
     def after_post_captcha_option(self, data, ajax_status):
         if ajax_status == "success":
@@ -136,6 +139,7 @@ class SignForm():
             csrf = data.responseJSON.csrf
             self.element_csrf_token.val(csrf).trigger("keyup")
             self.element_captcha_container.html(html)
+            window.PhanterPWA.I18N.DOMTranslate(self.element_captcha_container)
             if callable(self._on_captcha_resolve):
                 self._on_captcha_resolve(data, ajax_status)
         else:

@@ -518,17 +518,17 @@ class ProjectConfig():
                 v = str(self._config[x][y[0]])
                 self.project_ini[x][y[0]] = v
 
-        for x in self.api_ini.sections():
-            if x not in ['DEVELOPMENT', 'PRODUCTION']:
-                for y in self.api_ini.items(x):
-                    v = str(self._config[x][y[0]])
-                    self.api_ini[x][y[0]] = v
-            else:
-                KX = x.lower()
-                for y in self.api_ini.items(x):
-                    k = "{0}_on_{1}".format(y[0], KX)
-                    v = str(self._config['API'][k])
-                    self.api_ini[x][y[0]] = v
+        # for x in self.api_ini.sections():
+        #     if x not in ['DEVELOPMENT', 'PRODUCTION']:
+        #         for y in self.api_ini.items(x):
+        #             v = str(self._config[x][y[0]])
+        #             self.api_ini[x][y[0]] = v
+        #     else:
+        #         KX = x.lower()
+        #         for y in self.api_ini.items(x):
+        #             k = "{0}_on_{1}".format(y[0], KX)
+        #             v = str(self._config['API'][k])
+        #             self.api_ini[x][y[0]] = v
 
         for x in self.secret_ini.sections():
             for y in self.secret_ini.items(x):
