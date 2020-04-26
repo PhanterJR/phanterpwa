@@ -1,9 +1,9 @@
-// Transcrypt'ed from Python, 2020-04-20 22:09:31
+// Transcrypt'ed from Python, 2020-04-26 09:36:53
 import {AssertionError, AttributeError, BaseException, DeprecationWarning, Exception, IndexError, IterableError, KeyError, NotImplementedError, RuntimeWarning, StopIteration, UserWarning, ValueError, Warning, __JsIterator__, __PyIterator__, __Terminal__, __add__, __and__, __call__, __class__, __envir__, __eq__, __floordiv__, __ge__, __get__, __getcm__, __getitem__, __getslice__, __getsm__, __gt__, __i__, __iadd__, __iand__, __idiv__, __ijsmod__, __ilshift__, __imatmul__, __imod__, __imul__, __in__, __init__, __ior__, __ipow__, __irshift__, __isub__, __ixor__, __jsUsePyNext__, __jsmod__, __k__, __kwargtrans__, __le__, __lshift__, __lt__, __matmul__, __mergefields__, __mergekwargtrans__, __mod__, __mul__, __ne__, __neg__, __nest__, __or__, __pow__, __pragma__, __proxy__, __pyUseJsNext__, __rshift__, __setitem__, __setproperty__, __setslice__, __sort__, __specialattrib__, __sub__, __super__, __t__, __terminal__, __truediv__, __withblock__, __xor__, abs, all, any, assert, bool, bytearray, bytes, callable, chr, copy, deepcopy, delattr, dict, dir, divmod, enumerate, filter, float, getattr, hasattr, input, int, isinstance, issubclass, len, list, map, max, min, object, ord, pow, print, property, py_TypeError, py_iter, py_metatype, py_next, py_reversed, py_typeof, range, repr, round, set, setattr, sorted, str, sum, tuple, zip} from './org.transcrypt.__runtime__.js';
 import * as validations from './phanterpwa.apptools.validations.js';
 import * as websocket from './phanterpwa.apptools.websocket.js';
 import * as modal from './phanterpwa.apptools.components.modal.js';
-import * as handler from './phanterpwa.apptools.handler.js';
+import * as gatehandler from './phanterpwa.apptools.gatehandler.js';
 import * as events from './phanterpwa.apptools.components.events.js';
 import * as widgets from './phanterpwa.apptools.components.widgets.js';
 import * as helpers from './phanterpwa.apptools.helpers.js';
@@ -68,24 +68,6 @@ export var PhanterPWA =  __class__ ('PhanterPWA', [object], {
 		self.counter = 0;
 		self.states = dict ();
 		self._social_login_icons = dict ({'google': I (__kwargtrans__ ({_class: 'fab fa-google'})), 'facebook': I (__kwargtrans__ ({_class: 'fab fa-facebook'})), 'twitter': I (__kwargtrans__ ({_class: 'fab fa-twitter'}))});
-		$ (document).ajaxComplete ((function __lambda__ (event, xhr, options) {
-			if (arguments.length) {
-				var __ilastarg0__ = arguments.length - 1;
-				if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
-					var __allkwargs0__ = arguments [__ilastarg0__--];
-					for (var __attrib0__ in __allkwargs0__) {
-						switch (__attrib0__) {
-							case 'event': var event = __allkwargs0__ [__attrib0__]; break;
-							case 'xhr': var xhr = __allkwargs0__ [__attrib0__]; break;
-							case 'options': var options = __allkwargs0__ [__attrib0__]; break;
-						}
-					}
-				}
-			}
-			else {
-			}
-			return self._after_ajax_complete (event, xhr, options);
-		}));
 		window.PhanterPWA = self;
 		if (self.DEBUG) {
 			console.info ('starting {0} application (version: {1}, compilation: {2})'.format (self.CONFIG.PROJECT.title, self.CONFIG.PROJECT.version, self.CONFIG.PROJECT.compilation));
@@ -1444,16 +1426,16 @@ export var PhanterPWA =  __class__ ('PhanterPWA', [object], {
 				console.info (code, request, response);
 			}
 			if (code == 401) {
-				handler.Error_401 (request, response);
+				gatehandler.Error_401 (request, response);
 			}
 			else if (code == 403) {
-				handler.Error_403 (request, response);
+				gatehandler.Error_403 (request, response);
 			}
 			else if (code == 404) {
-				handler.Error_404 (request, response);
+				gatehandler.Error_404 (request, response);
 			}
 			else {
-				handler.Error_502 (request, response);
+				gatehandler.Error_502 (request, response);
 			}
 		}
 		else if (isinstance (request, WayRequest)) {
@@ -1463,7 +1445,7 @@ export var PhanterPWA =  __class__ ('PhanterPWA', [object], {
 			if (window.PhanterPWA.DEBUG) {
 				console.error ('The request must be WayRequest instance.');
 			}
-			handler.Error_500 (request, response);
+			gatehandler.Error_500 (request, response);
 		}
 	};},
 	get get_client_token () {return function () {
@@ -1860,7 +1842,7 @@ export var PhanterPWA =  __class__ ('PhanterPWA', [object], {
 		}
 		else {
 		}
-		self.ApiServer.POS (__kwargtrans__ (parameters));
+		self.ApiServer.POST (__kwargtrans__ (parameters));
 	});},
 	get PUT () {return __get__ (this, function (self) {
 		var parameters = dict ();
@@ -1954,6 +1936,7 @@ export var Loads =  __class__ ('Loads', [object], {
 		}
 		if (callable (self.onComplete)) {
 			self.onComplete (data);
+			window.PhanterPWA.reload ();
 		}
 	});},
 	get _process_args () {return __get__ (this, function (self) {
@@ -2578,7 +2561,18 @@ export var WayRequest =  __class__ ('WayRequest', [object], {
 		self.last_way = last_way;
 		if (__in__ (self.gate, window.PhanterPWA.Gates)) {
 			sessionStorage.setItem ('current_way', self.way);
-			window.PhanterPWA.Gates [self.gate] (self);
+			try {
+				window.PhanterPWA.Gates [self.gate] (self);
+			}
+			catch (__except0__) {
+				if (isinstance (__except0__, Exception)) {
+					console.error ("Error on try open '{0}'".format (way));
+					window.PhanterPWA.Gates [404] (self);
+				}
+				else {
+					throw __except0__;
+				}
+			}
 		}
 		else {
 			self.error = 404;

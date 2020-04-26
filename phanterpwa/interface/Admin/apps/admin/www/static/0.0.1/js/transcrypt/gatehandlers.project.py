@@ -158,7 +158,8 @@ class Index(gatehandler.Handler):
                     apps_dict[x]["build_folder"],
                     widgets.MenuBox(
                         "drop_2_{0}".format(x),
-                        xml_menu=UL(
+                        DIV(I(_class="fas fa-ellipsis-v"), _class="icon_button wave_on_click"),
+                        custom_menu=UL(
                             LI("Compile", **{
                                 "_id": "btn_compile_app_project_{0}".format(x),
                                 "_class": "btn_compile_app_project",
@@ -177,14 +178,15 @@ class Index(gatehandler.Handler):
                                 "data-menubox": "drop_2_{0}".format(x),
                                 "_class": 'dropdown-content'
                             },
-                        )
+                        ),
+                        onOpen=lambda: window.PhanterPWA.flash("foi clicado!")
                     )
                 )
             )
         if json.config.PROJECT.debug:
-            url = json.config.API.remote_address_on_development
+            url = json.config.API.remote_address_debug
         else:
-            url = json.config.API.remote_address_on_production
+            url = json.config.API.remote_address
         ShowApi = left_bar.LeftBarButton(
             "view_api",
             "Open Api",
@@ -291,6 +293,7 @@ class Index(gatehandler.Handler):
             table
         )
         html.html_to("#applications_container")
+        self.widgets_initialize()
 
     def _xml_config_project(self, json):
         project_config = dict(json.project_config['PROJECT'])

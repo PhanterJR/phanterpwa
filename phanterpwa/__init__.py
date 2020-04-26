@@ -3,7 +3,7 @@
 # license: MIT
 
 __author__ = "PhanterJR<junior.conex@gmail.com>"
-__version__ = "5.0.0"
+__version__ = "5.0.1"
 __install_requeriments__ = [
     "psutil",
     "tornado",
@@ -16,3 +16,5 @@ __install_requeriments__ = [
     "passlib",
     "appdirs>=1.4.3"
 ]
+
+

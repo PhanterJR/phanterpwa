@@ -1,4 +1,4 @@
-import phanterpwa.apptools.handler as handler
+import phanterpwa.apptools.gatehandler as gatehandler
 import phanterpwa.apptools.helpers as helpers
 import phanterpwa.apptools.forms as forms
 import phanterpwa.apptools.preloaders as preloaders
@@ -49,7 +49,7 @@ html_base = CONCATENATE(
 )
 
 
-class Error_404(handler.ErrorHandler):
+class Error_404(gatehandler.ErrorHandler):
     def start(self):
         html = html_base.jquery()
         html.find(".image-warnings").attr(
@@ -58,7 +58,7 @@ class Error_404(handler.ErrorHandler):
         jQuery("#main-container").html(html)
 
 
-class Error_401(handler.ErrorHandler):
+class Error_401(gatehandler.ErrorHandler):
     def start(self):
         html = CONCATENATE(
             DIV(
@@ -114,8 +114,7 @@ class Error_401(handler.ErrorHandler):
         )
 
 
-
-class Error_403(handler.ErrorHandler):
+class Error_403(gatehandler.ErrorHandler):
     def start(self):
         html = html_base.jquery()
         html.find(".image-warnings").attr(

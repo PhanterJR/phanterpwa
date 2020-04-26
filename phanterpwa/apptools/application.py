@@ -4,7 +4,7 @@ import phanterpwa.apptools.i18n as i18n
 import phanterpwa.apptools.helpers as helpers
 import phanterpwa.apptools.components.widgets as widgets
 import phanterpwa.apptools.components.events as events
-import phanterpwa.apptools.handler as handler
+import phanterpwa.apptools.gatehandler as gatehandler
 import phanterpwa.apptools.components.modal as modal
 import phanterpwa.apptools.websocket as websocket
 import phanterpwa.apptools.validations as validations
@@ -62,9 +62,9 @@ class PhanterPWA():
             "twitter": I(_class="fab fa-twitter")
         }
 
-        jQuery(document).ajaxComplete(
-            lambda event, xhr, options: self._after_ajax_complete(event, xhr, options)
-        )
+        # jQuery(document).ajaxComplete(
+        #     lambda event, xhr, options: self._after_ajax_complete(event, xhr, options)
+        # )
         window.PhanterPWA = self
         if self.DEBUG:
             console.info("starting {0} application (version: {1}, compilation: {2})".format(
@@ -627,20 +627,20 @@ class PhanterPWA():
             if window.PhanterPWA.DEBUG:
                 console.info(code, request, response)
             if code == 401:
-                handler.Error_401(request, response)
+                gatehandler.Error_401(request, response)
             elif code == 403:
-                handler.Error_403(request, response)
+                gatehandler.Error_403(request, response)
             elif code == 404:
-                handler.Error_404(request, response)
+                gatehandler.Error_404(request, response)
             else:
-                handler.Error_502(request, response)
+                gatehandler.Error_502(request, response)
         else:
             if isinstance(request, WayRequest):
                 window.PhanterPWA.Gates[code](request, response)
             else:
                 if window.PhanterPWA.DEBUG:
                     console.error("The request must be WayRequest instance.")
-                handler.Error_500(request, response)
+                gatehandler.Error_500(request, response)
 
     @staticmethod
     def get_client_token():
@@ -787,7 +787,7 @@ class PhanterPWA():
         self.ApiServer.DEL(**parameters)
 
     def POST(self, **parameters):
-        self.ApiServer.POS(**parameters)
+        self.ApiServer.POST(**parameters)
 
     def PUT(self, **parameters):
         self.ApiServer.PUT(**parameters)
@@ -816,6 +816,7 @@ class Loads():
             data = ns
         if callable(self.onComplete):
             self.onComplete(data)
+            window.PhanterPWA.reload()
 
     def _process_args(self):
         s_args = ""
@@ -1043,7 +1044,11 @@ class WayRequest():
         self.last_way = last_way
         if self.gate in window.PhanterPWA.Gates:
             sessionStorage.setItem("current_way", self.way)
-            window.PhanterPWA.Gates[self.gate](self)
+            try:
+                window.PhanterPWA.Gates[self.gate](self)
+            except Exception:
+                console.error("Error on try open '{0}'".format(way))
+                window.PhanterPWA.Gates[404](self)
         else:
             self.error = 404
             window.PhanterPWA.Gates[404](self)

@@ -297,6 +297,60 @@ class Others():
                                 _class="component_materialize"
                             ),
                         ),
+                        H2(I18N("Radiobox")),
+                        HR(),
+                        XSECTION(
+                            LABEL("Value: True"),
+                            DIV(
+                                widgets.RadioBox(
+                                    "radio1",
+                                    value=True,
+                                    label="Label Widget",
+                                ),
+                                _class="component_materialize"
+                            ),
+                        ),
+                        XSECTION(
+                            LABEL("Value: False"),
+                            DIV(
+                                widgets.RadioBox(
+                                    "radio2",
+                                    value=False,
+                                    label="Label Widget",
+                                ),
+                                _class="component_materialize"
+                            ),
+                        ),
+                        XSECTION(
+                            LABEL("Value: False"),
+                            DIV(
+                                widgets.RadioBox(
+                                    "radio4",
+                                    value=False,
+                                    label="Label Widget",
+                                    name="my_radio"
+                                ),
+                                widgets.RadioBox(
+                                    "radio5",
+                                    value=False,
+                                    label="Label Widget",
+                                    name="my_radio"
+                                ),
+                                widgets.RadioBox(
+                                    "radio6",
+                                    value=False,
+                                    label="Label Widget",
+                                    name="my_radio"
+                                ),
+                                widgets.RadioBox(
+                                    "radio7",
+                                    value=False,
+                                    label="Label Widget",
+                                    name="my_radio"
+                                ),
+                                _class="component_materialize"
+                            ),
+                        ),
                         H2(I18N("ListString")),
                         HR(),
                         XSECTION(

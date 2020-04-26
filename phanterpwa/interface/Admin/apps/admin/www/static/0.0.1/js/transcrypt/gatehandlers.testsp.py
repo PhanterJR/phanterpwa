@@ -140,7 +140,6 @@ class Index(gatehandler.Handler):
             elif json.status == 200:
                 window.PhanterPWA.flash("Test finished!")
 
-
     def _after_get_test_list(self, data, ajax_status):
         if ajax_status == "success":
             json = data.responseJSON
@@ -150,5 +149,6 @@ class Index(gatehandler.Handler):
             self._binds()
         else:
             window.PhanterPWA.flash("Problem on server: {0}".format(str(data.status)))
+
 
 __pragma__('nokwargs')

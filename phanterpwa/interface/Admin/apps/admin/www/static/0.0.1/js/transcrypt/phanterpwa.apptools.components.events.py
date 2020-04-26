@@ -106,10 +106,7 @@ class WidgetsInput(Event):
 
     def reload(self):
         for x in window.PhanterPWA.Request.widgets.keys():
-            if callable(window.PhanterPWA.Request.widgets[x].reload):
-                if window.PhanterPWA.Request.widgets[x].actived is False:
-                    window.PhanterPWA.Request.widgets[x].reload()
-                    window.PhanterPWA.Request.widgets[x].actived = True
+            window.PhanterPWA.Request.widgets[x]._reload()
 
     def _cleck_element(self, instance):
         if jQuery(instance.target_selector).length == 0:
@@ -118,8 +115,7 @@ class WidgetsInput(Event):
 
     def start(self):
         for x in window.PhanterPWA.Request.widgets.keys():
-            if callable(window.PhanterPWA.Request.widgets[x].start):
-                window.PhanterPWA.Request.widgets[x].start()
+            window.PhanterPWA.Request.widgets[x].start()
 
 
 __pragma__('nokwargs')

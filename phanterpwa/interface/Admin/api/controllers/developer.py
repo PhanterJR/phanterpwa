@@ -158,7 +158,8 @@ class Projects(web.RequestHandler):
                         "message": self.T(msg)
                     },
                     "projects_list": [[x[0], x[1], "running" if x[1] in running.projects else
-                        "stopped"] for x in self.Projects.projects_list],
+                        "stopped", ProjectConfig(
+                            os.path.join(x[1], "config.json"))['API']['port']] for x in self.Projects.projects_list],
                     "authorization": authorization,
                     "enviroment": enviroment,
                 })
@@ -637,7 +638,7 @@ class EchoWebSocket(websocket.WebSocketHandler):
                         _project_path = json_message["project_path"]
                         R = ProjectRunner()
                         if cmd == "run":
-                            R.run(_project_path, thread=True)
+                            R.run(_project_path, thread=True, compile=True)
                         elif cmd == "stop":
                             R.stop(_project_path)
 

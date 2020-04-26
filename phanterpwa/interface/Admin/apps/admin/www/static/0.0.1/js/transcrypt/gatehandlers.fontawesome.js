@@ -1,4 +1,4 @@
-// Transcrypt'ed from Python, 2020-04-10 04:02:59
+// Transcrypt'ed from Python, 2020-04-24 14:18:09
 import {AssertionError, AttributeError, BaseException, DeprecationWarning, Exception, IndexError, IterableError, KeyError, NotImplementedError, RuntimeWarning, StopIteration, UserWarning, ValueError, Warning, __JsIterator__, __PyIterator__, __Terminal__, __add__, __and__, __call__, __class__, __envir__, __eq__, __floordiv__, __ge__, __get__, __getcm__, __getitem__, __getslice__, __getsm__, __gt__, __i__, __iadd__, __iand__, __idiv__, __ijsmod__, __ilshift__, __imatmul__, __imod__, __imul__, __in__, __init__, __ior__, __ipow__, __irshift__, __isub__, __ixor__, __jsUsePyNext__, __jsmod__, __k__, __kwargtrans__, __le__, __lshift__, __lt__, __matmul__, __mergefields__, __mergekwargtrans__, __mod__, __mul__, __ne__, __neg__, __nest__, __or__, __pow__, __pragma__, __proxy__, __pyUseJsNext__, __rshift__, __setitem__, __setproperty__, __setslice__, __sort__, __specialattrib__, __sub__, __super__, __t__, __terminal__, __truediv__, __withblock__, __xor__, abs, all, any, assert, bool, bytearray, bytes, callable, chr, copy, deepcopy, delattr, dict, dir, divmod, enumerate, filter, float, getattr, hasattr, input, int, isinstance, issubclass, len, list, map, max, min, object, ord, pow, print, property, py_TypeError, py_iter, py_metatype, py_next, py_reversed, py_typeof, range, repr, round, set, setattr, sorted, str, sum, tuple, zip} from './org.transcrypt.__runtime__.js';
 import * as left_bar from './phanterpwa.apptools.components.left_bar.js';
 import * as widgets from './phanterpwa.apptools.components.widgets.js';
@@ -35,7 +35,7 @@ export var Index =  __class__ ('Index', [gatehandler.Handler], {
 		gatehandler.Handler.__init__ (self, request);
 	});},
 	get initialize () {return __get__ (this, function (self) {
-		var html = CONCATENATE (DIV (DIV (DIV (DIV ('COMPONENTES', __kwargtrans__ ({_class: 'phanterpwa-breadcrumb'})), DIV ('FONT AWESOME', __kwargtrans__ ({_class: 'phanterpwa-breadcrumb'})), __kwargtrans__ ({_class: 'phanterpwa-breadcrumb-wrapper'})), __kwargtrans__ ({_class: 'p-container'})), __kwargtrans__ ({_class: 'title_page_container card'})), DIV (DIV (DIV (DIV (widgets.Preloaders (), __kwargtrans__ ({_style: 'width:100%; text-align: center; padding-top: 100px; padding-bottom: 100px;'})), __kwargtrans__ ({_id: 'icon_awesome_container', _class: 'icon_awesome_container e-padding_20'})), __kwargtrans__ ({_class: 'card p-row padding_20'})), __kwargtrans__ ({_class: 'phanterpwa-container p-container'})));
+		var html = CONCATENATE (DIV (DIV (DIV (DIV ('COMPONENTES', __kwargtrans__ ({_class: 'phanterpwa-breadcrumb'})), DIV ('FONT AWESOME', __kwargtrans__ ({_class: 'phanterpwa-breadcrumb'})), __kwargtrans__ ({_class: 'phanterpwa-breadcrumb-wrapper'})), __kwargtrans__ ({_class: 'p-container'})), __kwargtrans__ ({_class: 'title_page_container card'})), DIV (DIV (DIV (DIV (widgets.Preloaders ('preloader_fontawesome'), __kwargtrans__ ({_style: 'width:100%; text-align: center; padding-top: 100px; padding-bottom: 100px;'})), __kwargtrans__ ({_id: 'icon_awesome_container', _class: 'icon_awesome_container e-padding_20'})), __kwargtrans__ ({_class: 'card p-row padding_20'})), __kwargtrans__ ({_class: 'phanterpwa-container p-container'})));
 		html.html_to ('#main-container');
 		var BackButton = left_bar.LeftBarButton ('back_localizar_aluno', 'Voltar', I (__kwargtrans__ ({_class: 'fas fa-arrow-circle-left'})), __kwargtrans__ (dict ({'_phanterpwa-way': 'home', 'position': 'top', 'ways': ['fontawesome']})));
 		window.PhanterPWA.Components ['left_bar'].add_button (BackButton);
@@ -44,8 +44,13 @@ export var Index =  __class__ ('Index', [gatehandler.Handler], {
 		}), 300);
 	});},
 	get _sampled () {return __get__ (this, function (self, value) {
-		var html = DIV (DIV (DIV (widgets.MenuBox (value.py_replace (' ', '_'), __kwargtrans__ ({icon: I (__kwargtrans__ ({_class: value})), xml_menu: UL (LI (LABEL ('Python: '), INPUT (__kwargtrans__ ({_value: 'I(_class="{0}")'.format (value)})), DIV (I (__kwargtrans__ ({_class: 'fas fa-clipboard'})), __kwargtrans__ ({_class: 'copy_buttom'})), __kwargtrans__ ({_class: 'icon_awesome_panel'})), __kwargtrans__ ({_class: 'dropdown-content, icon_awesome_panel_wrapper'}))})), __kwargtrans__ (dict ({'_data-icon': value, '_class': 'icon_awesome-button'}))), DIV (TABLE (TR (TD (' '.join (value.py_split (' ') [1].py_split ('-').__getslice__ (1, null, 1))))), __kwargtrans__ ({_class: 'icon_awesome-label'})), __kwargtrans__ ({_class: 'icon_awesome-wrapper'})), __kwargtrans__ ({_class: 'p-col w1p50 w3p25 w4p14'}));
+		var html = DIV (DIV (DIV (widgets.MenuBox (value.py_replace (' ', '_'), DIV (I (__kwargtrans__ ({_class: value})), __kwargtrans__ ({_class: 'icon_button wave_on_click'})), __kwargtrans__ ({custom_menu: DIV (DIV (DIV (LABEL ('Python'), INPUT (__kwargtrans__ ({_value: 'I(_class="{0}")'.format (value)})), __kwargtrans__ ({_class: 'label_and_input'})), DIV (I (__kwargtrans__ ({_class: 'fas fa-clipboard'})), __kwargtrans__ (dict ({'_data-src': 'I(_class="{0}")'.format (value), '_class': 'copy_buttom'}))), __kwargtrans__ ({_class: 'icon_awesome_panel'})), DIV (DIV (LABEL ('Html'), INPUT (__kwargtrans__ ({_value: str (I (__kwargtrans__ ({_class: value})))})), __kwargtrans__ ({_class: 'label_and_input'})), DIV (I (__kwargtrans__ ({_class: 'fas fa-clipboard'})), __kwargtrans__ (dict ({'_data-src': str (I (__kwargtrans__ ({_class: value}))), '_class': 'copy_buttom'}))), __kwargtrans__ ({_class: 'icon_awesome_panel'})), DIV (DIV (LABEL ('Class'), INPUT (__kwargtrans__ ({_value: value})), __kwargtrans__ ({_class: 'label_and_input'})), DIV (I (__kwargtrans__ ({_class: 'fas fa-clipboard'})), __kwargtrans__ (dict ({'_data-src': value, '_class': 'copy_buttom'}))), __kwargtrans__ ({_class: 'icon_awesome_panel'})), __kwargtrans__ ({_class: 'icon_awesome_panel_wrapper'})), onOpen: self._on_icon_open})), __kwargtrans__ (dict ({'_data-icon': value, '_class': 'icon_awesome-button'}))), DIV (TABLE (TR (TD (' '.join (value.py_split (' ') [1].py_split ('-').__getslice__ (1, null, 1))))), __kwargtrans__ ({_class: 'icon_awesome-label'})), __kwargtrans__ ({_class: 'icon_awesome-wrapper'})), __kwargtrans__ ({_class: 'p-col w1p50 w3p25 w4p14'}));
 		return html;
+	});},
+	get _on_icon_open () {return __get__ (this, function (self, el) {
+		$ (el).find ('.copy_buttom').off ('click').on ('click', (function __lambda__ () {
+			return self._copy (this);
+		}));
 	});},
 	get _add_content () {return __get__ (this, function (self, v) {
 		var html = CONCATENATE ();
@@ -82,30 +87,12 @@ export var Index =  __class__ ('Index', [gatehandler.Handler], {
 		p.find ('input').select ();
 		document.execCommand ('copy');
 	});},
-	get _process_icon () {return __get__ (this, function (self, el) {
-		$ ('.icon_awesome_panel_wrapper').css ('display', 'none');
-		var p = $ (el).parent ();
-		var icon = $ (el).data ('icon');
-		var p_html = DIV (DIV (DIV (I (__kwargtrans__ ({_class: 'fas fa-clipboard'})), __kwargtrans__ ({_class: 'copy_buttom'})), INPUT (__kwargtrans__ ({_value: 'I(_class="{0}")'.format (icon)})), __kwargtrans__ ({_class: 'icon_awesome_panel'})), __kwargtrans__ ({_class: 'icon_awesome_panel_wrapper'}));
-		if (p.find ('.icon_awesome-panel-container').find ('.icon_awesome_panel_wrapper').length == 0) {
-			p.find ('.icon_awesome-panel-container').html (p_html.jquery ());
-			p.find ('.copy_buttom').off ('click').on ('click', (function __lambda__ () {
-				return self._copy (this);
-			}));
-		}
-		else {
-			p.find ('.icon_awesome-panel-container').find ('.icon_awesome_panel_wrapper').remove ();
-		}
-	});},
 	get reload () {return __get__ (this, function (self) {
 		self.start ();
 	});},
 	get _after_load () {return __get__ (this, function (self, data) {
 		console.log (data);
 		XML (data).html_to ('#icon_awesome_container');
-		$ ('.icon_awesome-button').off ('click.icon_awesome-wrapper').on ('click.icon_awesome-wrapper', (function __lambda__ () {
-			return self._process_icon (this);
-		}));
 	});}
 });
 

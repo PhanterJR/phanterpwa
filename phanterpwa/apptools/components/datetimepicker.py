@@ -114,7 +114,7 @@ class Datepickers():
                     jQuery(self.target_selector).attr("phanterpwa-datetimepicker-iso", iso_format)
 
     def _onChoice(self):
-        if self.onChoice is not None and self.onChoice is not js_undefined:
+        if callable(self.onChoice):
             iso_format = self._apply_format("yyyy-MM-dd HH:ss:mm")
             jQuery(self.target_selector).attr("phanterpwa-datetimepicker-iso", iso_format)
             __pragma__('jsiter')
@@ -1453,21 +1453,20 @@ class Datepickers():
             '#phanterpwa_datetimepicker_calendar_{0} {1} .phanterpwa_datetimepicker_unit'.format(
                 self.namespace, '.phanterpwa_datetimepicker_day'
             )
+        ).off(
+            'click.selecting_datepicker',
         ).on(
-            'click',
-            lambda: _selecting(this)
-        )
-        jQuery(
-            '#phanterpwa_datetimepicker_calendar_{0} {1} .phanterpwa_datetimepicker_unit'.format(
-                self.namespace, '.phanterpwa_datetimepicker_day'
-            )
-        ).on(
-            'click',
+            'click.selecting_datepicker',
             lambda: _selecting(this)
         )
         jQuery(
             ".phanterpwa_datetimepicker_summary_container .phanterpwa-models-close"
-        ).on("click", lambda: self.close())
+        ).off(
+            "click.deleting_datepicker",
+        ).on(
+            "click.deleting_datepicker",
+            lambda: self.close()
+        )
 
 
 __pragma__('nokwargs')

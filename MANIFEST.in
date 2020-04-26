@@ -1,3 +1,4 @@
+include phanterpwa/apptools/handler.pybkp
 include phanterpwa/captchasvg/captchadata.json
 include phanterpwa/captchasvg/recipes/circle.recs
 include phanterpwa/captchasvg/recipes/heart.recs
@@ -64,7 +65,7 @@ include phanterpwa/interface/Admin/apps/admin/sources/styles/extends/capcha_prel
 include phanterpwa/interface/Admin/apps/admin/sources/styles/extends/logo.sass
 include phanterpwa/interface/Admin/apps/admin/sources/styles/extends/phanterpwa-logo.sass
 include phanterpwa/interface/Admin/apps/admin/sources/styles/extends/run_points.sass
-include phanterpwa/interface/Admin/apps/admin/sources/styles/gates/componentes.sass
+include phanterpwa/interface/Admin/apps/admin/sources/styles/gates/components.sass
 include phanterpwa/interface/Admin/apps/admin/sources/styles/gates/developer.sass
 include phanterpwa/interface/Admin/apps/admin/sources/styles/gates/main.sass
 include phanterpwa/interface/Admin/apps/admin/statics/favicons/android-chrome-144x144.png
@@ -276,8 +277,6 @@ include phanterpwa/interface/Admin/apps/admin/www/static/0.0.1/webfonts/fa-solid
 include phanterpwa/interface/Admin/apps/admin/www/static/0.0.1/webfonts/fa-solid-900.woff2
 include phanterpwa/interface/Admin/config.json
 include phanterpwa/interface/Admin/LICENSE
-include phanterpwa/interface/Admin/logs/api.log
-include phanterpwa/interface/Admin/logs/app.log
 include phanterpwa/interface/Admin/project.ini
 include phanterpwa/interface/Admin/temp/extends_mtime_admin.json
 include phanterpwa/interface/Admin/temp/extends_mtime_components.json

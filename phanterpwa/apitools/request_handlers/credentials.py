@@ -346,7 +346,7 @@ class SignForms(web.RequestHandler):
         url: '/api/signforms/<form_identify>'
     """
 
-    def initialize(self, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
+    def initialize(self, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None, list_forms=[]):
         self.projectConfig = projectConfig
         self.DALDatabase = DALDatabase
         self.i18nTranslator = i18nTranslator
@@ -375,13 +375,14 @@ class SignForms(web.RequestHandler):
             self.i18nTranslator.direct_translation = self.phanterpwa_language
         self.phanterpwa_user_agent = str(self.request.headers.get('User-Agent'))
         self.phanterpwa_remote_ip = str(self.request.remote_ip)
-        self.list_forms = {
+        self.list_forms = [*{
             "phanterpwa-form-activation",
             "phanterpwa-form-profile",
             "phanterpwa-form-change_password",
             "phanterpwa-form-search_alunos",
-            "phanterpwa-form-socios"
-        }
+            "phanterpwa-form-socios",
+            *list_forms
+        }]
 
     def check_origin(self, origin):
         return True
@@ -550,7 +551,7 @@ class SignCaptchaForms(web.RequestHandler):
         url: '/api/signcaptchaforms/<form_identify>'
     """
 
-    def initialize(self, projectConfig, DALDatabase, Translator_captcha, i18nTranslator=None, logger_api=None):
+    def initialize(self, projectConfig, DALDatabase, Translator_captcha, i18nTranslator=None, logger_api=None, list_forms=[]):
         self.projectConfig = projectConfig
         self.DALDatabase = DALDatabase
         self.i18nTranslator = i18nTranslator
@@ -579,12 +580,13 @@ class SignCaptchaForms(web.RequestHandler):
             self.i18nTranslator.direct_translation = self.phanterpwa_language
         self.phanterpwa_user_agent = str(self.request.headers.get('User-Agent'))
         self.phanterpwa_remote_ip = str(self.request.remote_ip)
-        self.list_forms = [
+        self.list_forms = [*{
             "phanterpwa-form-login",
             "phanterpwa-form-register",
             "phanterpwa-form-request_password",
             "phanterpwa-form-login401",
-        ]
+            *list_forms
+        }]
 
     def check_origin(self, origin):
         return True

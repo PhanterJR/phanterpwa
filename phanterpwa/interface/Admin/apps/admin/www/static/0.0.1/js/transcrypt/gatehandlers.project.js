@@ -1,4 +1,4 @@
-// Transcrypt'ed from Python, 2020-04-10 03:52:37
+// Transcrypt'ed from Python, 2020-04-24 18:41:56
 import {AssertionError, AttributeError, BaseException, DeprecationWarning, Exception, IndexError, IterableError, KeyError, NotImplementedError, RuntimeWarning, StopIteration, UserWarning, ValueError, Warning, __JsIterator__, __PyIterator__, __Terminal__, __add__, __and__, __call__, __class__, __envir__, __eq__, __floordiv__, __ge__, __get__, __getcm__, __getitem__, __getslice__, __getsm__, __gt__, __i__, __iadd__, __iand__, __idiv__, __ijsmod__, __ilshift__, __imatmul__, __imod__, __imul__, __in__, __init__, __ior__, __ipow__, __irshift__, __isub__, __ixor__, __jsUsePyNext__, __jsmod__, __k__, __kwargtrans__, __le__, __lshift__, __lt__, __matmul__, __mergefields__, __mergekwargtrans__, __mod__, __mul__, __ne__, __neg__, __nest__, __or__, __pow__, __pragma__, __proxy__, __pyUseJsNext__, __rshift__, __setitem__, __setproperty__, __setslice__, __sort__, __specialattrib__, __sub__, __super__, __t__, __terminal__, __truediv__, __withblock__, __xor__, abs, all, any, assert, bool, bytearray, bytes, callable, chr, copy, deepcopy, delattr, dict, dir, divmod, enumerate, filter, float, getattr, hasattr, input, int, isinstance, issubclass, len, list, map, max, min, object, ord, pow, print, property, py_TypeError, py_iter, py_metatype, py_next, py_reversed, py_typeof, range, repr, round, set, setattr, sorted, str, sum, tuple, zip} from './org.transcrypt.__runtime__.js';
 import * as left_bar from './phanterpwa.apptools.components.left_bar.js';
 import * as widgets from './phanterpwa.apptools.components.widgets.js';
@@ -231,13 +231,25 @@ export var Index =  __class__ ('Index', [gatehandler.Handler], {
 		var table = XTABLE ('applications-table', XTRH ('applications-table-head', ...['Application Name', 'Build Folder'], DIV (I (__kwargtrans__ ({_class: 'fas fa-plus'})), __kwargtrans__ (dict ({'_phanterpwa-way': 'application/new', '_class': 'icon_button wave_on_click'})))));
 		var apps_dict = dict (json.config.APPS);
 		for (var x of apps_dict.py_keys ()) {
-			table.append (XTRD ('applications-table-data-{0}'.format (x), x, apps_dict [x] ['build_folder'], widgets.MenuBox ('drop_2_{0}'.format (x), __kwargtrans__ ({xml_menu: UL (LI ('Compile', __kwargtrans__ (dict ({'_id': 'btn_compile_app_project_{0}'.format (x), '_class': 'btn_compile_app_project', '_data-path': json.config ['PROJECT'] ['path'], '_data-app': x}))), LI ('View', __kwargtrans__ (dict ({'_class': 'botao_editar_role', '_phanterpwa-way': 'application/{0}/view'.format (x)}))), LI ('Delete', __kwargtrans__ (dict ({'_class': 'botao_editar_role', '_phanterpwa-way': 'application/{0}/delete'.format (x)}))), __kwargtrans__ (dict ({'data-menubox': 'drop_2_{0}'.format (x), '_class': 'dropdown-content'})))}))));
+			table.append (XTRD ('applications-table-data-{0}'.format (x), x, apps_dict [x] ['build_folder'], widgets.MenuBox ('drop_2_{0}'.format (x), DIV (I (__kwargtrans__ ({_class: 'fas fa-ellipsis-v'})), __kwargtrans__ ({_class: 'icon_button wave_on_click'})), __kwargtrans__ ({custom_menu: UL (LI ('Compile', __kwargtrans__ (dict ({'_id': 'btn_compile_app_project_{0}'.format (x), '_class': 'btn_compile_app_project', '_data-path': json.config ['PROJECT'] ['path'], '_data-app': x}))), LI ('View', __kwargtrans__ (dict ({'_class': 'botao_editar_role', '_phanterpwa-way': 'application/{0}/view'.format (x)}))), LI ('Delete', __kwargtrans__ (dict ({'_class': 'botao_editar_role', '_phanterpwa-way': 'application/{0}/delete'.format (x)}))), __kwargtrans__ (dict ({'data-menubox': 'drop_2_{0}'.format (x), '_class': 'dropdown-content'}))), onOpen: (function __lambda__ () {
+				if (arguments.length) {
+					var __ilastarg0__ = arguments.length - 1;
+					if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+						var __allkwargs0__ = arguments [__ilastarg0__--];
+						for (var __attrib0__ in __allkwargs0__) {
+						}
+					}
+				}
+				else {
+				}
+				return window.PhanterPWA.flash ('foi clicado!');
+			})}))));
 		}
 		if (json.config.PROJECT.debug) {
-			var url = json.config.API.remote_address_on_development;
+			var url = json.config.API.remote_address_debug;
 		}
 		else {
-			var url = json.config.API.remote_address_on_production;
+			var url = json.config.API.remote_address;
 		}
 		var ShowApi = left_bar.LeftBarButton ('view_api', 'Open Api', I (__kwargtrans__ ({_class: 'fas fa-globe'})), __kwargtrans__ (dict ({'position': 'top', 'ways': [(function __lambda__ () {
 			if (arguments.length) {
@@ -267,6 +279,7 @@ export var Index =  __class__ ('Index', [gatehandler.Handler], {
 		window.PhanterPWA.Components ['left_bar'].add_button (ShowApi);
 		var html = DIV (XSECTION (LABEL ('Summary'), DIV (DIV (DIV (DIV (STRONG ('PROJECT PATH'), SPAN (json.config ['PROJECT'] ['path']), __kwargtrans__ ({_class: 'e-tagger-wrapper'})), __kwargtrans__ ({_class: 'p-col w1p100'})), __kwargtrans__ ({_class: 'p-row'})), DIV (DIV (DIV (STRONG ('IDENTIFIER NAME'), SPAN (json.config ['PROJECT'] ['name']), __kwargtrans__ ({_class: 'e-tagger-wrapper'})), __kwargtrans__ ({_class: 'p-col w1p100'})), __kwargtrans__ ({_class: 'p-row'})), DIV (DIV (DIV (STRONG ('TITLE'), SPAN (json.config ['PROJECT'] ['title']), __kwargtrans__ ({_class: 'e-tagger-wrapper'})), __kwargtrans__ ({_class: 'p-col w1p100'})), __kwargtrans__ ({_class: 'p-row'})), DIV (DIV (DIV (STRONG ('AUTHOR'), SPAN (json.config ['PROJECT'] ['author']), __kwargtrans__ ({_class: 'e-tagger-wrapper'})), __kwargtrans__ ({_class: 'p-col w1p100'})), __kwargtrans__ ({_class: 'p-row'})), DIV (DIV (DIV (STRONG ('VERSION'), SPAN (json.config ['PROJECT'] ['version']), __kwargtrans__ ({_class: 'e-tagger-wrapper'})), __kwargtrans__ ({_class: 'p-col w1p100 w3p50'})), DIV (DIV (STRONG ('COMPILATION'), SPAN (json.config ['PROJECT'] ['compilation']), __kwargtrans__ ({_class: 'e-tagger-wrapper'})), __kwargtrans__ ({_class: 'p-col w1p100 w3p50'})), __kwargtrans__ ({_class: 'p-row'})), DIV (DIV (DIV (STRONG ('DEBUG'), SPAN (json.config ['PROJECT'] ['debug']), __kwargtrans__ ({_class: 'e-tagger-wrapper'})), __kwargtrans__ ({_class: 'p-col w1p100 w3p50'})), DIV (DIV (STRONG ('STATUS'), SPAN ((json.running ? 'Running' : 'Stopped'), __kwargtrans__ ({_style: 'color: {0};'.format ((json.running ? 'green' : 'red'))})), __kwargtrans__ ({_class: 'e-tagger-wrapper'})), __kwargtrans__ ({_class: 'p-col w1p100 w3p50'})), __kwargtrans__ ({_class: 'p-row'})), __kwargtrans__ ({_class: 'e-padding_20'}))), table);
 		html.html_to ('#applications_container');
+		self.widgets_initialize ();
 	});},
 	get _xml_config_project () {return __get__ (this, function (self, json) {
 		if (arguments.length) {

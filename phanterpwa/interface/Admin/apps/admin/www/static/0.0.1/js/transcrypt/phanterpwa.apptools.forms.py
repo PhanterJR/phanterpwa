@@ -63,6 +63,8 @@ class SignForm():
             self.signCaptchaForm()
         else:
             self.signForm()
+        self._on_captcha_resolve = parameters.get("onCaptchaResolve", None)
+        self._on_click_option = parameters.get("onClickOption", None)
 
     def after_try_sign(self, data, ajax_status):
         if ajax_status == "success":
@@ -134,6 +136,8 @@ class SignForm():
             csrf = data.responseJSON.csrf
             self.element_csrf_token.val(csrf).trigger("keyup")
             self.element_captcha_container.html(html)
+            if callable(self._on_captcha_resolve):
+                self._on_captcha_resolve(data, ajax_status)
         else:
             if data.status == 0:
                 self.on_captcha_fail()
@@ -150,6 +154,8 @@ class SignForm():
         user_choice = jQuery(el).attr("token_option")
         signature = signature
         id_form = jQuery(el).attr("id_captcha")
+        if callable(self._on_click_option):
+            self._on_click_option(el)
         __pragma__('jsiter')
         captcha_vars = {
             'user_choice': user_choice,

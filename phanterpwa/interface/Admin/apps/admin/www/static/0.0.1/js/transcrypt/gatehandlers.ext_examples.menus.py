@@ -31,18 +31,59 @@ XML = helpers.XML
 XSECTION = helpers.XSECTION
 
 
-codemirrorsidebyside = """
+codemirrorfirstmenu = """
+import phanterpwa.apptools.components.widgets as widgets
+import phanterpwa.apptools.helpers as helpers
+DIV = helpers.XmlConstructor.tagger("div")
+
+html = DIV(
+    widgets.MenuBox(
+        "firstmenu",
+        I(_class="fas fa-ellipsis-v"),
+        DIV("Option1", _class="my_button_one"),
+        DIV("Option2", _class="my_button_two")
+    )
+)
+
+html.html_to("#your_target")
+# your code
+"""
+
+
+codemirrormenu2 = """
 # your code
 
+your_instance = widgets.MenuBox(
+    "firstmenu2",
+    "My menu",
+    DIV("Option1", _class="my_button_one"),
+    DIV("Option2", _class="my_button_two"),
+    **{
+        "width": 200,
+        "onOpen": lambda el: jQuery(el).find(
+            ".phanterpwa-widget-menubox-option"
+        ).off(
+            "click.phanterpwa-awesome-icon",
+        ).on(
+            "click.phanterpwa-awesome-icon",
+            lambda: window.PhanterPWA.flash("I'm clicked!")
+        )
+    }
+)
+
+# your code
+"""
+
+
+codemirrorsidebyside = """
+# your code
 your_menus = DIV(
     DIV(
         widgets.MenuBox(
             "sideleft",
-            xml_menu=UL(
-                LI(SPAN("Editar", _class="botao_editar_socio")),
-                LI(SPAN("Visualizar", _class="botao_visualizar_socio")),
-                _class='dropdown-content'
-            )
+            I(_class="fas fa-ellipsis-v"),
+            DIV("Option1", _class="my_button_one"),
+            DIV("Option2", _class="my_button_two")
         ),
         _class="p-col w1p10"
     ),
@@ -53,11 +94,9 @@ your_menus = DIV(
     DIV(
         widgets.MenuBox(
             "sideright",
-            xml_menu=UL(
-                LI(SPAN("Editar", _class="botao_editar_socio")),
-                LI(SPAN("Visualizar", _class="botao_visualizar_socio")),
-                _class='dropdown-content'
-            )
+            I(_class="fas fa-ellipsis-v"),
+            DIV("Option1", _class="my_button_one"),
+            DIV("Option2", _class="my_button_two")
         ),
         _class="p-col w1p10"
     ),
@@ -66,7 +105,6 @@ your_menus = DIV(
 
 # your code
 """
-
 
 
 class MenuBox():
@@ -93,43 +131,56 @@ class MenuBox():
                             DIV(
                                 STRONG(I18N("Code"), ":"),
                                 codemirror.CodeMirrorHelper(
-                                    "codemirrorsidebyside",
+                                    "codemirrorfirstmenu",
                                     **{
-                                        "value": codemirrorsidebyside,
+                                        "value": codemirrorfirstmenu,
                                         "mode": "python",
                                         "lineNumbers": True
                                     }
                                 ),
                                 STRONG(I18N("Results"), ":"),
                                 DIV(
-                                    DIV(
-                                        DIV(
-                                            widgets.MenuBox(
-                                                "sideleft",
-                                                xml_menu=UL(
-                                                    LI(SPAN("Editar", _class="botao_editar_socio")),
-                                                    LI(SPAN("Visualizar", _class="botao_visualizar_socio")),
-                                                    _class='dropdown-content'
-                                                )
-                                            ),
-                                            _class="p-col w1p10"
-                                        ),
-                                        DIV(
-                                            " ",
-                                            _class="p-col w1p80"
-                                        ),
-                                        DIV(
-                                            widgets.MenuBox(
-                                                "sideright",
-                                                xml_menu=UL(
-                                                    LI(SPAN("Editar", _class="botao_editar_socio")),
-                                                    LI(SPAN("Visualizar", _class="botao_visualizar_socio")),
-                                                    _class='dropdown-content'
-                                                )
-                                            ),
-                                            _class="p-col w1p10"
-                                        ),
-                                        _class="p-row"
+                                    widgets.MenuBox(
+                                        "firstmenu",
+                                        I(_class="fas fa-ellipsis-v"),
+                                        DIV("Option1", _class="my_button_one"),
+                                        DIV("Option2", _class="my_button_two")
+                                    ),
+                                    _class="widget_input_example"
+                                ),
+                                _class="e-padding_10"
+                            ),
+                        ),
+                        XSECTION(
+                            LABEL(I18N("Example"), ' 02'),
+                            DIV(
+                                STRONG(I18N("Code"), ":"),
+                                codemirror.CodeMirrorHelper(
+                                    "codemirrormenu2",
+                                    **{
+                                        "value": codemirrormenu2,
+                                        "mode": "python",
+                                        "lineNumbers": True
+                                    }
+                                ),
+                                STRONG(I18N("Results"), ":"),
+                                DIV(
+                                    widgets.MenuBox(
+                                        "firstmenu2",
+                                        "My menu",
+                                        DIV("Option1", _class="my_button_one"),
+                                        DIV("Option2", _class="my_button_two"),
+                                        **{
+                                            "width": 200,
+                                            "onOpen": lambda el: jQuery(el).find(
+                                                ".phanterpwa-widget-menubox-option"
+                                            ).off(
+                                                "click.phanterpwa-awesome-icon",
+                                            ).on(
+                                                "click.phanterpwa-awesome-icon",
+                                                lambda: window.PhanterPWA.flash("I'm clicked!")
+                                            )
+                                        }
                                     ),
                                     _class="widget_input_example"
                                 ),
@@ -154,11 +205,9 @@ class MenuBox():
                                         DIV(
                                             widgets.MenuBox(
                                                 "sideleft",
-                                                xml_menu=UL(
-                                                    LI(SPAN("Editar", _class="botao_editar_socio")),
-                                                    LI(SPAN("Visualizar", _class="botao_visualizar_socio")),
-                                                    _class='dropdown-content'
-                                                )
+                                                I(_class="fas fa-ellipsis-v"),
+                                                DIV("Option1", _class="my_button_one"),
+                                                DIV("Option2", _class="my_button_two")
                                             ),
                                             _class="p-col w1p10"
                                         ),
@@ -169,11 +218,9 @@ class MenuBox():
                                         DIV(
                                             widgets.MenuBox(
                                                 "sideright",
-                                                xml_menu=UL(
-                                                    LI(SPAN("Editar", _class="botao_editar_socio")),
-                                                    LI(SPAN("Visualizar", _class="botao_visualizar_socio")),
-                                                    _class='dropdown-content'
-                                                )
+                                                I(_class="fas fa-ellipsis-v"),
+                                                DIV("Option1", _class="my_button_one"),
+                                                DIV("Option2", _class="my_button_two")
                                             ),
                                             _class="p-col w1p10"
                                         ),

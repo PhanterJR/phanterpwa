@@ -24,6 +24,7 @@ class Handler():
     def __init__(self, request, **parameters):
         self._request = request
         self.debug = window.PhanterPWA.DEBUG
+        self.config = window.PhanterPWA.CONFIG
         self._authorized_roles = parameters.get("authorized_roles", "all")
         self._authorized_users = parameters.get("authorized_users", "all")
         self._back = window.PhanterPWA.get_current_way()
@@ -104,11 +105,8 @@ class Handler():
             console.info("method not used: Handler.initialize")
 
     def widgets_initialize(self):
-        for x in window.PhanterPWA.Request.widgets.keys():
-            if callable(window.PhanterPWA.Request.widgets[x].initialize):
-                if window.PhanterPWA.Request.widgets[x].actived is False:
-                    window.PhanterPWA.Request.widgets[x].initialize()
-                    window.PhanterPWA.Request.widgets[x].actived = True
+        for x in self.request.widgets.keys():
+            self.request.widgets[x].start()
 
 
 class ErrorHandler():

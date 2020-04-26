@@ -41,6 +41,8 @@ class Widget(helpers.XmlConstructor):
     def __init__(self, identifier, *content, **attributes):
         self.actived = False
         self.identifier = identifier
+        if self.identifier is js_undefined or self.identifier is None:
+            raise console.error("The identifier is invalid!")
         self._identifier = window.PhanterPWA.get_id(identifier)
         attributes["_id"] = "phanterpwa-widget-{0}".format(self.identifier)
         attributes["_phanterpwa-widget"] = self.identifier
@@ -53,6 +55,19 @@ class Widget(helpers.XmlConstructor):
             self.identifier
         )
         window.PhanterPWA.Request.add_widget(self)
+
+    def _reload(self):
+        if not window.PhanterPWA.check_event_namespace(
+                jQuery(self.target_selector), "phanterpwa_widget", self.identifier):
+            jQuery(
+                self.target_selector
+            ).off(
+                "phanterpwa_widget.{0}".format(self.identifier)
+            ).on(
+                "phanterpwa_widget.{0}".format(self.identifier),
+                lambda: self.reload()
+            )
+            jQuery(self.target_selector).trigger("phanterpwa_widget")
 
     def reload(self):
         if window.PhanterPWA.DEBUG:
@@ -80,6 +95,8 @@ class Input(Widget):
         self._format = parameters.get("format", None)
         self._icon_on_click = parameters.get("icon_on_click", None)
         self._onload = parameters.get("onLoad", None)
+        self._checker = parameters.get("checker", True)
+        self._on_date_datetime_choice = parameters.get("onDateorDatetimeChoice", None)
         wrapper_attr = {
             "_class": "phanterpwa-widget-wrapper phanterpwa-widget-input-wrapper phanterpwa-widget-wear-{0}".format(
                 self._wear)
@@ -138,7 +155,7 @@ class Input(Widget):
             DIV(
                 I(_class="fas fa-check"),
                 _class="phanterpwa-widget-check"
-            ),
+            ) if self._checker else "",
             xml_icon,
             DIV(
                 self.get_message_error(),
@@ -197,6 +214,7 @@ class Input(Widget):
             self._datetimepicker = datetimepicker.Datepickers(
                 self.target_selector,
                 **{"date_type": "date", "format": self._format,
+                "onChoice": self._on_date_datetime_choice,
                 "id_input_target": jQuery(self.target_selector).find("input")}
             )
             self._datetimepicker.start()
@@ -204,6 +222,7 @@ class Input(Widget):
             self._datetimepicker = datetimepicker.Datepickers(
                 self.target_selector,
                 **{"date_type": "datetime", "format": self._format,
+                "onChoice": self._on_date_datetime_choice,
                 "id_input_target": jQuery(self.target_selector).find("input")}
             )
             self._datetimepicker.start()
@@ -304,7 +323,7 @@ class Select(Widget):
         self._icon_check = parameters.get("icon_check", I(_class="fas fa-check"))
         self._on_click_new = parameters.get("on_click_new_button", None)
         self.set_z_index(parameters.get("z_index", None))
-        self.set_recalc_on_scroll(parameters.get("recalc_on_scroll", False))
+        self.set_recalc_on_scroll(parameters.get("recalc_on_scroll", True))
         xml_icon = ""
         if self._icon is not "":
             xml_icon = DIV(self._icon, _class="phanterpwa-widget-icon-wrapper")
@@ -584,6 +603,7 @@ class Select(Widget):
             "#phanterpwa-widget-select-input-{0}".format(self.identifier),
             self._xml_modal,
             on_close=lambda: self._after_modal_close(el),
+            width="100%",
             z_index=self._z_index,
             recalc_on_scroll=self._recalc_on_scroll
         )
@@ -822,7 +842,7 @@ class MultSelect(Widget):
         self._icon_check = parameters.get("icon_check", I(_class="fas fa-check"))
         self._on_click_new = parameters.get("on_click_new_button", None)
         self.set_z_index(parameters.get("z_index", None))
-        self.set_recalc_on_scroll(parameters.get("recalc_on_scroll", False))
+        self.set_recalc_on_scroll(parameters.get("recalc_on_scroll", True))
         xml_icon = ""
         if self._icon is not "":
             xml_icon = DIV(self._icon, _class="phanterpwa-widget-icon-wrapper")
@@ -1106,6 +1126,7 @@ class MultSelect(Widget):
             "#phanterpwa-widget-multselect-value-{0}".format(self.identifier),
             self._xml_modal,
             on_close=lambda: self._after_modal_close(el),
+            width="100%",
             z_index=self._z_index,
             recalc_on_scroll=self._recalc_on_scroll
         )
@@ -2200,24 +2221,151 @@ class CheckBox(Widget):
         self._binds()
 
 
-class MenuBox(Widget):
-    def __init__(self, identifier, *options, **parameters):
-        self._icon = parameters.get("icon", I(_class="fas fa-ellipsis-v"))
+class RadioBox(Widget):
+    def __init__(self, identifier, **parameters):
         self._label = parameters.get("label", None)
-        self._xml_menu = parameters.get("xml_menu", I(_class="fas fa-ellipsis-v"))
-        self._onreload = parameters.get('onReload', None)
-        self._onopen = parameters.get('onOpen', None)
-        self.set_z_index(parameters.get("z_index", None))
-        self._close_after_click_in = parameters.get("close_after_click_in", True)
-        self.set_recalc_on_scroll(parameters.get("recalc_on_scroll", False))
+        self._name = parameters.get("name", None)
+        self._value = parameters.get("value", False)
+        self._can_empty = parameters.get("can_empty", False)
+        self._wear = parameters.get("wear", "material")
+        self._form = parameters.get("form", None)
+        self._group = parameters.get("group", None)
+
+        wrapper_attr = {
+            "_class": "phanterpwa-widget-wrapper phanterpwa-widget-radio-wrapper phanterpwa-widget-wear-{0}".format(
+                self._wear)
+        }
+        parameters["_id"] = identifier
+        if "_class" in parameters:
+            parameters["_class"] = "{0}{1}".format(parameters["_class"], " phanterpwa-widget-radio")
+        else:
+            parameters['_class'] = "phanterpwa-widget-radio"
         label = ""
         if self._label is not None:
-            label = LABEL(self._label)
+            wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " has_label")
+            label = LABEL(self._label, _for="phanterpwa-widget-radio-input-{0}".format(identifier))
+        _checked = None
+        if self._value is True or self._Value is "true":
+            _checked = "checked"
+            wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " has_true")
 
         html = DIV(
-            self._icon,
+            INPUT(**{
+                "_id": "phanterpwa-widget-radio-input-{0}".format(identifier),
+                "_class": "phanterpwa-widget-radio-input",
+                "_name": self._name,
+                "_value": self._value,
+                "_placeholder": self._placeholder,
+                "_type": "radio",
+                "_checked": _checked,
+                "_data-instance": self.identifier,
+                "_data-form": self._form
+            }),
+            DIV(
+                DIV(
+                    self._xml_radio(),
+                    _class="phanterpwa-widget-radio-option-container"
+                ),
+                _class="phanterpwa-widget-radio-radio",
+                _tabindex=0
+            ),
             label,
-            _class="phanterpwa-widget-menubox-icon wave_on_click{0}".format(" icon_button" if label is None else ""),
+            **wrapper_attr
+        )
+        Widget.__init__(self, identifier, html, **parameters)
+
+    def _change_xml_radio(self):
+        el = jQuery("#phanterpwa-widget-radio-input-{0}".format(self.identifier))
+        value = el.prop("checked")
+        p = el.parent()
+        
+        if value is True:
+            p.addClass("has_true")
+            jQuery("#phanterpwa-widget-radio-input-{0}".format(self.identifier)).val(value)
+            self._value = True
+
+        else:
+            p.removeClass("has_true")
+            jQuery("#phanterpwa-widget-radio-input-{0}".format(self.identifier)).val(value)
+            self._value = False
+
+        self._xml_radio().html_to(jQuery(self.target_selector).find(".phanterpwa-widget-radio-option-container"))
+
+    def _xml_radio(self):
+        if self._value is True:
+            return DIV(
+                I(_class="far fa-dot-circle"),
+                _class="phanterpwa-widget-radio-true"
+            )
+        return DIV(
+            I(_class="far fa-circle"),
+            _class="phanterpwa-widget-radio-false"
+        )
+
+    def _set_radio_value(self, el):
+        el = jQuery(el)
+        p = el.parent()
+        p.addClass("has_true")
+        jQuery(".phanterpwa-widget-wrapper").removeClass("focus").removeClass("pre_focus")
+        p.addClass("focus")
+        self._value = True
+        p.find("input").prop("checked", self._value).val(self._value)
+        jQuery(".phanterpwa-widget-radio-input").trigger("change")
+
+    def _switch_focus(self, el):
+        el = jQuery(el)
+        p = el.parent()
+        if el.js_is(":focus"):
+            jQuery(".phanterpwa-widget-wrapper").removeClass("focus").removeClass("pre_focus")
+            p.addClass("focus")
+        else:
+            p.removeClass("focus")
+
+    def reload(self):
+        self.start()
+
+    def _binds(self):
+        target = jQuery(self.target_selector)
+        target.find(".phanterpwa-widget-radio-radio").off("click.phanterpwa-event-radio-switch").on(
+            "click.phanterpwa-event-radio-switch",
+            lambda: self._set_radio_value(this)
+        )
+        target.find("label").off("click.phanterpwa-event-radio-switch").on(
+            "click.phanterpwa-event-radio-switch",
+            lambda: self._set_radio_value(this)
+        )
+        target.find("input").off("change.phanterpwa-event-radio-switch").on(
+            "change.phanterpwa-event-radio-switch",
+            lambda: self._change_xml_radio()
+        )
+
+
+    def start(self):
+        self._binds()
+
+
+class MenuBox(Widget):
+    def __init__(self, identifier, button, *options, **parameters):
+        if button is js_undefined or button is None:
+            self._button = I(_class="fas fa-ellipsis-v")
+        else:
+            self._button = button
+        self._custom_menu = parameters.get("custom_menu", None)
+        self._xml_menu = []
+        self._onreload = parameters.get('onReload', None)
+        self._onopen = parameters.get('onOpen', None)
+        self._options = options
+        for x in self._options:
+            self.add_option(x)
+
+        self.set_z_index(parameters.get("z_index", None))
+        self._close_after_click_in = parameters.get("close_after_click_in", True)
+        self.set_recalc_on_scroll(parameters.get("recalc_on_scroll", True))
+        self._width = parameters.get('width', None)
+
+        html = DIV(
+            self._button,
+            _class="phanterpwa-widget-menubox-button",
             _phanterpwa_dowpdown_target="drop_{0}".format(identifier)
         )
         if "_class" in parameters:
@@ -2226,16 +2374,24 @@ class MenuBox(Widget):
             parameters['_class'] = "phanterpwa-widget-menubox"
         Widget.__init__(self, identifier, html, **parameters)
 
+    def add_option(self, option):
+        self._xml_menu.append(DIV(option, _class="phanterpwa-widget-menubox-option"))
+
     def _on_click(self, el):
-        jQuery(el)
+        if self._custom_menu is None:
+            content = self._xml_menu
+        else:
+            content = [self._custom_menu]
         self.modal = PseudoModal(
             self.target_selector,
             DIV(
-                self._xml_menu,
+                *content,
                 _id="phanterpwa-widget-menubox-options-content-{0}".format(self.identifier),
-                _class="phanterpwa-widget-menubox-options-content"
+                _class="phanterpwa-widget-menubox-options-content",
+                _style=None if self._width is None else "width: {0}px".format(self._width)
             ),
             vertical=True,
+            width=self._width,
             z_index=self._z_index,
             recalc_on_scroll=self._recalc_on_scroll,
             on_open=self._onopen
@@ -2244,6 +2400,20 @@ class MenuBox(Widget):
         if self._close_after_click_in is True:
             jQuery("#phanterpwa-widget-menubox-options-content-{0}".format(
                 self.identifier)).find(".phanterpwa-widget-menubox-option").off(
+                "click.close_pseudo_modal"
+            ).on(
+                "click.close_pseudo_modal",
+                lambda: self.modal.close()
+            )
+            jQuery("#phanterpwa-widget-menubox-options-content-{0}".format(
+                self.identifier)).find("ul>li").off(
+                "click.close_pseudo_modal"
+            ).on(
+                "click.close_pseudo_modal",
+                lambda: self.modal.close()
+            )
+            jQuery("#phanterpwa-widget-menubox-options-content-{0}".format(
+                self.identifier)).find("ul>span").off(
                 "click.close_pseudo_modal"
             ).on(
                 "click.close_pseudo_modal",
@@ -2294,11 +2464,10 @@ class PseudoModal():
         self._identifier = window.PhanterPWA.get_id("pseudomodal")
         self.pX = parameters.get("pX", 0)
         self.pY = parameters.get("pY", 0)
-        self.width = parameters.get("width", 0)
-        self.height = parameters.get("height", 0)
         self.data = parameters.get("data", None)
         self.value = parameters.get("value", None)
         self.on_close = parameters.get("on_close", None)
+        self._width = parameters.get("width", "auto")
         self.placeholder = parameters.get("placeholder", None)
         self._is_select = parameters.get("is_select", False)
         self._to_top = False
@@ -2328,12 +2497,8 @@ class PseudoModal():
         self.document_size = [jQuery(document).width(), jQuery(document).height()]
         self.scroll_top = jQuery(document).scrollTop()
         self.scroll_left = jQuery(document).scrollLeft()
-        self.width = jQuery(self.source_selector).width()
         self.theight = jQuery(self.source_selector).height()
-        if self._vertical_position:
-            self.twidth = jQuery(self.source_selector).width()
-        else:
-            self.twidth = self.width
+        self.twidth = jQuery(self.source_selector).width()
         self.toffset = jQuery(self.source_selector).offset()
         self.space_bottom = self.viewport[1] - self.toffset['top'] - self.theight + self.scroll_top
         self.space_top = self.toffset['top'] - self.scroll_top
@@ -2354,133 +2519,153 @@ class PseudoModal():
             self._to_top = False
 
     def _calc_position(self):
-        self._get_source_dimentions()
-        self._get_side_show()
-        self._get_wside_show()
-        if self._vertical_position:
-            jQuery(
-                "#{0}-wrapper".format(self._identifier)
-            ).css(
-                "left", self.toffset["left"]
-            ).css(
-                "top", self.toffset["top"]
-            ).css(
-                "width", self.width
+        if jQuery(self.source_selector).length == 0:
+            jQuery(document).off(
+                "scroll.recalc_on_scroll{0}".format(self._identifier)
             )
-            if self._to_top and self._to_left:  # to_top to_left
-                jQuery(
-                    "#{0}-wrapper".format(self._identifier)
-                ).find(
-                    ".phanterpwa-component-pseudomodal-content-wrapper"
-                ).css(
-                    "bottom", 0
-                ).css(
-                    "top", "auto"
-                ).css(
-                    "margin-top", "auto"
-                ).css(
-                    "margin-bottom", self.theight / -2
-                ).css(
-                    "right", 0
-                ).css(
-                    "left", "auto"
-                ).css(
-                    "margin-left", "auto"
-                ).css(
-                    "margin-right", self.twidth / 2
-                ).parent().addClass("to_top").removeClass("to_bottom").addClass("to_left").removeClass("to_right")
-            elif self._to_top:  # to_top to_right
-                jQuery(
-                    "#{0}-wrapper".format(self._identifier)
-                ).find(
-                    ".phanterpwa-component-pseudomodal-content-wrapper"
-                ).css(
-                    "bottom", 0
-                ).css(
-                    "top", "auto"
-                ).css(
-                    "margin-top", "auto"
-                ).css(
-                    "margin-bottom", self.theight / -2
-                ).css(
-                    "right", "auto"
-                ).css(
-                    "left", 0
-                ).css(
-                    "margin-left", self.twidth / 2
-                ).parent().addClass("to_top").removeClass("to_bottom").addClass("to_right").removeClass("to_left")
-            elif self._to_left:  # to_bottom to_left
-                jQuery(
-                    "#{0}-wrapper".format(self._identifier)
-                ).find(
-                    ".phanterpwa-component-pseudomodal-content-wrapper"
-                ).css(
-                    "bottom", "auto"
-                ).css(
-                    "top", 0
-                ).css(
-                    "margin-top", self.theight / 2
-                ).css(
-                    "right", 0
-                ).css(
-                    "left", "auto"
-                ).css(
-                    "margin-left", "auto"
-                ).css(
-                    "margin-right", self.twidth / 2
-                ).parent().addClass("to_bottom").removeClass("to_top").addClass("to_left").removeClass("to_right")
-            else:  # to_bottom to_right
-                jQuery(
-                    "#{0}-wrapper".format(self._identifier)
-                ).find(
-                    ".phanterpwa-component-pseudomodal-content-wrapper"
-                ).css(
-                    "bottom", "auto"
-                ).css(
-                    "top", 0
-                ).css(
-                    "margin-top", self.theight / 2
-                ).css(
-                    "right", "auto"
-                ).css(
-                    "left", 0
-                ).css(
-                    "margin-left", self.twidth / 2
-                ).parent().addClass("to_bottom").removeClass("to_top").addClass("to_right").removeClass("to_left")
+            jQuery(window).off(
+                "resize.recalc_on_resize{0}".format(self._identifier)
+            )
         else:
-            jQuery(
-                "#{0}-wrapper".format(self._identifier)
-            ).css(
-                "left", self.toffset["left"]
-            ).css(
-                "top", self.toffset["top"]
-            ).css(
-                "width", self.width
-            )
-            if self._to_top:
+            self._get_source_dimentions()
+            self._get_side_show()
+            self._get_wside_show()
+            if self._vertical_position:
                 jQuery(
                     "#{0}-wrapper".format(self._identifier)
-                ).find(
-                    ".phanterpwa-component-pseudomodal-content-wrapper"
                 ).css(
-                    "bottom", 0
+                    "left", self.toffset["left"]
                 ).css(
-                    "top", "auto"
+                    "top", self.toffset["top"]
                 ).css(
-                    "margin-top", "auto"
-                ).parent().addClass("to_top").removeClass("to_bottom")
+                    "width", self.twidth
+                )
+                if self._to_top and self._to_left:  # to_top to_left
+                    jQuery(
+                        "#{0}-wrapper".format(self._identifier)
+                    ).find(
+                        ".phanterpwa-component-pseudomodal-content-wrapper"
+                    ).css(
+                        "bottom", 0
+                    ).css(
+                        "top", "auto"
+                    ).css(
+                        "margin-top", "auto"
+                    ).css(
+                        "margin-bottom", self.theight / -2
+                    ).css(
+                        "right", 0
+                    ).css(
+                        "left", "auto"
+                    ).css(
+                        "margin-left", "auto"
+                    ).css(
+                        "margin-right", self.twidth / 2
+                    ).css(
+                        "width", self._width
+                    ).parent().addClass("to_top").removeClass("to_bottom").addClass("to_left").removeClass("to_right")
+                elif self._to_top:  # to_top to_right
+                    jQuery(
+                        "#{0}-wrapper".format(self._identifier)
+                    ).find(
+                        ".phanterpwa-component-pseudomodal-content-wrapper"
+                    ).css(
+                        "bottom", 0
+                    ).css(
+                        "top", "auto"
+                    ).css(
+                        "margin-top", "auto"
+                    ).css(
+                        "margin-bottom", self.theight / -2
+                    ).css(
+                        "right", "auto"
+                    ).css(
+                        "left", 0
+                    ).css(
+                        "margin-left", self.twidth / 2
+                    ).css(
+                        "width", self._width
+                    ).parent().addClass("to_top").removeClass("to_bottom").addClass("to_right").removeClass("to_left")
+                elif self._to_left:  # to_bottom to_left
+                    jQuery(
+                        "#{0}-wrapper".format(self._identifier)
+                    ).find(
+                        ".phanterpwa-component-pseudomodal-content-wrapper"
+                    ).css(
+                        "bottom", "auto"
+                    ).css(
+                        "top", 0
+                    ).css(
+                        "margin-top", self.theight / 2
+                    ).css(
+                        "right", 0
+                    ).css(
+                        "left", "auto"
+                    ).css(
+                        "margin-left", "auto"
+                    ).css(
+                        "margin-right", self.twidth / 2
+                    ).css(
+                        "width", self._width
+                    ).parent().addClass("to_bottom").removeClass("to_top").addClass("to_left").removeClass("to_right")
+                else:  # to_bottom to_right
+                    jQuery(
+                        "#{0}-wrapper".format(self._identifier)
+                    ).find(
+                        ".phanterpwa-component-pseudomodal-content-wrapper"
+                    ).css(
+                        "bottom", "auto"
+                    ).css(
+                        "top", 0
+                    ).css(
+                        "margin-top", self.theight / 2
+                    ).css(
+                        "right", "auto"
+                    ).css(
+                        "left", 0
+                    ).css(
+                        "margin-left", self.twidth / 2
+                    ).css(
+                        "width", self._width
+                    ).parent().addClass("to_bottom").removeClass("to_top").addClass("to_right").removeClass("to_left")
             else:
                 jQuery(
                     "#{0}-wrapper".format(self._identifier)
-                ).find(
-                    ".phanterpwa-component-pseudomodal-content-wrapper"
                 ).css(
-                    "bottom", "auto"
+                    "left", self.toffset["left"]
                 ).css(
-                    "top", 0
+                    "top", self.toffset["top"]
                 ).css(
-                    "margin-top", self.theight
-                ).parent().addClass("to_bottom").removeClass("to_top")
+                    "width", self.twidth
+                )
+                if self._to_top:
+                    jQuery(
+                        "#{0}-wrapper".format(self._identifier)
+                    ).find(
+                        ".phanterpwa-component-pseudomodal-content-wrapper"
+                    ).css(
+                        "bottom", 0
+                    ).css(
+                        "top", "auto"
+                    ).css(
+                        "margin-top", "auto"
+                    ).css(
+                        "width", self._width
+                    ).parent().addClass("to_top").removeClass("to_bottom")
+                else:
+                    jQuery(
+                        "#{0}-wrapper".format(self._identifier)
+                    ).find(
+                        ".phanterpwa-component-pseudomodal-content-wrapper"
+                    ).css(
+                        "bottom", "auto"
+                    ).css(
+                        "top", 0
+                    ).css(
+                        "margin-top", self.theight
+                    ).css(
+                        "width", self._width
+                    ).parent().addClass("to_bottom").removeClass("to_top")
 
     def start(self):
         style = "display: none;"
@@ -2508,9 +2693,18 @@ class PseudoModal():
         jQuery("#{0}".format(self._identifier)).fadeIn()
         self._calc_position()
         if self._recalc_on_scroll is not False:
-            document.removeEventListener('scroll', self._calc_position, True)
-            document.addEventListener('scroll', self._calc_position, True)
-        jQuery(window).resize(lambda: self._calc_position())
+            jQuery(document).off(
+                "scroll.recalc_on_scroll{0}".format(self._identifier)
+            ).on(
+                "scroll.recalc_on_scroll{0}".format(self._identifier),
+                self._calc_position
+            )
+        # jQuery(window).resize(lambda: self._calc_position())
+        jQuery(window).off(
+            "resize.recalc_on_resize{0}".format(self._identifier)
+        ).on(
+            "resize.recalc_on_resize{0}".format(self._identifier)
+        )
         jQuery(
             document
         ).off(
@@ -2875,7 +3069,7 @@ class TableFooterPagination(Widget):
         self._on_click_page = parameters.get("on_click_page", None)
         self._modal = None
         self.set_z_index(parameters.get("z_index", None))
-        self.set_recalc_on_scroll(parameters.get("recalc_on_scroll", False))
+        self.set_recalc_on_scroll(parameters.get("recalc_on_scroll", True))
         if str(self._page).isdigit():
             self._page = int(self._page)
         else:
@@ -3051,7 +3245,7 @@ class TableFooterPagination(Widget):
             "click.icon_buttom_pagination",
             lambda: (self._on_click_buttom_page(this), self._modal.close())
         )
-        
+
     def _open_panel_pages(self, el):
         p = jQuery(el).parent()
         p.addClass("enabled")

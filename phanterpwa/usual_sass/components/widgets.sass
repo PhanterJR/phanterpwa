@@ -58,6 +58,7 @@
             outline: unset !important
 
     .phanterpwa-widget-wrapper
+        padding-bottom: 10px
         .phanterpwa-widget-message_error
             position: absolute
             width: 100%
@@ -67,7 +68,10 @@
             overflow: hidden
             height: 0
             transition: height 0.3s ease
-        padding-bottom: 10px
+        &.has_error
+            .phanterpwa-widget-message_error
+                height: auto
+                transition: height 0.3s ease
         &.has_icon
             padding-right: 45px
             .phanterpwa-widget-check
@@ -78,11 +82,11 @@
                 height: 40px
                 position: absolute
                 right: 0
-                top: 0
+                top: 4px
                 background-color: $components
                 text-align: center
                 line-height: 40px
-                border-radius: 5px
+                border-radius: 29px
 
         &.has_mask, &.its_numbers
             input
@@ -123,6 +127,26 @@
                     line-height: 25px
                     overflow: hidden
                     transition: width 0.5s ease, opacity 0.5s ease
+        &.phanterpwa-widget-radio-wrapper
+            label
+                cursor: pointer
+            .phanterpwa-widget-radio-input
+                display: none
+            .phanterpwa-widget-radio-radio
+                cursor: pointer
+                float: left
+                margin-left: 10px
+                margin-right: 10px
+                width: 25px
+                position: relative
+                height: 25px
+
+                .phanterpwa-widget-radio-option-container
+                    position: absolute
+                    width: 25px
+                    height: 25px
+                    top: 0
+
         &.has_true
             .phanterpwa-widget-checkbox-checkbox
                 .phanterpwa-widget-checkbox-option-container
@@ -133,6 +157,11 @@
                     text-align: center
                     color: $components
                     transition: width 0.5s ease, opacity 0.5s ease
+        &.has_true
+            .phanterpwa-widget-radio-radio
+                .phanterpwa-widget-radio-true
+                    color: $components
+
         &.focus
             label
                 color: $components
@@ -1155,11 +1184,25 @@ ul
                             width: 35px
                             transition: color 0.5s ease
 
+
 .phanterpwa-widget-menubox-options-content
+    .phanterpwa-widget-menubox-option
+        min-width: 150px
+        height: 40px
+        line-height: 20px
+        width: 100%
+        white-space: nowrap
+        color: $components
+        text-align: center
+        margin: 0
+        padding: 10px 20px
+        cursor: pointer
+        &:hover
+            background-color: rgb(224, 224, 224)
     ul
         margin: 0
         padding: 0
-        >li, >span
+        >li
             color: $components
             text-align: center
             margin: 0

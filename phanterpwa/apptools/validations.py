@@ -139,7 +139,6 @@ class Valider():
         self.validators_list = validators_list
         self.value = value
         self.tests = {}
-        self.validate()
 
     def validate(self):
         validate_test_pass = list()

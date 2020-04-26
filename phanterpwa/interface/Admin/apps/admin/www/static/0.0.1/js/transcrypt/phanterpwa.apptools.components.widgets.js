@@ -1,4 +1,4 @@
-// Transcrypt'ed from Python, 2020-04-22 07:01:16
+// Transcrypt'ed from Python, 2020-04-26 09:36:57
 import {AssertionError, AttributeError, BaseException, DeprecationWarning, Exception, IndexError, IterableError, KeyError, NotImplementedError, RuntimeWarning, StopIteration, UserWarning, ValueError, Warning, __JsIterator__, __PyIterator__, __Terminal__, __add__, __and__, __call__, __class__, __envir__, __eq__, __floordiv__, __ge__, __get__, __getcm__, __getitem__, __getslice__, __getsm__, __gt__, __i__, __iadd__, __iand__, __idiv__, __ijsmod__, __ilshift__, __imatmul__, __imod__, __imul__, __in__, __init__, __ior__, __ipow__, __irshift__, __isub__, __ixor__, __jsUsePyNext__, __jsmod__, __k__, __kwargtrans__, __le__, __lshift__, __lt__, __matmul__, __mergefields__, __mergekwargtrans__, __mod__, __mul__, __ne__, __neg__, __nest__, __or__, __pow__, __pragma__, __proxy__, __pyUseJsNext__, __rshift__, __setitem__, __setproperty__, __setslice__, __sort__, __specialattrib__, __sub__, __super__, __t__, __terminal__, __truediv__, __withblock__, __xor__, abs, all, any, assert, bool, bytearray, bytes, callable, chr, copy, deepcopy, delattr, dict, dir, divmod, enumerate, filter, float, getattr, hasattr, input, int, isinstance, issubclass, len, list, map, max, min, object, ord, pow, print, property, py_TypeError, py_iter, py_metatype, py_next, py_reversed, py_typeof, range, repr, round, set, setattr, sorted, str, sum, tuple, zip} from './org.transcrypt.__runtime__.js';
 import * as datetimepicker from './phanterpwa.apptools.components.datetimepicker.js';
 import * as masks from './phanterpwa.apptools.fmasks.js';
@@ -47,6 +47,11 @@ export var Widget =  __class__ ('Widget', [helpers.XmlConstructor], {
 		}
 		self.actived = false;
 		self.identifier = identifier;
+		if (self.identifier === undefined || self.identifier === null) {
+			var __except0__ = console.error ('The identifier is invalid!');
+			__except0__.__cause__ = null;
+			throw __except0__;
+		}
 		self._identifier = window.PhanterPWA.get_id (identifier);
 		attributes ['_id'] = 'phanterpwa-widget-{0}'.format (self.identifier);
 		attributes ['_phanterpwa-widget'] = self.identifier;
@@ -59,6 +64,37 @@ export var Widget =  __class__ ('Widget', [helpers.XmlConstructor], {
 		helpers.XmlConstructor.__init__ (self, 'phanterpwa-widget', false, ...content, __kwargtrans__ (attributes));
 		self.target_selector = '#phanterpwa-widget-{0}'.format (self.identifier);
 		window.PhanterPWA.Request.add_widget (self);
+	});},
+	get _reload () {return __get__ (this, function (self) {
+		if (arguments.length) {
+			var __ilastarg0__ = arguments.length - 1;
+			if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+				var __allkwargs0__ = arguments [__ilastarg0__--];
+				for (var __attrib0__ in __allkwargs0__) {
+					switch (__attrib0__) {
+						case 'self': var self = __allkwargs0__ [__attrib0__]; break;
+					}
+				}
+			}
+		}
+		else {
+		}
+		if (!(window.PhanterPWA.check_event_namespace ($ (self.target_selector), 'phanterpwa_widget', self.identifier))) {
+			$ (self.target_selector).off ('phanterpwa_widget.{0}'.format (self.identifier)).on ('phanterpwa_widget.{0}'.format (self.identifier), (function __lambda__ () {
+				if (arguments.length) {
+					var __ilastarg0__ = arguments.length - 1;
+					if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+						var __allkwargs0__ = arguments [__ilastarg0__--];
+						for (var __attrib0__ in __allkwargs0__) {
+						}
+					}
+				}
+				else {
+				}
+				return self.reload ();
+			}));
+			$ (self.target_selector).trigger ('phanterpwa_widget');
+		}
 	});},
 	get reload () {return __get__ (this, function (self) {
 		if (arguments.length) {
@@ -132,6 +168,8 @@ export var Input =  __class__ ('Input', [Widget], {
 		self._format = parameters.py_get ('format', null);
 		self._icon_on_click = parameters.py_get ('icon_on_click', null);
 		self._onload = parameters.py_get ('onLoad', null);
+		self._checker = parameters.py_get ('checker', true);
+		self._on_date_datetime_choice = parameters.py_get ('onDateorDatetimeChoice', null);
 		var wrapper_attr = dict ({'_class': 'phanterpwa-widget-wrapper phanterpwa-widget-input-wrapper phanterpwa-widget-wear-{0}'.format (self._wear)});
 		parameters ['_id'] = identifier;
 		if (__in__ ('_class', parameters)) {
@@ -185,7 +223,7 @@ export var Input =  __class__ ('Input', [Widget], {
 		if (self._mask !== '' && self._mask !== null) {
 			wrapper_attr ['_class'] = '{0}{1}'.format (wrapper_attr ['_class'], ' has_mask');
 		}
-		var html = DIV (INPUT (__kwargtrans__ (dict ({'_id': 'phanterpwa-widget-input-input-{0}'.format (identifier), '_class': 'phanterpwa-widget-input-input', '_name': self._name, '_value': self._value, '_placeholder': self._placeholder, '_type': self._type, '_data-validators': JSON.stringify (self._validator), '_data-form': self._form}))), label, DIV (I (__kwargtrans__ ({_class: 'fas fa-check'})), __kwargtrans__ ({_class: 'phanterpwa-widget-check'})), xml_icon, DIV (self.get_message_error (), __kwargtrans__ ({_class: 'phanterpwa-widget-message_error phanterpwa-widget-input-message_error'})), __kwargtrans__ (wrapper_attr));
+		var html = DIV (INPUT (__kwargtrans__ (dict ({'_id': 'phanterpwa-widget-input-input-{0}'.format (identifier), '_class': 'phanterpwa-widget-input-input', '_name': self._name, '_value': self._value, '_placeholder': self._placeholder, '_type': self._type, '_data-validators': JSON.stringify (self._validator), '_data-form': self._form}))), label, (self._checker ? DIV (I (__kwargtrans__ ({_class: 'fas fa-check'})), __kwargtrans__ ({_class: 'phanterpwa-widget-check'})) : ''), xml_icon, DIV (self.get_message_error (), __kwargtrans__ ({_class: 'phanterpwa-widget-message_error phanterpwa-widget-input-message_error'})), __kwargtrans__ (wrapper_attr));
 		Widget.__init__ (self, identifier, html, __kwargtrans__ (parameters));
 	});},
 	get get_message_error () {return __get__ (this, function (self) {
@@ -330,11 +368,11 @@ export var Input =  __class__ ('Input', [Widget], {
 			self._icon_on_click (el);
 		}
 		else if (self._kind == 'date') {
-			self._datetimepicker = datetimepicker.Datepickers (self.target_selector, __kwargtrans__ (dict ({'date_type': 'date', 'format': self._format, 'id_input_target': $ (self.target_selector).find ('input')})));
+			self._datetimepicker = datetimepicker.Datepickers (self.target_selector, __kwargtrans__ (dict ({'date_type': 'date', 'format': self._format, 'onChoice': self._on_date_datetime_choice, 'id_input_target': $ (self.target_selector).find ('input')})));
 			self._datetimepicker.start ();
 		}
 		else if (self._kind == 'datetime') {
-			self._datetimepicker = datetimepicker.Datepickers (self.target_selector, __kwargtrans__ (dict ({'date_type': 'datetime', 'format': self._format, 'id_input_target': $ (self.target_selector).find ('input')})));
+			self._datetimepicker = datetimepicker.Datepickers (self.target_selector, __kwargtrans__ (dict ({'date_type': 'datetime', 'format': self._format, 'onChoice': self._on_date_datetime_choice, 'id_input_target': $ (self.target_selector).find ('input')})));
 			self._datetimepicker.start ();
 		}
 		else if (self._kind == 'password') {
@@ -615,7 +653,7 @@ export var Select =  __class__ ('Select', [Widget], {
 		self._icon_check = parameters.py_get ('icon_check', I (__kwargtrans__ ({_class: 'fas fa-check'})));
 		self._on_click_new = parameters.py_get ('on_click_new_button', null);
 		self.set_z_index (parameters.py_get ('z_index', null));
-		self.set_recalc_on_scroll (parameters.py_get ('recalc_on_scroll', false));
+		self.set_recalc_on_scroll (parameters.py_get ('recalc_on_scroll', true));
 		var xml_icon = '';
 		if (self._icon !== '') {
 			var xml_icon = DIV (self._icon, __kwargtrans__ ({_class: 'phanterpwa-widget-icon-wrapper'}));
@@ -1057,7 +1095,7 @@ export var Select =  __class__ ('Select', [Widget], {
 			else {
 			}
 			return self._after_modal_close (el);
-		}), z_index: self._z_index, recalc_on_scroll: self._recalc_on_scroll}));
+		}), width: '100%', z_index: self._z_index, recalc_on_scroll: self._recalc_on_scroll}));
 		self.modal.start ();
 		self._binds_modal_content ();
 	});},
@@ -1604,7 +1642,7 @@ export var MultSelect =  __class__ ('MultSelect', [Widget], {
 		self._icon_check = parameters.py_get ('icon_check', I (__kwargtrans__ ({_class: 'fas fa-check'})));
 		self._on_click_new = parameters.py_get ('on_click_new_button', null);
 		self.set_z_index (parameters.py_get ('z_index', null));
-		self.set_recalc_on_scroll (parameters.py_get ('recalc_on_scroll', false));
+		self.set_recalc_on_scroll (parameters.py_get ('recalc_on_scroll', true));
 		var xml_icon = '';
 		if (self._icon !== '') {
 			var xml_icon = DIV (self._icon, __kwargtrans__ ({_class: 'phanterpwa-widget-icon-wrapper'}));
@@ -2054,7 +2092,7 @@ export var MultSelect =  __class__ ('MultSelect', [Widget], {
 			else {
 			}
 			return self._after_modal_close (el);
-		}), z_index: self._z_index, recalc_on_scroll: self._recalc_on_scroll}));
+		}), width: '100%', z_index: self._z_index, recalc_on_scroll: self._recalc_on_scroll}));
 		self.modal.start ();
 		self._binds_modal_content ();
 	});},
@@ -4213,7 +4251,7 @@ export var CheckBox =  __class__ ('CheckBox', [Widget], {
 		self._binds ();
 	});}
 });
-export var MenuBox =  __class__ ('MenuBox', [Widget], {
+export var RadioBox =  __class__ ('RadioBox', [Widget], {
 	__module__: __name__,
 	get __init__ () {return __get__ (this, function (self, identifier) {
 		var parameters = dict ();
@@ -4230,24 +4268,264 @@ export var MenuBox =  __class__ ('MenuBox', [Widget], {
 				}
 				delete parameters.__kwargtrans__;
 			}
-			var options = tuple ([].slice.apply (arguments).slice (2, __ilastarg0__ + 1));
+		}
+		else {
+		}
+		self._label = parameters.py_get ('label', null);
+		self._name = parameters.py_get ('name', null);
+		self._value = parameters.py_get ('value', false);
+		self._can_empty = parameters.py_get ('can_empty', false);
+		self._wear = parameters.py_get ('wear', 'material');
+		self._form = parameters.py_get ('form', null);
+		self._group = parameters.py_get ('group', null);
+		var wrapper_attr = dict ({'_class': 'phanterpwa-widget-wrapper phanterpwa-widget-radio-wrapper phanterpwa-widget-wear-{0}'.format (self._wear)});
+		parameters ['_id'] = identifier;
+		if (__in__ ('_class', parameters)) {
+			parameters ['_class'] = '{0}{1}'.format (parameters ['_class'], ' phanterpwa-widget-radio');
+		}
+		else {
+			parameters ['_class'] = 'phanterpwa-widget-radio';
+		}
+		var label = '';
+		if (self._label !== null) {
+			wrapper_attr ['_class'] = '{0}{1}'.format (wrapper_attr ['_class'], ' has_label');
+			var label = LABEL (self._label, __kwargtrans__ ({_for: 'phanterpwa-widget-radio-input-{0}'.format (identifier)}));
+		}
+		var _checked = null;
+		if (self._value === true || self._Value === 'true') {
+			var _checked = 'checked';
+			wrapper_attr ['_class'] = '{0}{1}'.format (wrapper_attr ['_class'], ' has_true');
+		}
+		var html = DIV (INPUT (__kwargtrans__ (dict ({'_id': 'phanterpwa-widget-radio-input-{0}'.format (identifier), '_class': 'phanterpwa-widget-radio-input', '_name': self._name, '_value': self._value, '_placeholder': self._placeholder, '_type': 'radio', '_checked': _checked, '_data-instance': self.identifier, '_data-form': self._form}))), DIV (DIV (self._xml_radio (), __kwargtrans__ ({_class: 'phanterpwa-widget-radio-option-container'})), __kwargtrans__ ({_class: 'phanterpwa-widget-radio-radio', _tabindex: 0})), label, __kwargtrans__ (wrapper_attr));
+		Widget.__init__ (self, identifier, html, __kwargtrans__ (parameters));
+	});},
+	get _change_xml_radio () {return __get__ (this, function (self) {
+		if (arguments.length) {
+			var __ilastarg0__ = arguments.length - 1;
+			if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+				var __allkwargs0__ = arguments [__ilastarg0__--];
+				for (var __attrib0__ in __allkwargs0__) {
+					switch (__attrib0__) {
+						case 'self': var self = __allkwargs0__ [__attrib0__]; break;
+					}
+				}
+			}
+		}
+		else {
+		}
+		var el = $ ('#phanterpwa-widget-radio-input-{0}'.format (self.identifier));
+		var value = el.prop ('checked');
+		var p = el.parent ();
+		if (value === true) {
+			p.addClass ('has_true');
+			$ ('#phanterpwa-widget-radio-input-{0}'.format (self.identifier)).val (value);
+			self._value = true;
+		}
+		else {
+			p.removeClass ('has_true');
+			$ ('#phanterpwa-widget-radio-input-{0}'.format (self.identifier)).val (value);
+			self._value = false;
+		}
+		self._xml_radio ().html_to ($ (self.target_selector).find ('.phanterpwa-widget-radio-option-container'));
+	});},
+	get _xml_radio () {return __get__ (this, function (self) {
+		if (arguments.length) {
+			var __ilastarg0__ = arguments.length - 1;
+			if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+				var __allkwargs0__ = arguments [__ilastarg0__--];
+				for (var __attrib0__ in __allkwargs0__) {
+					switch (__attrib0__) {
+						case 'self': var self = __allkwargs0__ [__attrib0__]; break;
+					}
+				}
+			}
+		}
+		else {
+		}
+		if (self._value === true) {
+			return DIV (I (__kwargtrans__ ({_class: 'far fa-dot-circle'})), __kwargtrans__ ({_class: 'phanterpwa-widget-radio-true'}));
+		}
+		return DIV (I (__kwargtrans__ ({_class: 'far fa-circle'})), __kwargtrans__ ({_class: 'phanterpwa-widget-radio-false'}));
+	});},
+	get _set_radio_value () {return __get__ (this, function (self, el) {
+		if (arguments.length) {
+			var __ilastarg0__ = arguments.length - 1;
+			if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+				var __allkwargs0__ = arguments [__ilastarg0__--];
+				for (var __attrib0__ in __allkwargs0__) {
+					switch (__attrib0__) {
+						case 'self': var self = __allkwargs0__ [__attrib0__]; break;
+						case 'el': var el = __allkwargs0__ [__attrib0__]; break;
+					}
+				}
+			}
+		}
+		else {
+		}
+		var el = $ (el);
+		var p = el.parent ();
+		p.addClass ('has_true');
+		$ ('.phanterpwa-widget-wrapper').removeClass ('focus').removeClass ('pre_focus');
+		p.addClass ('focus');
+		self._value = true;
+		p.find ('input').prop ('checked', self._value).val (self._value);
+		$ ('.phanterpwa-widget-radio-input').trigger ('change');
+	});},
+	get _switch_focus () {return __get__ (this, function (self, el) {
+		if (arguments.length) {
+			var __ilastarg0__ = arguments.length - 1;
+			if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+				var __allkwargs0__ = arguments [__ilastarg0__--];
+				for (var __attrib0__ in __allkwargs0__) {
+					switch (__attrib0__) {
+						case 'self': var self = __allkwargs0__ [__attrib0__]; break;
+						case 'el': var el = __allkwargs0__ [__attrib0__]; break;
+					}
+				}
+			}
+		}
+		else {
+		}
+		var el = $ (el);
+		var p = el.parent ();
+		if (el.is (':focus')) {
+			$ ('.phanterpwa-widget-wrapper').removeClass ('focus').removeClass ('pre_focus');
+			p.addClass ('focus');
+		}
+		else {
+			p.removeClass ('focus');
+		}
+	});},
+	get reload () {return __get__ (this, function (self) {
+		if (arguments.length) {
+			var __ilastarg0__ = arguments.length - 1;
+			if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+				var __allkwargs0__ = arguments [__ilastarg0__--];
+				for (var __attrib0__ in __allkwargs0__) {
+					switch (__attrib0__) {
+						case 'self': var self = __allkwargs0__ [__attrib0__]; break;
+					}
+				}
+			}
+		}
+		else {
+		}
+		self.start ();
+	});},
+	get _binds () {return __get__ (this, function (self) {
+		if (arguments.length) {
+			var __ilastarg0__ = arguments.length - 1;
+			if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+				var __allkwargs0__ = arguments [__ilastarg0__--];
+				for (var __attrib0__ in __allkwargs0__) {
+					switch (__attrib0__) {
+						case 'self': var self = __allkwargs0__ [__attrib0__]; break;
+					}
+				}
+			}
+		}
+		else {
+		}
+		var target = $ (self.target_selector);
+		target.find ('.phanterpwa-widget-radio-radio').off ('click.phanterpwa-event-radio-switch').on ('click.phanterpwa-event-radio-switch', (function __lambda__ () {
+			if (arguments.length) {
+				var __ilastarg0__ = arguments.length - 1;
+				if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+					var __allkwargs0__ = arguments [__ilastarg0__--];
+					for (var __attrib0__ in __allkwargs0__) {
+					}
+				}
+			}
+			else {
+			}
+			return self._set_radio_value (this);
+		}));
+		target.find ('label').off ('click.phanterpwa-event-radio-switch').on ('click.phanterpwa-event-radio-switch', (function __lambda__ () {
+			if (arguments.length) {
+				var __ilastarg0__ = arguments.length - 1;
+				if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+					var __allkwargs0__ = arguments [__ilastarg0__--];
+					for (var __attrib0__ in __allkwargs0__) {
+					}
+				}
+			}
+			else {
+			}
+			return self._set_radio_value (this);
+		}));
+		target.find ('input').off ('change.phanterpwa-event-radio-switch').on ('change.phanterpwa-event-radio-switch', (function __lambda__ () {
+			if (arguments.length) {
+				var __ilastarg0__ = arguments.length - 1;
+				if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+					var __allkwargs0__ = arguments [__ilastarg0__--];
+					for (var __attrib0__ in __allkwargs0__) {
+					}
+				}
+			}
+			else {
+			}
+			return self._change_xml_radio ();
+		}));
+	});},
+	get start () {return __get__ (this, function (self) {
+		if (arguments.length) {
+			var __ilastarg0__ = arguments.length - 1;
+			if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+				var __allkwargs0__ = arguments [__ilastarg0__--];
+				for (var __attrib0__ in __allkwargs0__) {
+					switch (__attrib0__) {
+						case 'self': var self = __allkwargs0__ [__attrib0__]; break;
+					}
+				}
+			}
+		}
+		else {
+		}
+		self._binds ();
+	});}
+});
+export var MenuBox =  __class__ ('MenuBox', [Widget], {
+	__module__: __name__,
+	get __init__ () {return __get__ (this, function (self, identifier, button) {
+		var parameters = dict ();
+		if (arguments.length) {
+			var __ilastarg0__ = arguments.length - 1;
+			if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+				var __allkwargs0__ = arguments [__ilastarg0__--];
+				for (var __attrib0__ in __allkwargs0__) {
+					switch (__attrib0__) {
+						case 'self': var self = __allkwargs0__ [__attrib0__]; break;
+						case 'identifier': var identifier = __allkwargs0__ [__attrib0__]; break;
+						case 'button': var button = __allkwargs0__ [__attrib0__]; break;
+						default: parameters [__attrib0__] = __allkwargs0__ [__attrib0__];
+					}
+				}
+				delete parameters.__kwargtrans__;
+			}
+			var options = tuple ([].slice.apply (arguments).slice (3, __ilastarg0__ + 1));
 		}
 		else {
 			var options = tuple ();
 		}
-		self._icon = parameters.py_get ('icon', I (__kwargtrans__ ({_class: 'fas fa-ellipsis-v'})));
-		self._label = parameters.py_get ('label', null);
-		self._xml_menu = parameters.py_get ('xml_menu', I (__kwargtrans__ ({_class: 'fas fa-ellipsis-v'})));
+		if (button === undefined || button === null) {
+			self._button = I (__kwargtrans__ ({_class: 'fas fa-ellipsis-v'}));
+		}
+		else {
+			self._button = button;
+		}
+		self._custom_menu = parameters.py_get ('custom_menu', null);
+		self._xml_menu = [];
 		self._onreload = parameters.py_get ('onReload', null);
 		self._onopen = parameters.py_get ('onOpen', null);
+		self._options = options;
+		for (var x of self._options) {
+			self.add_option (x);
+		}
 		self.set_z_index (parameters.py_get ('z_index', null));
 		self._close_after_click_in = parameters.py_get ('close_after_click_in', true);
-		self.set_recalc_on_scroll (parameters.py_get ('recalc_on_scroll', false));
-		var label = '';
-		if (self._label !== null) {
-			var label = LABEL (self._label);
-		}
-		var html = DIV (self._icon, label, __kwargtrans__ ({_class: 'phanterpwa-widget-menubox-icon wave_on_click{0}'.format ((label === null ? ' icon_button' : '')), _phanterpwa_dowpdown_target: 'drop_{0}'.format (identifier)}));
+		self.set_recalc_on_scroll (parameters.py_get ('recalc_on_scroll', true));
+		self._width = parameters.py_get ('width', null);
+		var html = DIV (self._button, __kwargtrans__ ({_class: 'phanterpwa-widget-menubox-button', _phanterpwa_dowpdown_target: 'drop_{0}'.format (identifier)}));
 		if (__in__ ('_class', parameters)) {
 			parameters ['_class'] = '{0}{1}'.format (parameters ['_class'], ' phanterpwa-widget-menubox');
 		}
@@ -4255,6 +4533,23 @@ export var MenuBox =  __class__ ('MenuBox', [Widget], {
 			parameters ['_class'] = 'phanterpwa-widget-menubox';
 		}
 		Widget.__init__ (self, identifier, html, __kwargtrans__ (parameters));
+	});},
+	get add_option () {return __get__ (this, function (self, option) {
+		if (arguments.length) {
+			var __ilastarg0__ = arguments.length - 1;
+			if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+				var __allkwargs0__ = arguments [__ilastarg0__--];
+				for (var __attrib0__ in __allkwargs0__) {
+					switch (__attrib0__) {
+						case 'self': var self = __allkwargs0__ [__attrib0__]; break;
+						case 'option': var option = __allkwargs0__ [__attrib0__]; break;
+					}
+				}
+			}
+		}
+		else {
+		}
+		self._xml_menu.append (DIV (option, __kwargtrans__ ({_class: 'phanterpwa-widget-menubox-option'})));
 	});},
 	get _on_click () {return __get__ (this, function (self, el) {
 		if (arguments.length) {
@@ -4271,11 +4566,42 @@ export var MenuBox =  __class__ ('MenuBox', [Widget], {
 		}
 		else {
 		}
-		$ (el);
-		self.modal = PseudoModal (self.target_selector, DIV (self._xml_menu, __kwargtrans__ ({_id: 'phanterpwa-widget-menubox-options-content-{0}'.format (self.identifier), _class: 'phanterpwa-widget-menubox-options-content'})), __kwargtrans__ ({vertical: true, z_index: self._z_index, recalc_on_scroll: self._recalc_on_scroll, on_open: self._onopen}));
+		if (self._custom_menu === null) {
+			var content = self._xml_menu;
+		}
+		else {
+			var content = [self._custom_menu];
+		}
+		self.modal = PseudoModal (self.target_selector, DIV (...content, __kwargtrans__ ({_id: 'phanterpwa-widget-menubox-options-content-{0}'.format (self.identifier), _class: 'phanterpwa-widget-menubox-options-content', _style: (self._width === null ? null : 'width: {0}px'.format (self._width))})), __kwargtrans__ ({vertical: true, width: self._width, z_index: self._z_index, recalc_on_scroll: self._recalc_on_scroll, on_open: self._onopen}));
 		self.modal.start ();
 		if (self._close_after_click_in === true) {
 			$ ('#phanterpwa-widget-menubox-options-content-{0}'.format (self.identifier)).find ('.phanterpwa-widget-menubox-option').off ('click.close_pseudo_modal').on ('click.close_pseudo_modal', (function __lambda__ () {
+				if (arguments.length) {
+					var __ilastarg0__ = arguments.length - 1;
+					if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+						var __allkwargs0__ = arguments [__ilastarg0__--];
+						for (var __attrib0__ in __allkwargs0__) {
+						}
+					}
+				}
+				else {
+				}
+				return self.modal.close ();
+			}));
+			$ ('#phanterpwa-widget-menubox-options-content-{0}'.format (self.identifier)).find ('ul>li').off ('click.close_pseudo_modal').on ('click.close_pseudo_modal', (function __lambda__ () {
+				if (arguments.length) {
+					var __ilastarg0__ = arguments.length - 1;
+					if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+						var __allkwargs0__ = arguments [__ilastarg0__--];
+						for (var __attrib0__ in __allkwargs0__) {
+						}
+					}
+				}
+				else {
+				}
+				return self.modal.close ();
+			}));
+			$ ('#phanterpwa-widget-menubox-options-content-{0}'.format (self.identifier)).find ('ul>span').off ('click.close_pseudo_modal').on ('click.close_pseudo_modal', (function __lambda__ () {
 				if (arguments.length) {
 					var __ilastarg0__ = arguments.length - 1;
 					if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
@@ -4443,11 +4769,10 @@ export var PseudoModal =  __class__ ('PseudoModal', [object], {
 		self._identifier = window.PhanterPWA.get_id ('pseudomodal');
 		self.pX = parameters.py_get ('pX', 0);
 		self.pY = parameters.py_get ('pY', 0);
-		self.width = parameters.py_get ('width', 0);
-		self.height = parameters.py_get ('height', 0);
 		self.data = parameters.py_get ('data', null);
 		self.value = parameters.py_get ('value', null);
 		self.on_close = parameters.py_get ('on_close', null);
+		self._width = parameters.py_get ('width', 'auto');
 		self.placeholder = parameters.py_get ('placeholder', null);
 		self._is_select = parameters.py_get ('is_select', false);
 		self._to_top = false;
@@ -4534,14 +4859,8 @@ export var PseudoModal =  __class__ ('PseudoModal', [object], {
 		self.document_size = [$ (document).width (), $ (document).height ()];
 		self.scroll_top = $ (document).scrollTop ();
 		self.scroll_left = $ (document).scrollLeft ();
-		self.width = $ (self.source_selector).width ();
 		self.theight = $ (self.source_selector).height ();
-		if (self._vertical_position) {
-			self.twidth = $ (self.source_selector).width ();
-		}
-		else {
-			self.twidth = self.width;
-		}
+		self.twidth = $ (self.source_selector).width ();
 		self.toffset = $ (self.source_selector).offset ();
 		self.space_bottom = ((self.viewport [1] - self.toffset ['top']) - self.theight) + self.scroll_top;
 		self.space_top = self.toffset ['top'] - self.scroll_top;
@@ -4606,31 +4925,37 @@ export var PseudoModal =  __class__ ('PseudoModal', [object], {
 		}
 		else {
 		}
-		self._get_source_dimentions ();
-		self._get_side_show ();
-		self._get_wside_show ();
-		if (self._vertical_position) {
-			$ ('#{0}-wrapper'.format (self._identifier)).css ('left', self.toffset ['left']).css ('top', self.toffset ['top']).css ('width', self.width);
-			if (self._to_top && self._to_left) {
-				$ ('#{0}-wrapper'.format (self._identifier)).find ('.phanterpwa-component-pseudomodal-content-wrapper').css ('bottom', 0).css ('top', 'auto').css ('margin-top', 'auto').css ('margin-bottom', self.theight / -(2)).css ('right', 0).css ('left', 'auto').css ('margin-left', 'auto').css ('margin-right', self.twidth / 2).parent ().addClass ('to_top').removeClass ('to_bottom').addClass ('to_left').removeClass ('to_right');
-			}
-			else if (self._to_top) {
-				$ ('#{0}-wrapper'.format (self._identifier)).find ('.phanterpwa-component-pseudomodal-content-wrapper').css ('bottom', 0).css ('top', 'auto').css ('margin-top', 'auto').css ('margin-bottom', self.theight / -(2)).css ('right', 'auto').css ('left', 0).css ('margin-left', self.twidth / 2).parent ().addClass ('to_top').removeClass ('to_bottom').addClass ('to_right').removeClass ('to_left');
-			}
-			else if (self._to_left) {
-				$ ('#{0}-wrapper'.format (self._identifier)).find ('.phanterpwa-component-pseudomodal-content-wrapper').css ('bottom', 'auto').css ('top', 0).css ('margin-top', self.theight / 2).css ('right', 0).css ('left', 'auto').css ('margin-left', 'auto').css ('margin-right', self.twidth / 2).parent ().addClass ('to_bottom').removeClass ('to_top').addClass ('to_left').removeClass ('to_right');
-			}
-			else {
-				$ ('#{0}-wrapper'.format (self._identifier)).find ('.phanterpwa-component-pseudomodal-content-wrapper').css ('bottom', 'auto').css ('top', 0).css ('margin-top', self.theight / 2).css ('right', 'auto').css ('left', 0).css ('margin-left', self.twidth / 2).parent ().addClass ('to_bottom').removeClass ('to_top').addClass ('to_right').removeClass ('to_left');
-			}
+		if ($ (self.source_selector).length == 0) {
+			$ (document).off ('scroll.recalc_on_scroll{0}'.format (self._identifier));
+			$ (window).off ('resize.recalc_on_resize{0}'.format (self._identifier));
 		}
 		else {
-			$ ('#{0}-wrapper'.format (self._identifier)).css ('left', self.toffset ['left']).css ('top', self.toffset ['top']).css ('width', self.width);
-			if (self._to_top) {
-				$ ('#{0}-wrapper'.format (self._identifier)).find ('.phanterpwa-component-pseudomodal-content-wrapper').css ('bottom', 0).css ('top', 'auto').css ('margin-top', 'auto').parent ().addClass ('to_top').removeClass ('to_bottom');
+			self._get_source_dimentions ();
+			self._get_side_show ();
+			self._get_wside_show ();
+			if (self._vertical_position) {
+				$ ('#{0}-wrapper'.format (self._identifier)).css ('left', self.toffset ['left']).css ('top', self.toffset ['top']).css ('width', self.twidth);
+				if (self._to_top && self._to_left) {
+					$ ('#{0}-wrapper'.format (self._identifier)).find ('.phanterpwa-component-pseudomodal-content-wrapper').css ('bottom', 0).css ('top', 'auto').css ('margin-top', 'auto').css ('margin-bottom', self.theight / -(2)).css ('right', 0).css ('left', 'auto').css ('margin-left', 'auto').css ('margin-right', self.twidth / 2).css ('width', self._width).parent ().addClass ('to_top').removeClass ('to_bottom').addClass ('to_left').removeClass ('to_right');
+				}
+				else if (self._to_top) {
+					$ ('#{0}-wrapper'.format (self._identifier)).find ('.phanterpwa-component-pseudomodal-content-wrapper').css ('bottom', 0).css ('top', 'auto').css ('margin-top', 'auto').css ('margin-bottom', self.theight / -(2)).css ('right', 'auto').css ('left', 0).css ('margin-left', self.twidth / 2).css ('width', self._width).parent ().addClass ('to_top').removeClass ('to_bottom').addClass ('to_right').removeClass ('to_left');
+				}
+				else if (self._to_left) {
+					$ ('#{0}-wrapper'.format (self._identifier)).find ('.phanterpwa-component-pseudomodal-content-wrapper').css ('bottom', 'auto').css ('top', 0).css ('margin-top', self.theight / 2).css ('right', 0).css ('left', 'auto').css ('margin-left', 'auto').css ('margin-right', self.twidth / 2).css ('width', self._width).parent ().addClass ('to_bottom').removeClass ('to_top').addClass ('to_left').removeClass ('to_right');
+				}
+				else {
+					$ ('#{0}-wrapper'.format (self._identifier)).find ('.phanterpwa-component-pseudomodal-content-wrapper').css ('bottom', 'auto').css ('top', 0).css ('margin-top', self.theight / 2).css ('right', 'auto').css ('left', 0).css ('margin-left', self.twidth / 2).css ('width', self._width).parent ().addClass ('to_bottom').removeClass ('to_top').addClass ('to_right').removeClass ('to_left');
+				}
 			}
 			else {
-				$ ('#{0}-wrapper'.format (self._identifier)).find ('.phanterpwa-component-pseudomodal-content-wrapper').css ('bottom', 'auto').css ('top', 0).css ('margin-top', self.theight).parent ().addClass ('to_bottom').removeClass ('to_top');
+				$ ('#{0}-wrapper'.format (self._identifier)).css ('left', self.toffset ['left']).css ('top', self.toffset ['top']).css ('width', self.twidth);
+				if (self._to_top) {
+					$ ('#{0}-wrapper'.format (self._identifier)).find ('.phanterpwa-component-pseudomodal-content-wrapper').css ('bottom', 0).css ('top', 'auto').css ('margin-top', 'auto').css ('width', self._width).parent ().addClass ('to_top').removeClass ('to_bottom');
+				}
+				else {
+					$ ('#{0}-wrapper'.format (self._identifier)).find ('.phanterpwa-component-pseudomodal-content-wrapper').css ('bottom', 'auto').css ('top', 0).css ('margin-top', self.theight).css ('width', self._width).parent ().addClass ('to_bottom').removeClass ('to_top');
+				}
 			}
 		}
 	});},
@@ -4658,22 +4983,9 @@ export var PseudoModal =  __class__ ('PseudoModal', [object], {
 		$ ('#{0}'.format (self._identifier)).fadeIn ();
 		self._calc_position ();
 		if (self._recalc_on_scroll !== false) {
-			document.removeEventListener ('scroll', self._calc_position, true);
-			document.addEventListener ('scroll', self._calc_position, true);
+			$ (document).off ('scroll.recalc_on_scroll{0}'.format (self._identifier)).on ('scroll.recalc_on_scroll{0}'.format (self._identifier), self._calc_position);
 		}
-		$ (window).resize ((function __lambda__ () {
-			if (arguments.length) {
-				var __ilastarg0__ = arguments.length - 1;
-				if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
-					var __allkwargs0__ = arguments [__ilastarg0__--];
-					for (var __attrib0__ in __allkwargs0__) {
-					}
-				}
-			}
-			else {
-			}
-			return self._calc_position ();
-		}));
+		$ (window).off ('resize.recalc_on_resize{0}'.format (self._identifier)).on ('resize.recalc_on_resize{0}'.format (self._identifier));
 		$ (document).off ('click.close_pseudomodal').on ('click.close_pseudomodal', (function __lambda__ (event) {
 			if (arguments.length) {
 				var __ilastarg0__ = arguments.length - 1;
@@ -5333,7 +5645,7 @@ export var TableFooterPagination =  __class__ ('TableFooterPagination', [Widget]
 		self._on_click_page = parameters.py_get ('on_click_page', null);
 		self._modal = null;
 		self.set_z_index (parameters.py_get ('z_index', null));
-		self.set_recalc_on_scroll (parameters.py_get ('recalc_on_scroll', false));
+		self.set_recalc_on_scroll (parameters.py_get ('recalc_on_scroll', true));
 		if (str (self._page).isdigit ()) {
 			self._page = int (self._page);
 		}

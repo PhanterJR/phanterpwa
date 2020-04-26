@@ -42,6 +42,10 @@ def check_application():
                                 fi.lineno + 19
                             )
                         else:
+                            msg = "".join([msg,
+                                " The client version '{0}' is different of project version '{1}'".format(
+                                    self.phanterpwa_application_version, project_version)])
+                            dict_response['message'] = msg
                             help_debug = "{0}.{1}@{2}:{3}".format(
                                 self.__class__.__name__,
                                 f.__name__,
@@ -59,7 +63,8 @@ def check_application():
                         'message': msg,
                         'i18n': {
                             'message': self.i18nTranslator.T(msg) if self.i18nTranslator else msg
-                        }
+                        },
+                        'project_path': self.projectConfig['PROJECT']['path']
                     }
                     fi = getframeinfo(currentframe())
                     if not self.projectConfig['PROJECT']['debug']:
@@ -72,6 +77,10 @@ def check_application():
                             fi.lineno + 19
                         )
                     else:
+                        msg = "".join([msg,
+                            " The client name '{0}' is different of project name '{1}'".format(
+                                self.phanterpwa_application, project_name)])
+                        dict_response['message'] = msg
                         help_debug = "{0}.{1}@{2}:{3}".format(
                             self.__class__.__name__,
                             f.__name__,

@@ -1601,7 +1601,7 @@ class Index(gatehandler.Handler):
                 DIV(
                     DIV(
                         DIV(
-                            widgets.Preloaders(),
+                            widgets.Preloaders("preloader_fontawesome"),
                             _style="width:100%; text-align: center; padding-top: 100px; padding-bottom: 100px;"
                         ),
                         _id="icon_awesome_container", _class="icon_awesome_container e-padding_20"),
@@ -1628,19 +1628,56 @@ class Index(gatehandler.Handler):
                 DIV(
                     widgets.MenuBox(
                         value.replace(" ", "_"),
-                        icon=I(_class=value),
-                        xml_menu=UL(
-                            LI(
-                                LABEL("Python: "),
-                                INPUT(_value="I(_class=\"{0}\")".format(value)),
+                        DIV(I(_class=value), _class="icon_button wave_on_click"),
+                        custom_menu=DIV(
+                            DIV(
+                                DIV(
+                                    LABEL("Python"),
+                                    INPUT(_value="I(_class=\"{0}\")".format(value)),
+                                    _class="label_and_input"
+                                ),
                                 DIV(
                                     I(_class="fas fa-clipboard"),
-                                    _class="copy_buttom"
+                                    **{
+                                        "_data-src": "I(_class=\"{0}\")".format(value),
+                                        "_class": "copy_buttom"
+                                    }
                                 ),
                                 _class="icon_awesome_panel"
                             ),
-                            _class="dropdown-content, icon_awesome_panel_wrapper"
-                        )
+                            DIV(
+                                DIV(
+                                    LABEL("Html"),
+                                    INPUT(_value=str(I(_class=value))),
+                                    _class="label_and_input"
+                                ),
+                                DIV(
+                                    I(_class="fas fa-clipboard"),
+                                    **{
+                                        "_data-src": str(I(_class=value)),
+                                        "_class": "copy_buttom"
+                                    }
+                                ),
+                                _class="icon_awesome_panel"
+                            ),
+                            DIV(
+                                DIV(
+                                    LABEL("Class"),
+                                    INPUT(_value=value),
+                                    _class="label_and_input"
+                                ),
+                                DIV(
+                                    I(_class="fas fa-clipboard"),
+                                    **{
+                                        "_data-src": value,
+                                        "_class": "copy_buttom"
+                                    }
+                                ),
+                                _class="icon_awesome_panel"
+                            ),
+                            _class="icon_awesome_panel_wrapper"
+                        ),
+                        onOpen=self._on_icon_open
                     ),
                     **{"_data-icon": value, "_class": "icon_awesome-button"}
                 ),
@@ -1657,6 +1694,9 @@ class Index(gatehandler.Handler):
             _class="p-col w1p50 w3p25 w4p14",
         )
         return html
+
+    def _on_icon_open(self, el):
+        jQuery(el).find(".copy_buttom").off("click").on("click", lambda: self._copy(this))
 
     def _add_content(self, v):
         html = CONCATENATE()
@@ -1685,24 +1725,6 @@ class Index(gatehandler.Handler):
         p.find("input").select()
         document.execCommand("copy")
 
-    def _process_icon(self, el):
-        jQuery(".icon_awesome_panel_wrapper").css("display", "none")
-        p = jQuery(el).parent()
-        icon = jQuery(el).data("icon")
-        p_html = DIV(
-            DIV(
-                DIV(I(_class="fas fa-clipboard"), _class="copy_buttom"), INPUT(_value="I(_class=\"{0}\")".format(icon)),
-                _class="icon_awesome_panel"
-            ),
-            _class="icon_awesome_panel_wrapper"
-        )
-        if p.find(".icon_awesome-panel-container").find(".icon_awesome_panel_wrapper").length == 0:
-            p.find(".icon_awesome-panel-container").html(p_html.jquery())
-            p.find(".copy_buttom").off("click").on("click", lambda: self._copy(this))
-        else:
-            p.find(".icon_awesome-panel-container").find(".icon_awesome_panel_wrapper").remove()
-
-
     def reload(self):
         self.start()
 
@@ -1710,9 +1732,5 @@ class Index(gatehandler.Handler):
     def _after_load(self, data):
         console.log(data)
         XML(data).html_to("#icon_awesome_container")
-        jQuery(".icon_awesome-button").off("click.icon_awesome-wrapper").on(
-            "click.icon_awesome-wrapper",
-            lambda: self._process_icon(this)
-        )
 
 

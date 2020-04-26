@@ -7,7 +7,7 @@ import phanterpwa.apptools.helpers as helpers
 import phanterpwa.apptools.forms as forms
 import phanterpwa.apptools.preloaders as preloaders
 import phanterpwa.apptools.application as application
-import phanterpwa.apptools.handler as handler
+import phanterpwa.apptools.gatehandler as gatehandler
 from org.transcrypt.stubs.browser import __pragma__
 
 __pragma__('alias', "jQuery", "$")
@@ -1517,7 +1517,7 @@ class LeftBarAuthUserNoLogin(left_bar.LeftBarMenu):
         )
 
 
-class Profile(handler.GateHandler):
+class Profile(gatehandler.Handler):
     def initialize(self):
         self.requires_login = True
 
@@ -1694,7 +1694,7 @@ class Profile(handler.GateHandler):
         self.binds()
 
 
-class Lock(handler.GateHandler):
+class Lock(gatehandler.Handler):
     def on_other_user_click(self):
         jQuery("body").removeClass("phanterpwa-lock")
         localStorage.removeItem("last_auth_user")
@@ -1939,7 +1939,7 @@ class Lock(handler.GateHandler):
             self.on_other_user_click()
 
 
-class TwoFactor(handler.GateHandler):
+class TwoFactor(gatehandler.Handler):
     def initialize(self):
         self._authorization_url_two_factor = self._request.get_arg(0)
         AuthUserCmp = window.PhanterPWA.Components["auth_user"]

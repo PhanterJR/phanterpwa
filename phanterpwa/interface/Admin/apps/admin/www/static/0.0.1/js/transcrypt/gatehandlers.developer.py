@@ -182,7 +182,7 @@ class Index(gatehandler.Handler):
             "projects-table",
             XTRH(
                 "projects-table-head",
-                *["Project Name", "Diretory", "Status"],
+                *["Project Name", "Diretory", "Status", "Port"],
                 DIV(
                     I(_class="fas fa-plus"),
                     **{
@@ -210,9 +210,11 @@ class Index(gatehandler.Handler):
                         }
 
                     ),
+                    x[3],
                     widgets.MenuBox(
-                        "drop_{0}".format(x[0]),
-                        xml_menu=UL(
+                        "drop_project_{0}".format(x[0]),
+                        DIV(I(_class="fas fa-ellipsis-v"), _class="icon_button wave_on_click"),
+                        custom_menu=UL(
                             LI(btn_lbl.capitalize(), **{
                                 "_id": "btn_run_stop_project_{0}".format(x[0]),
                                 "_class": "btn_run_stop_project",
@@ -226,7 +228,7 @@ class Index(gatehandler.Handler):
                                 "_class": "botao_editar_role",
                                 "_phanterpwa-way": "project/{0}/delete".format(x[0])
                             }),
-                            **{"data-menubox": "drop_{0}".format(x[0]),
+                            **{"data-menubox": "drop_project_{0}".format(x[0]),
                             "_class": 'dropdown-content'},
                         ),
                         onOpen=self._bind_btn_run_stop

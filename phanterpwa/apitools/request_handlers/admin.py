@@ -20,7 +20,7 @@ class UserManager(web.RequestHandler):
         self.i18nTranslator = i18nTranslator
         if logger_api:
             self.logger_api = logger_api
-        if i18nTranslator:    
+        if i18nTranslator:
             self.T = i18nTranslator.T
         self.set_header("Access-Control-Allow-Origin", "*")
         self.set_header(
