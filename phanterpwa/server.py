@@ -22,16 +22,24 @@ class PhanterPWATornado(object):
         super(PhanterPWATornado, self).__init__()
         self.projectPath = projectPath
         self.projectConfig = configer.ProjectConfig(os.path.join(self.projectPath, "config.json"))
-        self.api_port = self.projectConfig['API']["port"]
         self.apps_ports = []
-        if self.projectConfig.get("APPS") and \
-            os.path.exists(os.path.join(self.projectConfig['PROJECT']['path'], "apps")):
-            for x in self.projectConfig['APPS']:
-                current_port = self.projectConfig['APPS'][x]['port']
-                if current_port not in self.apps_ports and current_port != self.api_port:
+        if self.projectConfig.get("FRONTEND") and \
+            os.path.exists(os.path.join(self.projectConfig['PROJECT']['path'], "frontend")):
+            for x in self.projectConfig['FRONTEND']:
+                current_port = self.projectConfig['FRONTEND'][x]['port']
+                if current_port not in self.apps_ports:
                     self.apps_ports.append(current_port)
                 else:
-                    raise ValueError("The '{0}' app port ({1}) is not valid".format(x, current_port))
+                    raise ValueError("The '{0}' frontend app port ({1}) is not valid".format(x, current_port))
+
+        if self.projectConfig.get("BACKEND") and \
+            os.path.exists(os.path.join(self.projectConfig['PROJECT']['path'], "backend")):
+            for x in self.projectConfig['BACKEND']:
+                current_port = self.projectConfig['BACKEND'][x]['port']
+                if current_port not in self.apps_ports:
+                    self.apps_ports.append(current_port)
+                else:
+                    raise ValueError("The '{0}' backend app port ({1}) is not valid".format(x, current_port))
 
         self.debug = self.projectConfig["PROJECT"]["debug"]
         self.version = self.projectConfig["PROJECT"]["version"]
@@ -53,25 +61,14 @@ class PhanterPWATornado(object):
         c.compile()
 
     def run(self):
-        sys.path.append(self.projectPath)
+        sys.path.insert(0, self.projectPath)
         os.chdir(self.projectPath)
-        handlers_api = importlib.import_module("api.handlers")
-        if isinstance(handlers_api.HANDLER, (list, tuple)):
-            api = web.Application(
-                handlers_api.HANDLER,
-                **handlers_api.SETTINGS
-            )
-            api_http_server = httpserver.HTTPServer(api)
-            api_http_server.listen(int(self.api_port))
-        else:
-            api = handlers_api.HANDLER
-            api_http_server = httpserver.HTTPServer(api)
-            api_http_server.listen(int(self.api_port))
+        print(self.projectPath)
 
         if self.apps_ports:
-            for x in self.projectConfig['APPS']:
-                current_port = self.projectConfig['APPS'][x]['port']
-                handlers_app = importlib.import_module("apps.{0}.handlers".format(x))
+            for x in self.projectConfig['BACKEND']:
+                current_port = self.projectConfig['BACKEND'][x]['port']
+                handlers_app = importlib.import_module("backend.{0}.handlers".format(x))
                 if isinstance(handlers_app.HANDLER, (list, tuple)):
                     app = web.Application(
                         handlers_app.HANDLER,
@@ -83,6 +80,22 @@ class PhanterPWATornado(object):
                     app = handlers_app.HANDLER
                     app_http_server = httpserver.HTTPServer(app)
                     app_http_server.listen(int(current_port))
+
+            for x in self.projectConfig['FRONTEND']:
+                current_port = self.projectConfig['FRONTEND'][x]['port']
+                handlers_app = importlib.import_module("frontend.{0}.handlers".format(x))
+                if isinstance(handlers_app.HANDLER, (list, tuple)):
+                    app = web.Application(
+                        handlers_app.HANDLER,
+                        **handlers_app.SETTINGS
+                    )
+                    app_http_server = httpserver.HTTPServer(app)
+                    app_http_server.listen(int(current_port))
+                else:
+                    app = handlers_app.HANDLER
+                    app_http_server = httpserver.HTTPServer(app)
+                    app_http_server.listen(int(current_port))
+
         ioloop.IOLoop.current().start()
         print("start stopped")
         ioloop.IOLoop.current().add_callback(lambda: ioloop.IOLoop.current().close(True))
@@ -120,15 +133,19 @@ class ProjectRunner():
         print("=" * 79)
         print("Starting server....")
         cfg = configer.ProjectConfig(project_path)
-        print('API')
-        print("  HOST:", cfg['API']['host'])
-        print("  PORT:", cfg['API']['port'])
-        if cfg['APPS']:
-            print('APPS')
-            for a in cfg['APPS']:
+        if cfg['BACKEND']:
+            print('BACKEND')
+            for a in cfg['BACKEND']:
                 print(" ", a)
-                print("    HOST:", cfg['APPS'][a]['host'])
-                print("    PORT:", cfg['APPS'][a]['port'])
+                print("    HOST:", cfg['BACKEND'][a]['host'])
+                print("    PORT:", cfg['BACKEND'][a]['port'])
+        print()
+        if cfg['FRONTEND']:
+            print('FRONTEND')
+            for a in cfg['FRONTEND']:
+                print(" ", a)
+                print("    HOST:", cfg['FRONTEND'][a]['host'])
+                print("    PORT:", cfg['FRONTEND'][a]['port'])
         print()
         with open(os.path.join(self.path_phanterpwa, "samples", "art"), "r") as f:
             print(f.read())
@@ -160,15 +177,19 @@ class ProjectRunner():
             print("=" * 79)
             print("Stoping server....")
             cfg = configer.ProjectConfig(project_path)
-            print('API')
-            print("  HOST:", cfg['API']['host'])
-            print("  PORT:", cfg['API']['port'])
-            if cfg['APPS']:
-                print('APPS')
-                for a in cfg['APPS']:
+            if cfg['BACKEND']:
+                print('BACKEND')
+                for a in cfg['BACKEND']:
                     print(" ", a)
-                    print("    HOST:", cfg['APPS'][a]['host'])
-                    print("    PORT:", cfg['APPS'][a]['port'])
+                    print("    HOST:", cfg['BACKEND'][a]['host'])
+                    print("    PORT:", cfg['BACKEND'][a]['port'])
+            print()
+            if cfg['FRONTEND']:
+                print('FRONTEND')
+                for a in cfg['FRONTEND']:
+                    print(" ", a)
+                    print("    HOST:", cfg['FRONTEND'][a]['host'])
+                    print("    PORT:", cfg['FRONTEND'][a]['port'])
             print()
             print("Goodbye!")
 

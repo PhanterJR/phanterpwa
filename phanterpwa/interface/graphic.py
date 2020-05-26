@@ -149,18 +149,18 @@ def list_installed_apps(path_project):
         j = ""
         with open(cfg, 'r', encoding='utf-8') as f:
             j = json.load(f)
-        if j and j["APPS"]:
+        if j and j["FRONTEND"]:
             change = False
-            for p in glob(os.path.join(j['PROJECT']['path'], "apps", "*")):
+            for p in glob(os.path.join(j['PROJECT']['path'], "frontend", "*")):
                 app_name = os.path.split(p)[-1]
                 if all([os.path.isdir(p),
                         os.path.isdir(os.path.join(p, "sources", "styles")),
                         os.path.isdir(os.path.join(p, "sources", "templates")),
                         os.path.isdir(os.path.join(p, "sources", "transcrypts")),
                         os.path.isdir(os.path.join(p, "statics"))]):
-                    if not j["APPS"].get(app_name, None):
+                    if not j["FRONTEND"].get(app_name, None):
                         change = True
-                        j["APPS"][app_name] = {
+                        j["FRONTEND"][app_name] = {
                             "build_folder": os.path.join(p, "www"),
                             "timeout_to_resign": 600,
                             "host": "0.0.0.0",
@@ -169,12 +169,12 @@ def list_installed_apps(path_project):
                             "styles_main_file": "application",
                             "views_main_file": "application"
                         }
-                    apps[app_name] = j["APPS"][app_name]
+                    apps[app_name] = j["FRONTEND"][app_name]
             if change:
                 with open(cfg, 'w', encoding='utf-8') as fw:
                     json.dump(j, fw, ensure_ascii=False, indent=2)
     if not apps:
-        print("Don't find installed apps on {0}".format(os.path.join(path_project, "apps")))
+        print("Don't find installed apps on {0}".format(os.path.join(path_project, "frontend")))
     return apps
 
 
@@ -808,7 +808,7 @@ class ProjectPWA():
 
                         I_name.grid(column=0, row=row, padx=(30, 5), pady=(2, 2), sticky='e')
                         t_name = ttk.Entry(frame)
-                        t_name.insert(0, os.path.join(project_path_data, "apps", i))
+                        t_name.insert(0, os.path.join(project_path_data, "frontend", i))
                         t_name.config(state="readonly")
                         t_name.grid(column=1, row=row, columnspan=4, padx=(0, 0), pady=(2, 2), sticky='ew')
                         bapp_name = ttk.Button(
@@ -1793,7 +1793,7 @@ class ConfigAPP():
         scrollbar.config(command=self.frame_canvas.yview)
         self.frame_canvas.pack(side=LEFT, fill=Y, expand=TRUE)
         tkInstance.protocol('WM_DELETE_WINDOW', lambda: self.close())
-        tkInstance.title("APP - {0} - PhanterPWA".format(self.AppCONFIG['APPS'][APP]["title"]))
+        tkInstance.title("APP - {0} - PhanterPWA".format(self.AppCONFIG["FRONTEND"][APP]["title"]))
         tkInstance.iconbitmap(os.path.join(CURRENT_DIR, "grafics", "icon.ico"))
         style_orange = ttk.Style()
         style_orange.configure('Wf.TButton', font=('default', 10, 'bold'), foreground='orange')
@@ -1808,7 +1808,7 @@ class ConfigAPP():
         row += 1
         APP_title_label = ttk.Label(frame, text=T("Title"))
         APP_title_label.grid(column=0, row=row, padx=(10, 5), pady=(5, 5), sticky="e")
-        APP_title = self.AppCONFIG['APPS'][APP]["title"]
+        APP_title = self.AppCONFIG["FRONTEND"][APP]["title"]
         self.APP_title_input = ttk.Entry(frame, width=70)
         self.APP_title_input.insert(0, APP_title)
         self.APP_title_input.grid(column=1, row=row, columnspan=2, padx=(5, 10), pady=(5, 5), sticky="we")
@@ -1818,7 +1818,7 @@ class ConfigAPP():
         row += 1
         APP_compiled_folder_label = ttk.Label(frame, text=T("Target folder on Compile"))
         APP_compiled_folder_label.grid(column=0, row=row, padx=(10, 5), pady=(5, 5), sticky="e")
-        APP_compiled_folder = self.AppCONFIG['APPS'][APP]['build_folder']
+        APP_compiled_folder = self.AppCONFIG["FRONTEND"][APP]['build_folder']
         self.APP_compiled_folder_input = ttk.Entry(frame, width=70)
         self.APP_compiled_folder_input.insert(0, APP_compiled_folder)
         self.APP_compiled_folder_input.config(state="readonly")
@@ -1832,7 +1832,7 @@ class ConfigAPP():
             row += 1
             k_label = ttk.Label(frame, text=T(time_values[k]))
             k_label.grid(column=0, row=row, padx=(10, 5), pady=(5, 5), sticky="e")
-            k_value = self.AppCONFIG['APPS'][APP][k]
+            k_value = self.AppCONFIG["FRONTEND"][APP][k]
             self.k_input = ttk.Entry(frame, width=70)
             self.k_input.insert(
                 0,
@@ -1909,11 +1909,11 @@ class ConfigAPP():
     def validAndSave(self, entry):
         if entry == "host":
             v = self.api_host_input.get()
-            self.AppCONFIG['APPS'][self.APP]['host'] = v
+            self.AppCONFIG["FRONTEND"][self.APP]['host'] = v
             self.updateAppCONFIG()
         elif entry == "port":
             v = self.api_port_input.get()
-            self.AppCONFIG['APPS'][self.APP]['port'] = v
+            self.AppCONFIG["FRONTEND"][self.APP]['port'] = v
             self.updateAppCONFIG()
 
     def updateAppCONFIG(self):
@@ -1975,10 +1975,10 @@ class ConfigAPP():
 
     def setEntryFolder(self, APP):
 
-        current_path = self.AppCONFIG["APPS"][APP]["build_folder"]
+        current_path = self.AppCONFIG["FRONTEND"][APP]["build_folder"]
         folder = filedialog.askdirectory(initialdir=current_path)
         if folder:
-            self.AppCONFIG["APPS"][APP]["build_folder"] = os.path.normpath(folder)
+            self.AppCONFIG["FRONTEND"][APP]["build_folder"] = os.path.normpath(folder)
             self.updateAppCONFIG()
             self.APP_compiled_folder_input.config(state="normal")
             self.APP_compiled_folder_input.delete(0, END)
@@ -2968,7 +2968,7 @@ class TimeComboxAPP():
         self.entry_seconds.insert(0, v)
         self.entry_seconds.config(state="readonly")
         if self.key_app:
-            self.AppsPWA.AppCONFIG['APPS'][self.APP][self.key_app] = t_seconds
+            self.AppsPWA.AppCONFIG["FRONTEND"][self.APP][self.key_app] = t_seconds
             self.AppsPWA.updateAppCONFIG()
         self.tkInstance.destroy()
 

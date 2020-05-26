@@ -69,9 +69,9 @@ class Compiler():
 
     def _check_app_list(self):
 
-        for app in list(self.config['APPS'].keys()):
-            if not isdir(join(self.projectpath, "apps", app)):
-                del self.config['APPS'][app]
+        for app in list(self.config['FRONTEND'].keys()):
+            if not isdir(join(self.projectpath, "frontend", app)):
+                del self.config['FRONTEND'][app]
 
     @property
     def app_list(self):
@@ -79,7 +79,7 @@ class Compiler():
             lista os aplicativos
         """
         self._check_app_list()
-        return self.config['APPS'].keys()
+        return self.config['FRONTEND'].keys()
 
     @property
     def build_apps_folder(self):
@@ -165,7 +165,7 @@ class Compiler():
         main_file = join(PATH_PHANTERPWA, "usual_sass", "phanterpwa.sass")
         if exists(join(dirname(main_file), "_compiler_sass_temp_file.sass")):
             os.unlink(join(dirname(main_file), "_compiler_sass_temp_file.sass"))
-        target_css = join(self.projectpath, "apps", app, "statics", "css", "phanterpwa.css")
+        target_css = join(self.projectpath, "frontend", app, "statics", "css", "phanterpwa.css")
         sfiles = self.get_files_dir(
             join(PATH_PHANTERPWA, "usual_sass"), ignore_files=["__init__.py"], ignore_paths=["__pycache__"])
         sass_files = (normpath(x) for x in sfiles if x.endswith(".sass"))
@@ -288,37 +288,37 @@ class Compiler():
         if self.build_apps_folder:
             return join(self.build_apps_folder, app, "www")
         else:
-            return self.config["APPS"][app]["build_folder"]
+            return self.config["FRONTEND"][app]["build_folder"]
 
     def path_build_statics_folder(self, app):
         if self.build_apps_folder:
             return join(self.build_apps_folder, app, "www", "static")
         else:
-            return join(self.config["APPS"][app]["build_folder"], "static")
+            return join(self.config["FRONTEND"][app]["build_folder"], "static")
 
     def path_build_styles_folder(self, app):
         if self.build_apps_folder:
             return join(self.build_apps_folder, app, "www", "static", self.version, "css")
         else:
-            return join(self.config["APPS"][app]["build_folder"], "static", self.version, "css")
+            return join(self.config["FRONTEND"][app]["build_folder"], "static", self.version, "css")
 
     def path_build_transcrypt_folder(self, app):
         if self.build_apps_folder:
             return join(self.build_apps_folder, app, "www", "static", self.version, "js", "transcrypt")
         else:
-            return join(self.config["APPS"][app]["build_folder"], "static", self.version, "js", "transcrypt")
+            return join(self.config["FRONTEND"][app]["build_folder"], "static", self.version, "js", "transcrypt")
 
     def path_templates_folder(self, app):
-        return join(self.projectpath, "apps", app, "sources", "templates")
+        return join(self.projectpath, "frontend", app, "sources", "templates")
 
     def path_styles_folder(self, app):
-        return join(self.projectpath, "apps", app, "sources", "styles")
+        return join(self.projectpath, "frontend", app, "sources", "styles")
 
     def path_transcrypts_folder(self, app):
-        return join(self.projectpath, "apps", app, "sources", "transcrypts")
+        return join(self.projectpath, "frontend", app, "sources", "transcrypts")
 
     def path_statics_folder(self, app):
-        return join(self.projectpath, "apps", app, "statics")
+        return join(self.projectpath, "frontend", app, "statics")
 
     def path_app_config_file(self, app):
         return join(self.path_transcrypts_folder(app), "config.py")
@@ -350,12 +350,12 @@ class Compiler():
 
     def _check_style_target_exist(self, app):
         target = join(self.path_build_styles_folder(app),
-            "{0}.css".format(self.config["APPS"][app]["styles_main_file"]))
+            "{0}.css".format(self.config["FRONTEND"][app]["styles_main_file"]))
         return isfile(target)
 
     def _check_transcrypt_target_exist(self, app):
         target = join(self.path_build_transcrypt_folder(app),
-            "{0}.js".format(self.config["APPS"][app]["transcrypt_main_file"]))
+            "{0}.js".format(self.config["FRONTEND"][app]["transcrypt_main_file"]))
         return isfile(target)
 
     def create_templates_to_update_generator(self, app):
@@ -436,7 +436,7 @@ class Compiler():
         return False
 
     def modules_files_monitor(self):
-        t = join(dirname(phanterpwa.__file__), "apptools")
+        t = join(dirname(phanterpwa.__file__), "frontend")
         lfi = self.get_files_dir(t, ignore_files=["__init__.py"], ignore_paths=["__pycache__"])
         return [x for x in lfi] + [
             join(dirname(phanterpwa.__file__), "xmlconstructor.py"),
@@ -521,7 +521,7 @@ class Compiler():
     def delete_compiled_app_folder(self, app):
         appConfig = self.config
         if self.full_compilation:
-            target = appConfig.get('APPS')[app]['build_folder']
+            target = appConfig.get('FRONTEND')[app]['build_folder']
             if target:
                 if exists(target) and isdir(target):
                     print("Deleting builder folder...")
@@ -538,13 +538,13 @@ class Compiler():
         print("\nCopying languages...")
         appConfig = self.config
         version = appConfig['PROJECT']['version']
-        apps_list_basedir = join(appConfig['PROJECT']['path'], "apps")
+        apps_list_basedir = join(appConfig['PROJECT']['path'], "frontend")
         source_apps = join(
             apps_list_basedir,
             "languages"
         )
         folder_lang_apps_list = join(
-            appConfig["APPS"][app]['build_folder'],
+            appConfig["FRONTEND"][app]['build_folder'],
             "static",
             version,
             "languages"
@@ -574,13 +574,13 @@ class Compiler():
         if changed or self.full_compilation:
             main_file = join(
                 self.path_styles_folder(app), "{0}.sass".format(
-                    appConfig["APPS"][app]['styles_main_file'])
+                    appConfig["FRONTEND"][app]['styles_main_file'])
             )
             if exists(join(dirname(main_file), "_compiler_sass_temp_file.sass")):
                 os.unlink(join(dirname(main_file), "_compiler_sass_temp_file.sass"))
             target_css = join(
                 self.path_build_styles_folder(app),
-                    "{0}.css".format(appConfig["APPS"][app]['styles_main_file'])
+                    "{0}.css".format(appConfig["FRONTEND"][app]['styles_main_file'])
             )
             try:
                 os.makedirs(dirname(target_css), exist_ok=True)
@@ -664,7 +664,7 @@ class Compiler():
         appConfig = self.config
         sys.path.append(project_path)
         os.chdir(project_path)
-        base_dir = join(appConfig['PROJECT']['path'], "apps", app)
+        base_dir = join(appConfig['PROJECT']['path'], "frontend", app)
 
         def _compile_html(file, base="", target=None, is_apps=False, app_name="", ignore=["__init__.py"]):
 
@@ -675,6 +675,7 @@ class Compiler():
                 i = importlib.import_module(i_mod)
                 importlib.reload(i)
                 name = "".join([*i_mod.split(".")[-1], ".html"])
+                print(i.__name__, name)
                 f_parts = i_mod.split(".")[3:-1]
                 files_www = join(target, *f_parts)
                 if is_apps:
@@ -712,7 +713,7 @@ class Compiler():
         if self._templates_to_update[app]:
             _compile_htmls(
                 join(base_dir, "sources", "templates"),
-                "apps.{0}.sources.templates".format(app),
+                "frontend.{0}.sources.templates".format(app),
                 target=target_apps,
                 is_apps=True,
                 app_name=app
@@ -733,7 +734,7 @@ class Compiler():
                     folder_script_apps_list), exist_ok=True)
             source = join(self.path_transcrypts_folder(app), "__target__")
             main_file = join(
-                self.path_transcrypts_folder(app), "{0}.py".format(appConfig["APPS"][app]['transcrypt_main_file']))
+                self.path_transcrypts_folder(app), "{0}.py".format(appConfig["FRONTEND"][app]['transcrypt_main_file']))
             print("    Convert python to javascript: {0}".format(main_file))
             print("    Starting Transcrypt compiler. Wait to complete.")
             if self.minify:
@@ -778,36 +779,36 @@ class Compiler():
                 self._has_config_changed[app] = self._process_transcrypt_config(app)
 
     def _process_transcrypt_config(self, app):
+        ignore_keys = [
+            "transcrypt_main_file"
+            "styles_main_file",
+            "views_main_file",
+            "host",
+            "port"
+        ]
+
         last_app_config = join(self.tempfolder, "project_config_{0}.json".format(app))
         path_app_config_file = self.path_app_config_file(app)
-        CONFIG = {'PROJECT': {}, 'CONFIGJS': {}, 'I18N': {}}
-        CONFIG['PROJECT'] = self.config['PROJECT']
+        CONFIG = {
+            "PROJECT": {
+                "name": self.config["PROJECT"]["name"],
+                "title": self.config["PROJECT"]["title"],
+                "version": self.config["PROJECT"]["version"],
+                "compilation": self.config["PROJECT"]["compilation"],
+                "debug": self.config["PROJECT"]["debug"],
+                "author": self.config["PROJECT"]["author"],
+            },
+            "APP": {
+            },
+            "I18N": {
 
-        if self.config["PROJECT"]["debug"]:
-            api_server_address = self.config['API']['remote_address_debug']
-            CONFIG['CONFIGJS']['api_server_address'] = api_server_address
-            CONFIG['CONFIGJS']['api_websocket_address'] = self.config['API']['websocket_address_debug']
-        else:
-            api_server_address = self.config['API']['remote_address']
-            CONFIG['CONFIGJS']['api_server_address'] = api_server_address
-            CONFIG['CONFIGJS']['api_websocket_address'] = self.config['API']['websocket_address']
-        CONFIG['CONFIGJS']['timeout_to_resign'] = self.config["APPS"][app]['timeout_to_resign']
-        social_logins = {}
-        social_list = []
-        for x in self.config.keys():
-            if x.startswith("OAUTH_"):
-                social_list.append(x[6:].lower())
-        if "SOCIAL_LOGIN" in self.config:
-            social_logins = {
-                x: "{0}/api/auth/{1}/prompt".format(api_server_address, x)
-                    for x in social_list
             }
-
-        CONFIG['APP'] = {
-            'name': app,
-            'title': self.config["APPS"][app]['title'],
         }
-        CONFIG['SOCIAL_LOGINS'] = social_logins
+        for x in self.config['FRONTEND'][app]:
+            if x not in ignore_keys:
+                CONFIG['APP'][x] = self.config['FRONTEND'][app][x]
+
+        CONFIG['APP']['name'] = app
 
         ini = "\n".join([
             "# Created automatically.",
@@ -818,7 +819,7 @@ class Compiler():
             "# file for this.",
             "#\n\n",
         ])
-        i18n_files = join(self.projectpath, "apps", "languages")
+        i18n_files = join(self.projectpath, "frontend", "languages")
         files = glob(join(i18n_files, "*.json"))
         i18n_languages = {}
         for x in files:
@@ -839,7 +840,7 @@ class Compiler():
             with open(last_app_config, "w", encoding="utf-8") as f:
                 new_c = json.dumps(self.config)
                 new_c = json.loads(new_c)
-                new_c["APPS"] = {app: new_c["APPS"][app]}
+                new_c["FRONTEND"] = {app: new_c["FRONTEND"][app]}
                 json.dump(new_c, f, ensure_ascii=True, indent=2)
             return True
         else:
@@ -849,8 +850,8 @@ class Compiler():
                 new_v['PROJECT']['compilation'] = self.config['PROJECT']['compilation']
                 new_c = json.dumps(self.config, ensure_ascii=True)
                 new_c = json.loads(new_c)
-                new_c["APPS"] = {app: new_c["APPS"][app]}
-                new_v["APPS"] = {app: new_v["APPS"][app]}
+                new_c["FRONTEND"] = {app: new_c["FRONTEND"][app]}
+                new_v["FRONTEND"] = {app: new_v["FRONTEND"][app]}
 
                 if new_v == new_c:
                     if exists(join(self.tempfolder, "transcrypts_mtime_{0}.json".format(app))):
@@ -866,7 +867,7 @@ class Compiler():
             with open(last_app_config, "w", encoding="utf-8") as f:
                 new_c = json.dumps(self.config)
                 new_c = json.loads(new_c)
-                new_c["APPS"] = {app: new_c["APPS"][app]}
+                new_c["FRONTEND"] = {app: new_c["FRONTEND"][app]}
                 json.dump(new_c, f, ensure_ascii=True, indent=2)
             return True
 
@@ -943,7 +944,7 @@ class Compiler():
                 yield [msg, True, "Pass"]
             except Exception as e:
                 yield [msg, True, "".join(traceback.format_tb(e.__traceback__))]
-            if current_debug or not exists(join(self.projectpath, "apps", app, "statics", "css", "phanterpwa.css")):
+            if current_debug or not exists(join(self.projectpath, "frontend", app, "statics", "css", "phanterpwa.css")):
                 msg = "Creating phanterpwa.css"
                 try:
                     self.phanterpwa_usual_sass(app)
@@ -1003,7 +1004,7 @@ class Compiler():
             if minify is True:
                 self.minify = True
             self.delete_compiled_app_folder(app)
-            if current_debug or not exists(join(self.projectpath, "apps", app, "statics", "css", "phanterpwa.css")):
+            if current_debug or not exists(join(self.projectpath, "frontend", app, "statics", "css", "phanterpwa.css")):
                 self.phanterpwa_usual_sass(app)
             self.copy_statics(app)
             self.copy_languages(app)

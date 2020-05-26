@@ -7,8 +7,8 @@ _current_dir = os.path.dirname(__file__)
 projectConfig = ProjectConfig(os.path.join(_current_dir, "config.json"))
 _debug = projectConfig['PROJECT']['debug']
 _project_name = projectConfig['PROJECT']['name']
-for app in projectConfig['APPS'].keys():
-    Translator_apps = Translator(os.path.join(_current_dir, "apps", app, "languages"), identifier="{0}-{1}".format(
+for app in projectConfig["FRONTEND"].keys():
+    Translator_apps = Translator(os.path.join(_current_dir, "frontend", app, "languages"), identifier="{0}-{1}".format(
         _project_name, app), debug=_debug)
     Translator_apps.add_language("pt-BR")
 Translator_email = Translator(os.path.join(_current_dir, "api", "languages", "email"), identifier="{0}-email".format(

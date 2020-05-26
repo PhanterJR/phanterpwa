@@ -37,7 +37,7 @@
     "host": "127.0.0.1",
     "port": 8801
   },
-  "APPS": {
+  "FRONTEND": {
     "sindfa": {
       "build_folder": "D:\\Github\\SindFA\\apps\\sindfa\\www",
       "title": "PhanterPWAClient",

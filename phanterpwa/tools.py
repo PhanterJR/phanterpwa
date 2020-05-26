@@ -240,7 +240,7 @@ def app_name_from_relative_child(project_path, child_path):
     :param project_path: Project path
     :child_path: Child folder of the project folder
     """
-    apps_list_basedir = os.path.join(project_path, "apps")
+    apps_list_basedir = os.path.join(project_path, "frontend")
     p = PurePath(child_path)
     r = p.relative_to(os.path.join(apps_list_basedir))
     return r.parts[0]

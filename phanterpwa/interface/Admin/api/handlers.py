@@ -1,5 +1,5 @@
 import os
-from phanterpwa.apitools.request_handlers import (
+from phanterpwa.backend.request_handlers import (
     admin,
     auth,
     credentials,

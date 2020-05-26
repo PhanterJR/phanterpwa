@@ -38,7 +38,7 @@
     "port": 8881,
     "default_time_two_factor_code_expire": 3600
   },
-  "APPS": {
+  "FRONTEND": {
     "scaffold_app": {
       "build_folder": "D:\\Github\\Scaffold_PhanterPWA\\apps\\scaffold_app\\www",
       "title": "PhanterPWA_Scaffold_App",

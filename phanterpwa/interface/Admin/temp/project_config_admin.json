@@ -42,7 +42,7 @@
     "remote_address": "http://127.0.0.1:18881",
     "websocket_address": "ws://127.0.0.1:18881/api/websocket"
   },
-  "APPS": {
+  "FRONTEND": {
     "admin": {
       "build_folder": "C:\\virtualenv\\py37\\phanterpwadeveloper\\Lib\\site-packages\\phanterpwa\\interface\\Admin\\apps\\admin\\www",
       "title": "Admin",

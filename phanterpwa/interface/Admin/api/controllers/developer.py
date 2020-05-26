@@ -6,7 +6,7 @@ import base64
 import json
 import unittest
 import phanterpwa
-from phanterpwa.apitools.decorators import (
+from phanterpwa.backend.decorators import (
     check_application
 )
 from phanterpwa import __install_requeriments__ as requeriments

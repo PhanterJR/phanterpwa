@@ -1,8 +1,8 @@
 {
     "CONFIG_INDENTIFY": "project_config",
     "ENVIRONMENT": {
-        "python": "C:\\virtualenv\\py37\\phanterpwadeveloper\\Scripts\\python.exe",
-        "path": "C:\\virtualenv\\py37\\phanterpwadeveloper\\Scripts"
+        "python": "D:\\Github\\phanterpwadeveloper\\Scripts\\python.exe",
+        "path": "D:\\Github\\phanterpwadeveloper\\Scripts"
     },
     "PROJECT": {
         "name": "project_without_ini",
@@ -12,7 +12,10 @@
         "author": "PhanterJR<phanterjr@conexaodidata.com.br>",
         "debug": true,
         "packaged": true,
-        "path": "C:\\virtualenv\\py37\\phanterpwadeveloper\\lib\\site-packages\\phanterpwa\\tests\\test_configer_path\\project_without_ini"
+        "minify": false,
+        "baseport": 10000,
+        "basehost": "127.0.0.1",
+        "path": "D:\\Github\\phanterpwadeveloper\\Lib\\site-packages\\phanterpwa\\tests\\test_configer_path\\project_without_ini"
     },
     "API": {
         "secret_key": "{{secret_key}}",
@@ -38,7 +41,7 @@
         "host": "127.0.0.1",
         "port": 8881
     },
-    "APPS": {},
+    "FRONTEND": {},
     "EMAIL": {
         "server": "mail.yourservermail.com",
         "username": "username@yourservermail.com",
@@ -51,5 +54,14 @@
     "CONTENT_EMAILS": {
         "copyright": "Conex\u00e3o Didata \u00a9 2011-{{now}}",
         "link_to_your_site": "https://phanterpwa.conexaodidata.com.br"
+    },
+    "APPS": {},
+    "BACKEND": {
+        "api": {
+            "build_folder": "D:\\Github\\phanterpwadeveloper\\Lib\\site-packages\\phanterpwa\\tests\\test_configer_path\\project_without_ini\\backend\\api\\www",
+            "title": "PhanterPWA Backend",
+            "host": "127.0.0.1",
+            "port": 10000
+        }
     }
 }

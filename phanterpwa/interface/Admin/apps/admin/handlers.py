@@ -7,7 +7,7 @@ from phanterpwa.configer import ProjectConfig
 _current_dir = os.path.join(os.path.dirname(__file__))
 folder_name = os.path.split(_current_dir)[-1]
 projectConfig = ProjectConfig(os.path.normpath(os.path.join(_current_dir, "..", "..", "config.json")))
-_targer_compiled_app = projectConfig['APPS'][folder_name]['build_folder']
+_targer_compiled_app = projectConfig["FRONTEND"][folder_name]['build_folder']
 _version = projectConfig['PROJECT']['version']
 _debug = projectConfig['PROJECT']['debug']
 
@@ -15,7 +15,7 @@ _debug = projectConfig['PROJECT']['debug']
 class AppMainPage(web.RequestHandler):
     def get(self):
         self.render(os.path.join(_targer_compiled_app, "{0}.html".format(
-            projectConfig['APPS'][folder_name]['views_main_file']
+            projectConfig["FRONTEND"][folder_name]['views_main_file']
         )))
 
 

@@ -2,9 +2,9 @@ import os
 import glob
 from pydal import DAL
 from core import (projectConfig, logger_api)
-from phanterpwa.apitools.pydal.auth import AuthTables
-from phanterpwa.apitools.pydal.credentials import CredentialsTables
-from phanterpwa.apitools.pydal.gallery import GalleryTables
+from phanterpwa.backend.pydal.auth import AuthTables
+from phanterpwa.backend.pydal.credentials import CredentialsTables
+from phanterpwa.backend.pydal.gallery import GalleryTables
 database_path = os.path.join(os.path.dirname(__file__), '..', 'databases')
 files = glob.glob(os.path.join(os.path.dirname(__file__), "*.py"))
 
