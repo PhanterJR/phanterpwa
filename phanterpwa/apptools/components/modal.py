@@ -22,23 +22,12 @@ class Modal():
     def __init__(self, target_selector, **parameters):
         self.target_selector = target_selector
         self.target_element = jQuery(target_selector)
-        self.title = ""
-        self.content = ""
-        self.footer = ""
-        self.header_height = 80
-        self.footer_height = 80
+        self.title = parameters.get("title", "")
+        self.content = parameters.get("content", "")
+        self.footer = parameters.get("footer", "")
+        self.header_height = parameters.get("header_height", 80)
+        self.footer_height = parameters.get("footer_height", 80)
         self._max_content_height = 400
-        self._form = parameters.get("form", None)
-        if "title" in parameters:
-            self.title = parameters["title"]
-        if "content" in parameters:
-            self.content = parameters["content"]
-        if "footer" in parameters:
-            self.footer = parameters["footer"]
-        if "header_height" in parameters:
-            self.header_height = parameters["header_height"]
-        if "footer_height" in parameters:
-            self.footer_height = parameters["footer_height"]
         if "_class" in parameters:
             parameters["_class"] = "{0}{1}".format(
                 parameters["_class"].strip(),
@@ -48,6 +37,7 @@ class Modal():
             parameters["_class"] = "phanterpwa-component-modal-wrapper phanterpwa-container"
         if "after_open" in parameters:
             self._after_open = parameters["after_open"]
+        self._z_index = parameters.get("z_index", 1006)
         wrapper_content = CONCATENATE(
             DIV(
                 DIV(
@@ -99,7 +89,8 @@ class Modal():
                 ),
                 _class="phanterpwa-centralizer-wrapper"
             ),
-            _class="phanterpwa-component-modal-container phanterpwa-fixed-fulldisplay"
+            _class="phanterpwa-component-modal-container phanterpwa-fixed-fulldisplay",
+            _style="z-index: {0}".format(self._z_index)
         )
 
     def switch_modal(self):
@@ -132,15 +123,13 @@ class Modal():
             widget_name = jQuery(el).attr("phanterpwa-widget")
             widget = window.PhanterPWA.Request.widgets.get(widget_name, None)
             if widget is not None:
-                widget.set_z_index("1006")
-                widget.set_recalc_on_scroll(True)
+                if callable(widget.set_z_index):
+                    widget.set_z_index(self._z_index + 1)
+                if callable(widget.set_recalc_on_scroll):
+                    widget.set_recalc_on_scroll(True)
 
         modal_container.find(
-            "{0}, {1}, {2}".format(
-                "phanterpwa-widget.phanterpwa-widget-select",
-                "phanterpwa-widget.phanterpwa-widget-menubox",
-                "tr.phanterpwa-widget-table-pagination"
-            )
+            "[phanterpwa-widget]"
         ).each(
             lambda: change_position_and_zindex(this)
         )

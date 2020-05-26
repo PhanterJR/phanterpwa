@@ -277,6 +277,8 @@ include phanterpwa/interface/Admin/apps/admin/www/static/0.0.1/webfonts/fa-solid
 include phanterpwa/interface/Admin/apps/admin/www/static/0.0.1/webfonts/fa-solid-900.woff2
 include phanterpwa/interface/Admin/config.json
 include phanterpwa/interface/Admin/LICENSE
+include phanterpwa/interface/Admin/logs/api.log
+include phanterpwa/interface/Admin/logs/app.log
 include phanterpwa/interface/Admin/project.ini
 include phanterpwa/interface/Admin/temp/extends_mtime_admin.json
 include phanterpwa/interface/Admin/temp/extends_mtime_components.json
@@ -364,6 +366,8 @@ include phanterpwa/tests/test_i18n_languages/en-US.json
 include phanterpwa/tests/test_i18n_languages/entries.json
 include phanterpwa/tests/test_i18n_languages/pt-BR.json
 include phanterpwa/tests/test_i18n_languages/pt-PT.json
+include phanterpwa/tests/test_tools_humanize_seconds/entries.json
+include phanterpwa/tests/test_tools_humanize_seconds/pt-BR.json
 include phanterpwa/usual_sass/components/alert_top_activation.sass
 include phanterpwa/usual_sass/components/breascrumbs.sass
 include phanterpwa/usual_sass/components/buttons.sass

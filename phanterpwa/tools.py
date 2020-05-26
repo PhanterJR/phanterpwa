@@ -14,10 +14,12 @@ import re
 import sys
 import os
 import json
+from datetime import datetime
 from pathlib import PurePath
 from subprocess import Popen, PIPE, call
 from unicodedata import normalize
 from phanterpwa import __install_requeriments__ as requeriments
+from tornado import escape
 
 
 def check_requeriments() -> "generator - each step returns (str, bool)":
@@ -189,7 +191,8 @@ def sass_map_vars(string_sass):
     return d
 
 
-def temporary_password(size: int=8, chars: str="abcdefghijlmnopqrstuvxzwykABCDEFGHIJLMNOPQRSTUVXZWYK0123456789") -> str:
+def temporary_password(
+        size: int = 8, chars: str = "abcdefghijlmnopqrstuvxzwykABCDEFGHIJLMNOPQRSTUVXZWYK0123456789") -> str:
     """Create a random sequence of characters.
 
     :param size: generated string size.
@@ -243,7 +246,7 @@ def app_name_from_relative_child(project_path, child_path):
     return r.parts[0]
 
 
-def generate_activation_code(size: int=6) -> str:
+def generate_activation_code(size: int = 6) -> str:
     """Create a numeric code of predefined size with one character validator.
 
     :param size: generated string number size.
@@ -278,7 +281,7 @@ def generate_activation_code(size: int=6) -> str:
     return "-".join([f, ver[su]])
 
 
-def check_activation_code(code: str, size: int=6) -> (str, None):
+def check_activation_code(code: str, size: int = 6) -> (str, None):
     """Checks whether the string in the code parameter is a valid activation code
 
     :param size: Activation code size ignoring the check digit
@@ -317,7 +320,7 @@ def check_activation_code(code: str, size: int=6) -> (str, None):
             if su >= 9:
                 su = su - 9
         if ver[su] == dig:
-                return code
+            return code
 
 
 def config(cfg_file, dict_cfg=None, rewrite=False):
@@ -368,7 +371,7 @@ def config(cfg_file, dict_cfg=None, rewrite=False):
         }
 
     """
-    if dict_cfg == None:
+    if dict_cfg is None:
         dict_cfg = dict()
 
     if not isinstance(dict_cfg, dict):
@@ -492,9 +495,8 @@ def join_seconds(splitted_seconds: dict) -> int:
         31539601
         >>> join_seconds({'year': 1, 'second': 3601})
         31539601
-        >>> join_seconds({'year': 1, 'minute': 60, second': 1})
+        >>> join_seconds({'year': 1, 'minute': 60, 'second': 1})
         31539601
-    
     """
 
     if isinstance(splitted_seconds, dict):
@@ -654,7 +656,7 @@ def humanize_seconds(seconds: int, translator_instance: ("phanterpwa.i18n.Transl
     return s
 
 
-def text_normalize(text: str, upper: bool=True):
+def text_normalize(text: str, upper: bool = True):
     """"Remove the graphic accents of Latin languages"
 
     :param text: string that will be normalized
@@ -673,3 +675,72 @@ def text_normalize(text: str, upper: bool=True):
         return normalize('NFKD', text).encode('ascii', 'ignore').decode('ascii').upper()
     else:
         return normalize('NFKD', text).encode('ascii', 'ignore').decode('ascii')
+
+
+def string_escape(value):
+    r"""Escapes the <,>, ", 'and & characters of a string, when adding an interactable object such as a list,
+    a dictionary, tuples and a set it cycles through the values in search of strings recursively, remembering
+    that objects of the type tuple and set will be converted to lists.
+
+    :param value: string, dict, list, tuple or set.
+
+    Example:
+        >>> from phanterpwa.tools import string_escape
+        >>> string_escape("<div>the content<\div>")
+        '&lt;div&gt;the content&lt;\div&gt;'
+        >>> result = string_escape({
+            "one": "<div style='test'>one</div>",
+            "two": ["<div>two</div>"],
+            "three": ("<div>three</div>", ),
+            "four": {"<div>four</div>"},
+            "five": {
+                "five_one": ["<br>", ("<input>", "<hr>"), {"<a href='link'></a>"}]
+            }
+        })
+        >>> result["one"]
+        '&lt;div style=&#39;test&#39;&gt;one&lt;/div&gt;'
+        >>> result["two"]
+        '["&lt;div&gt;two&lt;/div&gt;"]'
+        >>> result["three"]
+        '["&lt;div&gt;three&lt;/div&gt;"]'
+        >>> result["four"]
+        '['&lt;div&gt;four&lt;/div&gt;']'
+        >>> result["five"]["five_one"]
+        '["&lt;br&gt;", ["&lt;input&gt;", "&lt;hr&gt;"], ["&lt;a href=&#39;link&#39;&gt;&lt;/a&gt;"]]'
+
+    """
+    if isinstance(value, str):
+        return escape.xhtml_escape(value)
+    elif isinstance(value, (list, tuple, set)):
+        new_list = []
+        for x in value:
+            new_list.append(string_escape(x))
+        return new_list
+    elif isinstance(value, dict):
+        new_dict = {}
+        for x in value.keys():
+            new_dict[x] = string_escape(value[x])
+        return new_dict
+    elif isinstance(value, datetime):
+        return value.isoformat(" ", "seconds")
+    else:
+        return value
+
+
+def one_space(value):
+    """"Removes empty spaces, tabs and new lines from a string and adds a space between words when necessary.
+
+    Example:
+        >>> from phanterpwa.tools import one_space
+        >>> one_space("   My    long \r\n text. \tTabulation,      spaces,     spaces.         ")
+        'My long text. Tabulation, spaces, spaces.'
+
+
+    """
+    result = ""
+    if isinstance(value, str):
+        value = value.strip()
+        value = value.replace("\n", " ").replace("\t", " ").replace("\r", " ")
+        spl = value.split(" ")
+        result = " ".join([x for x in spl if x])
+    return result

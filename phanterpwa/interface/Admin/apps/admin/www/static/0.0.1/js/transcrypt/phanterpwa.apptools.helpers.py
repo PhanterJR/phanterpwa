@@ -78,6 +78,7 @@ class XmlConstructor():
         el = jQuery(selector).html(self.__jquery_object)
         if window.PhanterPWA is not js_undefined:
             window.PhanterPWA.reload_events(selector=self.__jquery_object)
+            window.PhanterPWA.I18N.DOMTranslate(self.__jquery_object)
         return el
 
     def text_to(self, selector):
@@ -89,6 +90,7 @@ class XmlConstructor():
         el = jQuery(selector).append(self.__jquery_object)
         if window.PhanterPWA is not js_undefined:
             window.PhanterPWA.reload_events(selector=self.__jquery_object)
+            window.PhanterPWA.I18N.DOMTranslate(self.__jquery_object)
         return el
 
     def insert_to(self, selector, position=0):
@@ -103,6 +105,7 @@ class XmlConstructor():
         el = target
         if window.PhanterPWA is not js_undefined:
             window.PhanterPWA.reload_events(selector=self.__jquery_object)
+            window.PhanterPWA.I18N.DOMTranslate(self.__jquery_object)
         return el
 
     @staticmethod

@@ -1,4 +1,4 @@
-// Transcrypt'ed from Python, 2020-04-26 09:37:07
+// Transcrypt'ed from Python, 2020-04-27 18:50:08
 import {AssertionError, AttributeError, BaseException, DeprecationWarning, Exception, IndexError, IterableError, KeyError, NotImplementedError, RuntimeWarning, StopIteration, UserWarning, ValueError, Warning, __JsIterator__, __PyIterator__, __Terminal__, __add__, __and__, __call__, __class__, __envir__, __eq__, __floordiv__, __ge__, __get__, __getcm__, __getitem__, __getslice__, __getsm__, __gt__, __i__, __iadd__, __iand__, __idiv__, __ijsmod__, __ilshift__, __imatmul__, __imod__, __imul__, __in__, __init__, __ior__, __ipow__, __irshift__, __isub__, __ixor__, __jsUsePyNext__, __jsmod__, __k__, __kwargtrans__, __le__, __lshift__, __lt__, __matmul__, __mergefields__, __mergekwargtrans__, __mod__, __mul__, __ne__, __neg__, __nest__, __or__, __pow__, __pragma__, __proxy__, __pyUseJsNext__, __rshift__, __setitem__, __setproperty__, __setslice__, __sort__, __specialattrib__, __sub__, __super__, __t__, __terminal__, __truediv__, __withblock__, __xor__, abs, all, any, assert, bool, bytearray, bytes, callable, chr, copy, deepcopy, delattr, dict, dir, divmod, enumerate, filter, float, getattr, hasattr, input, int, isinstance, issubclass, len, list, map, max, min, object, ord, pow, print, property, py_TypeError, py_iter, py_metatype, py_next, py_reversed, py_typeof, range, repr, round, set, setattr, sorted, str, sum, tuple, zip} from './org.transcrypt.__runtime__.js';
 import * as widgets from './phanterpwa.apptools.components.widgets.js';
 import * as helpers from './phanterpwa.apptools.helpers.js';
@@ -122,6 +122,7 @@ export var SignForm =  __class__ ('SignForm', [object], {
 		else {
 		}
 		self.element_captcha_container.html (DIV (DIV (I18N ('Conection Fail!').jquery ().attr ('pt-BR', 'Conexão Falhou!'), __kwargtrans__ ({_id: 'captcha_reload_conection_fail_messagem'})), DIV (DIV (I (__kwargtrans__ ({_class: 'fas fa-redo-alt'})), __kwargtrans__ ({_id: 'captcha_reload_conection_icon'})), DIV (I18N ('Try again!').jquery ().attr ('pt-BR', 'Tente Novamente'), __kwargtrans__ ({_id: 'captcha_reload_conection_try_again_messagem'})), __kwargtrans__ ({_class: 'captcha_reload_conection_button link'})), __kwargtrans__ ({_class: 'captcha_reload_conection_container'})).jquery ());
+		window.PhanterPWA.I18N.DOMTranslate (self.element_captcha_container);
 		self.element_captcha_container.find ('.captcha_reload_conection_button').off ('click.captcha_reload_conection_button_{0}'.format (self.table_name)).on ('click.captcha_reload_conection_button_{0}'.format (self.table_name), (function __lambda__ () {
 			if (arguments.length) {
 				var __ilastarg0__ = arguments.length - 1;
@@ -193,6 +194,7 @@ export var SignForm =  __class__ ('SignForm', [object], {
 			}
 			return self.on_click_captcha_option (this, signature);
 		}));
+		window.PhanterPWA.I18N.DOMTranslate (self.element_captcha_container);
 	});},
 	get after_post_captcha_option () {return __get__ (this, function (self, data, ajax_status) {
 		if (arguments.length) {
@@ -215,6 +217,7 @@ export var SignForm =  __class__ ('SignForm', [object], {
 			var csrf = data.responseJSON.csrf;
 			self.element_csrf_token.val (csrf).trigger ('keyup');
 			self.element_captcha_container.html (html);
+			window.PhanterPWA.I18N.DOMTranslate (self.element_captcha_container);
 			if (callable (self._on_captcha_resolve)) {
 				self._on_captcha_resolve (data, ajax_status);
 			}

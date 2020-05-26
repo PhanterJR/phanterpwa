@@ -1,4 +1,4 @@
-// Transcrypt'ed from Python, 2020-04-26 09:36:57
+// Transcrypt'ed from Python, 2020-04-29 04:59:38
 import {AssertionError, AttributeError, BaseException, DeprecationWarning, Exception, IndexError, IterableError, KeyError, NotImplementedError, RuntimeWarning, StopIteration, UserWarning, ValueError, Warning, __JsIterator__, __PyIterator__, __Terminal__, __add__, __and__, __call__, __class__, __envir__, __eq__, __floordiv__, __ge__, __get__, __getcm__, __getitem__, __getslice__, __getsm__, __gt__, __i__, __iadd__, __iand__, __idiv__, __ijsmod__, __ilshift__, __imatmul__, __imod__, __imul__, __in__, __init__, __ior__, __ipow__, __irshift__, __isub__, __ixor__, __jsUsePyNext__, __jsmod__, __k__, __kwargtrans__, __le__, __lshift__, __lt__, __matmul__, __mergefields__, __mergekwargtrans__, __mod__, __mul__, __ne__, __neg__, __nest__, __or__, __pow__, __pragma__, __proxy__, __pyUseJsNext__, __rshift__, __setitem__, __setproperty__, __setslice__, __sort__, __specialattrib__, __sub__, __super__, __t__, __terminal__, __truediv__, __withblock__, __xor__, abs, all, any, assert, bool, bytearray, bytes, callable, chr, copy, deepcopy, delattr, dict, dir, divmod, enumerate, filter, float, getattr, hasattr, input, int, isinstance, issubclass, len, list, map, max, min, object, ord, pow, print, property, py_TypeError, py_iter, py_metatype, py_next, py_reversed, py_typeof, range, repr, round, set, setattr, sorted, str, sum, tuple, zip} from './org.transcrypt.__runtime__.js';
 import * as datetimepicker from './phanterpwa.apptools.components.datetimepicker.js';
 import * as masks from './phanterpwa.apptools.fmasks.js';
@@ -95,6 +95,65 @@ export var Widget =  __class__ ('Widget', [helpers.XmlConstructor], {
 			}));
 			$ (self.target_selector).trigger ('phanterpwa_widget');
 		}
+	});},
+	get get_message_error () {return __get__ (this, function (self) {
+		if (arguments.length) {
+			var __ilastarg0__ = arguments.length - 1;
+			if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+				var __allkwargs0__ = arguments [__ilastarg0__--];
+				for (var __attrib0__ in __allkwargs0__) {
+					switch (__attrib0__) {
+						case 'self': var self = __allkwargs0__ [__attrib0__]; break;
+					}
+				}
+			}
+		}
+		else {
+		}
+		if (self._message_error !== null) {
+			return self._message_error;
+		}
+		else {
+			return '';
+		}
+	});},
+	get set_message_error () {return __get__ (this, function (self, message_error) {
+		if (arguments.length) {
+			var __ilastarg0__ = arguments.length - 1;
+			if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+				var __allkwargs0__ = arguments [__ilastarg0__--];
+				for (var __attrib0__ in __allkwargs0__) {
+					switch (__attrib0__) {
+						case 'self': var self = __allkwargs0__ [__attrib0__]; break;
+						case 'message_error': var message_error = __allkwargs0__ [__attrib0__]; break;
+					}
+				}
+			}
+		}
+		else {
+		}
+		if (message_error !== null) {
+			$ (self.target_selector).find ('.phanterpwa-widget-message_error').html (message_error);
+			$ (self.target_selector).find ('.phanterpwa-widget-wrapper').addClass ('has_error');
+		}
+		self._message_error = message_error;
+	});},
+	get del_message_error () {return __get__ (this, function (self) {
+		if (arguments.length) {
+			var __ilastarg0__ = arguments.length - 1;
+			if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+				var __allkwargs0__ = arguments [__ilastarg0__--];
+				for (var __attrib0__ in __allkwargs0__) {
+					switch (__attrib0__) {
+						case 'self': var self = __allkwargs0__ [__attrib0__]; break;
+					}
+				}
+			}
+		}
+		else {
+		}
+		self.set_message_error (null);
+		$ (self.target_selector).find ('.phanterpwa-widget-wrapper').removeClass ('has_error');
 	});},
 	get reload () {return __get__ (this, function (self) {
 		if (arguments.length) {
@@ -682,8 +741,8 @@ export var Select =  __class__ ('Select', [Widget], {
 			wrapper_attr ['_class'] = '{0}{1}'.format (wrapper_attr ['_class'], ' has_value');
 		}
 		var select = SELECT (__kwargtrans__ ({_class: 'phanterpwa-widget-select-select', _name: self._name}));
-		var ul = UL (__kwargtrans__ ({_class: 'phanterpwa-widget-select-options-wrapper'}));
-		self._xml_modal = ul;
+		var table = TABLE (__kwargtrans__ ({_class: 'phanterpwa-widget-select-options-wrapper'}));
+		self._xml_modal = table;
 		self._xml_select = select;
 		self._create_xml_select ();
 		self._create_xml_modal ();
@@ -843,7 +902,7 @@ export var Select =  __class__ ('Select', [Widget], {
 		}
 		else {
 		}
-		var ul = UL (__kwargtrans__ ({_class: 'phanterpwa-widget-select-options-wrapper'}));
+		var table = TABLE (__kwargtrans__ ({_class: 'phanterpwa-widget-select-options-wrapper'}));
 		if (self._data !== []) {
 			if (self._can_empty) {
 				if (self._value === '') {
@@ -852,92 +911,35 @@ export var Select =  __class__ ('Select', [Widget], {
 				else {
 					var icon_empty = DIV (self._icon_option, __kwargtrans__ ({_class: 'phanterpwa-widget-select-li-icon'}));
 				}
-				ul.append (LI (SPAN (I18N ('Empty')), icon_empty, __kwargtrans__ (dict ({'_data-value': '', '_data-target': 'phanterpwa-widget-select-input-{0}'.format (self.identifier), '_data-text': '', '_class': 'phanterpwa-widget-select-li-option empty'}))));
+				table.append (TR (TD (SPAN (I18N ('Empty')), icon_empty, __kwargtrans__ (dict ({'_data-value': '', '_data-target': 'phanterpwa-widget-select-input-{0}'.format (self.identifier), '_data-text': '', '_class': 'phanterpwa-widget-select-li-option empty'})))));
 			}
 			for (var vdata of self._data) {
 				if (self._value !== '') {
 					if (vdata [0] == self._value) {
-						ul.append (LI (SPAN (vdata [1]), DIV (self._icon_option_selected, __kwargtrans__ ({_class: 'phanterpwa-widget-select-li-icon'})), __kwargtrans__ (dict ({'_data-value': vdata [0], '_data-text': vdata [1], '_data-target': 'phanterpwa-widget-select-input-{0}'.format (self.identifier), '_class': 'phanterpwa-widget-select-li-option selected'}))));
+						table.append (TR (TD (SPAN (vdata [1]), DIV (self._icon_option_selected, __kwargtrans__ ({_class: 'phanterpwa-widget-select-li-icon'})), __kwargtrans__ (dict ({'_data-value': vdata [0], '_data-text': vdata [1], '_data-target': 'phanterpwa-widget-select-input-{0}'.format (self.identifier), '_class': 'phanterpwa-widget-select-li-option selected'})))));
 					}
 					else {
-						ul.append (LI (SPAN (vdata [1]), DIV (self._icon_option, __kwargtrans__ ({_class: 'phanterpwa-widget-select-li-icon'})), __kwargtrans__ (dict ({'_data-value': vdata [0], '_data-text': vdata [1], '_data-target': 'phanterpwa-widget-select-input-{0}'.format (self.identifier), '_class': 'phanterpwa-widget-select-li-option'}))));
+						table.append (TR (TD (SPAN (vdata [1]), DIV (self._icon_option, __kwargtrans__ ({_class: 'phanterpwa-widget-select-li-icon'})), __kwargtrans__ (dict ({'_data-value': vdata [0], '_data-text': vdata [1], '_data-target': 'phanterpwa-widget-select-input-{0}'.format (self.identifier), '_class': 'phanterpwa-widget-select-li-option'})))));
 					}
 				}
 				else {
-					ul.append (LI (SPAN (vdata [1]), DIV (self._icon_option, __kwargtrans__ ({_class: 'phanterpwa-widget-select-li-icon'})), __kwargtrans__ (dict ({'_data-value': vdata [0], '_data-text': vdata [1], '_data-target': 'phanterpwa-widget-select-input-{0}'.format (self.identifier), '_class': 'phanterpwa-widget-select-li-option'}))));
+					table.append (TR (TD (SPAN (vdata [1]), DIV (self._icon_option, __kwargtrans__ ({_class: 'phanterpwa-widget-select-li-icon'})), __kwargtrans__ (dict ({'_data-value': vdata [0], '_data-text': vdata [1], '_data-target': 'phanterpwa-widget-select-input-{0}'.format (self.identifier), '_class': 'phanterpwa-widget-select-li-option'})))));
 				}
 			}
 			var icon_placeholder = DIV (DIV (DIV (self._icon_plus, __kwargtrans__ ({_class: 'link phanterpwa-widget-select-li-icon_plus'})), DIV (INPUT (__kwargtrans__ ({_class: 'phanterpwa-widget-select-li-input'})), DIV (self._icon_confirm, __kwargtrans__ ({_class: 'phanterpwa-widget-select-li-icon_confirm link'})), __kwargtrans__ ({_class: 'phanterpwa-widget-select-li-input-editable'})), __kwargtrans__ ({_class: 'phanterpwa-widget-select-li-input-editable-wrapper'})), __kwargtrans__ ({_class: 'phanterpwa-widget-select-li-icon_plus-wrapper'}));
 			if (self._placeholder !== null) {
 				if (self._editable) {
-					ul.insert (0, LI (SPAN (self._placeholder, __kwargtrans__ ({_class: 'phanterpwa-widget-select-placeholder'})), icon_placeholder, __kwargtrans__ (dict ({'_data-value': '', '_data-target': 'phanterpwa-widget-select-input-{0}'.format (self.identifier), '_data-text': '', '_class': 'phanterpwa-widget-select-li-title has_editable'}))));
+					table.insert (0, TR (TD (SPAN (self._placeholder, __kwargtrans__ ({_class: 'phanterpwa-widget-select-placeholder'})), icon_placeholder, __kwargtrans__ (dict ({'_data-value': '', '_data-target': 'phanterpwa-widget-select-input-{0}'.format (self.identifier), '_data-text': '', '_class': 'phanterpwa-widget-select-li-title has_editable'})))));
 				}
 				else {
-					ul.insert (0, LI (SPAN (self._placeholder, __kwargtrans__ ({_class: 'phanterpwa-widget-select-placeholder'})), '', __kwargtrans__ (dict ({'_data-value': '', '_data-target': 'phanterpwa-widget-select-input-{0}'.format (self.identifier), '_data-text': '', '_class': 'phanterpwa-widget-select-li-title'}))));
+					table.insert (0, TR (TD (SPAN (self._placeholder, __kwargtrans__ ({_class: 'phanterpwa-widget-select-placeholder'})), '', __kwargtrans__ (dict ({'_data-value': '', '_data-target': 'phanterpwa-widget-select-input-{0}'.format (self.identifier), '_data-text': '', '_class': 'phanterpwa-widget-select-li-title'})))));
 				}
 			}
 			else if (self._editable) {
-				ul.insert (0, LI (SPAN (self._placeholder, __kwargtrans__ ({_class: 'phanterpwa-widget-select-placeholder'})), icon_placeholder, __kwargtrans__ (dict ({'_data-value': '', '_data-target': 'phanterpwa-widget-select-input-{0}'.format (self.identifier), '_data-text': '', '_class': 'phanterpwa-widget-select-li-title has_editable'}))));
+				table.insert (0, TR (TD (SPAN (self._placeholder, __kwargtrans__ ({_class: 'phanterpwa-widget-select-placeholder'})), icon_placeholder, __kwargtrans__ (dict ({'_data-value': '', '_data-target': 'phanterpwa-widget-select-input-{0}'.format (self.identifier), '_data-text': '', '_class': 'phanterpwa-widget-select-li-title has_editable'})))));
 			}
 		}
-		self._xml_modal = ul;
-	});},
-	get get_message_error () {return __get__ (this, function (self) {
-		if (arguments.length) {
-			var __ilastarg0__ = arguments.length - 1;
-			if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
-				var __allkwargs0__ = arguments [__ilastarg0__--];
-				for (var __attrib0__ in __allkwargs0__) {
-					switch (__attrib0__) {
-						case 'self': var self = __allkwargs0__ [__attrib0__]; break;
-					}
-				}
-			}
-		}
-		else {
-		}
-		if (self._message_error !== null) {
-			return self._message_error;
-		}
-		else {
-			return '';
-		}
-	});},
-	get set_message_error () {return __get__ (this, function (self, message_error) {
-		if (arguments.length) {
-			var __ilastarg0__ = arguments.length - 1;
-			if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
-				var __allkwargs0__ = arguments [__ilastarg0__--];
-				for (var __attrib0__ in __allkwargs0__) {
-					switch (__attrib0__) {
-						case 'self': var self = __allkwargs0__ [__attrib0__]; break;
-						case 'message_error': var message_error = __allkwargs0__ [__attrib0__]; break;
-					}
-				}
-			}
-		}
-		else {
-		}
-		$ ('#{0}'.format (self.identifier)).find ('.phanterpwa-widget-message_error').html (message_error);
-		$ ('#{0}'.format (self.identifier)).addClass ('has_error');
-		self._message_error;
-	});},
-	get del_message_error () {return __get__ (this, function (self) {
-		if (arguments.length) {
-			var __ilastarg0__ = arguments.length - 1;
-			if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
-				var __allkwargs0__ = arguments [__ilastarg0__--];
-				for (var __attrib0__ in __allkwargs0__) {
-					switch (__attrib0__) {
-						case 'self': var self = __allkwargs0__ [__attrib0__]; break;
-					}
-				}
-			}
-		}
-		else {
-		}
-		self.set_message_error ('');
-		$ ('#{0}'.format (self.identifier)).removeClass ('has_error');
+		self._xml_modal = table;
 	});},
 	get validate () {return __get__ (this, function (self) {
 		if (arguments.length) {
@@ -1214,6 +1216,7 @@ export var Select =  __class__ ('Select', [Widget], {
 				var new_key = '${0}:{1}'.format (new Date ().getTime (), new_value);
 				self._data.append ([new_key, new_value]);
 				self._value = new_key;
+				self._alias_value = new_value;
 				$ ('#phanterpwa-widget-select-input-{0}'.format (self.identifier)).val (new_value);
 				var target = $ (self.target_selector);
 				target.find ('select.phanterpwa-widget-select-select').find ('option').removeAttr ('selected');
@@ -1283,6 +1286,7 @@ export var Select =  __class__ ('Select', [Widget], {
 			target.find ('select.phanterpwa-widget-select-select').find ('option').removeAttr ('selected');
 			target.find ('select.phanterpwa-widget-select-select').find ("option[value='{0}']".format (v)).attr ('selected', 'selected').prop ('selected', true);
 			$ ('#{0}'.format (t)).val (h);
+			self._alias_value = h;
 		}
 		else if (v !== '') {
 			target.find ('select.phanterpwa-widget-select-select').find ('option').removeAttr ('selected');
@@ -1291,12 +1295,14 @@ export var Select =  __class__ ('Select', [Widget], {
 			target.find ('select.phanterpwa-widget-select-select').find ("option[value='{0}']".format (v)).attr ('selected', 'selected').prop ('selected', true);
 			$ ('#{0}'.format (t)).val (h);
 			self._value = v;
+			self._alias_value = h;
 		}
 		else if (self._can_empty) {
 			target.find ('select.phanterpwa-widget-select-select').find ('option').removeAttr ('selected');
 			target.find ('select.phanterpwa-widget-select-select').find ("option[value='']").attr ('selected', 'selected').prop ('selected', true);
 			self._value = '';
 			$ ('#{0}'.format (t)).val ('');
+			self._alias_value = '';
 		}
 		if (self.modal !== null && self.modal !== undefined) {
 			if (callable (self.modal.close)) {
@@ -1504,12 +1510,15 @@ export var Select =  __class__ ('Select', [Widget], {
 		}
 		else {
 			var p = $ (el).parent ().parent ();
+			var pp = p.parent ();
 			if (p.hasClass ('enabled')) {
 				p.removeClass ('enabled');
+				pp.removeClass ('editable_enabled');
 			}
 			else {
 				$ (el).parent ().find ('input').focus ();
 				p.addClass ('enabled');
+				pp.addClass ('editable_enabled');
 			}
 		}
 	});},
@@ -1600,6 +1609,22 @@ export var Select =  __class__ ('Select', [Widget], {
 		else {
 		}
 		return self._value;
+	});},
+	get alias_value () {return __get__ (this, function (self) {
+		if (arguments.length) {
+			var __ilastarg0__ = arguments.length - 1;
+			if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+				var __allkwargs0__ = arguments [__ilastarg0__--];
+				for (var __attrib0__ in __allkwargs0__) {
+					switch (__attrib0__) {
+						case 'self': var self = __allkwargs0__ [__attrib0__]; break;
+					}
+				}
+			}
+		}
+		else {
+		}
+		return self._alias_value;
 	});}
 });
 export var MultSelect =  __class__ ('MultSelect', [Widget], {
@@ -1647,7 +1672,7 @@ export var MultSelect =  __class__ ('MultSelect', [Widget], {
 		if (self._icon !== '') {
 			var xml_icon = DIV (self._icon, __kwargtrans__ ({_class: 'phanterpwa-widget-icon-wrapper'}));
 		}
-		var wrapper_attr = dict ({'_class': 'phanterpwa-widget-wrapper phanterpwa-widget-multselect-wrapper phanterpwa-widget-wear-{0}'.format (self._wear)});
+		var wrapper_attr = dict ({'_class': 'phanterpwa-widget-wrapper phanterpwa-widget-wear-{0}{1}'.format (self._wear, ' phanterpwa-widget-multselect-wrapper')});
 		parameters ['_id'] = identifier;
 		self.identifier = identifier;
 		if (__in__ ('_class', parameters)) {
@@ -1671,8 +1696,8 @@ export var MultSelect =  __class__ ('MultSelect', [Widget], {
 			wrapper_attr ['_class'] = '{0}{1}'.format (wrapper_attr ['_class'], ' has_value');
 		}
 		var select = SELECT (__kwargtrans__ ({_class: 'phanterpwa-widget-multselect-select', _name: self._name}));
-		var ul = UL (__kwargtrans__ ({_class: 'phanterpwa-widget-multselect-options-wrapper'}));
-		self._xml_modal = ul;
+		var table = TABLE (__kwargtrans__ ({_class: 'phanterpwa-widget-multselect-options-wrapper'}));
+		self._xml_modal = table;
 		self._xml_select = select;
 		self._create_xml_select ();
 		self._create_xml_modal ();
@@ -1850,32 +1875,32 @@ export var MultSelect =  __class__ ('MultSelect', [Widget], {
 		}
 		else {
 		}
-		var ul = UL (__kwargtrans__ ({_class: 'phanterpwa-widget-multselect-options-wrapper'}));
+		var ul = TABLE (__kwargtrans__ ({_class: 'phanterpwa-widget-multselect-options-wrapper'}));
 		if (len (self._data_dict.py_keys ()) > 0) {
 			for (var vdata of self._data_dict.py_keys ()) {
 				if (len (self._value) > 0) {
 					if (__in__ (vdata, self._value)) {
-						ul.append (LI (SPAN (self._data_dict [vdata]), DIV (self._icon_option_selected, __kwargtrans__ ({_class: 'phanterpwa-widget-multselect-li-icon'})), __kwargtrans__ (dict ({'_data-value': vdata, '_data-text': self._data_dict [vdata], '_data-target': 'phanterpwa-widget-multselect-value-{0}'.format (self.identifier), '_class': 'phanterpwa-widget-multselect-li-option selected', '_phanterpwa-widget-multiselect-status': 'enabled'}))));
+						ul.append (TR (TD (SPAN (self._data_dict [vdata]), DIV (self._icon_option_selected, __kwargtrans__ ({_class: 'phanterpwa-widget-multselect-li-icon'})), __kwargtrans__ (dict ({'_data-value': vdata, '_data-text': self._data_dict [vdata], '_data-target': 'phanterpwa-widget-multselect-value-{0}'.format (self.identifier), '_class': 'phanterpwa-widget-multselect-li-option selected', '_phanterpwa-widget-multiselect-status': 'enabled'})))));
 					}
 					else {
-						ul.append (LI (SPAN (self._data_dict [vdata]), DIV (self._icon_option, __kwargtrans__ ({_class: 'phanterpwa-widget-multselect-li-icon'})), __kwargtrans__ (dict ({'_data-value': vdata, '_data-text': self._data_dict [vdata], '_data-target': 'phanterpwa-widget-multselect-value-{0}'.format (self.identifier), '_class': 'phanterpwa-widget-multselect-li-option'}))));
+						ul.append (TR (TD (SPAN (self._data_dict [vdata]), DIV (self._icon_option, __kwargtrans__ ({_class: 'phanterpwa-widget-multselect-li-icon'})), __kwargtrans__ (dict ({'_data-value': vdata, '_data-text': self._data_dict [vdata], '_data-target': 'phanterpwa-widget-multselect-value-{0}'.format (self.identifier), '_class': 'phanterpwa-widget-multselect-li-option'})))));
 					}
 				}
 				else {
-					ul.append (LI (SPAN (self._data_dict [vdata]), DIV (self._icon_option, __kwargtrans__ ({_class: 'phanterpwa-widget-multselect-li-icon'})), __kwargtrans__ (dict ({'_data-value': vdata, '_data-text': self._data_dict [vdata], '_data-target': 'phanterpwa-widget-multselect-value-{0}'.format (self.identifier), '_class': 'phanterpwa-widget-multselect-li-option'}))));
+					ul.append (TR (TD (SPAN (self._data_dict [vdata]), DIV (self._icon_option, __kwargtrans__ ({_class: 'phanterpwa-widget-multselect-li-icon'})), __kwargtrans__ (dict ({'_data-value': vdata, '_data-text': self._data_dict [vdata], '_data-target': 'phanterpwa-widget-multselect-value-{0}'.format (self.identifier), '_class': 'phanterpwa-widget-multselect-li-option'})))));
 				}
 			}
 			var icon_placeholder = DIV (DIV (DIV (self._icon_plus, __kwargtrans__ ({_class: 'link phanterpwa-widget-multselect-li-icon_plus'})), DIV (INPUT (__kwargtrans__ ({_class: 'phanterpwa-widget-multselect-li-input'})), DIV (self._icon_confirm, __kwargtrans__ ({_class: 'phanterpwa-widget-multselect-li-icon_confirm link'})), __kwargtrans__ ({_class: 'phanterpwa-widget-multselect-li-input-editable'})), __kwargtrans__ ({_class: 'phanterpwa-widget-multselect-li-input-editable-wrapper'})), __kwargtrans__ ({_class: 'phanterpwa-widget-multselect-li-icon_plus-wrapper'}));
 			if (self._placeholder !== null) {
 				if (self._editable) {
-					ul.insert (0, LI (SPAN (self._placeholder, __kwargtrans__ ({_class: 'phanterpwa-widget-multselect-placeholder'})), icon_placeholder, __kwargtrans__ (dict ({'_data-value': '', '_data-target': 'phanterpwa-widget-multselect-value-{0}'.format (self.identifier), '_data-text': '', '_class': 'phanterpwa-widget-multselect-li-title has_editable'}))));
+					ul.insert (0, TR (TD (SPAN (self._placeholder, __kwargtrans__ ({_class: 'phanterpwa-widget-multselect-placeholder'})), icon_placeholder, __kwargtrans__ (dict ({'_data-value': '', '_data-target': 'phanterpwa-widget-multselect-value-{0}'.format (self.identifier), '_data-text': '', '_class': 'phanterpwa-widget-multselect-li-title has_editable'})))));
 				}
 				else {
-					ul.insert (0, LI (SPAN (self._placeholder, __kwargtrans__ ({_class: 'phanterpwa-widget-multselect-placeholder'})), '', __kwargtrans__ (dict ({'_data-value': '', '_data-target': 'phanterpwa-widget-multselect-value-{0}'.format (self.identifier), '_data-text': '', '_class': 'phanterpwa-widget-multselect-li-title'}))));
+					ul.insert (0, TR (TD (SPAN (self._placeholder, __kwargtrans__ ({_class: 'phanterpwa-widget-multselect-placeholder'})), '', __kwargtrans__ (dict ({'_data-value': '', '_data-target': 'phanterpwa-widget-multselect-value-{0}'.format (self.identifier), '_data-text': '', '_class': 'phanterpwa-widget-multselect-li-title'})))));
 				}
 			}
 			else if (self._editable) {
-				ul.insert (0, LI (SPAN (self._placeholder, __kwargtrans__ ({_class: 'phanterpwa-widget-multselect-placeholder'})), icon_placeholder, __kwargtrans__ (dict ({'_data-value': '', '_data-target': 'phanterpwa-widget-multselect-value-{0}'.format (self.identifier), '_data-text': '', '_class': 'phanterpwa-widget-multselect-li-title has_editable'}))));
+				ul.insert (0, TR (TD (SPAN (self._placeholder, __kwargtrans__ ({_class: 'phanterpwa-widget-multselect-placeholder'})), icon_placeholder, __kwargtrans__ (dict ({'_data-value': '', '_data-target': 'phanterpwa-widget-multselect-value-{0}'.format (self.identifier), '_data-text': '', '_class': 'phanterpwa-widget-multselect-li-title has_editable'})))));
 			}
 		}
 		self._xml_modal = ul;
@@ -2240,6 +2265,9 @@ export var MultSelect =  __class__ ('MultSelect', [Widget], {
 				self._check_value ();
 			}
 		}
+		else {
+			self._binds_values_content ();
+		}
 	});},
 	get _add_new_option () {return __get__ (this, function (self, el) {
 		if (arguments.length) {
@@ -2533,12 +2561,15 @@ export var MultSelect =  __class__ ('MultSelect', [Widget], {
 		}
 		else {
 			var p = $ (el).parent ().parent ();
+			var pp = p.parent ();
 			if (p.hasClass ('enabled')) {
 				p.removeClass ('enabled');
+				pp.removeClass ('editable_enabled');
 			}
 			else {
 				$ (el).parent ().find ('input').focus ();
 				p.addClass ('enabled');
+				pp.addClass ('editable_enabled');
 			}
 		}
 	});},
@@ -2559,7 +2590,7 @@ export var MultSelect =  __class__ ('MultSelect', [Widget], {
 		}
 		var p = $ (el).parent ();
 		var v = p.data ('value');
-		if (__in__ (v, self._alias_value.py_keys ())) {
+		if (__in__ (str (v), self._alias_value.py_keys ())) {
 			delete self._alias_value [v];
 			self._value = list (self._alias_value.py_keys ());
 			$ ('#phanterpwa-widget-multselect-input-{0}'.format (self.identifier)).val (JSON.stringify (self._value));
@@ -2568,6 +2599,9 @@ export var MultSelect =  __class__ ('MultSelect', [Widget], {
 			self._xml_values.html_to ('#phanterpwa-widget-multselect-value-{0}'.format (self.identifier));
 			self._binds_values_content ();
 			self._check_value ();
+		}
+		else {
+			console.log (v);
 		}
 	});},
 	get _binds_values_content () {return __get__ (this, function (self) {
@@ -2701,6 +2735,22 @@ export var MultSelect =  __class__ ('MultSelect', [Widget], {
 		else {
 		}
 		return self._value;
+	});},
+	get alias_value () {return __get__ (this, function (self) {
+		if (arguments.length) {
+			var __ilastarg0__ = arguments.length - 1;
+			if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+				var __allkwargs0__ = arguments [__ilastarg0__--];
+				for (var __attrib0__ in __allkwargs0__) {
+					switch (__attrib0__) {
+						case 'self': var self = __allkwargs0__ [__attrib0__]; break;
+					}
+				}
+			}
+		}
+		else {
+		}
+		return self._alias_value;
 	});}
 });
 export var ListString =  __class__ ('ListString', [Widget], {

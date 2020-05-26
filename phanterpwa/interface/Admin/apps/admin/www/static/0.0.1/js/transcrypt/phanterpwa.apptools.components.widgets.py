@@ -69,6 +69,25 @@ class Widget(helpers.XmlConstructor):
             )
             jQuery(self.target_selector).trigger("phanterpwa_widget")
 
+    def get_message_error(self):
+        if self._message_error is not None:
+            return self._message_error
+        else:
+            return ""
+
+    def set_message_error(self, message_error):
+        if message_error is not None:
+            jQuery(self.target_selector).find(
+                ".phanterpwa-widget-message_error").html(message_error)
+            jQuery(self.target_selector).find(
+                ".phanterpwa-widget-wrapper").addClass("has_error")
+        self._message_error = message_error
+
+    def del_message_error(self):
+        self.set_message_error(None)
+        jQuery(self.target_selector).find(
+            ".phanterpwa-widget-wrapper").removeClass("has_error")
+
     def reload(self):
         if window.PhanterPWA.DEBUG:
             console.info("the reload not used")
@@ -353,8 +372,8 @@ class Select(Widget):
         if self._value is not "":
             wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " has_value")
         select = SELECT(_class="phanterpwa-widget-select-select", _name=self._name)
-        ul = UL(_class="phanterpwa-widget-select-options-wrapper")
-        self._xml_modal = ul
+        table = TABLE(_class="phanterpwa-widget-select-options-wrapper")
+        self._xml_modal = table
         self._xml_select = select
         self._create_xml_select()
         self._create_xml_modal()
@@ -455,7 +474,7 @@ class Select(Widget):
         self._xml_select = select
 
     def _create_xml_modal(self):
-        ul = UL(_class="phanterpwa-widget-select-options-wrapper")
+        table = TABLE(_class="phanterpwa-widget-select-options-wrapper")
         if self._data is not []:
             if self._can_empty:
                 if self._value is "":
@@ -463,40 +482,40 @@ class Select(Widget):
                 else:
                     icon_empty = DIV(self._icon_option, _class="phanterpwa-widget-select-li-icon")
 
-                ul.append(LI(SPAN(I18N("Empty")),
+                table.append(TR(TD(SPAN(I18N("Empty")),
                     icon_empty, **{
                         "_data-value": "",
                         "_data-target": "phanterpwa-widget-select-input-{0}".format(self.identifier),
                         "_data-text": "",
                         "_class": "phanterpwa-widget-select-li-option empty"
-                }))
+                })))
             for vdata in self._data:
                 if self._value is not "":
                     if vdata[0] == self._value:
-                        ul.append(LI(SPAN(vdata[1]),
+                        table.append(TR(TD(SPAN(vdata[1]),
                             DIV(self._icon_option_selected, _class="phanterpwa-widget-select-li-icon"), **{
                                 "_data-value": vdata[0],
                                 "_data-text": vdata[1],
                                 "_data-target": "phanterpwa-widget-select-input-{0}".format(self.identifier),
                                 "_class": "phanterpwa-widget-select-li-option selected"
-                        }))
+                        })))
 
                     else:
-                        ul.append(LI(SPAN(vdata[1]),
+                        table.append(TR(TD(SPAN(vdata[1]),
                             DIV(self._icon_option, _class="phanterpwa-widget-select-li-icon"), **{
                                 "_data-value": vdata[0],
                                 "_data-text": vdata[1],
                                 "_data-target": "phanterpwa-widget-select-input-{0}".format(self.identifier),
                                 "_class": "phanterpwa-widget-select-li-option"
-                        }))
+                        })))
                 else:
-                    ul.append(LI(SPAN(vdata[1]),
+                    table.append(TR(TD(SPAN(vdata[1]),
                         DIV(self._icon_option, _class="phanterpwa-widget-select-li-icon"), **{
                             "_data-value": vdata[0],
                             "_data-text": vdata[1],
                             "_data-target": "phanterpwa-widget-select-input-{0}".format(self.identifier),
                             "_class": "phanterpwa-widget-select-li-option"
-                    }))
+                    })))
             icon_placeholder = DIV(
                 DIV(
                     DIV(self._icon_plus, _class="link phanterpwa-widget-select-li-icon_plus"),
@@ -512,46 +531,46 @@ class Select(Widget):
 
             if self._placeholder is not None:
                 if self._editable:
-                    ul.insert(0, LI(SPAN(self._placeholder, _class="phanterpwa-widget-select-placeholder"),
+                    table.insert(0, TR(TD(SPAN(self._placeholder, _class="phanterpwa-widget-select-placeholder"),
                         icon_placeholder, **{
                             "_data-value": "",
                             "_data-target": "phanterpwa-widget-select-input-{0}".format(self.identifier),
                             "_data-text": "",
                             "_class": "phanterpwa-widget-select-li-title has_editable"
-                    }))
+                    })))
                 else:
-                    ul.insert(0, LI(SPAN(self._placeholder, _class="phanterpwa-widget-select-placeholder"),
+                    table.insert(0, TR(TD(SPAN(self._placeholder, _class="phanterpwa-widget-select-placeholder"),
                         "", **{
                             "_data-value": "",
                             "_data-target": "phanterpwa-widget-select-input-{0}".format(self.identifier),
                             "_data-text": "",
                             "_class": "phanterpwa-widget-select-li-title"
-                    }))
+                    })))
             else:
                 if self._editable:
-                    ul.insert(0, LI(SPAN(self._placeholder, _class="phanterpwa-widget-select-placeholder"),
+                    table.insert(0, TR(TD(SPAN(self._placeholder, _class="phanterpwa-widget-select-placeholder"),
                         icon_placeholder, **{
                             "_data-value": "",
                             "_data-target": "phanterpwa-widget-select-input-{0}".format(self.identifier),
                             "_data-text": "",
                             "_class": "phanterpwa-widget-select-li-title has_editable"
-                    }))
-        self._xml_modal = ul
+                    })))
+        self._xml_modal = table
 
-    def get_message_error(self):
-        if self._message_error is not None:
-            return self._message_error
-        else:
-            return ""
+    # def get_message_error(self):
+    #     if self._message_error is not None:
+    #         return self._message_error
+    #     else:
+    #         return ""
 
-    def set_message_error(self, message_error):
-        jQuery("#{0}".format(self.identifier)).find(".phanterpwa-widget-message_error").html(message_error)
-        jQuery("#{0}".format(self.identifier)).addClass("has_error")
-        self._message_error
+    # def set_message_error(self, message_error):
+    #     jQuery("#{0}".format(self.identifier)).find(".phanterpwa-widget-message_error").html(message_error)
+    #     jQuery("#{0}".format(self.identifier)).addClass("has_error")
+    #     self._message_error
 
-    def del_message_error(self):
-        self.set_message_error("")
-        jQuery("#{0}".format(self.identifier)).removeClass("has_error")
+    # def del_message_error(self):
+    #     self.set_message_error("")
+    #     jQuery("#{0}".format(self.identifier)).removeClass("has_error")
 
     def validate(self):
         if callable(self._validator):
@@ -652,6 +671,7 @@ class Select(Widget):
                 new_key = "${0}:{1}".format(__new__(Date().getTime()), new_value)
                 self._data.append([new_key, new_value])
                 self._value = new_key
+                self._alias_value = new_value
                 jQuery("#phanterpwa-widget-select-input-{0}".format(self.identifier)).val(new_value)
                 target = jQuery(self.target_selector)
                 target.find("select.phanterpwa-widget-select-select").find("option").removeAttr("selected")
@@ -691,6 +711,7 @@ class Select(Widget):
             target.find("select.phanterpwa-widget-select-select").find(
                 "option[value='{0}']".format(v)).attr("selected", "selected").prop('selected', True)
             jQuery("#{0}".format(t)).val(h)
+            self._alias_value = h
         elif v is not "":
             target.find("select.phanterpwa-widget-select-select").find("option").removeAttr("selected")
             dkeys[v] = h
@@ -701,12 +722,14 @@ class Select(Widget):
                 "option[value='{0}']".format(v)).attr("selected", "selected").prop('selected', True)
             jQuery("#{0}".format(t)).val(h)
             self._value = v
+            self._alias_value = h
         elif self._can_empty:
             target.find("select.phanterpwa-widget-select-select").find("option").removeAttr("selected")
             target.find("select.phanterpwa-widget-select-select").find(
                 "option[value='']").attr("selected", "selected").prop('selected', True)
             self._value = ""
             jQuery("#{0}".format(t)).val("")
+            self._alias_value = ""
 
         if self.modal is not None and self.modal is not js_undefined:
             if callable(self.modal.close):
@@ -780,11 +803,14 @@ class Select(Widget):
             self._on_click_new(self)
         else:
             p = jQuery(el).parent().parent()
+            pp = p.parent()
             if p.hasClass("enabled"):
                 p.removeClass("enabled")
+                pp.removeClass("editable_enabled")
             else:
                 jQuery(el).parent().find("input").focus()
                 p.addClass("enabled")
+                pp.addClass("editable_enabled")
 
     def _binds_modal_content(self):
         jQuery(".phanterpwa-component-pseudomodal-content").find(
@@ -819,6 +845,9 @@ class Select(Widget):
     def value(self):
         return self._value
 
+    def alias_value(self):
+        return self._alias_value
+
 
 class MultSelect(Widget):
     def __init__(self, identifier, **parameters):
@@ -847,8 +876,10 @@ class MultSelect(Widget):
         if self._icon is not "":
             xml_icon = DIV(self._icon, _class="phanterpwa-widget-icon-wrapper")
         wrapper_attr = {
-            "_class": "phanterpwa-widget-wrapper phanterpwa-widget-multselect-wrapper phanterpwa-widget-wear-{0}".format(
-                self._wear)
+            "_class": "phanterpwa-widget-wrapper phanterpwa-widget-wear-{0}{1}".format(
+                self._wear,
+                " phanterpwa-widget-multselect-wrapper"
+            )
         }
         parameters["_id"] = identifier
         self.identifier = identifier
@@ -872,8 +903,8 @@ class MultSelect(Widget):
         if len(self._value) > 0:
             wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " has_value")
         select = SELECT(_class="phanterpwa-widget-multselect-select", _name=self._name)
-        ul = UL(_class="phanterpwa-widget-multselect-options-wrapper")
-        self._xml_modal = ul
+        table = TABLE(_class="phanterpwa-widget-multselect-options-wrapper")
+        self._xml_modal = table
         self._xml_select = select
         self._create_xml_select()
         self._create_xml_modal()
@@ -990,37 +1021,37 @@ class MultSelect(Widget):
         self._xml_select = select
 
     def _create_xml_modal(self):
-        ul = UL(_class="phanterpwa-widget-multselect-options-wrapper")
+        ul = TABLE(_class="phanterpwa-widget-multselect-options-wrapper")
         if len(self._data_dict.keys()) > 0:
 
             for vdata in self._data_dict.keys():
                 if len(self._value) > 0:
                     if vdata in self._value:
-                        ul.append(LI(SPAN(self._data_dict[vdata]),
+                        ul.append(TR(TD(SPAN(self._data_dict[vdata]),
                             DIV(self._icon_option_selected, _class="phanterpwa-widget-multselect-li-icon"), **{
                                 "_data-value": vdata,
                                 "_data-text": self._data_dict[vdata],
                                 "_data-target": "phanterpwa-widget-multselect-value-{0}".format(self.identifier),
                                 "_class": "phanterpwa-widget-multselect-li-option selected",
                                 "_phanterpwa-widget-multiselect-status": "enabled",
-                        }))
+                        })))
 
                     else:
-                        ul.append(LI(SPAN(self._data_dict[vdata]),
+                        ul.append(TR(TD(SPAN(self._data_dict[vdata]),
                             DIV(self._icon_option, _class="phanterpwa-widget-multselect-li-icon"), **{
                                 "_data-value": vdata,
                                 "_data-text": self._data_dict[vdata],
                                 "_data-target": "phanterpwa-widget-multselect-value-{0}".format(self.identifier),
                                 "_class": "phanterpwa-widget-multselect-li-option"
-                        }))
+                        })))
                 else:
-                    ul.append(LI(SPAN(self._data_dict[vdata]),
+                    ul.append(TR(TD(SPAN(self._data_dict[vdata]),
                         DIV(self._icon_option, _class="phanterpwa-widget-multselect-li-icon"), **{
                             "_data-value": vdata,
                             "_data-text": self._data_dict[vdata],
                             "_data-target": "phanterpwa-widget-multselect-value-{0}".format(self.identifier),
                             "_class": "phanterpwa-widget-multselect-li-option"
-                    }))
+                    })))
             icon_placeholder = DIV(
                 DIV(
                     DIV(self._icon_plus, _class="link phanterpwa-widget-multselect-li-icon_plus"),
@@ -1036,30 +1067,30 @@ class MultSelect(Widget):
 
             if self._placeholder is not None:
                 if self._editable:
-                    ul.insert(0, LI(SPAN(self._placeholder, _class="phanterpwa-widget-multselect-placeholder"),
+                    ul.insert(0, TR(TD(SPAN(self._placeholder, _class="phanterpwa-widget-multselect-placeholder"),
                         icon_placeholder, **{
                             "_data-value": "",
                             "_data-target": "phanterpwa-widget-multselect-value-{0}".format(self.identifier),
                             "_data-text": "",
                             "_class": "phanterpwa-widget-multselect-li-title has_editable"
-                    }))
+                    })))
                 else:
-                    ul.insert(0, LI(SPAN(self._placeholder, _class="phanterpwa-widget-multselect-placeholder"),
+                    ul.insert(0, TR(TD(SPAN(self._placeholder, _class="phanterpwa-widget-multselect-placeholder"),
                         "", **{
                             "_data-value": "",
                             "_data-target": "phanterpwa-widget-multselect-value-{0}".format(self.identifier),
                             "_data-text": "",
                             "_class": "phanterpwa-widget-multselect-li-title"
-                    }))
+                    })))
             else:
                 if self._editable:
-                    ul.insert(0, LI(SPAN(self._placeholder, _class="phanterpwa-widget-multselect-placeholder"),
+                    ul.insert(0, TR(TD(SPAN(self._placeholder, _class="phanterpwa-widget-multselect-placeholder"),
                         icon_placeholder, **{
                             "_data-value": "",
                             "_data-target": "phanterpwa-widget-multselect-value-{0}".format(self.identifier),
                             "_data-text": "",
                             "_class": "phanterpwa-widget-multselect-li-title has_editable"
-                    }))
+                    })))
         self._xml_modal = ul
 
     def get_message_error(self):
@@ -1210,6 +1241,8 @@ class MultSelect(Widget):
                 self._xml_values.html_to("#phanterpwa-widget-multselect-value-{0}".format(self.identifier))
                 self._binds_values_content()
                 self._check_value()
+        else:
+            self._binds_values_content()
 
     def _add_new_option(self, el):
         inp = jQuery(el).parent().find("input")
@@ -1326,16 +1359,19 @@ class MultSelect(Widget):
             self._on_click_new(self)
         else:
             p = jQuery(el).parent().parent()
+            pp = p.parent()
             if p.hasClass("enabled"):
                 p.removeClass("enabled")
+                pp.removeClass("editable_enabled")
             else:
                 jQuery(el).parent().find("input").focus()
                 p.addClass("enabled")
+                pp.addClass("editable_enabled")
 
     def _del_value(self, el):
         p = jQuery(el).parent()
         v = p.data("value")
-        if v in self._alias_value.keys():
+        if str(v) in self._alias_value.keys():
             del self._alias_value[v]
             self._value = list(self._alias_value.keys())
             jQuery("#phanterpwa-widget-multselect-input-{0}".format(self.identifier)).val(JSON.stringify(self._value))
@@ -1344,6 +1380,8 @@ class MultSelect(Widget):
             self._xml_values.html_to("#phanterpwa-widget-multselect-value-{0}".format(self.identifier))
             self._binds_values_content()
             self._check_value()
+        else:
+            console.log(v)
 
     def _binds_values_content(self):
         jQuery(self.target_selector).find(
@@ -1395,6 +1433,9 @@ class MultSelect(Widget):
 
     def value(self):
         return self._value
+
+    def alias_value(self):
+        return self._alias_value
 
 
 class ListString(Widget):
@@ -1685,6 +1726,7 @@ class ListString(Widget):
             lambda: self._on_click_remove(this)
         )
         self._check_value()
+
 
     def _add_div_animation(self, el):
         wrapper = el.find(".phanterpwa-widget-wrapper")
