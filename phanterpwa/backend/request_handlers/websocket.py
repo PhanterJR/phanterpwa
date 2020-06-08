@@ -14,7 +14,8 @@ check_compilation = re.compile(r"check_compilation\[([0-9]*)\]")
 class EchoWebSocket(websocket.WebSocketHandler):
     connections = set()
 
-    def initialize(self, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
+    def initialize(self, app_name, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
+        self.app_name = app_name
         self.projectConfig = projectConfig
         self.DALDatabase = DALDatabase
         self.i18nTranslator = i18nTranslator
@@ -51,8 +52,8 @@ class EchoWebSocket(websocket.WebSocketHandler):
                     msg = json_message["message"]
                     if json_message["phanterpwa-authorization"] is not "anonymous":
                         t = Serialize(
-                            self.projectConfig['API']['secret_key'],
-                            self.projectConfig['API']['default_time_user_token_expire']
+                            self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                            self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire']
                         )
                         token_content = None
                         try:

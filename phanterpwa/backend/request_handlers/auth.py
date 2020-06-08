@@ -55,7 +55,8 @@ class Auth(web.RequestHandler):
         url: '/api/auth/'
     """
 
-    def initialize(self, projectConfig, DALDatabase, Translator_email, i18nTranslator=None, logger_api=None):
+    def initialize(self, app_name, projectConfig, DALDatabase, Translator_email, i18nTranslator=None, logger_api=None):
+        self.app_name = app_name
         self.projectConfig = projectConfig
         self.DALDatabase = DALDatabase
         self.Translator_email = Translator_email
@@ -100,8 +101,8 @@ class Auth(web.RequestHandler):
 
         if self.phanterpwa_authorization:
             t = Serialize(
-                self.projectConfig['API']['secret_key'],
-                self.projectConfig['API']['default_time_user_token_expire']
+                self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire']
             )
             token_content = None
             try:
@@ -126,7 +127,7 @@ class Auth(web.RequestHandler):
                     role = None
 
                     t_url = URLSafeSerializer(
-                        self.projectConfig['API']['url_secret_key'],
+                        self.projectConfig['BACKEND'][self.app_name]["secret_key"],
                         salt="url_secret_key"
                     )
                     id_client = q_client.id
@@ -217,7 +218,7 @@ class Auth(web.RequestHandler):
                 try:
                     result = pbkdf2_sha512.verify(
                         "password{0}{1}".format(
-                            password, self.projectConfig['API']['secret_key']),
+                            password, self.projectConfig['BACKEND'][self.app_name]['secret_key']),
                         q_user.password_hash
                     )
                 except Exception:
@@ -228,13 +229,13 @@ class Auth(web.RequestHandler):
                         (datetime.now() < q_user.temporary_password_expire) and q_user.temporary_password_hash:
                         result = pbkdf2_sha512.verify(
                             "password{0}{1}".format(
-                                password, self.projectConfig['API']['secret_key']),
+                                password, self.projectConfig['BACKEND'][self.app_name]['secret_key']),
                             q_user.temporary_password_hash
                         )
                         if result:
                             used_temporary = password
                             q_user.update_record(login_attempts=0)
-                if q_user.login_attempts > self.projectConfig['API']['max_login_attempts']:
+                if q_user.login_attempts > self.projectConfig['BACKEND'][self.app_name]['max_login_attempts']:
                     if q_user.datetime_next_attempt_to_login and\
                             (datetime.now() <= q_user.datetime_next_attempt_to_login):
                         t_delta = q_user.datetime_next_attempt_to_login - datetime.now()
@@ -257,15 +258,15 @@ class Auth(web.RequestHandler):
                         q_user.update_record(login_attempts=1)
                 if result:
                     remember_me = False
-                    timeout_token_user = self.projectConfig['API']['default_time_user_token_expire']
+                    timeout_token_user = self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire']
                     rem_me = dict_arguments['remember_me']
                     if any([rem_me is True,
                             rem_me == "on",
                             rem_me == "true"]):
                         remember_me = True
-                        timeout_token_user = self.projectConfig['API']['default_time_user_token_expire_remember_me']
+                        timeout_token_user = self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire_remember_me']
                     t_user = Serialize(
-                        self.projectConfig['API']['secret_key'],
+                        self.projectConfig['BACKEND'][self.app_name]['secret_key'],
                         timeout_token_user
                     )
                     content = {
@@ -284,11 +285,11 @@ class Auth(web.RequestHandler):
                         role = roles[-1]
                     q_user.update_record(login_attempts=0)
                     t_client = Serialize(
-                        self.projectConfig['API']['secret_key'],
-                        self.projectConfig['API']['default_time_client_token_expire']
+                        self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                        self.projectConfig['BACKEND'][self.app_name]['default_time_client_token_expire']
                     )
                     t_url = URLSafeSerializer(
-                        self.projectConfig['API']['url_secret_key'],
+                        self.projectConfig['BACKEND'][self.app_name]["secret_key"],
                         salt="url_secret_key"
                     )
                     r_client = self.DALDatabase(
@@ -329,7 +330,7 @@ class Auth(web.RequestHandler):
 
                     if q_user.two_factor_login or two_factor:
                         two_factor_serialize = URLSafeSerializer(
-                            self.projectConfig['API']['url_secret_key'],
+                            self.projectConfig['BACKEND'][self.app_name]["secret_key"],
                             salt="two_factor_url"
                         )
                         content = {
@@ -349,7 +350,7 @@ class Auth(web.RequestHandler):
                             ),
                             code=two_factor_code,
                             time_expires=humanize_seconds(
-                                self.projectConfig['API']['default_time_two_factor_code_expire'],
+                                self.projectConfig['BACKEND'][self.app_name]['default_time_two_factor_code_expire'],
                                 self.Translator_email
                             ),
                             user_agent=self.phanterpwa_user_agent,
@@ -473,18 +474,18 @@ class Auth(web.RequestHandler):
                 else:
                     q_user.update_record(
                         temporary_password_expire=datetime.now() +
-                            timedelta(seconds=self.projectConfig['API']['default_time_temporary_password_expire']),
+                            timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['default_time_temporary_password_expire']),
                         datetime_next_attempt_to_login=datetime.now() +
-                            timedelta(seconds=self.projectConfig['API']['timeout_to_next_login_attempt'])
+                            timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['timeout_to_next_login_attempt'])
                     )
                     msg = 'Wrong password! Attempt {attempt_number} from {max_attempts}'
                     message = msg.format(
                         attempt_number=q_user.login_attempts,
-                        max_attempts=self.projectConfig['API']['max_login_attempts']
+                        max_attempts=self.projectConfig['BACKEND'][self.app_name]['max_login_attempts']
                     )
                     message_i18n = self.T(msg).format(
                         attempt_number=q_user.login_attempts,
-                        max_attempts=self.projectConfig['API']['max_login_attempts']
+                        max_attempts=self.projectConfig['BACKEND'][self.app_name]['max_login_attempts']
                     )
                     self.DALDatabase.commit()
                     self.set_status(400)
@@ -524,7 +525,8 @@ class TwoFactor(web.RequestHandler):
         url: '/api/auth/two-factor/<authorization_url>'
     """
 
-    def initialize(self, projectConfig, DALDatabase, Translator_email, i18nTranslator=None, logger_api=None):
+    def initialize(self, app_name, projectConfig, DALDatabase, Translator_email, i18nTranslator=None, logger_api=None):
+        self.app_name = app_name
         self.projectConfig = projectConfig
         self.DALDatabase = DALDatabase
         self.Translator_email = Translator_email
@@ -568,7 +570,7 @@ class TwoFactor(web.RequestHandler):
         if authorization_url:
             token_content = None
             two_factor_serialize = URLSafeSerializer(
-                self.projectConfig['API']['url_secret_key'],
+                self.projectConfig['BACKEND'][self.app_name]["secret_key"],
                 salt="two_factor_url"
             )
             try:
@@ -587,11 +589,11 @@ class TwoFactor(web.RequestHandler):
                 if q_user and q_client and not q_client.locked:
 
                     remember_me = q_client.remember_me
-                    timeout_token_user = self.projectConfig['API']['default_time_user_token_expire']
+                    timeout_token_user = self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire']
                     if remember_me:
-                        timeout_token_user = self.projectConfig['API']['default_time_user_token_expire_remember_me']
+                        timeout_token_user = self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire_remember_me']
                     t_user = Serialize(
-                        self.projectConfig['API']['secret_key'],
+                        self.projectConfig['BACKEND'][self.app_name]['secret_key'],
                         timeout_token_user
                     )
                     content = {
@@ -610,11 +612,11 @@ class TwoFactor(web.RequestHandler):
                         role = roles[-1]
                     q_user.update_record(login_attempts=0)
                     t_client = Serialize(
-                        self.projectConfig['API']['secret_key'],
-                        self.projectConfig['API']['default_time_client_token_expire']
+                        self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                        self.projectConfig['BACKEND'][self.app_name]['default_time_client_token_expire']
                     )
                     t_url = URLSafeSerializer(
-                        self.projectConfig['API']['url_secret_key'],
+                        self.projectConfig['BACKEND'][self.app_name]["secret_key"],
                         salt="url_secret_key"
                     )
                     q_client.delete_record()
@@ -694,7 +696,8 @@ class LockUser(web.RequestHandler):
         url: '/api/auth/lock/'
     """
 
-    def initialize(self, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
+    def initialize(self, app_name, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
+        self.app_name = app_name
         self.projectConfig = projectConfig
         self.DALDatabase = DALDatabase
         self.i18nTranslator = i18nTranslator
@@ -751,10 +754,11 @@ class LockUser(web.RequestHandler):
 
 class ImageUser(web.RequestHandler):
     """
-        url: '/api/auth/image/<id_image>'
+        url: '/backend/<app_name>/auth/image/<id_image>'
     """
 
-    def initialize(self, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
+    def initialize(self, app_name, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
+        self.app_name = app_name
         self.projectConfig = projectConfig
         self.DALDatabase = DALDatabase
         self.i18nTranslator = i18nTranslator
@@ -797,7 +801,7 @@ class ImageUser(web.RequestHandler):
             (self.DALDatabase.auth_user_phanterpwagallery.subfolder == 'profile')).select(
                 self.DALDatabase.auth_user_phanterpwagallery.phanterpwagallery).last()
         if q_image:
-            file = os.path.join(self.projectConfig['PROJECT']['path'], 'api', 'uploads',
+            file = os.path.join(self.projectConfig['PROJECT']['path'], 'backend', self.app_name, 'uploads',
                 q_image.phanterpwagallery.folder,
                     q_image.phanterpwagallery.alias_name)
             self.set_header(
@@ -816,7 +820,7 @@ class ImageUser(web.RequestHandler):
                 return
         self.set_status(404)
         file = os.path.join(self.projectConfig['PROJECT']['path'],
-                'api', 'statics', 'images', 'user.png')
+                'backend', self.app_name, 'statics', 'images', 'user.png')
         with open(file, 'rb') as f:
             while True:
                 data = f.read(buf_size)
@@ -835,7 +839,8 @@ class ChangeAccount(web.RequestHandler):
         url: 'api/auth/change/'
     """
 
-    def initialize(self, projectConfig, DALDatabase, Translator_email, i18nTranslator=None, logger_api=None):
+    def initialize(self, app_name, projectConfig, DALDatabase, Translator_email, i18nTranslator=None, logger_api=None):
+        self.app_name = app_name
         self.projectConfig = projectConfig
         self.DALDatabase = DALDatabase
         self.i18nTranslator = i18nTranslator
@@ -960,7 +965,7 @@ class ChangeAccount(web.RequestHandler):
                     ),
                     code=activation_code,
                     time_expires=humanize_seconds(
-                        self.projectConfig['API']['default_time_activation_code_expire'],
+                        self.projectConfig['BACKEND'][self.app_name]['default_time_activation_code_expire'],
                         self.Translator_email
                     ),
                     copyright=interpolate(self.projectConfig['CONTENT_EMAILS']['copyright'], {'now': datetime.now().year}),
@@ -1027,7 +1032,7 @@ class ChangeAccount(web.RequestHandler):
                     self.phanterpwa_current_user.update_record(
                         activation_code=activation_code.split("-")[0],
                         timeout_to_resend_activation_email=datetime.now() +
-                            timedelta(seconds=self.projectConfig['API']['default_time_activation_code_expire'])
+                            timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['default_time_activation_code_expire'])
                     )
                     activate = False
                     self.phanterpwa_current_user.update_record(email=new_email, activated=activate)
@@ -1111,7 +1116,8 @@ class CreateAccount(web.RequestHandler):
         url: 'api/auth/create/'
     """
 
-    def initialize(self, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
+    def initialize(self, app_name, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
+        self.app_name = app_name
         self.projectConfig = projectConfig
         self.DALDatabase = DALDatabase
         self.i18nTranslator = i18nTranslator
@@ -1153,7 +1159,7 @@ class CreateAccount(web.RequestHandler):
         dict_arguments['password'] = base64.b64decode(password).decode('utf-8')
         dict_arguments['password_repeat'] = base64.b64decode(password_repeat).decode('utf-8')
         pass_hash = pbkdf2_sha512.hash("password{0}{1}".format(
-            dict_arguments['password'], self.projectConfig['API']['secret_key']))
+            dict_arguments['password'], self.projectConfig['BACKEND'][self.app_name]['secret_key']))
         dict_arguments['password_hash'] = pass_hash
         result = FieldsDALValidateDictArgs(
             dict_arguments,
@@ -1183,8 +1189,8 @@ class CreateAccount(web.RequestHandler):
                 role = "user"
                 self.DALDatabase.auth_membership.insert(auth_user=r.id, auth_group=3)
             t_user = Serialize(
-                self.projectConfig['API']['secret_key'],
-                self.projectConfig['API']['default_time_user_token_expire']
+                self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire']
             )
             content_user = {
                 'id': str(r.id),
@@ -1195,11 +1201,11 @@ class CreateAccount(web.RequestHandler):
             token_client = self.phanterpwa_client_token
             id_client = self.DALDatabase.client.update_or_insert(auth_user=r.id)
             t_client = Serialize(
-                self.projectConfig['API']['secret_key'],
-                self.projectConfig['API']['default_time_client_token_expire']
+                self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                self.projectConfig['BACKEND'][self.app_name]['default_time_client_token_expire']
             )
             t_url = URLSafeSerializer(
-                self.projectConfig['API']['url_secret_key'],
+                self.projectConfig['BACKEND'][self.app_name]["secret_key"],
                 salt="url_secret_key"
             )
             content_client = {
@@ -1291,7 +1297,8 @@ class RequestAccount(web.RequestHandler):
         url: '/api/auth/request-password/'
     """
 
-    def initialize(self, projectConfig, DALDatabase, Translator_email, i18nTranslator=None, logger_api=None):
+    def initialize(self, app_name, projectConfig, DALDatabase, Translator_email, i18nTranslator=None, logger_api=None):
+        self.app_name = app_name
         self.projectConfig = projectConfig
         self.DALDatabase = DALDatabase
         self.i18nTranslator = i18nTranslator
@@ -1358,8 +1365,8 @@ class RequestAccount(web.RequestHandler):
         else:
             q_user = self.DALDatabase(self.DALDatabase.auth_user.email == dict_arguments['email']).select().first()
             now = datetime.now()
-            t_expires = self.projectConfig['API']['default_time_temporary_password_expire']
-            t_wait = self.projectConfig['API']['timeout_to_resend_temporary_password_mail']
+            t_expires = self.projectConfig['BACKEND'][self.app_name]['default_time_temporary_password_expire']
+            t_wait = self.projectConfig['BACKEND'][self.app_name]['timeout_to_resend_temporary_password_mail']
             delta_time_wait = timedelta(seconds=t_expires)
             if t_expires > t_wait:
                 delta_time_wait = timedelta(seconds=t_expires - t_wait)
@@ -1393,7 +1400,7 @@ class RequestAccount(web.RequestHandler):
                     user_name="{0} {1}".format(q_user.first_name, q_user.last_name),
                     password=new_password,
                     time_expires=humanize_seconds(
-                        self.projectConfig['API']['default_time_temporary_password_expire'],
+                        self.projectConfig['BACKEND'][self.app_name]['default_time_temporary_password_expire'],
                         self.Translator_email
                     ),
                     copyright=interpolate(self.projectConfig['CONTENT_EMAILS']['copyright'], {'now': datetime.now().year}),
@@ -1458,13 +1465,13 @@ class RequestAccount(web.RequestHandler):
                     })
                 else:
                     pass_hash = pbkdf2_sha512.hash("password{0}{1}".format(
-                        new_password, self.projectConfig['API']['secret_key']))
+                        new_password, self.projectConfig['BACKEND'][self.app_name]['secret_key']))
                     q_user.update_record(
                         temporary_password_hash=pass_hash,
                         temporary_password_expire=datetime.now() +
-                            timedelta(seconds=self.projectConfig['API']['default_time_temporary_password_expire']),
+                            timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['default_time_temporary_password_expire']),
                         timeout_to_resend_temporary_password_mail=datetime.now() +
-                            timedelta(seconds=self.projectConfig['API']['timeout_to_resend_temporary_password_mail'])
+                            timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['timeout_to_resend_temporary_password_mail'])
                     )
                     self.DALDatabase.commit()
                     message = 'An email was sent instructing you how to proceed to recover your account.'
@@ -1488,7 +1495,8 @@ class ActiveAccount(web.RequestHandler):
         url: '/api/auth/active-account/'
     """
 
-    def initialize(self, projectConfig, DALDatabase, Translator_email, i18nTranslator=None, logger_api=None):
+    def initialize(self, app_name, projectConfig, DALDatabase, Translator_email, i18nTranslator=None, logger_api=None):
+        self.app_name = app_name
         self.projectConfig = projectConfig
         self.DALDatabase = DALDatabase
         self.i18nTranslator = i18nTranslator
@@ -1525,8 +1533,8 @@ class ActiveAccount(web.RequestHandler):
     @check_user_token()
     def get(self, *args, **kargs):
         now = datetime.now()
-        t_expires = self.projectConfig['API']['default_time_activation_code_expire']
-        t_wait = self.projectConfig['API']['timeout_to_resend_activation_email']
+        t_expires = self.projectConfig['BACKEND'][self.app_name]['default_time_activation_code_expire']
+        t_wait = self.projectConfig['BACKEND'][self.app_name]['timeout_to_resend_activation_email']
         delta_time_wait = timedelta(seconds=t_expires)
         if t_expires > t_wait:
             delta_time_wait = timedelta(seconds=t_expires - t_wait)
@@ -1564,7 +1572,7 @@ class ActiveAccount(web.RequestHandler):
                 ),
                 code=activation_code,
                 time_expires=humanize_seconds(
-                    self.projectConfig['API']['default_time_activation_code_expire'],
+                    self.projectConfig['BACKEND'][self.app_name]['default_time_activation_code_expire'],
                     self.Translator_email
                 ),
                 copyright=interpolate(self.projectConfig['CONTENT_EMAILS']['copyright'], {'now': datetime.now().year}),
@@ -1630,7 +1638,7 @@ class ActiveAccount(web.RequestHandler):
                 self.phanterpwa_current_user.update_record(
                     activation_code=activation_code.split("-")[0],
                     timeout_to_resend_activation_email=datetime.now() +
-                        timedelta(seconds=self.projectConfig['API']['default_time_activation_code_expire'])
+                        timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['default_time_activation_code_expire'])
                 )
                 self.DALDatabase.commit()
                 message = 'An email was sent instructing you how to proceed to activate your account.'
@@ -1706,7 +1714,7 @@ class ActiveAccount(web.RequestHandler):
                 if code and q_user.activation_code == code:
                     result = True
 
-                if q_user.activation_attempts > self.projectConfig['API']['max_activation_attempts']:
+                if q_user.activation_attempts > self.projectConfig['BACKEND'][self.app_name]['max_activation_attempts']:
                     if q_user.datetime_next_attempt_to_activate and\
                             datetime.now() <= q_user.datetime_next_attempt_to_activate:
                         t_delta = q_user.datetime_next_attempt_to_activate - datetime.now()
@@ -1772,16 +1780,16 @@ class ActiveAccount(web.RequestHandler):
                 else:
                     q_user.update_record(
                         datetime_next_attempt_to_activate=datetime.now() +
-                            timedelta(seconds=self.projectConfig['API']['wait_time_to_try_activate_again'])
+                            timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['wait_time_to_try_activate_again'])
                     )
                     msg = 'Wrong activation code! Attempt {attempt_number} from {max_attempts}'
                     message = msg.format(
                         attempt_number=q_user.activation_attempts,
-                        max_attempts=self.projectConfig['API']['max_activation_attempts']
+                        max_attempts=self.projectConfig['BACKEND'][self.app_name]['max_activation_attempts']
                     )
                     message_i18n = self.T(msg).format(
                         attempt_number=q_user.activation_attempts,
-                        max_attempts=self.projectConfig['API']['max_activation_attempts']
+                        max_attempts=self.projectConfig['BACKEND'][self.app_name]['max_activation_attempts']
                     )
                     self.DALDatabase.commit()
                     self.set_status(400)
@@ -1813,7 +1821,8 @@ class ChangePassword(web.RequestHandler):
         url: '/api/auth/change-password'
     """
 
-    def initialize(self, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
+    def initialize(self, app_name, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
+        self.app_name = app_name
         self.projectConfig = projectConfig
         self.DALDatabase = DALDatabase
         self.i18nTranslator = i18nTranslator
@@ -1854,11 +1863,11 @@ class ChangePassword(web.RequestHandler):
         new_password = base64.b64decode(new_password).decode('utf-8')
         new_password_repeat = base64.b64decode(new_password_repeat).decode('utf-8')
         pass_hash = pbkdf2_sha512.hash("password{0}{1}".format(
-            new_password, self.projectConfig['API']['secret_key']))
+            new_password, self.projectConfig['BACKEND'][self.app_name]['secret_key']))
         dict_arguments['password'] = "password{0}{1}".format(
-            password, self.projectConfig['API']['secret_key'])
+            password, self.projectConfig['BACKEND'][self.app_name]['secret_key'])
 
-        if self.phanterpwa_current_user.login_attempts >= self.projectConfig['API']['max_login_attempts']:
+        if self.phanterpwa_current_user.login_attempts >= self.projectConfig['BACKEND'][self.app_name]['max_login_attempts']:
             if self.phanterpwa_current_user.datetime_next_attempt_to_login and\
                     (datetime.now() <= self.phanterpwa_current_user.datetime_next_attempt_to_login):
                 t_delta = self.phanterpwa_current_user.datetime_next_attempt_to_login - datetime.now()
@@ -1907,7 +1916,7 @@ class ChangePassword(web.RequestHandler):
                 self.phanterpwa_current_user.temporary_password_hash:
                 result = pbkdf2_sha512.verify(
                     "password{0}{1}".format(
-                        password, self.projectConfig['API']['secret_key']),
+                        password, self.projectConfig['BACKEND'][self.app_name]['secret_key']),
                     self.phanterpwa_current_user.temporary_password_hash
                 )
                 if result:
@@ -1920,15 +1929,15 @@ class ChangePassword(web.RequestHandler):
                     login_attempts=self.phanterpwa_current_user.login_attempts + 1)
             self.phanterpwa_current_user.update_record(
                 datetime_next_attempt_to_login=datetime.now() +
-                    timedelta(seconds=self.projectConfig['API']['timeout_to_next_login_attempt'])
+                    timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['timeout_to_next_login_attempt'])
             )
             self.phanterpwa_current_user.login_attempts
-            self.projectConfig['API']['max_login_attempts']
+            self.projectConfig['BACKEND'][self.app_name]['max_login_attempts']
             message = 'The form has errors. Attempt {0} to {1}'
             msg_i18n = self.T(message).format(
-                self.phanterpwa_current_user.login_attempts, self.projectConfig['API']['max_login_attempts'])
+                self.phanterpwa_current_user.login_attempts, self.projectConfig['BACKEND'][self.app_name]['max_login_attempts'])
             msg = message.format(
-                self.phanterpwa_current_user.login_attempts, self.projectConfig['API']['max_login_attempts'])
+                self.phanterpwa_current_user.login_attempts, self.projectConfig['BACKEND'][self.app_name]['max_login_attempts'])
             i18n_errors = {}
             for x in check_passwords.errors:
                 tran = self.T(check_passwords.errors[x])

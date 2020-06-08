@@ -1,4 +1,4 @@
-
+import os
 from tornado import (
     web
 )
@@ -6,18 +6,16 @@ from tornado import (
 #     projectConfig,
 #     Translator,
 # )
-from phanterpwa.i18n import browser_language
+from phanterpwa.i18n import (
+    browser_language,
+    Translator
+)
 
 
 class I18N(web.RequestHandler):
-    def initialize(self, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
+    def initialize(self, app_name, projectConfig):
+        self.app_name = app_name
         self.projectConfig = projectConfig
-        self.DALDatabase = DALDatabase
-        self.i18nTranslator = i18nTranslator
-        if logger_api:
-            self.logger_api = logger_api
-        if i18nTranslator:
-            self.T = i18nTranslator.T
         self.set_header("Access-Control-Allow-Origin", "*")
         self.set_header(
             "Access-Control-Allow-Headers",
@@ -35,8 +33,6 @@ class I18N(web.RequestHandler):
             self.phanterpwa_language = self.request.headers.get("phanterpwa-language")
         else:
             self.phanterpwa_language = browser_language(self.request.headers.get("Accept-Language"))
-        self.phanterpwa_user_agent = str(self.request.headers.get('User-Agent'))
-        self.phanterpwa_remote_ip = str(self.request.remote_ip)
 
     def check_origin(self, origin):
         return True
@@ -47,16 +43,22 @@ class I18N(web.RequestHandler):
 
     def get(self, *args):
         app = args[0]
-        translator_instance = self.i18nTranslator.get_instance("{0}-{1}".format(self.projectConfig["PROJECT"]["name"], app))
+        dict_arguments = {k: self.request.arguments.get(k)[0].decode('utf-8') for k in self.request.arguments}
+        lang = dict_arguments.get("lang", self.phanterpwa_language)
+        word = dict_arguments.get("new_word", None)
+        current_dir = self.projectConfig['PROJECT']['path']
+        translator_instance = Translator(
+            os.path.join(current_dir, "backend", self.app_name, "languages", app),
+            identifier=lang,
+            debug=self.projectConfig['PROJECT']['debug']
+        )
+
         if translator_instance:
-            translator_instance.direct_translation = self.phanterpwa_language
+            if word and lang:
+                translator_instance.add_language(lang)
+                translator_instance.direct_translation = lang
+                translator_instance.translator(word, lang)
             if self.projectConfig["PROJECT"]["debug"]:
-                T = translator_instance.T
-                dict_arguments = {k: self.request.arguments.get(k)[0].decode('utf-8') for k in self.request.arguments}
-                word = dict_arguments.get("new_word")
-                lang = dict_arguments.get("lang")
-                if word and lang:
-                    translator_instance.translator(word, lang)
                 return self.write(translator_instance.languages)
             else:
                 return self.set_status(503)

@@ -616,7 +616,7 @@ class FormFromTableDAL():
                         "_type": "hidden"
                     }),
                 ),
-                _id='phanterpwa-widget-input-{0}-csrf_token'.format(self.table_name),
+                _id='phanterpwa-widget-input-input-{0}-csrf_token'.format(self.table_name),
                 _class='phanterpwa-widget phanterpwa-widget-hidden e-display_hidden'
             ),
             _id="phanterpwa-widget-form-{0}".format(self.table_name),

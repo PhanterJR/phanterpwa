@@ -42,10 +42,10 @@ export var SignForm =  __class__ ('SignForm', [object], {
 		self.has_captcha = null;
 		self.after_sign = null;
 		self.preload = preloaders.android;
-		self.element_csrf_token = $ (self.element_target).find ('#phanterpwa-widget-input-{0}-csrf_token'.format (self.table_name));
+		self.element_csrf_token = $ (self.element_target).find ('#phanterpwa-widget-input-input-{0}-csrf_token'.format (self.table_name));
 		if (self.element_csrf_token.length == 0) {
 			self.element_target.prepend (CSRFInput (self.table_name).jquery ());
-			self.element_csrf_token = $ (self.element_target).find ('#phanterpwa-widget-input-{0}-csrf_token'.format (self.table_name));
+			self.element_csrf_token = $ (self.element_target).find ('#phanterpwa-widget-input-input-{0}-csrf_token'.format (self.table_name));
 		}
 		self.element_captcha_container = $ (self.element_target).find ('#phanterpwa-widget-{0}-captcha-container'.format (self.table_name));
 		if (__in__ ('has_captcha', parameters)) {
@@ -284,7 +284,7 @@ export var SignForm =  __class__ ('SignForm', [object], {
 			console.error ('The {0} not exist'.format (self.target_selector));
 		}
 		else {
-			self.element_csrf_token = $ (self.element_target).find ('#phanterpwa-widget-input-{0}-csrf_token'.format (self.table_name));
+			self.element_csrf_token = $ (self.element_target).find ('#phanterpwa-widget-input-input-{0}-csrf_token'.format (self.table_name));
 			self.element_csrf_token.val ('').trigger ('keyup');
 			window.PhanterPWA.ApiServer.GET (__kwargtrans__ (dict ({'url_args': ['api', 'signcaptchaforms', 'phanterpwa-form-{0}'.format (self.table_name)], 'onComplete': self.after_get_captcha_html})));
 		}
@@ -491,7 +491,7 @@ export var CSRFInput =  __class__ ('CSRFInput', [helpers.XmlConstructor], {
 		else {
 			self.button_attributes ['_class'] = 'phanterpwa-widget phanterpwa-widget-hidden e-display_hidden';
 		}
-		helpers.XmlConstructor.__init__ (self, 'div', false, DIV (I (__kwargtrans__ ({_class: 'fas fa-check'})), __kwargtrans__ ({_id: 'phanterpwa-widget-check-{0}-csrf_token'.format (self.table_name), _class: 'phanterpwa-widget-check'})), DIV (INPUT (__kwargtrans__ ({_id: 'phanterpwa-widget-input-{0}-csrf_token'.format (self.table_name), _name: 'csrf_token', _phanterpwa_widget_validator: JSON.stringify (['IS_NOT_EMPTY']), _phanterpwa_widget_table_name: self.table_name, _type: 'hidden'})), LABEL ('CSRF Token', __kwargtrans__ ({_for: 'phanterpwa-widget-input-{0}-csrf_token'.format (self.table_name)})), __kwargtrans__ ({_class: 'input-field'})), DIV (__kwargtrans__ ({_class: 'phanterpwa-widget-error'})), __kwargtrans__ (attributes));
+		helpers.XmlConstructor.__init__ (self, 'div', false, DIV (I (__kwargtrans__ ({_class: 'fas fa-check'})), __kwargtrans__ ({_id: 'phanterpwa-widget-check-{0}-csrf_token'.format (self.table_name), _class: 'phanterpwa-widget-check'})), DIV (INPUT (__kwargtrans__ ({_id: 'phanterpwa-widget-input-input-{0}-csrf_token'.format (self.table_name), _name: 'csrf_token', _phanterpwa_widget_validator: JSON.stringify (['IS_NOT_EMPTY']), _phanterpwa_widget_table_name: self.table_name, _type: 'hidden'})), LABEL ('CSRF Token', __kwargtrans__ ({_for: 'phanterpwa-widget-input-input-{0}-csrf_token'.format (self.table_name)})), __kwargtrans__ ({_class: 'input-field'})), DIV (__kwargtrans__ ({_class: 'phanterpwa-widget-error'})), __kwargtrans__ (attributes));
 	});}
 });
 export var FormWidget =  __class__ ('FormWidget', [helpers.XmlConstructor], {

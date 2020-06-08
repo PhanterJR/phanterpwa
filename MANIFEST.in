@@ -1,4 +1,3 @@
-include phanterpwa/apptools/handler.pybkp
 include phanterpwa/captchasvg/captchadata.json
 include phanterpwa/captchasvg/recipes/circle.recs
 include phanterpwa/captchasvg/recipes/heart.recs
@@ -97,10 +96,6 @@ include phanterpwa/interface/Admin/apps/admin/statics/fonts/roboto-v20-latin-reg
 include phanterpwa/interface/Admin/apps/admin/statics/fonts/roboto-v20-latin-regular.ttf
 include phanterpwa/interface/Admin/apps/admin/statics/fonts/roboto-v20-latin-regular.woff
 include phanterpwa/interface/Admin/apps/admin/statics/fonts/roboto-v20-latin-regular.woff2
-include phanterpwa/interface/Admin/apps/admin/statics/fonts/Segoe UI Bold Italic.woff
-include phanterpwa/interface/Admin/apps/admin/statics/fonts/Segoe UI Bold.woff
-include phanterpwa/interface/Admin/apps/admin/statics/fonts/Segoe UI Italic.woff
-include phanterpwa/interface/Admin/apps/admin/statics/fonts/Segoe UI.woff
 include phanterpwa/interface/Admin/apps/admin/statics/images/background.jpg
 include phanterpwa/interface/Admin/apps/admin/statics/images/user.png
 include phanterpwa/interface/Admin/apps/admin/statics/images/warning.png
@@ -161,10 +156,6 @@ include phanterpwa/interface/Admin/apps/admin/www/static/0.0.1/fonts/roboto-v20-
 include phanterpwa/interface/Admin/apps/admin/www/static/0.0.1/fonts/roboto-v20-latin-regular.ttf
 include phanterpwa/interface/Admin/apps/admin/www/static/0.0.1/fonts/roboto-v20-latin-regular.woff
 include phanterpwa/interface/Admin/apps/admin/www/static/0.0.1/fonts/roboto-v20-latin-regular.woff2
-include phanterpwa/interface/Admin/apps/admin/www/static/0.0.1/fonts/Segoe UI Bold Italic.woff
-include phanterpwa/interface/Admin/apps/admin/www/static/0.0.1/fonts/Segoe UI Bold.woff
-include phanterpwa/interface/Admin/apps/admin/www/static/0.0.1/fonts/Segoe UI Italic.woff
-include phanterpwa/interface/Admin/apps/admin/www/static/0.0.1/fonts/Segoe UI.woff
 include phanterpwa/interface/Admin/apps/admin/www/static/0.0.1/images/background.jpg
 include phanterpwa/interface/Admin/apps/admin/www/static/0.0.1/images/user.png
 include phanterpwa/interface/Admin/apps/admin/www/static/0.0.1/images/warning.png
@@ -341,18 +332,18 @@ include phanterpwa/tests/test_cli_projects/project01/config.json
 include phanterpwa/tests/test_cli_projects/project02/config.json
 include phanterpwa/tests/test_configer_path/fake_project/config.json
 include phanterpwa/tests/test_configer_path/project-invalid-name/config.json
-include phanterpwa/tests/test_configer_path/project01/api/api.ini
-include phanterpwa/tests/test_configer_path/project01/apps/app01/app.ini
-include phanterpwa/tests/test_configer_path/project01/apps/app02/app.ini
+include phanterpwa/tests/test_configer_path/project01/backend/api/app.ini
 include phanterpwa/tests/test_configer_path/project01/config.json
+include phanterpwa/tests/test_configer_path/project01/frontend/app01/app.ini
+include phanterpwa/tests/test_configer_path/project01/frontend/app02/app.ini
 include phanterpwa/tests/test_configer_path/project01/project.ini
 include phanterpwa/tests/test_configer_path/project02/config.json
-include phanterpwa/tests/test_configer_path/project_without_confgjson_and_with_ini/api/api.ini
-include phanterpwa/tests/test_configer_path/project_without_confgjson_and_with_ini/apps/app01/app.ini
-include phanterpwa/tests/test_configer_path/project_without_confgjson_and_with_ini/apps/app02/app.ini
+include phanterpwa/tests/test_configer_path/project_without_confgjson_and_with_ini/backend/api/app.ini
 include phanterpwa/tests/test_configer_path/project_without_confgjson_and_with_ini/config.json
+include phanterpwa/tests/test_configer_path/project_without_confgjson_and_with_ini/frontend/app01/app.ini
+include phanterpwa/tests/test_configer_path/project_without_confgjson_and_with_ini/frontend/app02/app.ini
 include phanterpwa/tests/test_configer_path/project_without_confgjson_and_with_ini/project.ini
-include phanterpwa/tests/test_configer_path/project_without_ini/api/api.ini
+include phanterpwa/tests/test_configer_path/project_without_ini/backend/api/app.ini
 include phanterpwa/tests/test_configer_path/project_without_ini/config.json
 include phanterpwa/tests/test_configer_path/project_without_ini/project.ini
 include phanterpwa/tests/test_folder/cfg.json

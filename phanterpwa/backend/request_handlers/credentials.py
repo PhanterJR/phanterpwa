@@ -29,7 +29,8 @@ class SignClient(web.RequestHandler):
         /api/client/
     """
 
-    def initialize(self, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
+    def initialize(self, app_name, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
+        self.app_name = app_name
         self.projectConfig = projectConfig
         self.DALDatabase = DALDatabase
         self.i18nTranslator = i18nTranslator
@@ -68,11 +69,11 @@ class SignClient(web.RequestHandler):
         self.phanterpwa_client_token = self.request.headers.get('phanterpwa-client-token')
         self.phanterpwa_authorization = self.request.headers.get('phanterpwa-authorization')
         t_client = Serialize(
-            self.projectConfig['API']['secret_key'],
-            self.projectConfig['API']['default_time_client_token_expire']
+            self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+            self.projectConfig['BACKEND'][self.app_name]['default_time_client_token_expire']
         )
         t_url = URLSafeSerializer(
-            self.projectConfig['API']['url_secret_key'],
+            self.projectConfig['BACKEND'][self.app_name]['secret_key'],
             salt="url_secret_key"
         )
         msg = 'The client does not have a client-token, a new one has been generated.'
@@ -95,8 +96,8 @@ class SignClient(web.RequestHandler):
                             token_url = t_url.dumps({**token_content_client})
                             if self.phanterpwa_authorization:
                                 t_user = Serialize(
-                                    self.projectConfig['API']['secret_key'],
-                                    self.projectConfig['API']['default_time_user_token_expire']
+                                    self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                                    self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire']
                                 )
                                 token_content_user = None
                                 try:
@@ -116,7 +117,7 @@ class SignClient(web.RequestHandler):
                                         msg = "".join(['The client-token is valid and belongs ',
                                             'to a login user, will be reused.'])
                                         time_resing_client = int(
-                                            self.projectConfig['API']['default_time_client_token_expire'] * 0.8) + 1
+                                            self.projectConfig['BACKEND'][self.app_name]['default_time_client_token_expire'] * 0.8) + 1
                                         if q_client.date_created +\
                                                 timedelta(seconds=time_resing_client) < datetime.now():
                                             new_client = self.DALDatabase.client.insert(
@@ -225,8 +226,8 @@ class SignClient(web.RequestHandler):
                 else:
                     if self.phanterpwa_authorization:
                         t_user = Serialize(
-                            self.projectConfig['API']['secret_key'],
-                            self.projectConfig['API']['default_time_user_token_expire']
+                            self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                            self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire']
                         )
                         token_content_user = None
                         try:
@@ -346,7 +347,8 @@ class SignForms(web.RequestHandler):
         url: '/api/signforms/<form_identify>'
     """
 
-    def initialize(self, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None, list_forms=[]):
+    def initialize(self, app_name, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None, list_forms=[]):
+        self.app_name = app_name
         self.projectConfig = projectConfig
         self.DALDatabase = DALDatabase
         self.i18nTranslator = i18nTranslator
@@ -400,8 +402,8 @@ class SignForms(web.RequestHandler):
             self.DALDatabase((self.DALDatabase.csrf.client == id_client) &
                 (self.DALDatabase.csrf.form_identify == form_identify)).delete()
             t = Serialize(
-                self.projectConfig['API']['secret_key'],
-                self.projectConfig['API']['default_time_csrf_token_expire']
+                self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                self.projectConfig['BACKEND'][self.app_name]['default_time_csrf_token_expire']
             )
             id_csrf = self.DALDatabase.csrf.insert(
                 form_identify=form_identify,
@@ -454,7 +456,8 @@ class SignLockForm(web.RequestHandler):
         url: '/api/signlockform/'
     """
 
-    def initialize(self, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
+    def initialize(self, app_name, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
+        self.app_name = app_name
         self.projectConfig = projectConfig
         self.DALDatabase = DALDatabase
         self.i18nTranslator = i18nTranslator
@@ -497,8 +500,8 @@ class SignLockForm(web.RequestHandler):
             self.DALDatabase((self.DALDatabase.csrf.client == id_client) &
                 (self.DALDatabase.csrf.form_identify == form_identify)).delete()
             t = Serialize(
-                self.projectConfig['API']['secret_key'],
-                self.projectConfig['API']['default_time_csrf_token_expire']
+                self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                self.projectConfig['BACKEND'][self.app_name]['default_time_csrf_token_expire']
             )
             id_csrf = self.DALDatabase.csrf.insert(
                 form_identify=form_identify,
@@ -551,7 +554,8 @@ class SignCaptchaForms(web.RequestHandler):
         url: '/api/signcaptchaforms/<form_identify>'
     """
 
-    def initialize(self, projectConfig, DALDatabase, Translator_captcha, i18nTranslator=None, logger_api=None, list_forms=[]):
+    def initialize(self, app_name, projectConfig, DALDatabase, Translator_captcha, i18nTranslator=None, logger_api=None, list_forms=[]):
+        self.app_name = app_name
         self.projectConfig = projectConfig
         self.DALDatabase = DALDatabase
         self.i18nTranslator = i18nTranslator
@@ -607,8 +611,8 @@ class SignCaptchaForms(web.RequestHandler):
                 (self.DALDatabase.captcha.form_identify == form_identify)).delete()
             captcha = Captcha(
                 form_identify,
-                secret_key=self.projectConfig['API']['secret_key'],
-                time_token_expire=self.projectConfig['API']['default_time_csrf_token_expire'],
+                secret_key=self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                time_token_expire=self.projectConfig['BACKEND'][self.app_name]['default_time_csrf_token_expire'],
                 translator=self.Translator_captcha
             )
             html_captcha = captcha.html.xml()
@@ -665,8 +669,8 @@ class SignCaptchaForms(web.RequestHandler):
             q_captcha.delete_record()
             captcha = Captcha(
                 form_identify,
-                self.projectConfig['API']['secret_key'],
-                self.projectConfig['API']['default_time_csrf_token_expire'],
+                self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                self.projectConfig['BACKEND'][self.app_name]['default_time_csrf_token_expire'],
                 translator=self.Translator_captcha
             )
 
@@ -679,8 +683,8 @@ class SignCaptchaForms(web.RequestHandler):
                 )
                 if id_csrf:
                     t = Serialize(
-                        self.projectConfig['API']['secret_key'],
-                        self.projectConfig['API']['default_time_csrf_token_expire']
+                        self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                        self.projectConfig['BACKEND'][self.app_name]['default_time_csrf_token_expire']
                     )
                     sign_captha = t.dumps({
                         'id': str(id_csrf),
@@ -711,8 +715,8 @@ class SignCaptchaForms(web.RequestHandler):
                         (self.DALDatabase.captcha.form_identify == form_identify)).delete()
                     captcha = Captcha(
                         form_identify,
-                        secret_key=self.projectConfig['API']['secret_key'],
-                        time_token_expire=self.projectConfig['API']['default_time_csrf_token_expire'],
+                        secret_key=self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                        time_token_expire=self.projectConfig['BACKEND'][self.app_name]['default_time_csrf_token_expire'],
                         translator=self.Translator_captcha
                     )
                     html_captcha = captcha.html.xml()
@@ -770,7 +774,8 @@ class ReSing(web.RequestHandler):
         url: '/api/resigncredentials/''
     """
 
-    def initialize(self, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
+    def initialize(self, app_name, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
+        self.app_name = app_name
         self.projectConfig = projectConfig
         self.DALDatabase = DALDatabase
         self.i18nTranslator = i18nTranslator
@@ -807,27 +812,27 @@ class ReSing(web.RequestHandler):
     def get(self, *args, **kargs):
         q_client = self.DALDatabase(self.DALDatabase.client.token == self.phanterpwa_client_token).select().first()
         remember_me = q_client.remember_me
-        timeout_to_resign = self.projectConfig["API"]["timeout_to_resign"]
+        timeout_to_resign = self.projectConfig['BACKEND'][self.app_name]["timeout_to_resign"]
         time_resing_client = int(
-            self.projectConfig['API']['default_time_client_token_expire'] * 0.8) + 1
+            self.projectConfig['BACKEND'][self.app_name]['default_time_client_token_expire'] * 0.8) + 1
         if remember_me:
             timeout_to_resign = int(
-                self.projectConfig['API']['default_time_user_token_expire_remember_me'] * 0.8) + 1
+                self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire_remember_me'] * 0.8) + 1
         t_client = Serialize(
-            self.projectConfig['API']['secret_key'],
-            self.projectConfig['API']['default_time_client_token_expire']
+            self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+            self.projectConfig['BACKEND'][self.app_name]['default_time_client_token_expire']
         )
         t_url = URLSafeSerializer(
-            self.projectConfig['API']['url_secret_key'],
+            self.projectConfig['BACKEND'][self.app_name]['secret_key'],
             salt="url_secret_key"
         )
         if q_client.last_resign is None or ((q_client.last_resign +
                     timedelta(seconds=timeout_to_resign)) < datetime.now()):
-            timeout_token_user = self.projectConfig['API']['default_time_user_token_expire']
+            timeout_token_user = self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire']
             if remember_me:
-                timeout_token_user = self.projectConfig['API']['default_time_user_token_expire_remember_me']
+                timeout_token_user = self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire_remember_me']
             t_user = Serialize(
-                self.projectConfig['API']['secret_key'],
+                self.projectConfig['BACKEND'][self.app_name]['secret_key'],
                 timeout_token_user
             )
             content_client = {
@@ -868,11 +873,11 @@ class ReSing(web.RequestHandler):
         elif q_client.date_created +\
                 timedelta(seconds=time_resing_client) < datetime.now():
             q_client.delete_record()
-            timeout_token_user = self.projectConfig['API']['default_time_user_token_expire']
+            timeout_token_user = self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire']
             if remember_me:
-                timeout_token_user = self.projectConfig['API']['default_time_user_token_expire_remember_me']
+                timeout_token_user = self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire_remember_me']
             t_user = Serialize(
-                self.projectConfig['API']['secret_key'],
+                self.projectConfig['BACKEND'][self.app_name]['secret_key'],
                 timeout_token_user
             )
             new_client = self.DALDatabase.client.insert(

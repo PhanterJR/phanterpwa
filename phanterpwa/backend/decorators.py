@@ -144,8 +144,8 @@ def check_client_token(ignore_locked=True):
                     self.set_status(400)
                     return self.write(dict_response)
                 t = Serialize(
-                    self.projectConfig['API']['secret_key'],
-                    self.projectConfig['API']['default_time_client_token_expire']
+                    self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                    self.projectConfig['BACKEND'][self.app_name]['default_time_client_token_expire']
                 )
                 self.DALDatabase._adapter.reconnect()
                 q = self.DALDatabase(self.DALDatabase.client.token == self.phanterpwa_client_token).select().first()
@@ -163,8 +163,8 @@ def check_client_token(ignore_locked=True):
                                 int(token_content['id_client']) == q.id:
                                 if self.phanterpwa_authorization:
                                     t_user = Serialize(
-                                        self.projectConfig['API']['secret_key'],
-                                        self.projectConfig['API']['default_time_user_token_expire']
+                                        self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                                        self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire']
                                     )
                                     token_content_user = None
                                     id_user = None
@@ -293,7 +293,7 @@ def check_url_token():
                 self.set_status(400)
                 return self.write(dict_response)
             t = URLSafeSerializer(
-                self.projectConfig['API']['url_secret_key'],
+                self.projectConfig['BACKEND'][self.app_name]['secret_key'],
                 salt="url_secret_key"
             )
             self.DALDatabase._adapter.reconnect()
@@ -342,10 +342,10 @@ def check_url_token():
     return decorator
 
 
-def check_public_csrf_token(form_identify=None):
+def check_public_csrf_token(form_identify=None, ignore_locked=True):
     def decorator(f):
         @wraps(f)
-        @check_client_token()
+        @check_client_token(ignore_locked=ignore_locked)
         def check_csrf_token_decorator(self, *args, **kargs):
             dict_arguments = {k: self.request.arguments.get(k)[0].decode('utf-8') for k in self.request.arguments}
             self.phanterpwa_csrf_token_content = None
@@ -383,8 +383,8 @@ def check_public_csrf_token(form_identify=None):
                 self.set_status(400)
                 return self.write(dict_response)
             t = Serialize(
-                self.projectConfig['API']['secret_key'],
-                self.projectConfig['API']['default_time_user_token_expire']
+                self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire']
             )
             token_content = None
             try:
@@ -523,8 +523,8 @@ def check_user_token():
                 id_user = None
                 if self.phanterpwa_client_token and self.phanterpwa_authorization:
                     t = Serialize(
-                        self.projectConfig['API']['secret_key'],
-                        self.projectConfig['API']['default_time_user_token_expire']
+                        self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                        self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire']
                     )
                     token_content = None
                     try:
@@ -753,10 +753,10 @@ def requires_authentication(users_id=None, users_email=None, roles_id=None, role
     return decorator
 
 
-def requires_no_authentication(ids=None):
+def requires_no_authentication(ids=None, ignore_locked=True):
     def decorator(f):
         @wraps(f)
-        @check_client_token(ignore_locked=False)
+        @check_client_token(ignore_locked=ignore_locked)
         def requires_no_authentication_decorator(self, *args, **kargs):
             self.phanterpwa_current_user = None
             self.phanterpwa_client_token = self.request.headers.get('phanterpwa-client-token')
@@ -764,8 +764,8 @@ def requires_no_authentication(ids=None):
             id_user = None
             if self.phanterpwa_client_token and self.phanterpwa_authorization:
                 t = Serialize(
-                    self.projectConfig['API']['secret_key'],
-                    self.projectConfig['API']['default_time_user_token_expire']
+                    self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                    self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire']
                 )
                 token_content = None
                 try:

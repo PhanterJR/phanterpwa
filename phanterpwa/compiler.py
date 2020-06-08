@@ -321,7 +321,7 @@ class Compiler():
         return join(self.projectpath, "frontend", app, "statics")
 
     def path_app_config_file(self, app):
-        return join(self.path_transcrypts_folder(app), "config.py")
+        return join(self.path_transcrypts_folder(app), "auto", "config.py")
 
     def target_template_file_by_source(self, src, app) -> str:
         relative_to = self.path_templates_folder(app)
@@ -675,7 +675,6 @@ class Compiler():
                 i = importlib.import_module(i_mod)
                 importlib.reload(i)
                 name = "".join([*i_mod.split(".")[-1], ".html"])
-                print(i.__name__, name)
                 f_parts = i_mod.split(".")[3:-1]
                 files_www = join(target, *f_parts)
                 if is_apps:
@@ -733,21 +732,24 @@ class Compiler():
                 join(
                     folder_script_apps_list), exist_ok=True)
             source = join(self.path_transcrypts_folder(app), "__target__")
-            main_file = join(
-                self.path_transcrypts_folder(app), "{0}.py".format(appConfig["FRONTEND"][app]['transcrypt_main_file']))
-            print("    Convert python to javascript: {0}".format(main_file))
-            print("    Starting Transcrypt compiler. Wait to complete.")
-            if self.minify:
-                print("    For minification it's necessary to have java installed, if compilation fail,",
-                    " the compilation will try transcrypt on unminify format.")
-                try:
-                    subprocess.run("{0} -X utf8 -m transcrypt {1}".format(python_env, main_file), shell=True)
-                except Exception as e:
-                    print("    Minification Fail!!! It's try unminify mode now, it's fast.",
-                        " Check java instalation. Error:", e)
-                    subprocess.run("{0} -X utf8 -m transcrypt {1} -n".format(python_env, main_file), shell=True)
-            else:
-                subprocess.run("{0} -X utf8 -m transcrypt {1} -n -m".format(python_env, main_file), shell=True)
+            files_trans = []
+            for t in glob(join(self.path_transcrypts_folder(app), "*.py")):
+                if not basename(t).startswith("_"):
+                    files_trans.append(t)
+            for main_file in files_trans:
+                print("    Convert python to javascript: {0}".format(main_file))
+                print("    Starting Transcrypt compiler. Wait to complete.")
+                if self.minify:
+                    print("    For minification it's necessary to have java installed, if compilation fail,",
+                        " the compilation will try transcrypt on unminify format.")
+                    try:
+                        subprocess.run("{0} -X utf8 -m transcrypt {1}".format(python_env, main_file), shell=True)
+                    except Exception as e:
+                        print("    Minification Fail!!! It's try unminify mode now, it's fast.",
+                            " Check java instalation. Error:", e)
+                        subprocess.run("{0} -X utf8 -m transcrypt {1} -n".format(python_env, main_file), shell=True)
+                else:
+                    subprocess.run("{0} -X utf8 -m transcrypt {1} -n -m".format(python_env, main_file), shell=True)
             list_all = glob(join(source, "*"))
             for y in list_all:
                 if isfile(y):

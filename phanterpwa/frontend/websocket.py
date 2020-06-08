@@ -21,9 +21,9 @@ __pragma__('kwargs')
 
 
 class WebSocketPhanterPWA():
-    def __init__(self, api_websocket_address, **parameters):
+    def __init__(self, websocket_address, **parameters):
         self._opened = False
-        self.api_websocket_address = api_websocket_address
+        self.websocket_address = websocket_address
         self.comulative_time = 300
         self.last_ws = None
         self.manual_connection = False
@@ -107,7 +107,7 @@ class WebSocketPhanterPWA():
 
     def start(self):
         if not self.manual_connection:
-            self._ws = __new__(WebSocket(self.api_websocket_address))
+            self._ws = __new__(WebSocket(self.websocket_address))
             self._authorization = window.PhanterPWA.get_authorization()
             self._config = window.PhanterPWA.CONFIG
             self._binds()
@@ -116,7 +116,7 @@ class WebSocketPhanterPWA():
             if(r):
                 self.manual_connection = False
                 self.comulative_time = 0
-                self._ws = __new__(WebSocket(self.api_websocket_address))
+                self._ws = __new__(WebSocket(self.websocket_address))
                 self._authorization = window.PhanterPWA.get_authorization()
                 self._config = window.PhanterPWA.CONFIG
                 self._binds()

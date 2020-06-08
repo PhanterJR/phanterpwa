@@ -624,7 +624,7 @@ class ModalLogin(modal.Modal):
     def submit(self):
         self.clear_errors()
         window.PhanterPWA.login(
-            jQuery("#phanterpwa-widget-input-login-csrf_token").val(),
+            jQuery("#phanterpwa-widget-input-input-login-csrf_token").val(),
             jQuery("#phanterpwa-widget-input-input-login-email").val(),
             jQuery("#phanterpwa-widget-input-input-login-password").val(),
             jQuery("#phanterpwa-widget-checkbox-input-login-remember_me").prop("checked"),
@@ -801,7 +801,7 @@ class ModalRegister(modal.Modal):
     def submit(self):
         self.clear_errors()
         window.PhanterPWA.register(
-            jQuery("#phanterpwa-widget-input-register-csrf_token").val(),
+            jQuery("#phanterpwa-widget-input-input-register-csrf_token").val(),
             jQuery("#phanterpwa-widget-input-input-register-first_name").val(),
             jQuery("#phanterpwa-widget-input-input-register-last_name").val(),
             jQuery("#phanterpwa-widget-input-input-register-email").val(),
@@ -826,9 +826,7 @@ class ModalRequestPassword(modal.Modal):
             **{
                 "type": "string",
                 "label": I18N("E-Mail"),
-                "phanterpwa": {
-                    "validators": ["IS_EMAIL"],
-                },
+                "validators": ["IS_EMAIL"],
                 "_class": "p-col w1p100"
             }
         )
@@ -840,9 +838,7 @@ class ModalRequestPassword(modal.Modal):
                 **{
                     "type": "string",
                     "label": I18N("E-Mail"),
-                    "phanterpwa": {
-                        "validators": ["IS_EMAIL"],
-                    },
+                    "validators": ["IS_EMAIL"],
                     "value": last_auth_user.email,
                     "_class": "p-col w1p100"
                 }
@@ -1081,7 +1077,7 @@ class AlertActivationAccount(top_slide.TopSlide):
         self.element_target = jQuery(self.target_selector)
         self.clear_errors()
         window.PhanterPWA.activation_account(
-            self.element_target.find("#phanterpwa-widget-input-activation-csrf_token").val(),
+            self.element_target.find("#phanterpwa-widget-input-input-activation-csrf_token").val(),
             self.element_target.find("#phanterpwa-widget-input-input-activation-activation_code").val(),
             callback=self.after_submit
         )
@@ -1520,79 +1516,6 @@ class LeftBarAuthUserNoLogin(left_bar.LeftBarMenu):
 class Profile(gatehandler.Handler):
     def initialize(self):
         self.requires_login = True
-
-    def after_submit(self, data, ajax_status):
-            if ajax_status == "success":
-                json = data.responseJSON
-                message = json.i18n.message
-                window.PhanterPWA.flash(**{'html': message})
-                if data.status == 200:
-                    jQuery(".phanterpwa-gallery-upload-input-file").val('')
-                    auth_user = json.auth_user
-                    window.PhanterPWA.update_auth_user(auth_user)
-                    self.reload()
-
-            else:
-                forms.SignForm("#form-profile")
-                json = data.responseJSON
-                message = json.i18n.message
-                window.PhanterPWA.flash(**{'html': message})
-
-    def submit(self):
-        formdata = __new__(FormData(jQuery("#form-profile")[0]))
-        window.PhanterPWA.ApiServer.PUT(**{
-            'url_args': ["api", "auth", "change"],
-            'form_data': formdata,
-            'onComplete': self.after_submit
-        })
-
-    def open_modal_change_password(self):
-        window.PhanterPWA.Components['auth_user'].modal_change_password()
-
-    def binds(self):
-        forms.ValidateForm("#form-profile")
-        jQuery(
-            "#phanterpwa-widget-form-submit_button-profile"
-        ).off(
-            "click.profile_button_save"
-        ).on(
-            "click.profile_button_save",
-            self.submit
-        )
-        jQuery(
-            "#phanterpwa-widget-form-form_button-change_password"
-        ).off(
-            "click.profile_button_change_password"
-        ).on(
-            "click.profile_button_change_password",
-            self.open_modal_change_password
-        )
-
-    def reload(self):
-        forms.SignForm("#form-profile")
-        self.auth_user = window.PhanterPWA.get_last_auth_user()
-        first_name = ""
-        last_name = ""
-        email = ""
-        user_image = window.PhanterPWA.get_last_auth_user_image()
-        if self.auth_user is not None and self.auth_user is not js_undefined:
-            first_name = self.auth_user.first_name
-            last_name = self.auth_user.last_name
-            email = self.auth_user.email
-
-        self.GalleryInput = gallery.GalleryInput(
-            "#profile-image-user-container", **{"cutter": True, "current_image": user_image})
-        if not jQuery("#phanterpwa-component-left_bar-url-imagem-user").lenght == 0:
-            jQuery("#phanterpwa-component-left_bar-url-imagem-user").attr(
-                "src", user_image)
-        jQuery("#url_image_user").attr("src", user_image)
-        jQuery("#phanterpwa-component-left_bar-url-imagem-user").attr(
-            "src", user_image)
-        jQuery("#phanterpwa-widget-input-profile-first_name").val(first_name)
-        jQuery("#phanterpwa-widget-input-profile-last_name").val(last_name)
-        jQuery("#phanterpwa-widget-input-profile-email").val(email).trigger("keyup")
-
-    def start(self):
         self.auth_user = window.PhanterPWA.get_last_auth_user()
         first_name = ""
         last_name = ""
@@ -1693,8 +1616,96 @@ class Profile(gatehandler.Handler):
         self.reload()
         self.binds()
 
+    def after_submit(self, data, ajax_status):
+            if ajax_status == "success":
+                json = data.responseJSON
+                message = json.i18n.message
+                window.PhanterPWA.flash(**{'html': message})
+                if data.status == 200:
+                    jQuery(".phanterpwa-gallery-upload-input-file").val('')
+                    auth_user = json.auth_user
+                    window.PhanterPWA.update_auth_user(auth_user)
+                    self.reload()
+
+            else:
+                forms.SignForm("#form-profile")
+                json = data.responseJSON
+                message = json.i18n.message
+                window.PhanterPWA.flash(**{'html': message})
+
+    def submit(self):
+        formdata = __new__(FormData(jQuery("#form-profile")[0]))
+        window.PhanterPWA.ApiServer.PUT(**{
+            'url_args': ["api", "auth", "change"],
+            'form_data': formdata,
+            'onComplete': self.after_submit
+        })
+
+    def open_modal_change_password(self):
+        window.PhanterPWA.Components['auth_user'].modal_change_password()
+
+    def binds(self):
+        forms.ValidateForm("#form-profile")
+        jQuery(
+            "#phanterpwa-widget-form-submit_button-profile"
+        ).off(
+            "click.profile_button_save"
+        ).on(
+            "click.profile_button_save",
+            self.submit
+        )
+        jQuery(
+            "#phanterpwa-widget-form-form_button-change_password"
+        ).off(
+            "click.profile_button_change_password"
+        ).on(
+            "click.profile_button_change_password",
+            self.open_modal_change_password
+        )
+
+    def reload(self):
+        forms.SignForm("#form-profile")
+        self.auth_user = window.PhanterPWA.get_last_auth_user()
+        first_name = ""
+        last_name = ""
+        email = ""
+        user_image = window.PhanterPWA.get_last_auth_user_image()
+        if self.auth_user is not None and self.auth_user is not js_undefined:
+            first_name = self.auth_user.first_name
+            last_name = self.auth_user.last_name
+            email = self.auth_user.email
+
+        self.GalleryInput = gallery.GalleryInput(
+            "#profile-image-user-container", **{"cutter": True, "current_image": user_image})
+        if not jQuery("#phanterpwa-component-left_bar-url-imagem-user").lenght == 0:
+            jQuery("#phanterpwa-component-left_bar-url-imagem-user").attr(
+                "src", user_image)
+        jQuery("#url_image_user").attr("src", user_image)
+        jQuery("#phanterpwa-component-left_bar-url-imagem-user").attr(
+            "src", user_image)
+        jQuery("#phanterpwa-widget-input-profile-first_name").val(first_name)
+        jQuery("#phanterpwa-widget-input-profile-last_name").val(last_name)
+        jQuery("#phanterpwa-widget-input-profile-email").val(email).trigger("keyup")
+
 
 class Lock(gatehandler.Handler):
+    def initialize(self):
+        request = self.request
+        last_way = request["last_way"]
+        if last_way is not None and last_way is not js_undefined and last_way is not "lock":
+            sessionStorage.setItem("way_before_lock", last_way)
+        else:
+            sessionStorage.setItem("way_before_lock", window.PhanterPWA.default_way)
+        self.last_auth_user = window.PhanterPWA.get_last_auth_user()
+        self.last_auth_user_image = window.PhanterPWA.get_last_auth_user_image()
+        if self.last_auth_user is not None:
+            window.PhanterPWA.ApiServer.GET(**{
+                'url_args': ["api", "auth", "lock"],
+                'onComplete': self.after_confirm_lock
+            })
+        else:
+            self.on_other_user_click()
+
     def on_other_user_click(self):
         jQuery("body").removeClass("phanterpwa-lock")
         localStorage.removeItem("last_auth_user")
@@ -1755,7 +1766,7 @@ class Lock(gatehandler.Handler):
         formdata = __new__(FormData())
         formdata.append(
             "csrf_token",
-            jQuery("#form-lock #phanterpwa-widget-input-lock-csrf_token").val()
+            jQuery("#form-lock #phanterpwa-widget-input-input-lock-csrf_token").val()
         )
         login_password = "{0}:{1}".format(
             window.btoa(jQuery("#form-lock #phanterpwa-widget-input-lock-email").val()),
@@ -1921,23 +1932,6 @@ class Lock(gatehandler.Handler):
         json = data.responseJSON
         window.PhanterPWA.flash(**{'html': json.i18n.message})
 
-    def start(self):
-        request = self.request
-        last_way = request["last_way"]
-        if last_way is not None and last_way is not js_undefined and last_way is not "lock":
-            sessionStorage.setItem("way_before_lock", last_way)
-        else:
-            sessionStorage.setItem("way_before_lock", window.PhanterPWA.default_way)
-        self.last_auth_user = window.PhanterPWA.get_last_auth_user()
-        self.last_auth_user_image = window.PhanterPWA.get_last_auth_user_image()
-        if self.last_auth_user is not None:
-            window.PhanterPWA.ApiServer.GET(**{
-                'url_args': ["api", "auth", "lock"],
-                'onComplete': self.after_confirm_lock
-            })
-        else:
-            self.on_other_user_click()
-
 
 class TwoFactor(gatehandler.Handler):
     def initialize(self):
@@ -1953,6 +1947,7 @@ class TwoFactor(gatehandler.Handler):
             self.way_before_two_factor = last_way
         else:
             self.way_before_two_factor = window.PhanterPWA.default_way
+        self.start()
 
     def after_submit(self, data, ajax_status):
         if ajax_status == "success":

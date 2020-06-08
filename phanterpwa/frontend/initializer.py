@@ -1,5 +1,4 @@
 import phanterpwa.frontend.server as server
-import phanterpwa.frontend.progressbar as progressbar
 import phanterpwa.frontend.i18n as i18n
 import phanterpwa.frontend.helpers as helpers
 import phanterpwa.frontend.components.widgets as widgets
@@ -8,24 +7,24 @@ import phanterpwa.frontend.gatehandler as gatehandler
 import phanterpwa.frontend.components.modal as modal
 import phanterpwa.frontend.websocket as websocket
 import phanterpwa.frontend.validations as validations
-from org.transcrypt.stubs.browser import __pragma__
+# from org.transcrypt.stubs.browser import __pragma__
 
-__pragma__('alias', "jQuery", "$")
-__pragma__('skip')
+# __pragma__('alias', "jQuery", "$")
+# __pragma__('skip')
 
 # it is ignored on transcrypt
 window = jQuery = console = document = localStorage = URL = M = FormData = setTimeout = RegExp =\
-    sessionStorage = this = FileReader = JSON = js_undefined = navigator = __new__ = Date = 0
+    sessionStorage = this = FileReader = JSON = js_undefined = navigator = __new__ = __pragma__ = Date = 0
 
-__pragma__('noskip')
-
-
-__pragma__('kwargs')
+# __pragma__('noskip')
 
 
+# __pragma__('kwargs')
+
+
+XML = helpers.XML
 DIV = helpers.XmlConstructor.tagger("div")
 H2 = helpers.XmlConstructor.tagger("h2")
-XML = helpers.XML
 TEXTAREA = helpers.XmlConstructor.tagger("textarea")
 I = helpers.XmlConstructor.tagger("i")
 
@@ -76,7 +75,7 @@ class PhanterPWA():
         self.ApiServer = server.ApiServer()
         self.ApiServer.getClientToken()
         self.I18N = i18n.I18NServer()
-        self.WS = websocket.WebSocketPhanterPWA(self.CONFIG["APP"]["websocket_address"])
+        self.WS = websocket.WebSocketPhanterPWA(self.CONFIG["APP"]["http_address"])
         if self.DEBUG:
             self.add_component(Developer_Toolbar())
         self.Valider = validations.Valid
@@ -153,15 +152,17 @@ class PhanterPWA():
 
     def social_login_list(self):
         social_logins = window.PhanterPWA["CONFIG"]["SOCIAL_LOGINS"]
+        s_logins = dict()
         if social_logins is not None and social_logins is not js_undefined:
-            list_login = social_logins.keys()
-            l = []
-            for x in list_login:
-                if x in self._social_login_icons:
-                    l.append([x, self._social_login_icons[x]])
-                else:
-                    l.append([x, I(_class="fas fa-at")])
-            return l
+            s_logins = dict(social_logins)
+        list_login = social_logins.keys()
+        l = []
+        for x in list_login:
+            if x in self._social_login_icons:
+                l.append([x, self._social_login_icons[x]])
+            else:
+                l.append([x, I(_class="fas fa-at")])
+        return l
 
     @staticmethod
     def get_app_name(self):
@@ -241,22 +242,6 @@ class PhanterPWA():
 
         if callable(callback):
             setTimeout(f, delay)
-
-    def save_state(self, key_state):
-        """Save complete body html on specific key"""
-        body_html = jQuery('body').html()
-        self.states[key_state] = body_html
-
-    def load_state(self, key_state, callback):
-        page = self.states.get(key_state, None)
-        body = None
-        if page is not None:
-            body = jQuery('body').html(page)
-            self.reload_components()
-        else:
-            console.error("The key_state do not exist")
-        if callable(callback):
-            callback(body)
 
     def add_component(self, component):
         if isinstance(component, Component):
@@ -773,7 +758,7 @@ class PhanterPWA():
     def parse_way(self, way):
         gate = way
         if "?" in way or "/" in way:
-            url = "{0}/{1}".format(window.PhanterPWA.CONFIG.APP.http_address, way)
+            url = "{0}/{1}".format(window.PhanterPWA.CONFIG.CONFIGJS.api_server_address, way)
             return self.parse_url(url)
         else:
             return {gate, [], {}, way}
@@ -1001,7 +986,7 @@ class WayRequest():
         self.gate = way
         self.way = way
         if "?" in self.way or "/" in self.way:
-            l = "{0}/{1}".format(window.PhanterPWA.CONFIG.APP.http_address, self.way)
+            l = "{0}/{1}".format(window.PhanterPWA.CONFIG.CONFIGJS.api_server_address, self.way)
             l = __new__(URL(l))
             t_args = l.pathname.split("/")[1:]
             self.gate = t_args[0]

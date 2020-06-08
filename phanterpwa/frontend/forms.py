@@ -43,12 +43,12 @@ class SignForm():
         self.after_sign = None
         self.preload = preloaders.android
         self.element_csrf_token = jQuery(self.element_target).find(
-            "#phanterpwa-widget-input-{0}-csrf_token".format(self.table_name)
+            "#phanterpwa-widget-input-input-{0}-csrf_token".format(self.table_name)
         )
         if self.element_csrf_token.length == 0:
             self.element_target.prepend(CSRFInput(self.table_name).jquery())
             self.element_csrf_token = jQuery(self.element_target).find(
-                "#phanterpwa-widget-input-{0}-csrf_token".format(self.table_name)
+                "#phanterpwa-widget-input-input-{0}-csrf_token".format(self.table_name)
             )
         self.element_captcha_container = jQuery(self.element_target).find(
             "#phanterpwa-widget-{0}-captcha-container".format(self.table_name)
@@ -184,7 +184,7 @@ class SignForm():
             console.error("The {0} not exist".format(self.target_selector))
         else:
             self.element_csrf_token = jQuery(self.element_target).find(
-                "#phanterpwa-widget-input-{0}-csrf_token".format(self.table_name)
+                "#phanterpwa-widget-input-input-{0}-csrf_token".format(self.table_name)
             )
             self.element_csrf_token.val("").trigger("keyup")
 
@@ -290,28 +290,38 @@ class CSRFInput(helpers.XmlConstructor):
             self,
             'div',
             False,
-            DIV(
-                I(
-                    _class="fas fa-check"
-                ),
-                _id="phanterpwa-widget-check-{0}-csrf_token".format(self.table_name),
-                _class="phanterpwa-widget-check"
+            widgets.Input(
+                "{0}-{1}".format(self.table_name, "csrf_token"),
+                label="CSRF Token",
+                name="csrf_token",
+                value="",
+                form=self.table_name,
+                validators=['IS_NOT_EMPTY']
             ),
-            DIV(
-                INPUT(
-                    _id="phanterpwa-widget-input-{0}-csrf_token".format(self.table_name),
-                    _name="csrf_token",
-                    _phanterpwa_widget_validator=JSON.stringify(['IS_NOT_EMPTY']),
-                    _phanterpwa_widget_table_name=self.table_name,
-                    _type="hidden"
-                ),
-                LABEL(
-                    "CSRF Token",
-                    _for="phanterpwa-widget-input-{0}-csrf_token".format(self.table_name),
-                ),
-                _class='input-field'
-            ),
-            DIV(_class="phanterpwa-widget-error"),
+            # DIV(
+            #     I(
+            #         _class="fas fa-check"
+            #     ),
+            #     _id="phanterpwa-widget-check-{0}-csrf_token".format(self.table_name),
+            #     _class="phanterpwa-widget-check"
+            # ),
+            # DIV(
+            #     INPUT(
+            #         **{
+            #             "_id": "phanterpwa-widget-input-input{0}-csrf_token".format(self.table_name),
+            #             "_name": "csrf_token",
+            #             "_type": "hidden",
+            #             "_data-validators": JSON.stringify(['IS_NOT_EMPTY']),
+            #             "_data-form": self.table_name
+            #         }
+            #     ),
+            #     LABEL(
+            #         "CSRF Token",
+            #         _for="phanterpwa-widget-input-input-{0}-csrf_token".format(self.table_name),
+            #     ),
+            #     _class='input-field'
+            # ),
+            # DIV(_class="phanterpwa-widget-error"),
             **attributes
         )
 

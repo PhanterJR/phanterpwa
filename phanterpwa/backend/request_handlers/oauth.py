@@ -37,7 +37,8 @@ class Prompt(web.RequestHandler):
         url: url: 'api/oauth/prompt/<social_name>'
     """
 
-    def initialize(self, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
+    def initialize(self, app_name, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
+        self.app_name = app_name
         self.projectConfig = projectConfig
         self.DALDatabase = DALDatabase
         self.i18nTranslator = i18nTranslator
@@ -74,10 +75,7 @@ class Prompt(web.RequestHandler):
     def get(self, *args, **kargs):
         social_name = args[0]
         dict_arguments = {k: self.request.arguments.get(k)[0].decode('utf-8') for k in self.request.arguments}
-        if self.projectConfig['PROJECT']['debug']:
-            url_base = self.projectConfig['API']['remote_address_on_development']
-        else:
-            url_base = self.projectConfig['API']['remote_address_on_production']
+        url_base = self.projectConfig['BACKEND'][self.app_name]['http_address']
         if social_name == "google":
             client_id = self.projectConfig['OAUTH_{0}'.format(social_name.upper())]['client_id']
             client_secret = self.projectConfig['OAUTH_{0}'.format(social_name.upper())]['client_secret']
@@ -148,7 +146,8 @@ class Redirect(web.RequestHandler):
         url: 'api/oauth/redirect/<social_name>'
     """
 
-    def initialize(self, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
+    def initialize(self, app_name, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
+        self.app_name = app_name
         self.projectConfig = projectConfig
         self.DALDatabase = DALDatabase
         self.i18nTranslator = i18nTranslator
@@ -184,10 +183,8 @@ class Redirect(web.RequestHandler):
     def get(self, *args, **kargs):
         social_name = args[0]
         dict_arguments = {k: self.request.arguments.get(k)[0].decode('utf-8') for k in self.request.arguments}
-        if self.projectConfig['PROJECT']['debug']:
-            url_base = self.projectConfig['API']['remote_address_on_development']
-        else:
-            url_base = self.projectConfig['API']['remote_address_on_production']
+
+        url_base = self.projectConfig['BACKEND'][self.app_name]['http_address']
         if social_name == "google":
             state = dict_arguments.get("state")
             q_state = self.DALDatabase(
@@ -235,7 +232,7 @@ class Redirect(web.RequestHandler):
                 })
             else:
 
-                url_consult = self.projectConfig['OAUTH_{0}'.format(social_name.upper())]['remote_address']
+                url_consult = self.projectConfig['OAUTH_{0}'.format(social_name.upper())]['http_address']
                 googleapi = "{0}?access_token={1}".format(
                     url_consult, quote(token['access_token']))
                 try:
@@ -274,9 +271,9 @@ class Redirect(web.RequestHandler):
                     if email:
                         q_user = self.DALDatabase(self.DALDatabase.auth_user.email == email).select().first()
                         if q_user:
-                            timeout_token_user = self.projectConfig['API']['default_time_user_token_expire_remember_me']
+                            timeout_token_user = self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire_remember_me']
                             t_user = Serialize(
-                                self.projectConfig['API']['secret_key'],
+                                self.projectConfig['BACKEND'][self.app_name]['secret_key'],
                                 timeout_token_user
                             )
                             content = {
@@ -295,11 +292,11 @@ class Redirect(web.RequestHandler):
                                 role = roles[-1]
                             q_user.update_record(login_attempts=0)
                             t_client = Serialize(
-                                self.projectConfig['API']['secret_key'],
-                                self.projectConfig['API']['default_time_client_token_expire']
+                                self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                                self.projectConfig['BACKEND'][self.app_name]['default_time_client_token_expire']
                             )
                             t_url = URLSafeSerializer(
-                                self.projectConfig['API']['url_secret_key'],
+                                self.projectConfig['BACKEND'][self.app_name]["secret_key"],
                                 salt="url_secret_key"
                             )
                             r_client = self.DALDatabase(self.DALDatabase.client.token == self.phanterpwa_client_token).select().first()
@@ -365,7 +362,7 @@ class Redirect(web.RequestHandler):
                     else:
                         new_password = os.urandom(3).hex()
                         password_hash = pbkdf2_sha512.hash("password{0}{1}".format(
-                            new_password, self.projectConfig['API']['secret_key']))
+                            new_password, self.projectConfig['BACKEND'][self.app_name]['secret_key']))
                         table = self.DALDatabase.auth_user
                         social_image = googleapi_user.get("picture", None)
                         first_name = googleapi_user.get("given_name", "")
@@ -395,8 +392,8 @@ class Redirect(web.RequestHandler):
                                 role = "user"
                                 self.DALDatabase.auth_membership.insert(auth_user=r.id, auth_group=3)
                             t_user = Serialize(
-                                self.projectConfig['API']['secret_key'],
-                                self.projectConfig['API']['default_time_user_token_expire']
+                                self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                                self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire']
                             )
                             content_user = {
                                 'id': str(r.id),
@@ -407,11 +404,11 @@ class Redirect(web.RequestHandler):
                             token_client = self.phanterpwa_client_token
                             id_client = self.DALDatabase.client.update_or_insert(auth_user=r.id)
                             t_client = Serialize(
-                                self.projectConfig['API']['secret_key'],
-                                self.projectConfig['API']['default_time_client_token_expire']
+                                self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                                self.projectConfig['BACKEND'][self.app_name]['default_time_client_token_expire']
                             )
                             t_url = URLSafeSerializer(
-                                self.projectConfig['API']['url_secret_key'],
+                                self.projectConfig['BACKEND'][self.app_name]["secret_key"],
                                 salt="url_secret_key"
                             )
                             content_client = {
@@ -539,9 +536,9 @@ class Redirect(web.RequestHandler):
                     if email:
                         q_user = self.DALDatabase(self.DALDatabase.auth_user.email == email).select().first()
                         if q_user:
-                            timeout_token_user = self.projectConfig['API']['default_time_user_token_expire_remember_me']
+                            timeout_token_user = self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire_remember_me']
                             t_user = Serialize(
-                                self.projectConfig['API']['secret_key'],
+                                self.projectConfig['BACKEND'][self.app_name]['secret_key'],
                                 timeout_token_user
                             )
                             content = {
@@ -560,11 +557,11 @@ class Redirect(web.RequestHandler):
                                 role = roles[-1]
                             q_user.update_record(login_attempts=0)
                             t_client = Serialize(
-                                self.projectConfig['API']['secret_key'],
-                                self.projectConfig['API']['default_time_client_token_expire']
+                                self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                                self.projectConfig['BACKEND'][self.app_name]['default_time_client_token_expire']
                             )
                             t_url = URLSafeSerializer(
-                                self.projectConfig['API']['url_secret_key'],
+                                self.projectConfig['BACKEND'][self.app_name]["secret_key"],
                                 salt="url_secret_key"
                             )
                             r_client = self.DALDatabase(self.DALDatabase.client.token == self.phanterpwa_client_token).select().first()
@@ -629,7 +626,7 @@ class Redirect(web.RequestHandler):
                     else:
                         new_password = os.urandom(3).hex()
                         password_hash = pbkdf2_sha512.hash("password{0}{1}".format(
-                            new_password, self.projectConfig['API']['secret_key']))
+                            new_password, self.projectConfig['BACKEND'][self.app_name]['secret_key']))
                         table = self.DALDatabase.auth_user
                         social_image = googleapi_user.get("picture", None)
                         first_name = googleapi_user.get("given_name", "")
@@ -659,8 +656,8 @@ class Redirect(web.RequestHandler):
                                 role = "user"
                                 self.DALDatabase.auth_membership.insert(auth_user=r.id, auth_group=3)
                             t_user = Serialize(
-                                self.projectConfig['API']['secret_key'],
-                                self.projectConfig['API']['default_time_user_token_expire']
+                                self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                                self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire']
                             )
                             content_user = {
                                 'id': str(r.id),
@@ -671,11 +668,11 @@ class Redirect(web.RequestHandler):
                             token_client = self.phanterpwa_client_token
                             id_client = self.DALDatabase.client.update_or_insert(auth_user=r.id)
                             t_client = Serialize(
-                                self.projectConfig['API']['secret_key'],
-                                self.projectConfig['API']['default_time_client_token_expire']
+                                self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                                self.projectConfig['BACKEND'][self.app_name]['default_time_client_token_expire']
                             )
                             t_url = URLSafeSerializer(
-                                self.projectConfig['API']['url_secret_key'],
+                                self.projectConfig['BACKEND'][self.app_name]["secret_key"],
                                 salt="url_secret_key"
                             )
                             content_client = {

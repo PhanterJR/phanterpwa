@@ -6,7 +6,8 @@ from tornado import (
 
 
 class Welcome(web.RequestHandler):
-    def initialize(self, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
+    def initialize(self, app_name, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
+        self.app_name = app_name
         self.projectConfig = projectConfig
         self.DALDatabase = DALDatabase
         self.i18nTranslator = i18nTranslator

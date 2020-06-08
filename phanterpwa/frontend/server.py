@@ -15,7 +15,7 @@ __pragma__('kwargs')
 class ApiServer():
 
     def __init__(self):
-        self.remote_address = window.PhanterPWA.CONFIG.CONFIGJS.api_server_address
+        self.remote_address = window.PhanterPWA.CONFIG["APP"]["http_address"]
 
     def _process_args(self, args):
         s_args = ""
