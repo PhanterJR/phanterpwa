@@ -127,3 +127,4 @@ phanterpwa/interface/Admin/temp/statics_mtime_admin.json
 phanterpwa/interface/Admin/temp/styles_mtime_admin.json
 phanterpwa/interface/Admin/temp/templates_mtime_admin.json
 phanterpwa/interface/Admin/temp/transcrypts_mtime_admin.json
+*.sqlite
