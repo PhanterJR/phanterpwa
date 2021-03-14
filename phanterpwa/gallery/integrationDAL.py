@@ -28,11 +28,11 @@ class pyDALTables():
 
 class PhanterpwaGalleryUserImage():
 
-    def __init__(self, id_user, db, projectConfig):
+    def __init__(self, id_user, db, projectConfig, appname="api"):
         self.db = db
         self.id_user = id_user
         self.upload_folder = os.path.normpath(
-            os.path.join(projectConfig["PROJECT"]["path"], "api", "uploads")
+            os.path.join(projectConfig["PROJECT"]["path"], "backapps", appname, "uploads")
         )
         self.projectConfig = projectConfig
 
@@ -159,10 +159,10 @@ class PhanterpwaGalleryUpload(object):
 
 class PhanterpwaGalleryImage():
 
-    def __init__(self, sub_folder, db, projectConfig, id_image=0):
+    def __init__(self, sub_folder, db, projectConfig, id_image=0, appname="api"):
         self.db = db
         self.upload_folder = os.path.normpath(
-            os.path.join(projectConfig["PROJECT"]["path"], "api", "uploads")
+            os.path.join(projectConfig["PROJECT"]["path"], "backapps", appname, "uploads")
         )
         self.projectConfig = projectConfig
         self.sub_folder = sub_folder

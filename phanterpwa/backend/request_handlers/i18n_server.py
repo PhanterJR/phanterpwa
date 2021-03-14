@@ -48,7 +48,7 @@ class I18N(web.RequestHandler):
         word = dict_arguments.get("new_word", None)
         current_dir = self.projectConfig['PROJECT']['path']
         translator_instance = Translator(
-            os.path.join(current_dir, "backend", self.app_name, "languages", app),
+            os.path.join(current_dir, "backapps", self.app_name, "languages", app),
             identifier=lang,
             debug=self.projectConfig['PROJECT']['debug']
         )

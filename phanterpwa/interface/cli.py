@@ -103,7 +103,7 @@ def package_project_app(project_path, target, reset_config=True):
     os.makedirs(compact_temp, exist_ok=True)
     if os.path.exists(temp_file):
         shutil.rmtree(temp_file)
-    print(os.path.join(temp_file, "frontend", '*', 'www'))
+    print(os.path.join(temp_file, "frontapps", '*', 'www'))
     shutil.copytree(
         project_path,
         temp_file,
@@ -117,7 +117,7 @@ def package_project_app(project_path, target, reset_config=True):
             'secret.ini',
         )
     )
-    for x in glob.glob(os.path.join(temp_file, "frontend", '*', 'www')):
+    for x in glob.glob(os.path.join(temp_file, "frontapps", '*', 'www')):
         if os.path.isdir(x):
             shutil.rmtree(x)
     if os.path.isdir(os.path.join(temp_file, 'api', 'uploads')):
@@ -414,7 +414,7 @@ class Cli():
             cont = 0
             app_list = list(self.ProjectConfig["FRONTEND"].keys())
             for a in app_list:
-                path_app = os.path.join(project_path, "frontend", a)
+                path_app = os.path.join(project_path, "frontapps", a)
                 print("  [{0}] - {1} - {2}".format(cont, a, path_app))
                 cont += 1
 
@@ -512,7 +512,7 @@ class Cli():
             print()
             print(self.title(T("Summary")))
             print()
-            print("  {0}: {1}".format(T("Path"), os.path.join(project_path, "frontend", app_name)))
+            print("  {0}: {1}".format(T("Path"), os.path.join(project_path, "frontapps", app_name)))
             print("  {0}: {1}".format(T("Identifier Name"), app_name))
             print("  {0}: {1}".format(T("Title"), self.ProjectConfig["FRONTEND"][app_name]['title']))
             print()
@@ -553,7 +553,11 @@ class Cli():
             print()
             limit = cont
             print("  File: {0}".format(os.path.join(project_path, "secret.ini")))
-            for x in self.ProjectConfig.secret_ini.sections():
+            try:
+                sect = self.ProjectConfig.secret_ini.sections()
+            except:
+                sect = []
+            for x in sect:
                 print("  [{0}] - {1}".format(cont, x))
                 switch[cont] = x
                 cont += 1
@@ -618,7 +622,7 @@ class Cli():
             self.clear()
             print(self.title("".join([T("Application"), " (", app_name, ") ", T("config")])))
             print()
-            print("  File: {0}".format(os.path.join(project_path, "frontend", app_name, "app.ini")))
+            print("  File: {0}".format(os.path.join(project_path, "frontapps", app_name, "app.ini")))
             cont = 0
             switch = {}
             app_ini = self.ProjectConfig.apps_ini.get(app_name, {})
@@ -768,7 +772,7 @@ class Cli():
             self.clear()
             print(self.title("".join([T("Application"), " (", app_name, ") ", T("Config - Section:"), " ", section])))
             print()
-            print("  File: {0}".format(os.path.join(project_path, "frontend", app_name, "app.ini")))
+            print("  File: {0}".format(os.path.join(project_path, "frontapps", app_name, "app.ini")))
             cont = 0
             switch = {}
             app_ini = self.ProjectConfig.apps_ini.get(app_name, {})
@@ -858,7 +862,7 @@ class Cli():
                         else:
                             self.message = "".join([app_choiced, " ", T("changed!")])
                             app_ini[section][app_choiced] = new_value
-                    with open(os.path.join(project_path, "frontend", app_name, "app.ini"), 'w', encoding="utf-8") as configfile:
+                    with open(os.path.join(project_path, "frontapps", app_name, "app.ini"), 'w', encoding="utf-8") as configfile:
                         app_ini.write(configfile)
                     self.ProjectConfig.save()
                 else:

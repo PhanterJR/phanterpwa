@@ -224,15 +224,15 @@ class TestProjectConfig(unittest.TestCase):
         path_dir = os.path.join(os.path.dirname(phanterpwa.__file__), "tests", "test_configer_path", "project01")
         if os.path.isfile(os.path.join(path_dir, "config.json")):
             os.remove(os.path.join(path_dir, "config.json"))
-        # if os.path.isfile(os.path.join(path_dir, "backend", "api", "app.ini")):
-        #     os.remove(os.path.join(path_dir, "backend", "api", "app.ini"))
+        # if os.path.isfile(os.path.join(path_dir, "backapps", "api", "app.ini")):
+        #     os.remove(os.path.join(path_dir, "backapps", "api", "app.ini"))
         if os.path.isfile(os.path.join(path_dir, "project.ini")):
             os.remove(os.path.join(path_dir, "project.ini"))
         cfg = ProjectConfig(path_dir)
         print(cfg._ini_apps_backend)
 
         self.assertTrue(os.path.isfile(os.path.join(path_dir, "config.json")))
-        self.assertTrue(os.path.isfile(os.path.join(path_dir, "backend", "api", "app.ini")))
+        self.assertTrue(os.path.isfile(os.path.join(path_dir, "backapps", "api", "app.ini")))
         self.assertTrue(os.path.isfile(os.path.join(path_dir, "project.ini")))
         # file
         self.assertEqual(
@@ -246,8 +246,8 @@ class TestProjectConfig(unittest.TestCase):
             "pyenv": ENV_PYTHON.replace("\\", "\\\\"),
             "pypath": os.path.dirname(ENV_PYTHON).replace("\\", "\\\\"),
             "projectpath": path_dir.replace("\\", "\\\\"),
-            "app01": os.path.join(path_dir, "frontend", "app01", "www").replace("\\", "\\\\"),
-            "app02": os.path.join(path_dir, "frontend", "app02", "www").replace("\\", "\\\\")
+            "app01": os.path.join(path_dir, "frontapps", "app01", "www").replace("\\", "\\\\"),
+            "app02": os.path.join(path_dir, "frontapps", "app02", "www").replace("\\", "\\\\")
         })
         self.assertEqual(
             string_cfg,
@@ -314,8 +314,8 @@ class TestProjectConfig(unittest.TestCase):
     #         "pyenv": ENV_PYTHON.replace("\\", "\\\\"),
     #         "pypath": os.path.dirname(ENV_PYTHON).replace("\\", "\\\\"),
     #         "projectpath": path_dir.replace("\\", "\\\\"),
-    #         "app01": os.path.join(path_dir, "frontend", "app01", "www").replace("\\", "\\\\"),
-    #         "app02": os.path.join(path_dir, "frontend", "app02", "www").replace("\\", "\\\\")
+    #         "app01": os.path.join(path_dir, "frontapps", "app01", "www").replace("\\", "\\\\"),
+    #         "app02": os.path.join(path_dir, "frontapps", "app02", "www").replace("\\", "\\\\")
     #     })
     #     self.assertEqual(cfgcontent, s_cfg)
     #     with open(os.path.join(path_dir, "api", "api.ini"), "r", encoding="utf-8") as f:

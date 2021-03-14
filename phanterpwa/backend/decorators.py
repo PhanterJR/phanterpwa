@@ -21,7 +21,7 @@ def check_application():
                 self.phanterpwa_application_version = self.request.headers.get('phanterpwa-application-version')
                 if self.phanterpwa_application == project_name:
                     if self.phanterpwa_application_version != project_version:
-                        msg = 'The client needs update ({0})'
+                        msg = 'The client needs update ({0}).'
                         dict_response = {
                             'status': 'Bad Request',
                             'code': 400,
@@ -42,7 +42,7 @@ def check_application():
                                 fi.lineno + 19
                             )
                         else:
-                            msg = "".join([msg,
+                            msg = "".join([msg.format(project_version),
                                 " The client version '{0}' is different of project version '{1}'".format(
                                     self.phanterpwa_application_version, project_version)])
                             dict_response['message'] = msg
@@ -56,7 +56,7 @@ def check_application():
                         self.set_status(400)
                         return self.write(dict_response)
                 else:
-                    msg = 'The client is not compatible'
+                    msg = 'The client is not compatible.'
                     dict_response = {
                         'status': 'Bad Request',
                         'code': 400,
@@ -351,7 +351,9 @@ def check_public_csrf_token(form_identify=None, ignore_locked=True):
             self.phanterpwa_csrf_token_content = None
             self.phanterpwa_csrf_token = dict_arguments.get("csrf_token")
             self.phanterpwa_user_agent = self.request.headers.get('User-Agent')
-            self.phanterpwa_remote_ip = str(self.request.remote_ip)
+            self.phanterpwa_remote_ip = self.request.headers.get("X-Real-IP") or \
+                self.request.headers.get("X-Forwarded-For") or \
+                self.request.remote_ip
             if not self.phanterpwa_csrf_token:
                 msg = 'The CSRF token is not in form. "csrf_token"'
                 dict_response = {
@@ -405,24 +407,27 @@ def check_public_csrf_token(form_identify=None, ignore_locked=True):
                             q.delete_record()
                             self.DALDatabase.commit()
                             if form_identify:
-                                if isinstance(form_identify, str) and form_identify == token_content["form_identify"]:
+                                self.phanterpwa_form_identify = token_content["form_identify"]
+                                if isinstance(form_identify, str) and form_identify == self.phanterpwa_form_identify:
                                     return f(self, *args, **kargs)
                                 elif isinstance(form_identify, (list, tuple)) and \
-                                        token_content["form_identify"] in form_identify:
+                                        self.phanterpwa_form_identify in form_identify:
                                     return f(self, *args, **kargs)
                                 else:
                                     msg = "".join(["The crsf token is invalid! ",
-                                        "The csrf token created for \"",
-                                        str(token_content["form_identify"]),
-                                        "\" is being used for a request that only accepts \"",
-                                        str(form_identify),
-                                        "\"."])
+                                        "The csrf token created for \"{0}\"",
+                                        " is being used for a request that only accepts \"{1}\"."
+                                        ])
+                                    
+                                    trans_msg = self.i18nTranslator.T(msg)
+                                    msg = msg.format(str(self.phanterpwa_form_identify), str(form_identify))
+                                    trans_msg = trans_msg.format(str(self.phanterpwa_form_identify), str(form_identify))
                                     dict_response = {
                                         'status': 'Bad Request',
                                         'code': 400,
                                         'message': msg,
                                         'i18n': {
-                                            'message': self.i18nTranslator.T(msg) if self.i18nTranslator else msg
+                                            'message': trans_msg
                                         }
                                     }
                                     fi = getframeinfo(currentframe())
@@ -509,7 +514,7 @@ def check_public_csrf_token(form_identify=None, ignore_locked=True):
     return decorator
 
 
-def check_user_token():
+def check_user_token(ignore_activation=False):
     def decorator(f):
         @wraps(f)
         @check_client_token(ignore_locked=False)
@@ -555,18 +560,50 @@ def check_user_token():
                         (self.DALDatabase.client.token == self.phanterpwa_client_token)
                     ).select().first()
                     if q_user and q_client:
-                        if not q_user.permit_mult_login:
-                            r_client = self.DALDatabase(
-                                (self.DALDatabase.client.auth_user == id_user) &
-                                (self.DALDatabase.client.token != self.phanterpwa_client_token)
-                            ).select()
-                            if r_client:
+                        if not q_user.activated and not ignore_activation:
+                            msg = "The user token is invalid!"
+                            dict_response = {
+                                'status': 'Forbidden',
+                                'code': 403,
+                                'message': msg,
+                                'i18n': {
+                                    'message': self.i18nTranslator.T(msg) if self.i18nTranslator else msg
+                                }
+                            }
+                            fi = getframeinfo(currentframe())
+                            if not self.projectConfig['PROJECT']['debug']:
+                                help_debug = "({0}){1}.{2}->({3})@{4}:{5}".format(
+                                    getfile(self.__class__),
+                                    self.__class__.__name__,
+                                    f.__name__,
+                                    fi.filename,
+                                    fi.function,
+                                    fi.lineno + 19
+                                )
+                            else:
+                                help_debug = "{0}.{1}@{2}:{3}".format(
+                                    self.__class__.__name__,
+                                    f.__name__,
+                                    fi.function,
+                                    fi.lineno + 19
+                                )
+                            dict_response['help_debug'] = help_debug
+                            self.set_status(403)
+                            return self.write(dict_response)
+                        else:
+
+                            if not q_user.permit_mult_login:
                                 r_client = self.DALDatabase(
                                     (self.DALDatabase.client.auth_user == id_user) &
                                     (self.DALDatabase.client.token != self.phanterpwa_client_token)
-                                ).remove()
-                        self.DALDatabase.commit()
-                        return f(self, *args, **kargs)
+                                ).select()
+                                if r_client:
+                                    r_client = self.DALDatabase(
+                                        (self.DALDatabase.client.auth_user == id_user) &
+                                        (self.DALDatabase.client.token != self.phanterpwa_client_token)
+                                    ).remove()
+                            self.DALDatabase.commit()
+                            return f(self, *args, **kargs)
                     else:
                         if q_client:
                             q_client.delete_record()
@@ -636,10 +673,10 @@ def check_user_token():
     return decorator
 
 
-def check_private_csrf_token(form_identify=None):
+def check_private_csrf_token(form_identify=None, ignore_activation=False):
     def decorator(f):
         @wraps(f)
-        @check_user_token()
+        @check_user_token(ignore_activation)
         @check_public_csrf_token(form_identify)
         def check_csrf_token_decorator(self, *args, **kargs):
             current_user = self.phanterpwa_csrf_token_content.get("user", None)

@@ -8,6 +8,8 @@ import phanterpwa.frontend.forms as forms
 import phanterpwa.frontend.preloaders as preloaders
 import phanterpwa.frontend.application as application
 import phanterpwa.frontend.gatehandler as gatehandler
+import phanterpwa.frontend.decorators as decorators
+import phanterpwa.frontend.components.widgets as widgets
 from org.transcrypt.stubs.browser import __pragma__
 
 __pragma__('alias', "jQuery", "$")
@@ -20,11 +22,18 @@ DIV = helpers.XmlConstructor.tagger("div")
 FORM = helpers.XmlConstructor.tagger("form")
 SPAN = helpers.XmlConstructor.tagger("span")
 IMG = helpers.XmlConstructor.tagger("img", True)
+HR = helpers.XmlConstructor.tagger("hr", True)
 I = helpers.XmlConstructor.tagger("i")
 H2 = helpers.XmlConstructor.tagger("h2")
 P = helpers.XmlConstructor.tagger("p")
+LABEL = helpers.XmlConstructor.tagger("label")
+STRONG = helpers.XmlConstructor.tagger("strong")
 I18N = helpers.I18N
 CONCATENATE = helpers.CONCATENATE
+XSECTION = helpers.XSECTION
+Table = widgets.Table
+TableHead = widgets.TableHead
+TableData = widgets.TableData
 
 __pragma__('kwargs')
 
@@ -138,11 +147,7 @@ class AuthUser(application.Component):
         forms.ValidateForm("#form-change_password")
 
     def logout(self):
-        sessionStorage.removeItem("phanterpwa-authorization")
-        sessionStorage.removeItem("auth_user")
-        localStorage.removeItem("phanterpwa-authorization")
-        localStorage.removeItem("auth_user")
-        window.PhanterPWA.open_default_way()
+        window.PhanterPWA.logout()
         LeftBar = window.PhanterPWA.Components['left_bar']
         if LeftBar is not None and LeftBar is not js_undefined:
             LeftBar.reload()
@@ -630,6 +635,324 @@ class ModalLogin(modal.Modal):
             jQuery("#phanterpwa-widget-checkbox-input-login-remember_me").prop("checked"),
             callback=self.after_submit
         )
+
+
+class ModalPersonalInformation(modal.Modal):
+    def __init__(self, target_element, **parameters):
+        AuthUserCmp = window.PhanterPWA.Components['auth_user']
+        self.AuthUser = None
+        if AuthUserCmp is not None and AuthUserCmp is not js_undefined and not isinstance(AuthUserCmp, AuthUser):
+            console.error("Need AuthUser instance on window.PhanterPWA.Components")
+        else:
+            self.AuthUser = AuthUserCmp
+        self.element_target = jQuery(target_element)
+        self.auth_user = window.PhanterPWA.get_last_auth_user()
+        first_name = ""
+        last_name = ""
+        email = ""
+        if self.auth_user is not None and self.auth_user is not js_undefined:
+            first_name = self.auth_user.first_name
+            last_name = self.auth_user.last_name
+            email = self.auth_user.email
+        tcontent = DIV(
+            DIV(
+                DIV(
+                    forms.FormWidget(
+                        "change_account",
+                        "first_name",
+                        **{
+                            "type": "string",
+                            "label": I18N("First Name"),
+                            "value": first_name,
+                            "validators": ["IS_NOT_EMPTY"],
+                            "_class": "p-col w1p100 w3p50"
+                        },
+                    ),
+                    forms.FormWidget(
+                        "change_account",
+                        "last_name",
+                        **{
+                            "type": "string",
+                            "label": I18N("Last Name"),
+                            "value": last_name,
+                            "validators": ["IS_NOT_EMPTY"],
+                            "_class": "p-col w1p100 w3p50"
+                        },
+                    ),
+                    DIV(
+                        forms.FormWidget(
+                            "change_account",
+                            "email",
+                            **{
+                                "type": "string",
+                                "label": I18N("E-Mail"),
+                                "value": email,
+                                "validators": ["IS_EMAIL"],
+                                "_class": "p-col w1p100"
+                            }
+                        ),
+                        _class="e-hidden"
+                    ),
+                    _class="p-row change_account_inputs_container"
+                ),
+                _class="p-col w1p100"
+            ),
+
+            _class="phanterpwa-change_account-form-inputs p-row"
+        ).jquery()
+        if self.auth_user is not None and self.auth_user is not js_undefined:
+            tcontent.addClass("has_auth_user")
+
+        tfooter = DIV(
+            DIV(
+                forms.SubmitButton(
+                    "change_account",
+                    I18N("Save Changes", **{"_pt-br": "Salvar Mudanças"}),
+                    _class="btn-autoresize wave_on_click waves-phanterpwa"
+                ),
+                # forms.FormButton(
+                #     "change_password",
+                #     I18N("Change Password", **{"_pt-br": "Mudar Senha"}),
+                #     _class="btn-autoresize wave_on_click waves-phanterpwa"
+                # ),
+                _class='phanterpwa-form-buttons-container'
+            ),
+            _class="p-col w1p100"
+        ).jquery()
+        modal.Modal.__init__(
+            self,
+            self.element_target,
+            **{
+                "form": "change_account",
+                "header_height": 50,
+                "title": I18N("Personal Information", **{"_pt-br": "Informações Pessoais"}),
+                "content": tcontent,
+                "footer": tfooter,
+                "after_open": self.binds
+            }
+        )
+
+    def after_submit(self, data, ajax_status):
+            if ajax_status == "success":
+                json = data.responseJSON
+                message = json.i18n.message
+                window.PhanterPWA.flash(**{'html': message})
+                if data.status == 200:
+                    jQuery(".phanterpwa-gallery-upload-input-file").val('')
+                    auth_user = json.auth_user
+                    window.PhanterPWA.update_auth_user(auth_user)
+                    self.AuthUser.start()
+                    LeftBar = window.PhanterPWA.Components['left_bar']
+                    if LeftBar is not None and LeftBar is not js_undefined:
+                        LeftBar.reload()
+                    self.reload()
+                    self.close()
+                else:
+                    forms.SignForm("#form-change_account")
+
+            else:
+                forms.SignForm("#form-change_account")
+                json = data.responseJSON
+                message = json.i18n.message
+                window.PhanterPWA.flash(**{'html': message})
+
+    def submit(self):
+        formdata = __new__(FormData(jQuery("#form-change_account")[0]))
+        window.PhanterPWA.ApiServer.PUT(**{
+            'url_args': ["api", "auth", "change"],
+            'form_data': formdata,
+            'onComplete': self.after_submit
+        })
+
+    def binds(self):
+        forms.ValidateForm("#form-change_account")
+        jQuery(
+            "#phanterpwa-widget-form-submit_button-change_account"
+        ).off(
+            "click.profile_button_save"
+        ).on(
+            "click.profile_button_save",
+            self.submit
+        )
+        # jQuery(
+        #     "#phanterpwa-widget-form-form_button-change_password"
+        # ).off(
+        #     "click.profile_button_change_password"
+        # ).on(
+        #     "click.profile_button_change_password",
+        #     self.open_modal_change_password
+        # )
+
+    def reload(self):
+        forms.SignForm("#form-change_account")
+        self.auth_user = window.PhanterPWA.get_last_auth_user()
+        first_name = ""
+        last_name = ""
+        email = ""
+        if self.auth_user is not None and self.auth_user is not js_undefined:
+            first_name = self.auth_user.first_name
+            last_name = self.auth_user.last_name
+            email = self.auth_user.email
+
+        jQuery("#phanterpwa-widget-input-input-profile-first_name").val(first_name)
+        jQuery("#phanterpwa-widget-input-input-profile-last_name").val(last_name)
+        jQuery("#phanterpwa-tagger-span-first_name").text(first_name)
+        jQuery("#phanterpwa-tagger-span-last_name").text(last_name)
+
+
+class ModalChangeEmail(modal.Modal):
+    def __init__(self, target_element, **parameters):
+        AuthUserCmp = window.PhanterPWA.Components['auth_user']
+        self.AuthUser = None
+        if AuthUserCmp is not None and AuthUserCmp is not js_undefined and not isinstance(AuthUserCmp, AuthUser):
+            console.error("Need AuthUser instance on window.PhanterPWA.Components")
+        else:
+            self.AuthUser = AuthUserCmp
+        self.element_target = jQuery(target_element)
+        self.auth_user = window.PhanterPWA.get_last_auth_user()
+        first_name = ""
+        last_name = ""
+        email = ""
+        if self.auth_user is not None and self.auth_user is not js_undefined:
+            first_name = self.auth_user.first_name
+            last_name = self.auth_user.last_name
+            email = self.auth_user.email
+        tcontent = DIV(
+            DIV(
+                DIV(
+                    DIV(
+                        forms.FormWidget(
+                            "change_account",
+                            "first_name",
+                            **{
+                                "type": "string",
+                                "label": I18N("First Name"),
+                                "value": first_name,
+                                "validators": ["IS_NOT_EMPTY"],
+                                "_class": "p-col w1p100 w3p50"
+                            },
+                        ),
+                        forms.FormWidget(
+                            "change_account",
+                            "last_name",
+                            **{
+                                "type": "string",
+                                "label": I18N("Last Name"),
+                                "value": last_name,
+                                "validators": ["IS_NOT_EMPTY"],
+                                "_class": "p-col w1p100 w3p50"
+                            },
+                        ),
+                        _class="e-hidden"
+                    ),
+                    forms.FormWidget(
+                        "change_account",
+                        "email",
+                        **{
+                            "type": "string",
+                            "label": I18N("E-Mail"),
+                            "value": email,
+                            "validators": ["IS_EMAIL"],
+                            "_class": "p-col w1p100"
+                        }
+                    ),
+                    _class="p-row change_account_inputs_container"
+                ),
+                _class="p-col w1p100"
+            ),
+
+            _class="phanterpwa-change_account-form-inputs p-row"
+        ).jquery()
+        if self.auth_user is not None and self.auth_user is not js_undefined:
+            tcontent.addClass("has_auth_user")
+
+        tfooter = DIV(
+            DIV(
+                forms.SubmitButton(
+                    "change_account",
+                    I18N("Save Changes", **{"_pt-br": "Salvar Mudanças"}),
+                    _class="btn-autoresize wave_on_click waves-phanterpwa"
+                ),
+                _class='phanterpwa-form-buttons-container'
+            ),
+            _class="p-col w1p100"
+        ).jquery()
+        modal.Modal.__init__(
+            self,
+            self.element_target,
+            **{
+                "form": "change_account",
+                "header_height": 50,
+                "title": I18N("Personal Information", **{"_pt-br": "Informações Pessoais"}),
+                "content": tcontent,
+                "footer": tfooter,
+                "after_open": self.binds
+            }
+        )
+
+    def after_submit(self, data, ajax_status):
+            if ajax_status == "success":
+                json = data.responseJSON
+                message = json.i18n.message
+                window.PhanterPWA.flash(**{'html': message})
+                if data.status == 200:
+                    jQuery(".phanterpwa-gallery-upload-input-file").val('')
+                    auth_user = json.auth_user
+                    window.PhanterPWA.update_auth_user(auth_user)
+                    self.reload()
+                    self.close()
+                    if self.AuthUser is not None:
+                        self.AuthUser.AlertActivationAccount.check_activation()
+                        window.PhanterPWA.ApiServer.GET(**{
+                            'url_args': ["api", "auth", "active-account"],
+                            'onComplete': lambda: window.PhanterPWA.flash(
+                                **{'html': I18N(
+                                    "Email sent with activation code",
+                                    **{"_pt-br": "Email enviado com o código de ativação"}
+                                )}
+                            )
+                        })
+                else:
+                    forms.SignForm("#form-change_account")
+
+            else:
+                forms.SignForm("#form-change_account")
+                json = data.responseJSON
+                message = json.i18n.message
+                window.PhanterPWA.flash(**{'html': message})
+
+    def submit(self):
+        formdata = __new__(FormData(jQuery("#form-change_account")[0]))
+        window.PhanterPWA.ApiServer.PUT(**{
+            'url_args': ["api", "auth", "change"],
+            'form_data': formdata,
+            'onComplete': self.after_submit
+        })
+
+    def binds(self):
+        forms.ValidateForm("#form-change_account")
+        jQuery(
+            "#phanterpwa-widget-form-submit_button-change_account"
+        ).off(
+            "click.profile_button_save"
+        ).on(
+            "click.profile_button_save",
+            self.submit
+        )
+
+    def reload(self):
+        forms.SignForm("#form-change_account")
+        self.auth_user = window.PhanterPWA.get_last_auth_user()
+        first_name = ""
+        last_name = ""
+        email = ""
+        if self.auth_user is not None and self.auth_user is not js_undefined:
+            first_name = self.auth_user.first_name
+            last_name = self.auth_user.last_name
+            email = self.auth_user.email
+
+        jQuery("#phanterpwa-widget-input-input-profile-email").val(email)
+        jQuery("#phanterpwa-tagger-span-email").text(email)
 
 
 class ModalRegister(modal.Modal):
@@ -1294,7 +1617,8 @@ class LeftBarAuthUserLogin(left_bar.LeftBarUserMenu):
         self.addSubmenu(
             "lock",
             I18N("Lock", **{"_pt-br": "Bloquear"}),
-            _class="command_user"
+            **{"_phanterpwa-way": "lock",
+                "_class": "command_user"}
         )
 
         self.addSubmenu(
@@ -1343,6 +1667,10 @@ class LeftBarAuthUserLogin(left_bar.LeftBarUserMenu):
     def logout(self):
         window.PhanterPWA.logout()
         self.start()
+        window.PhanterPWA.logout()
+        LeftBar = window.PhanterPWA.Components['left_bar']
+        if LeftBar is not None and LeftBar is not js_undefined:
+            LeftBar.reload()
         window.PhanterPWA.Components['auth_user'].start()
 
     def start(self):
@@ -1514,16 +1842,38 @@ class LeftBarAuthUserNoLogin(left_bar.LeftBarMenu):
 
 
 class Profile(gatehandler.Handler):
+
+    @decorators.check_authorization(lambda: window.PhanterPWA.logged())
     def initialize(self):
-        self.requires_login = True
         self.auth_user = window.PhanterPWA.get_last_auth_user()
         first_name = ""
         last_name = ""
         email = ""
+        locale = "Automatic"
+        two_factor = False
+        two_factor_represent = I(_class="fas fa-times")
+        multiple_login = False
+        multiple_login_represent = I(_class="fas fa-times")
         if self.auth_user is not None and self.auth_user is not js_undefined:
             first_name = self.auth_user.first_name
             last_name = self.auth_user.last_name
             email = self.auth_user.email
+            if self.auth_user.locale is not None and self.auth_user.locale is not js_undefined: 
+                locale = self.auth_user.locale
+
+            if self.auth_user.two_factor is not None and self.auth_user.two_factor is not js_undefined: 
+                two_factor = self.auth_user.two_factor
+                if two_factor:
+                    two_factor_represent = I(_class="fas fa-check")
+
+
+            if self.auth_user.multiple_login is not None and self.auth_user.multiple_login is not js_undefined: 
+                multiple_login = self.auth_user.multiple_login
+                if multiple_login:
+                    multiple_login_represent = I(_class="fas fa-check")
+
+
+
         xml_content = CONCATENATE(
             DIV(
                 DIV(
@@ -1536,76 +1886,189 @@ class Profile(gatehandler.Handler):
             ),
             DIV(
                 DIV(
-                    FORM(
-                        DIV(
+                    XSECTION(
+                        LABEL(I18N("Personal Information", **{"_pt-br": "Informações Pessoais"})),
+                        FORM(
                             DIV(
                                 DIV(
-                                    preloaders.android,
-                                    _style="text-align:center;"
+                                    DIV(
+                                        DIV(
+                                            preloaders.android,
+                                            _style="text-align:center;"
+                                        ),
+                                        _id="profile-image-user-container",
+                                        _class='p-row'
+                                    ),
+                                    _class="p-col w1p100 l4"
                                 ),
-                                _id="profile-image-user-container",
-                                _class='p-row'
+                                DIV(
+                                    DIV(
+                                        DIV(
+                                            STRONG(I18N("First Name")),
+                                            SPAN(
+                                                first_name,
+                                                _id="phanterpwa-tagger-span-first_name"
+                                            ),
+                                            DIV(
+                                                I(_class="fas fa-pen"),
+                                                _class="e-tagger-button e-link open-model-edit-personal_information"
+                                            ),
+                                            _class="e-tagger-wrapper"
+                                        ),
+                                        _class="p-col w1p100"
+                                    ),
+                                    _class="p-row"
+                                ),
+                                DIV(
+                                    DIV(
+                                        DIV(
+                                            STRONG(I18N("Last Name")),
+                                            SPAN(
+                                                last_name,
+                                                _id="phanterpwa-tagger-span-last_name"
+                                            ),
+                                            DIV(
+                                                I(_class="fas fa-pen"),
+                                                _class="e-tagger-button e-link open-model-edit-personal_information"
+                                            ),
+                                            _class="e-tagger-wrapper"
+                                        ),
+                                        _class="p-col w1p100"
+                                    ),
+                                    _class="p-row"
+                                ),
+                                DIV(
+                                    DIV(
+                                        DIV(
+                                            STRONG(I18N("E-Mail")),
+                                            SPAN(
+                                                email,
+                                                _id="phanterpwa-tagger-span-email"
+                                            ),
+                                            DIV(
+                                                I(_class="fas fa-pen"),
+                                                _class="e-tagger-button e-link open-model-edit-change_email"
+                                            ),
+                                            _class="e-tagger-wrapper"
+                                        ),
+                                        _class="p-col w1p100"
+                                    ),
+                                    _class="p-row"
+                                ),
+                                _class="e-padding_20"
                             ),
-                            _class="p-col w1p100 l4"
-                        ),
-                        DIV(
                             DIV(
-                                forms.FormWidget(
-                                    "profile",
-                                    "first_name",
-                                    **{
-                                        "type": "string",
-                                        "label": I18N("First Name"),
-                                        "value": first_name,
-                                        "validators": ["IS_NOT_EMPTY"],
-                                        "_class": "p-col w1p100 w3p50"
-                                    },
+                                DIV(
+                                    DIV(
+                                        forms.FormWidget(
+                                            "profile",
+                                            "first_name",
+                                            **{
+                                                "type": "string",
+                                                "label": I18N("First Name"),
+                                                "value": first_name,
+                                                "validators": ["IS_NOT_EMPTY"],
+                                                "_class": "p-col w1p100 w3p50"
+                                            },
+                                        ),
+                                        forms.FormWidget(
+                                            "profile",
+                                            "last_name",
+                                            **{
+                                                "type": "string",
+                                                "label": I18N("Last Name"),
+                                                "value": last_name,
+                                                "validators": ["IS_NOT_EMPTY"],
+                                                "_class": "p-col w1p100 w3p50"
+                                            },
+                                        ),
+                                        forms.FormWidget(
+                                            "profile",
+                                            "email",
+                                            **{
+                                                "type": "string",
+                                                "label": I18N("E-Mail"),
+                                                "value": email,
+                                                "validators": ["IS_EMAIL"],
+                                                "_class": "p-col w1p100"
+                                            }
+                                        ),
+                                        _class="p-row profile_inputs_container"
+                                    ),
+
+                                    _class="p-col w1p100"
                                 ),
-                                forms.FormWidget(
-                                    "profile",
-                                    "last_name",
-                                    **{
-                                        "type": "string",
-                                        "label": I18N("Last Name"),
-                                        "value": last_name,
-                                        "validators": ["IS_NOT_EMPTY"],
-                                        "_class": "p-col w1p100 w3p50"
-                                    },
-                                ),
-                                forms.FormWidget(
-                                    "profile",
-                                    "email",
-                                    **{
-                                        "type": "string",
-                                        "label": I18N("E-Mail"),
-                                        "value": email,
-                                        "validators": ["IS_EMAIL"],
-                                        "_class": "p-col w1p100"
-                                    }
-                                ),
-                                _class="p-row profile_inputs_container"
+                                _class="e-padding_20 e-hidden"
                             ),
-                            DIV(
-                                forms.SubmitButton(
-                                    "profile",
-                                    I18N("Save Changes", **{"_pt-br": "Salvar Mudanças"}),
-                                    _class="btn-autoresize wave_on_click waves-phanterpwa"
-                                ),
-                                forms.FormButton(
-                                    "change_password",
-                                    I18N("Change Password", **{"_pt-br": "Mudar Senha"}),
-                                    _class="btn-autoresize wave_on_click waves-phanterpwa"
-                                ),
-                                _class='phanterpwa-form-buttons-container'
-                            ),
-                            _class="p-col w1p100"
+                            **{
+                                "_phanterpwa-form": "profile",
+                                "_id": "form-profile",
+                                "_class": "p-row",
+                                "_autocomplete": "off"
+                            }
                         ),
-                        **{
-                            "_phanterpwa-form": "profile",
-                            "_id": "form-profile",
-                            "_class": "p-row",
-                            "_autocomplete": "off"
-                        }
+                    ),
+                    XSECTION(
+                        LABEL(I18N("Segurity", **{"_pt-br": "Segurança"})),
+                        FORM(
+                            DIV(
+                                DIV(
+                                    DIV(
+                                        DIV(
+                                            STRONG(I18N("Two-step authentication")),
+                                            SPAN(
+                                                two_factor_represent,
+                                                _id="phanterpwa-tagger-span-two_factor"
+                                            ),
+                                            DIV(
+                                                I(_class="fas fa-pen"),
+                                                _class="e-tagger-button e-link open-model-edit-security"
+                                            ),
+                                            _class="e-tagger-wrapper"
+                                        ),
+                                        _class="p-col w1p100"
+                                    ),
+                                    _class="p-row"
+                                ),
+                                DIV(
+                                    DIV(
+                                        DIV(
+                                            STRONG(I18N("Multiple logins")),
+                                            SPAN(
+                                                multiple_login_represent,
+                                                _id="phanterpwa-tagger-span-multiple_login"
+                                            ),
+                                            DIV(
+                                                I(_class="fas fa-pen"),
+                                                _class="e-tagger-button e-link open-model-edit-security"
+                                            ),
+                                            _class="e-tagger-wrapper"
+                                        ),
+                                        _class="p-col w1p100"
+                                    ),
+                                    DIV(
+                                        HR(),
+                                        H2(I18N("Active sessions")),
+                                        DIV(
+                                            DIV(
+                                                preloaders.android,
+                                                _style="text-align:center; overflow: hidden;"
+                                            ),
+                                            _id="active_sessions_wrapper"
+                                        ),
+                                         _class="p-col w1p100"
+                                    ),
+                                    _class="p-row"
+                                ),
+                                _class="e-padding_20"
+                            ),
+                            **{
+                                "_phanterpwa-form": "security",
+                                "_id": "form-security",
+                                "_class": "p-row",
+                                "_autocomplete": "off"
+                            }
+                        ),
                     ),
                     _class='e-margin_bottom_20 phanterpwa-card-container e-padding_20 card'
                 ),
@@ -1613,8 +2076,10 @@ class Profile(gatehandler.Handler):
             )
         )
         xml_content.html_to("#main-container")
+
+
         self.reload()
-        self.binds()
+        self.get_active_sessions()
 
     def after_submit(self, data, ajax_status):
             if ajax_status == "success":
@@ -1633,6 +2098,80 @@ class Profile(gatehandler.Handler):
                 message = json.i18n.message
                 window.PhanterPWA.flash(**{'html': message})
 
+    def get_active_sessions(self):
+        window.PhanterPWA.ApiServer.GET(**{
+            'url_args': ["api", "auth"],
+            'onComplete': self._active_sessions_xml
+        })
+
+    def _active_sessions_xml(self, data, ajax_status):
+        if ajax_status == "success":
+            json = data.responseJSON
+            if json.sessions is not None and json.sessions is not js_undefined:
+                MyTable = Table(
+                    "session_table"
+                )
+                cont = 0
+                for x in json.sessions:
+                    console.log(x)
+                    cont += 1
+                    date_created = __new__(Date(x["date_created"]))
+                    date_created = date_created.toLocaleDateString(
+                        window.PhanterPWA.I18N.load_storage(), {
+                            "year": "numeric",
+                            "month": "2-digit",
+                            "day": "numeric"
+                        }
+                    )
+                    identify = x["identify"]
+                    if x["this_session"]:
+                        agent = STRONG(x["agent"])
+                        date_created = STRONG(date_created)
+                        remote_addr = STRONG(x["remote_addr"])
+                        this_session = DIV(
+                            STRONG(I18N("This Session", **{"_pt-br": "Esta sessão"})),
+                            _class="btn",
+                            **{"_data-session_id": identify, "_disabled": "disabled"}
+                        )
+
+                    else:
+                        agent = x["agent"]
+                        date_created = date_created
+                        remote_addr = x["remote_addr"]
+                        this_session = DIV(
+                            I18N("Cancel", **{"_pt-br": "Cancelar"}),
+                            _class="phanterpwa_cancel_session e-link btn wave_on_click",
+                            **{"_data-session_id": identify}
+                        )
+                    MyTable.append(
+                        TableData(
+                            "data_{0}".format(cont),
+                            agent, date_created, remote_addr, this_session, drag_and_drop=False)
+                    )
+                MyTable.html_to("#active_sessions_wrapper")
+                jQuery(
+                    ".phanterpwa_cancel_session"
+                ).off(
+                    "click.cancel_session"
+                ).on(
+                    "click.cancel_session",
+                    lambda: self.delete_session(jQuery(this).attr("data-session_id"))
+                )
+
+    def _after_delete_session(self, data, ajax_status):
+        json = data.responseJSON
+        if ajax_status == "success":
+            self._active_sessions_xml(data, ajax_status)
+        window.PhanterPWA.flash(**{'html': json.i18n.message})
+
+
+    def delete_session(self, identify):
+        window.PhanterPWA.ApiServer.DELETE(**{
+            'url_args': ["api", "auth", identify],
+            'onComplete': self._after_delete_session
+        })        
+
+
     def submit(self):
         formdata = __new__(FormData(jQuery("#form-profile")[0]))
         window.PhanterPWA.ApiServer.PUT(**{
@@ -1643,25 +2182,6 @@ class Profile(gatehandler.Handler):
 
     def open_modal_change_password(self):
         window.PhanterPWA.Components['auth_user'].modal_change_password()
-
-    def binds(self):
-        forms.ValidateForm("#form-profile")
-        jQuery(
-            "#phanterpwa-widget-form-submit_button-profile"
-        ).off(
-            "click.profile_button_save"
-        ).on(
-            "click.profile_button_save",
-            self.submit
-        )
-        jQuery(
-            "#phanterpwa-widget-form-form_button-change_password"
-        ).off(
-            "click.profile_button_change_password"
-        ).on(
-            "click.profile_button_change_password",
-            self.open_modal_change_password
-        )
 
     def reload(self):
         forms.SignForm("#form-profile")
@@ -1676,16 +2196,53 @@ class Profile(gatehandler.Handler):
             email = self.auth_user.email
 
         self.GalleryInput = gallery.GalleryInput(
-            "#profile-image-user-container", **{"cutter": True, "current_image": user_image})
+            "#profile-image-user-container", **{
+                "cutter": True,
+                "current_image":user_image,
+                "afterCut": lambda: self.submit()
+            }
+        )
         if not jQuery("#phanterpwa-component-left_bar-url-imagem-user").lenght == 0:
             jQuery("#phanterpwa-component-left_bar-url-imagem-user").attr(
                 "src", user_image)
         jQuery("#url_image_user").attr("src", user_image)
         jQuery("#phanterpwa-component-left_bar-url-imagem-user").attr(
             "src", user_image)
-        jQuery("#phanterpwa-widget-input-profile-first_name").val(first_name)
-        jQuery("#phanterpwa-widget-input-profile-last_name").val(last_name)
-        jQuery("#phanterpwa-widget-input-profile-email").val(email).trigger("keyup")
+        jQuery("#phanterpwa-widget-input-input-profile-first_name").val(first_name)
+        jQuery("#phanterpwa-widget-input-input-profile-last_name").val(last_name)
+        jQuery("#phanterpwa-widget-input-input-profile-email").val(email).trigger("keyup")
+        jQuery(
+            ".open-model-edit-personal_information"
+        ).off(
+            "click.open-model-edit-personal_information"
+        ).on(
+            "click.open-model-edit-personal_information",
+            lambda: self.modal_personal_information()
+        )
+        jQuery(
+            ".open-model-edit-change_email"
+        ).off(
+            "click.open-model-edit-change_email"
+        ).on(
+            "click.open-model-edit-change_email",
+            lambda: self.modal_change_email()
+        )
+
+    def modal_personal_information(self):
+        self.Modal = ModalPersonalInformation(
+            "#modal-container"
+        )
+        self.Modal.open()
+        forms.SignForm("#form-change_account")
+        forms.ValidateForm("#form-change_account")
+
+    def modal_change_email(self):
+        self.Modal = ModalChangeEmail(
+            "#modal-container"
+        )
+        self.Modal.open()
+        forms.SignForm("#form-change_account")
+        forms.ValidateForm("#form-change_account")
 
 
 class Lock(gatehandler.Handler):
@@ -1769,15 +2326,15 @@ class Lock(gatehandler.Handler):
             jQuery("#form-lock #phanterpwa-widget-input-input-lock-csrf_token").val()
         )
         login_password = "{0}:{1}".format(
-            window.btoa(jQuery("#form-lock #phanterpwa-widget-input-lock-email").val()),
-            window.btoa(jQuery("#form-lock #phanterpwa-widget-input-lock-password").val())
+            window.btoa(jQuery("#form-lock #phanterpwa-widget-input-input-lock-email").val()),
+            window.btoa(jQuery("#form-lock #phanterpwa-widget-input-input-lock-password").val())
         )
-        formdata.append("authorization", login_password)
+        formdata.append("edata", login_password)
         remember_me = False
-        if jQuery("#form-lock #phanterpwa-widget-input-lock-remember_me").prop("checked"):
+        if jQuery("#form-lock #phanterpwa-widget-checkbox-input-lock-remember_me").prop("checked"):
             remember_me = True
         formdata.append(
-            jQuery("#form-lock #phanterpwa-widget-input-lock-remember_me").attr("name"),
+            jQuery("#form-lock #phanterpwa-widget-checkbox-input-lock-remember_me").attr("name"),
             remember_me
         )
         window.PhanterPWA.ApiServer.POST(**{
@@ -1808,6 +2365,15 @@ class Lock(gatehandler.Handler):
     def after_confirm_lock(self, data, ajax_status):
         if ajax_status == "success":
             html = CONCATENATE(
+                DIV(
+                    DIV(
+                        DIV(
+                            DIV(I18N("Locked", **{"_pt-br": "Bloqueado"}), _class="phanterpwa-breadcrumb"),
+                            _class="phanterpwa-breadcrumb-wrapper"
+                        ),
+                        _class="container"),
+                    _class='title_page_container card'
+                ),
                 DIV(
                     DIV(
                         DIV(
@@ -1916,9 +2482,10 @@ class Lock(gatehandler.Handler):
             jQuery("body").addClass("phanterpwa-lock")
             # jQuery("#main-container").html(html.jquery())
             html.html_to("#main-container")
-            jQuery("#form-lock #phanterpwa-widget-input-lock-email").val(self.last_auth_user.email)
+            jQuery("#form-lock #phanterpwa-widget-input-input-lock-email").val(self.last_auth_user.email)
             if self.last_auth_user.remember_me:
-                jQuery("#form-lock #phanterpwa-widget-input-lock-remember_me").attr("checked", "checked")
+                # jQuery("#form-lock #phanterpwa-widget-checkbox-input-lock-remember_me").attr("checked", "checked").val(True)
+                PhanterPWA.Request.widgets["lock-remember_me"].set_value(True)
             jQuery(
                 "#form-lock-profile-user-name"
             ).text(

@@ -12,7 +12,8 @@ from phanterpwa.tools import (
     config
 )
 from phanterpwa.compiler import Compiler
-from phanterpwa.interface.graphic import start
+#from phanterpwa.interface.graphic import start
+from phanterpwa.interface.admin_tk import start
 from phanterpwa.interface.cli import Cli
 CURRENT_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__)))
 CWD = os.path.join(CURRENT_DIR, "interface")

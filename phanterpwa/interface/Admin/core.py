@@ -7,19 +7,19 @@ _current_dir = os.path.dirname(__file__)
 projectConfig = ProjectConfig(os.path.join(_current_dir, "config.json"))
 _debug = projectConfig['PROJECT']['debug']
 _project_name = projectConfig['PROJECT']['name']
-for app in projectConfig["FRONTEND"].keys():
-    Translator_apps = Translator(os.path.join(_current_dir, "frontend", app, "languages"), identifier="{0}-{1}".format(
-        _project_name, app), debug=_debug)
-    Translator_apps.add_language("pt-BR")
-Translator_email = Translator(os.path.join(_current_dir, "api", "languages", "email"), identifier="{0}-email".format(
-    _project_name), debug=_debug)
-Translator_email.add_language("pt-BR")
-Translator_captcha = Translator(os.path.join(_current_dir, "api", "languages", "captcha"), identifier="{0}-captcha".format(
-    _project_name), debug=_debug)
-Translator_captcha.add_language("pt-BR")
-Translator_api = Translator(os.path.join(_current_dir, "api", "languages"), identifier="{0}-api".format(
-    _project_name), debug=_debug)
-Translator_api.add_language("pt-BR")
+# for app in projectConfig['FRONTEND'].keys():
+#     Translator_apps = Translator(os.path.join(_current_dir, "frontapps", app, "languages"), identifier="{0}-{1}".format(
+#         _project_name, app), debug=_debug)
+#     Translator_apps.add_language("pt-BR")
+# Translator_email = Translator(os.path.join(_current_dir, "api", "languages", "email"), identifier="{0}-email".format(
+#     _project_name), debug=_debug)
+# Translator_email.add_language("pt-BR")
+# Translator_captcha = Translator(os.path.join(_current_dir, "api", "languages", "captcha"), identifier="{0}-captcha".format(
+#     _project_name), debug=_debug)
+# Translator_captcha.add_language("pt-BR")
+# Translator_api = Translator(os.path.join(_current_dir, "api", "languages"), identifier="{0}-api".format(
+#     _project_name), debug=_debug)
+# Translator_api.add_language("pt-BR")
 formatter = logging.Formatter(
     '%(asctime)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'

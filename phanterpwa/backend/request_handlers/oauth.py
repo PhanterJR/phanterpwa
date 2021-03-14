@@ -61,7 +61,9 @@ class Prompt(web.RequestHandler):
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         self.set_header('Access-Control-Allow-Methods', 'GET, OPTIONS, POST')
         self.phanterpwa_user_agent = str(self.request.headers.get('User-Agent'))
-        self.phanterpwa_remote_ip = str(self.request.remote_ip)
+        self.phanterpwa_remote_ip = self.request.headers.get("X-Real-IP") or \
+            self.request.headers.get("X-Forwarded-For") or \
+            self.request.remote_ip
         self.phanterpwa_origin = self.request.headers.get('Origin')
 
     def check_origin(self, origin):
@@ -170,7 +172,9 @@ class Redirect(web.RequestHandler):
         self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         self.set_header('Access-Control-Allow-Methods', 'GET, OPTIONS, POST')
         self.phanterpwa_user_agent = str(self.request.headers.get('User-Agent'))
-        self.phanterpwa_remote_ip = str(self.request.remote_ip)
+        self.phanterpwa_remote_ip = self.request.headers.get("X-Real-IP") or \
+            self.request.headers.get("X-Forwarded-For") or \
+            self.request.remote_ip
         self.phanterpwa_origin = self.request.headers.get('Origin')
 
     def check_origin(self, origin):
@@ -334,7 +338,7 @@ class Redirect(web.RequestHandler):
                             user_image = PhanterpwaGalleryUserImage(q_user.id, self.DALDatabase, self.projectConfig)
                             social_image = googleapi_user.get("picture", None)
 
-                            redirect = "{0}?{1}".format(
+                            redirect = "#_phanterpwa:/{0}?{1}".format(
                                 origin if origin else "",
                                 urlencode({
                                     'authorization': token_user,
@@ -443,7 +447,7 @@ class Redirect(web.RequestHandler):
                             self.set_status(201)
                             roles = ["user"]
                             role = "user"
-                            redirect = "{0}?{1}".format(
+                            redirect = "#_phanterpwa:/{0}?{1}".format(
                                 origin if origin else "",
                                 urlencode({
                                     'authorization': token_user,
@@ -598,7 +602,7 @@ class Redirect(web.RequestHandler):
                             self.DALDatabase.commit()
                             user_image = PhanterpwaGalleryUserImage(q_user.id, self.DALDatabase, self.projectConfig)
 
-                            redirect = "{0}?{1}".format(
+                            redirect = "#_phanterpwa:/{0}?{1}".format(
                                 origin if origin else "",
                                 urlencode({
                                     'authorization': token_user,
@@ -707,7 +711,7 @@ class Redirect(web.RequestHandler):
                             self.set_status(201)
                             roles = ["user"]
                             role = "user"
-                            redirect = "{0}?{1}".format(
+                            redirect = "#_phanterpwa:/{0}?{1}".format(
                                 origin if origin else "",
                                 urlencode({
                                     'authorization': token_user,
@@ -731,6 +735,7 @@ class Redirect(web.RequestHandler):
                             self.write(
                                 str(HTML(HEAD(), BODY(SCRIPT("window.location = '{0}'".format(redirect))))))
 
+            
         message = "An error occurred while trying to authenticate."
         self.set_status(400)
         return self.write({

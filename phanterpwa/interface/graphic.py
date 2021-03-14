@@ -151,7 +151,7 @@ def list_installed_apps(path_project):
             j = json.load(f)
         if j and j["FRONTEND"]:
             change = False
-            for p in glob(os.path.join(j['PROJECT']['path'], "frontend", "*")):
+            for p in glob(os.path.join(j['PROJECT']['path'], "frontapps", "*")):
                 app_name = os.path.split(p)[-1]
                 if all([os.path.isdir(p),
                         os.path.isdir(os.path.join(p, "sources", "styles")),
@@ -174,7 +174,7 @@ def list_installed_apps(path_project):
                 with open(cfg, 'w', encoding='utf-8') as fw:
                     json.dump(j, fw, ensure_ascii=False, indent=2)
     if not apps:
-        print("Don't find installed apps on {0}".format(os.path.join(path_project, "frontend")))
+        print("Don't find installed apps on {0}".format(os.path.join(path_project, "frontapps")))
     return apps
 
 
@@ -808,7 +808,7 @@ class ProjectPWA():
 
                         I_name.grid(column=0, row=row, padx=(30, 5), pady=(2, 2), sticky='e')
                         t_name = ttk.Entry(frame)
-                        t_name.insert(0, os.path.join(project_path_data, "frontend", i))
+                        t_name.insert(0, os.path.join(project_path_data, "frontapps", i))
                         t_name.config(state="readonly")
                         t_name.grid(column=1, row=row, columnspan=4, padx=(0, 0), pady=(2, 2), sticky='ew')
                         bapp_name = ttk.Button(

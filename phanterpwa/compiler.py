@@ -6,6 +6,8 @@ import importlib
 import shutil
 import subprocess
 import phanterpwa
+import time
+import datetime
 import re
 import traceback
 from pathlib import PurePath
@@ -70,7 +72,7 @@ class Compiler():
     def _check_app_list(self):
 
         for app in list(self.config['FRONTEND'].keys()):
-            if not isdir(join(self.projectpath, "frontend", app)):
+            if not isdir(join(self.projectpath, "frontapps", app)):
                 del self.config['FRONTEND'][app]
 
     @property
@@ -165,7 +167,13 @@ class Compiler():
         main_file = join(PATH_PHANTERPWA, "usual_sass", "phanterpwa.sass")
         if exists(join(dirname(main_file), "_compiler_sass_temp_file.sass")):
             os.unlink(join(dirname(main_file), "_compiler_sass_temp_file.sass"))
-        target_css = join(self.projectpath, "frontend", app, "statics", "css", "phanterpwa.css")
+        target_dir = join(self.projectpath, "frontapps", app, "statics", "css")
+        if not isdir(target_dir):
+            try:
+                os.makedirs(target_dir, exist_ok=True)
+            except OSError as e:
+                raise e("Problem on create folder '{0}'.".format(target_dir))
+        target_css = join(target_dir, "phanterpwa.css")
         sfiles = self.get_files_dir(
             join(PATH_PHANTERPWA, "usual_sass"), ignore_files=["__init__.py"], ignore_paths=["__pycache__"])
         sass_files = (normpath(x) for x in sfiles if x.endswith(".sass"))
@@ -309,18 +317,19 @@ class Compiler():
             return join(self.config["FRONTEND"][app]["build_folder"], "static", self.version, "js", "transcrypt")
 
     def path_templates_folder(self, app):
-        return join(self.projectpath, "frontend", app, "sources", "templates")
+        return join(self.projectpath, "frontapps", app, "sources", "templates")
 
     def path_styles_folder(self, app):
-        return join(self.projectpath, "frontend", app, "sources", "styles")
+        return join(self.projectpath, "frontapps", app, "sources", "styles")
 
     def path_transcrypts_folder(self, app):
-        return join(self.projectpath, "frontend", app, "sources", "transcrypts")
+        return join(self.projectpath, "frontapps", app, "sources", "transcrypts")
 
     def path_statics_folder(self, app):
-        return join(self.projectpath, "frontend", app, "statics")
+        return join(self.projectpath, "frontapps", app, "statics")
 
     def path_app_config_file(self, app):
+        os.makedirs(join(self.path_transcrypts_folder(app), "auto"), exist_ok=True)
         return join(self.path_transcrypts_folder(app), "auto", "config.py")
 
     def target_template_file_by_source(self, src, app) -> str:
@@ -431,12 +440,15 @@ class Compiler():
                             return True
                     else:
                         return True
+                for x in content:
+                    if not isfile(x):
+                        return True
         else:
             return True
         return False
 
     def modules_files_monitor(self):
-        t = join(dirname(phanterpwa.__file__), "frontend")
+        t = join(dirname(phanterpwa.__file__), "frontapps")
         lfi = self.get_files_dir(t, ignore_files=["__init__.py"], ignore_paths=["__pycache__"])
         return [x for x in lfi] + [
             join(dirname(phanterpwa.__file__), "xmlconstructor.py"),
@@ -538,7 +550,7 @@ class Compiler():
         print("\nCopying languages...")
         appConfig = self.config
         version = appConfig['PROJECT']['version']
-        apps_list_basedir = join(appConfig['PROJECT']['path'], "frontend")
+        apps_list_basedir = join(appConfig['PROJECT']['path'], "frontapps")
         source_apps = join(
             apps_list_basedir,
             "languages"
@@ -664,7 +676,7 @@ class Compiler():
         appConfig = self.config
         sys.path.append(project_path)
         os.chdir(project_path)
-        base_dir = join(appConfig['PROJECT']['path'], "frontend", app)
+        base_dir = join(appConfig['PROJECT']['path'], "frontapps", app)
 
         def _compile_html(file, base="", target=None, is_apps=False, app_name="", ignore=["__init__.py"]):
 
@@ -712,7 +724,7 @@ class Compiler():
         if self._templates_to_update[app]:
             _compile_htmls(
                 join(base_dir, "sources", "templates"),
-                "frontend.{0}.sources.templates".format(app),
+                "frontapps.{0}.sources.templates".format(app),
                 target=target_apps,
                 is_apps=True,
                 app_name=app
@@ -725,32 +737,37 @@ class Compiler():
         print("\nProcess scrypts...")
         appConfig = self.config
         changed = self._check_script_change(app)
-        if changed or self.full_compilation:
-            python_env = appConfig['ENVIRONMENT']['python']
-            folder_script_apps_list = self.path_build_transcrypt_folder(app)
-            os.makedirs(
-                join(
-                    folder_script_apps_list), exist_ok=True)
-            source = join(self.path_transcrypts_folder(app), "__target__")
-            files_trans = []
-            for t in glob(join(self.path_transcrypts_folder(app), "*.py")):
-                if not basename(t).startswith("_"):
-                    files_trans.append(t)
-            for main_file in files_trans:
-                print("    Convert python to javascript: {0}".format(main_file))
-                print("    Starting Transcrypt compiler. Wait to complete.")
-                if self.minify:
-                    print("    For minification it's necessary to have java installed, if compilation fail,",
-                        " the compilation will try transcrypt on unminify format.")
-                    try:
-                        subprocess.run("{0} -X utf8 -m transcrypt {1}".format(python_env, main_file), shell=True)
-                    except Exception as e:
-                        print("    Minification Fail!!! It's try unminify mode now, it's fast.",
-                            " Check java instalation. Error:", e)
-                        subprocess.run("{0} -X utf8 -m transcrypt {1} -n".format(python_env, main_file), shell=True)
-                else:
-                    subprocess.run("{0} -X utf8 -m transcrypt {1} -n -m".format(python_env, main_file), shell=True)
+        if not (changed or self.full_compilation):
+            print("    Local files no changed...")
+        python_env = appConfig['ENVIRONMENT']['python']
+        folder_script_apps_list = self.path_build_transcrypt_folder(app)
+        os.makedirs(
+            join(
+                folder_script_apps_list), exist_ok=True)
+        source = join(self.path_transcrypts_folder(app), "__target__")
+        files_trans = []
+        for t in glob(join(self.path_transcrypts_folder(app), "*.py")):
+            if not basename(t).startswith("_"):
+                files_trans.append(t)
+        for main_file in files_trans:
+            now = datetime.datetime.now()
+            mdtime = time.mktime(now.timetuple())
+            os.utime(main_file, (mdtime, mdtime))
+            print("    Convert python to javascript: {0}".format(main_file))
+            print("    Starting Transcrypt compiler. Wait to complete.")
+            if self.minify:
+                print("    For minification it's necessary to have java installed, if compilation fail,",
+                    " the compilation will try transcrypt on unminify format.")
+                try:
+                    subprocess.run("{0} -X utf8 -m transcrypt {1}".format(python_env, main_file), shell=True)
+                except Exception as e:
+                    print("    Minification Fail!!! It's try unminify mode now, it's fast.",
+                        " Check java instalation. Error:", e)
+                    subprocess.run("{0} -X utf8 -m transcrypt {1} -n".format(python_env, main_file), shell=True)
+            else:
+                subprocess.run("{0} -X utf8 -m transcrypt {1} -n -m".format(python_env, main_file), shell=True)
             list_all = glob(join(source, "*"))
+            print("Coping scripts from __target__ to {0}\n".format(folder_script_apps_list))
             for y in list_all:
                 if isfile(y):
                     script_file = join(
@@ -768,10 +785,8 @@ class Compiler():
                                 with open(script_file, "w", encoding="utf-8") as f:
                                     f.write("".join(lines_script[0:-1]))
 
-            print("Finish!!!\n\n\n")
-        else:
-            print("    Skiping scripts...")
-            pass
+        print("Finish!!!\n\n\n")
+
 
     def transcrypts_config(self, app=None):
         if app:
@@ -821,7 +836,7 @@ class Compiler():
             "# file for this.",
             "#\n\n",
         ])
-        i18n_files = join(self.projectpath, "frontend", "languages")
+        i18n_files = join(self.projectpath, "frontapps", "languages")
         files = glob(join(i18n_files, "*.json"))
         i18n_languages = {}
         for x in files:
@@ -917,7 +932,7 @@ class Compiler():
                     "phanterpwa_modules_mtime.json"), "w", encoding="utf-8") as f:
                 json.dump(content, f, ensure_ascii=True, indent=2)
 
-    def compile_by_step(self, app=None, force_complete_compilation=False, minify=False):
+    def compile_by_step(self, app=None, full_compilation=False, minify=False):
         app_list = self.app_list
         if app:
             app_list = [app]
@@ -929,24 +944,23 @@ class Compiler():
             except Exception as e:
                 yield [msg, False, traceback.format_tb(e.__traceback__)]
             current_debug = self.config["PROJECT"]["debug"]
+            self.minify = self.config['PROJECT'].get("minify", False)
             if current_debug:
-                self.minify = False
                 self.full_compilation = False
             else:
-                self.minify = True
                 self.full_compilation = True
             self._check_phanterpwa_modules()
-            if force_complete_compilation:
-                self.full_compilation = True
-            if minify is True:
-                self.minify = True
+            if full_compilation is not None:
+                self.full_compilation = bool(full_compilation)
+            if minify is not None:
+                self.minify = bool(minify)
             msg = "Delete compiled app folder"
             try:
                 self.delete_compiled_app_folder(app)
                 yield [msg, True, "Pass"]
             except Exception as e:
                 yield [msg, True, "".join(traceback.format_tb(e.__traceback__))]
-            if current_debug or not exists(join(self.projectpath, "frontend", app, "statics", "css", "phanterpwa.css")):
+            if current_debug or not exists(join(self.projectpath, "frontapps", app, "statics", "css", "phanterpwa.css")):
                 msg = "Creating phanterpwa.css"
                 try:
                     self.phanterpwa_usual_sass(app)
@@ -986,7 +1000,7 @@ class Compiler():
                 yield [msg, True, "".join(traceback.format_tb(e.__traceback__))]
         self._save_mtimes()
 
-    def compile(self, app=None, force_complete_compilation=False, minify=False):
+    def compile(self, app=None, full_compilation=None, minify=None):
         app_list = self.app_list
         if app:
             app_list = [app]
@@ -994,19 +1008,18 @@ class Compiler():
             self.transcrypts_config(app)
             print("\n============ APP COMPILATION: {0} ==============".format(app))
             current_debug = self.config["PROJECT"]["debug"]
+            self.minify = self.config["PROJECT"].get("minify", False)
             if current_debug:
-                self.minify = False
                 self.full_compilation = False
             else:
-                self.minify = True
                 self.full_compilation = True
             self._check_phanterpwa_modules()
-            if force_complete_compilation:
-                self.full_compilation = True
-            if minify is True:
-                self.minify = True
+            if full_compilation is not None:
+                self.full_compilation = bool(full_compilation)
+            if minify is not None:
+                self.minify = bool(minify)
             self.delete_compiled_app_folder(app)
-            if current_debug or not exists(join(self.projectpath, "frontend", app, "statics", "css", "phanterpwa.css")):
+            if current_debug or not exists(join(self.projectpath, "frontapps", app, "statics", "css", "phanterpwa.css")):
                 self.phanterpwa_usual_sass(app)
             self.copy_statics(app)
             self.copy_languages(app)

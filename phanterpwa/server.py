@@ -7,7 +7,8 @@ import psutil
 from tornado import (
     web,
     ioloop,
-    httpserver
+    httpserver,
+    autoreload
 )
 from phanterpwa import compiler
 from phanterpwa import configer
@@ -24,7 +25,7 @@ class PhanterPWATornado(object):
         self.projectConfig = configer.ProjectConfig(os.path.join(self.projectPath, "config.json"))
         self.apps_ports = []
         if self.projectConfig.get("FRONTEND") and \
-            os.path.exists(os.path.join(self.projectConfig['PROJECT']['path'], "frontend")):
+            os.path.exists(os.path.join(self.projectConfig['PROJECT']['path'], "frontapps")):
             for x in self.projectConfig['FRONTEND']:
                 current_port = self.projectConfig['FRONTEND'][x]['port']
                 if current_port not in self.apps_ports:
@@ -33,7 +34,7 @@ class PhanterPWATornado(object):
                     raise ValueError("The '{0}' frontend app port ({1}) is not valid".format(x, current_port))
 
         if self.projectConfig.get("BACKEND") and \
-            os.path.exists(os.path.join(self.projectConfig['PROJECT']['path'], "backend")):
+            os.path.exists(os.path.join(self.projectConfig['PROJECT']['path'], "backapps")):
             for x in self.projectConfig['BACKEND']:
                 current_port = self.projectConfig['BACKEND'][x]['port']
                 if current_port not in self.apps_ports:
@@ -68,7 +69,7 @@ class PhanterPWATornado(object):
         if self.apps_ports:
             for x in self.projectConfig['BACKEND']:
                 current_port = self.projectConfig['BACKEND'][x]['port']
-                handlers_app = importlib.import_module("backend.{0}.handlers".format(x))
+                handlers_app = importlib.import_module("backapps.{0}.handlers".format(x))
                 if isinstance(handlers_app.HANDLER, (list, tuple)):
                     app = web.Application(
                         handlers_app.HANDLER,
@@ -83,7 +84,7 @@ class PhanterPWATornado(object):
 
             for x in self.projectConfig['FRONTEND']:
                 current_port = self.projectConfig['FRONTEND'][x]['port']
-                handlers_app = importlib.import_module("frontend.{0}.handlers".format(x))
+                handlers_app = importlib.import_module("frontapps.{0}.handlers".format(x))
                 if isinstance(handlers_app.HANDLER, (list, tuple)):
                     app = web.Application(
                         handlers_app.HANDLER,
@@ -95,7 +96,7 @@ class PhanterPWATornado(object):
                     app = handlers_app.HANDLER
                     app_http_server = httpserver.HTTPServer(app)
                     app_http_server.listen(int(current_port))
-
+        autoreload.watch(os.path.join(self.projectPath, "config.json"))
         ioloop.IOLoop.current().start()
         print("start stopped")
         ioloop.IOLoop.current().add_callback(lambda: ioloop.IOLoop.current().close(True))
@@ -131,7 +132,7 @@ class ProjectRunner():
         command = " ".join([self.env_python, "-X utf8", target])
         print()
         print("=" * 79)
-        print("Starting server....")
+        print("Starting server..........")
         cfg = configer.ProjectConfig(project_path)
         if cfg['BACKEND']:
             print('BACKEND')
@@ -139,6 +140,7 @@ class ProjectRunner():
                 print(" ", a)
                 print("    HOST:", cfg['BACKEND'][a]['host'])
                 print("    PORT:", cfg['BACKEND'][a]['port'])
+
         print()
         if cfg['FRONTEND']:
             print('FRONTEND')

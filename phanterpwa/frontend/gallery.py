@@ -574,6 +574,11 @@ class phanterpwaGalleryCutter():
         self.config["current_image"] = canvas.toDataURL()
         self.phanterpwaInput.config = self.config
         self.phanterpwaInput.simpleView(self.config["current_image"])
+        if window.PhanterPWA.DEBUG:
+            console.info("Cutting image")
+        if callable(self.config.get("afterCut")):
+            self.config["afterCut"](self)
+
 
     def movecutterZoom(self, x, zoominicial, width, height):
         self.deslocationPositionZoom = x * (-1)

@@ -23,9 +23,13 @@ from phanterpwa.tools import (
     temporary_password,
     interpolate,
     generate_activation_code,
-    check_activation_code
+    check_activation_code,
+    user_agent_parse
 )
-from phanterpwa.backend.pydal.extra_validations import PASSWORD_MATCH_WITH_HASH
+from phanterpwa.backend.pydal.extra_validations import (
+    PASSWORD_MATCH_WITH_HASH,
+    VALID_PASSWORD
+)
 from phanterpwa.i18n import browser_language
 from phanterpwa.third_parties.xss import xssescape as E
 from phanterpwa.gallery.cutter import PhanterpwaGalleryCutter
@@ -50,6 +54,209 @@ from datetime import (
 )
 
 
+def arbritary_login(app_name, projectConfig, db, email, user_agent, remote_ip, client_token):
+    _client_token = client_token
+    q_user = db(db.auth_user.email == email).select().first()
+    if q_user:
+        timeout_token_user = projectConfig['BACKEND'][app_name]['default_time_user_token_expire_remember_me']
+        t_user = Serialize(
+            projectConfig['BACKEND'][app_name]['secret_key'],
+            timeout_token_user
+        )
+        content = {
+            'id': str(q_user.id),
+            'email': email
+        }
+        token_user = t_user.dumps(content)
+        token_user = token_user.decode('utf-8')
+        q_role = db(
+            (db.auth_membership.auth_user == q_user.id) &
+            (db.auth_group.id == db.auth_membership.auth_group)
+        ).select(db.auth_group.role, orderby=db.auth_group.grade)
+        roles = [x.role for x in q_role]
+        dict_roles = {x.id: x.role for x in q_role}
+        roles_id = [x.id for x in q_role]
+        role = None
+        if roles:
+            role = roles[-1]
+        q_user.update_record(login_attempts=0)
+        t_client = Serialize(
+            projectConfig['BACKEND'][app_name]['secret_key'],
+            projectConfig['BACKEND'][app_name]['default_time_client_token_expire']
+        )
+        t_url = URLSafeSerializer(
+            projectConfig['BACKEND'][app_name]["secret_key"],
+            salt="url_secret_key"
+        )
+        r_client = db(db.client.token == _client_token).select().first()
+        if r_client:
+            r_client.delete_record()
+        id_client = db.client.insert(auth_user=q_user.id, date_created=datetime.now())
+        q_client = db(db.client.id == id_client).select().first()
+        content = {
+            'id_user': str(q_user.id),
+            'id_client': str(id_client),
+            'user_agent': user_agent,
+            'remote_addr': remote_ip
+        }
+        token_url = t_url.dumps(content)
+        token_client = t_client.dumps(content)
+        token_client = token_client.decode('utf-8')
+        q_client.update_record(
+            token=token_client,
+            date_created=datetime.now(),
+            remember_me=True,
+            locked=False,
+        )
+
+        if not q_user.permit_mult_login:
+            r_client = db(
+                (db.client.auth_user == q_user.id) &
+                (db.client.token != token_client)
+            ).select()
+            if r_client:
+                r_client = db(
+                    (db.client.auth_user == q_user.id) &
+                    (db.client.token != token_client)
+                ).delete()
+        db.commit()
+        user_image = PhanterpwaGalleryUserImage(q_user.id, db, projectConfig)
+        social_image = googleapi_user.get("picture", None)
+
+        return {
+            'authorization': token_user,
+            'client_token': token_client,
+            'url_token': token_url,
+            'auth_user': {
+                'id': str(q_user.id),
+                'first_name': E(q_user.first_name),
+                'last_name': E(q_user.last_name),
+                'email': email,
+                'remember_me': q_client.remember_me,
+                'roles': roles,
+                'role': role,
+                'dict_roles': dict_roles,
+                'roles_id': roles_id,
+                'activated': q_user.activated,
+                'image': user_image.id_image,
+                'two_factor': q_user.two_factor_login,
+                'multiple_login': q_user.permit_mult_login,
+                'locale': q_user.locale,
+                'social_login': None
+            }
+        }
+    else:
+        return None
+
+
+def arbritary_new_user(app_name, projectConfig, db, email, first_name, last_name, user_agent, remote_ip, client_token):
+    _client_token = client_token 
+    new_password = os.urandom(3).hex()
+    password_hash = pbkdf2_sha512.hash("password{0}{1}".format(
+        new_password, projectConfig['BACKEND'][app_name]['secret_key']))
+    table = db.auth_user
+    social_image = googleapi_user.get("picture", None)
+    first_name = googleapi_user.get("given_name", "")
+    last_name = googleapi_user.get("family_name", "")
+    dict_arguments = {
+        "first_name": first_name,
+        "last_name": last_name,
+        "email": email,
+        "password_hash": password_hash,
+        "activated": True
+    }
+    result = FieldsDALValidateDictArgs(
+        dict_arguments,
+        *[table[x] for x in table.fields if x in [
+            "first_name", "last_name", "email", "password_hash"]]
+    )
+    r = result.validate_and_insert(db.auth_user)
+    if r and r.id:
+        q_user = db(db.auth_user.id == r.id).select().first()
+        if r.id == 1:
+            role = "root"
+            id_role = db(db.auth_group.role == 'root').select().first()
+            if id_role:
+                db.auth_membership.insert(auth_user=1,
+                auth_group=id_role.id)
+        else:
+            role = "user"
+            db.auth_membership.insert(auth_user=r.id, auth_group=3)
+        t_user = Serialize(
+            projectConfig['BACKEND'][app_name]['secret_key'],
+            projectConfig['BACKEND'][app_name]['default_time_user_token_expire']
+        )
+        content_user = {
+            'id': str(r.id),
+            'email': dict_arguments['email']
+        }
+        token_user = t_user.dumps(content_user)
+        token_user = token_user.decode('utf-8')
+        token_client = _client_token
+        id_client = db.client.update_or_insert(auth_user=r.id)
+        t_client = Serialize(
+            projectConfig['BACKEND'][app_name]['secret_key'],
+            projectConfig['BACKEND'][app_name]['default_time_client_token_expire']
+        )
+        t_url = URLSafeSerializer(
+            projectConfig['BACKEND'][app_name]["secret_key"],
+            salt="url_secret_key"
+        )
+        content_client = {
+            'id_user': str(r.id),
+            'id_client': str(id_client),
+            'user_agent': user_agent,
+            'remote_addr': remote_ip
+        }
+        token_url = t_url.dumps(content_client)
+        token_client = t_client.dumps(content_client)
+        token_client = token_client.decode('utf-8')
+        q_client = db(db.client.id == id_client).select().first()
+        q_client.update_record(
+            token=token_client,
+            date_created=datetime.now()
+        )
+        r_client = db(db.client.token == _client_token).select().first()
+        if r_client:
+            r_client.delete_record()
+        if not q_user.permit_mult_login:
+            r_client = db(
+                (db.client.auth_user == id_user) &
+                (db.client.token != _client_token)
+            ).select()
+            if r_client:
+                r_client = db(
+                    (db.client.auth_user == id_user) &
+                    (db.client.token != _client_token)
+                ).remove()
+        db.commit()
+        user_image = PhanterpwaGalleryUserImage(r.id, db, projectConfig)
+        roles = ["user"]
+        role = "user"
+        return {
+            'authorization': token_user,
+            'client_token': token_client,
+            'url_token': token_url,
+            'auth_user': {
+                'id': str(q_user.id),
+                'first_name': E(q_user.first_name),
+                'last_name': E(q_user.last_name),
+                'email': email,
+                'remember_me': q_client.remember_me,
+                'roles': roles,
+                'role': role,
+                'dict_roles': dict_roles,
+                'roles_id': roles_id,
+                'activated': q_user.activated,
+                'image': user_image.id_image,
+                'two_factor': q_user.two_factor_login,
+                'multiple_login': q_user.permit_mult_login,
+                'locale': q_user.locale,
+                'social_login': None
+            }
+        }
+
+
 class Auth(web.RequestHandler):
     """
         url: '/api/auth/'
@@ -70,13 +277,14 @@ class Auth(web.RequestHandler):
             "Access-Control-Allow-Headers",
             "".join([
                 "phanterpwa-language,",
+                "phanterpwa-authorization,"
                 "phanterpwa-application,",
                 "phanterpwa-application-version,",
                 "phanterpwa-client-token,",
                 "cache-control"
             ])
         )
-        self.set_header('Access-Control-Allow-Methods', 'GET, OPTIONS, POST')
+        self.set_header('Access-Control-Allow-Methods', 'GET, OPTIONS, POST, DELETE')
         if self.request.headers.get("phanterpwa-language"):
             self.phanterpwa_language = self.request.headers.get("phanterpwa-language")
         else:
@@ -84,7 +292,10 @@ class Auth(web.RequestHandler):
         if self.i18nTranslator:
             self.i18nTranslator.direct_translation = self.phanterpwa_language
         self.phanterpwa_user_agent = str(self.request.headers.get('User-Agent'))
-        self.phanterpwa_remote_ip = str(self.request.remote_ip)
+        self.phanterpwa_remote_ip = self.request.headers.get("X-Real-IP") or \
+            self.request.headers.get("X-Forwarded-For") or \
+            self.request.remote_ip
+        self.phanterpwa_form_identify = None
 
     def check_origin(self, origin):
         return True
@@ -93,9 +304,68 @@ class Auth(web.RequestHandler):
         self.set_status(200)
         self.write({"status": "OK"})
 
+    @check_client_token()
+    @check_user_token()
+    def get(self, *args):
+        t_client = Serialize(
+            self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+            self.projectConfig['BACKEND'][self.app_name]['default_time_client_token_expire']
+        )
+        if self.phanterpwa_client_token:
+            db = self.DALDatabase
+            # self.phanterpwa_current_client.as_dict(datetime_to_str=True)
+            q = db(db.client.token == self.phanterpwa_client_token).select().first()
+            if q:
+                token_content_client = None
+                try:
+                    token_content_client = t_client.loads(self.phanterpwa_client_token)
+                except BadSignature:
+                    msg = 'The client have a invalid client-token, a new one has been generated.'
+                    token_content_client = None
+                except SignatureExpired:
+                    msg = 'The client have a expired client-token, a new one has been generated.'
+                    token_content_client = None
+                if token_content_client:
+                    sessions = []
+                    q_sessions = db(db.client.auth_user==self.phanterpwa_current_user.id).select(orderby=db.client.date_created)
+                    for x in q_sessions:
+                        this_session=False
+                        if x.token == self.phanterpwa_client_token:
+                            this_session=True
+                        tc = None
+                        try:
+                            tc = t_client.loads(x.token)
+                        except:
+                            tc = None
+                        user_agent = None
+                        remote_addr = None
+                        date_created = x.date_created
+                        if tc:
+                            remote_addr = tc['remote_addr']
+                            user_agent = tc['user_agent']
+                        sessions.append(
+                            dict(
+                                user_agent=user_agent,
+                                agent = user_agent_parse(user_agent),
+                                remote_addr=remote_addr,
+                                date_created=str(date_created),
+                                this_session=this_session,
+                                identify=x.id
+                            )
+                        )
+
+                    self.set_status(200)
+                    self.write({
+                        'status': 'OK',
+                        'code': 200,
+                        'message': 'Session list',
+                        "sessions": sessions
+                    })
+
+
     @check_public_csrf_token(form_identify=[
         "phanterpwa-form-login", "user_locked", "phanterpwa-form-request_password"])
-    def post(self):
+    def post(self, *args):
         self.phanterpwa_authorization = self.request.headers.get('phanterpwa-authorization')
         dict_arguments = {k: self.request.arguments.get(k)[0].decode('utf-8') for k in self.request.arguments}
 
@@ -122,8 +392,12 @@ class Auth(web.RequestHandler):
                     q_role = self.DALDatabase(
                         (self.DALDatabase.auth_membership.auth_user == q_user.id) &
                         (self.DALDatabase.auth_group.id == self.DALDatabase.auth_membership.auth_group)
-                    ).select(self.DALDatabase.auth_group.role, orderby=self.DALDatabase.auth_group.grade)
+                    ).select(
+                        self.DALDatabase.auth_group.id, self.DALDatabase.auth_group.role, orderby=self.DALDatabase.auth_group.grade
+                    )
                     roles = [x.role for x in q_role]
+                    dict_roles = {x.id: x.role for x in q_role}
+                    roles_id = [x.id for x in q_role]
                     role = None
 
                     t_url = URLSafeSerializer(
@@ -160,8 +434,13 @@ class Auth(web.RequestHandler):
                             'remember_me': q_client.remember_me,
                             'roles': roles,
                             'role': role,
+                            'dict_roles': dict_roles,
+                            'roles_id': roles_id,
                             'activated': q_user.activated,
                             'image': user_image.id_image,
+                            'two_factor': q_user.two_factor_login,
+                            'multiple_login': q_user.permit_mult_login,
+                            'locale': q_user.locale,
                             'social_login': None
                         },
                         'i18n': {
@@ -278,8 +557,12 @@ class Auth(web.RequestHandler):
                     q_role = self.DALDatabase(
                         (self.DALDatabase.auth_membership.auth_user == q_user.id) &
                         (self.DALDatabase.auth_group.id == self.DALDatabase.auth_membership.auth_group)
-                    ).select(self.DALDatabase.auth_group.role, orderby=self.DALDatabase.auth_group.grade)
+                    ).select(
+                        self.DALDatabase.auth_group.id, self.DALDatabase.auth_group.role, orderby=self.DALDatabase.auth_group.grade
+                    )
                     roles = [x.role for x in q_role]
+                    dict_roles = {x.id: x.role for x in q_role}
+                    roles_id = [x.id for x in q_role]
                     role = None
                     if roles:
                         role = roles[-1]
@@ -328,7 +611,7 @@ class Auth(web.RequestHandler):
                     self.DALDatabase.commit()
                     user_image = PhanterpwaGalleryUserImage(q_user.id, self.DALDatabase, self.projectConfig)
 
-                    if q_user.two_factor_login or two_factor:
+                    if (q_user.two_factor_login or two_factor) and not used_temporary and not self.phanterpwa_form_identify=="user_locked":
                         two_factor_serialize = URLSafeSerializer(
                             self.projectConfig['BACKEND'][self.app_name]["secret_key"],
                             salt="two_factor_url"
@@ -435,6 +718,7 @@ class Auth(web.RequestHandler):
                                 'status': 'OK',
                                 'message': message,
                                 'client_token': token_client,
+                                'as': self.phanterpwa_form_identify,
                                 'auth_user': {
                                     'remember_me': q_client.remember_me
                                 },
@@ -462,8 +746,13 @@ class Auth(web.RequestHandler):
                                 'remember_me': q_client.remember_me,
                                 'roles': roles,
                                 'role': role,
+                                'dict_roles': dict_roles,
+                                'roles_id': roles_id,
                                 'activated': q_user.activated,
                                 'image': user_image.id_image,
+                                'two_factor': q_user.two_factor_login,
+                                'multiple_login': q_user.permit_mult_login,
+                                'locale': q_user.locale,
                                 'social_login': None
                             },
                             'i18n': {
@@ -513,11 +802,76 @@ class Auth(web.RequestHandler):
             'status': 'Bad Request',
             'code': 400,
             'message': 'Invalid password or email',
-            'as': self.phanterpwa_authorization,
+            'as': dict_arguments.get('edata'),
             'i18n': {
                 'message': self.T('Invalid password or email')
             }
         })
+
+    @check_client_token()
+    @check_user_token()
+    def delete(self, *args):
+        id_session = args[0]
+        t_client = Serialize(
+            self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+            self.projectConfig['BACKEND'][self.app_name]['default_time_client_token_expire']
+        )
+        if self.phanterpwa_client_token:
+            db = self.DALDatabase
+            # self.phanterpwa_current_client.as_dict(datetime_to_str=True)
+            q = db(db.client.token == self.phanterpwa_client_token).select().first()
+            if q:
+                token_content_client = None
+                try:
+                    token_content_client = t_client.loads(self.phanterpwa_client_token)
+                except BadSignature:
+                    msg = 'The client have a invalid client-token, a new one has been generated.'
+                    token_content_client = None
+                except SignatureExpired:
+                    msg = 'The client have a expired client-token, a new one has been generated.'
+                    token_content_client = None
+                if token_content_client:
+                    sessions = []
+                    q_sessions = db(db.client.auth_user==self.phanterpwa_current_user.id).select(orderby=db.client.date_created)
+                    for x in q_sessions:
+                        this_session = False
+                        if x.token == self.phanterpwa_client_token:
+                            this_session = True
+                        if (str(x.id) == id_session) and not this_session:
+                            x.delete_record()
+                        else:
+                            tc = None
+                            try:
+                                tc = t_client.loads(x.token)
+                            except:
+                                tc = None
+                            user_agent = None
+                            remote_addr = None
+                            date_created = x.date_created
+                            if tc:
+                                remote_addr = tc['remote_addr']
+                                user_agent = tc['user_agent']
+                            sessions.append(
+                                dict(
+                                    user_agent=user_agent,
+                                    agent = user_agent_parse(user_agent),
+                                    remote_addr=remote_addr,
+                                    date_created=str(date_created),
+                                    this_session=this_session,
+                                    identify=x.id
+                                )
+                            )
+
+                    self.set_status(200)
+                    self.write({
+                        'status': 'OK',
+                        'code': 200,
+                        'message': 'Deleted Session',
+                        'i18n': {
+                            'message': self.T('Deleted Session')
+                        },
+                        'sessions': sessions
+                    })
 
 
 class TwoFactor(web.RequestHandler):
@@ -554,7 +908,9 @@ class TwoFactor(web.RequestHandler):
         if self.i18nTranslator:
             self.i18nTranslator.direct_translation = self.phanterpwa_language
         self.phanterpwa_user_agent = str(self.request.headers.get('User-Agent'))
-        self.phanterpwa_remote_ip = str(self.request.remote_ip)
+        self.phanterpwa_remote_ip = self.request.headers.get("X-Real-IP") or \
+            self.request.headers.get("X-Forwarded-For") or \
+            self.request.remote_ip
 
     def check_origin(self, origin):
         return True
@@ -605,8 +961,12 @@ class TwoFactor(web.RequestHandler):
                     q_role = self.DALDatabase(
                         (self.DALDatabase.auth_membership.auth_user == q_user.id) &
                         (self.DALDatabase.auth_group.id == self.DALDatabase.auth_membership.auth_group)
-                    ).select(self.DALDatabase.auth_group.role, orderby=self.DALDatabase.auth_group.grade)
+                    ).select(
+                        self.DALDatabase.auth_group.id, self.DALDatabase.auth_group.role, orderby=self.DALDatabase.auth_group.grade
+                    )
                     roles = [x.role for x in q_role]
+                    dict_roles = {x.id: x.role for x in q_role}
+                    roles_id = [x.id for x in q_role]
                     role = None
                     if roles:
                         role = roles[-1]
@@ -669,8 +1029,13 @@ class TwoFactor(web.RequestHandler):
                             'remember_me': q_client.remember_me,
                             'roles': roles,
                             'role': role,
+                            'dict_roles': dict_roles,
+                            'roles_id': roles_id,
                             'activated': q_user.activated,
                             'image': user_image.id_image,
+                            'two_factor': q_user.two_factor_login,
+                            'multiple_login': q_user.permit_mult_login,
+                            'locale': q_user.locale,
                             'social_login': None
                         },
                         'i18n': {
@@ -725,7 +1090,9 @@ class LockUser(web.RequestHandler):
         if self.i18nTranslator:
             self.i18nTranslator.direct_translation = self.phanterpwa_language
         self.phanterpwa_user_agent = str(self.request.headers.get('User-Agent'))
-        self.phanterpwa_remote_ip = str(self.request.remote_ip)
+        self.phanterpwa_remote_ip = self.request.headers.get("X-Real-IP") or \
+            self.request.headers.get("X-Forwarded-For") or \
+            self.request.remote_ip
 
     def check_origin(self, origin):
         return True
@@ -801,14 +1168,14 @@ class ImageUser(web.RequestHandler):
             (self.DALDatabase.auth_user_phanterpwagallery.subfolder == 'profile')).select(
                 self.DALDatabase.auth_user_phanterpwagallery.phanterpwagallery).last()
         if q_image:
-            file = os.path.join(self.projectConfig['PROJECT']['path'], 'backend', self.app_name, 'uploads',
+            file = os.path.join(self.projectConfig['PROJECT']['path'], "backapps", self.app_name, 'uploads',
                 q_image.phanterpwagallery.folder,
                     q_image.phanterpwagallery.alias_name)
             self.set_header(
                 'Content-Disposition', 'attachment; filename="{0}"'.format(
                     q_image.phanterpwagallery.filename)
             )
-            if os.path.isfile(file):
+            if os.path.isfile(os.path.normpath(file)):
                 self.set_status(200)
                 with open(file, 'rb') as f:
                     while True:
@@ -818,9 +1185,9 @@ class ImageUser(web.RequestHandler):
                         self.write(data)
                 self.finish()
                 return
-        self.set_status(404)
+        self.set_status(202)
         file = os.path.join(self.projectConfig['PROJECT']['path'],
-                'backend', self.app_name, 'statics', 'images', 'user.png')
+                "backapps", self.app_name, 'statics', 'images', 'user.png')
         with open(file, 'rb') as f:
             while True:
                 data = f.read(buf_size)
@@ -869,12 +1236,14 @@ class ChangeAccount(web.RequestHandler):
         if self.i18nTranslator:
             self.i18nTranslator.direct_translation = self.phanterpwa_language
         self.phanterpwa_user_agent = str(self.request.headers.get('User-Agent'))
-        self.phanterpwa_remote_ip = str(self.request.remote_ip)
+        self.phanterpwa_remote_ip = self.request.headers.get("X-Real-IP") or \
+            self.request.headers.get("X-Forwarded-For") or \
+            self.request.remote_ip
 
     def check_origin(self, origin):
         return True
 
-    @check_private_csrf_token(form_identify=["phanterpwa-form-profile"])
+    @check_private_csrf_token(form_identify=["phanterpwa-form-profile", "phanterpwa-form-change_account"])
     def put(self, *args, **kargs):
 
         dict_arguments = {k: self.request.arguments.get(k)[0].decode('utf-8') for k in self.request.arguments}
@@ -1042,7 +1411,7 @@ class ChangeAccount(web.RequestHandler):
                     ).select().first()
                     if q_list:
                         q_list.update_record(
-                            datetime_changed=detetime.now()
+                            datetime_changed=datetime.now()
                         )
                     else:
                         self.DALDatabase.email_user_list.insert(
@@ -1058,8 +1427,12 @@ class ChangeAccount(web.RequestHandler):
                 q_role = self.DALDatabase(
                     (self.DALDatabase.auth_membership.auth_user == self.phanterpwa_current_user.id) &
                     (self.DALDatabase.auth_group.id == self.DALDatabase.auth_membership.auth_group)
-                ).select(self.DALDatabase.auth_group.role, orderby=self.DALDatabase.auth_group.grade)
+                ).select(
+                    self.DALDatabase.auth_group.id, self.DALDatabase.auth_group.role, orderby=self.DALDatabase.auth_group.grade
+                )
                 roles = [x.role for x in q_role]
+                dict_roles = {x.id: x.role for x in q_role}
+                roles_id = [x.id for x in q_role]
                 role = None
                 if roles:
                     role = roles[-1]
@@ -1082,8 +1455,13 @@ class ChangeAccount(web.RequestHandler):
                         'remember_me': q_client.remember_me,
                         'roles': roles,
                         'role': role,
+                        'dict_roles': dict_roles,
+                        'roles_id': roles_id,
                         'activated': activate,
                         'image': user_image.id_image,
+                        'two_factor': self.phanterpwa_current_user.two_factor_login,
+                        'multiple_login': self.phanterpwa_current_user.permit_mult_login,
+                        'locale': self.phanterpwa_current_user.locale,
                         'social_login': None
                     },
                     'i18n': {
@@ -1144,7 +1522,9 @@ class CreateAccount(web.RequestHandler):
         if self.i18nTranslator:
             self.i18nTranslator.direct_translation = self.phanterpwa_language
         self.phanterpwa_user_agent = str(self.request.headers.get('User-Agent'))
-        self.phanterpwa_remote_ip = str(self.request.remote_ip)
+        self.phanterpwa_remote_ip = self.request.headers.get("X-Real-IP") or \
+            self.request.headers.get("X-Forwarded-For") or \
+            self.request.remote_ip
 
     def check_origin(self, origin):
         return True
@@ -1240,6 +1620,14 @@ class CreateAccount(web.RequestHandler):
             self.set_status(201)
             roles = ["user"]
             role = "user"
+            q_role = self.DALDatabase(
+                (self.DALDatabase.auth_membership.auth_user == r.id) &
+                (self.DALDatabase.auth_group.id == self.DALDatabase.auth_membership.auth_group)
+            ).select(
+                self.DALDatabase.auth_group.id, self.DALDatabase.auth_group.role, orderby=self.DALDatabase.auth_group.grade
+            )
+            dict_roles = {x.id: x.role for x in q_role}
+            roles_id = [x.id for x in q_role]
             return self.write({
                 'status': 'Created',
                 'code': 201,
@@ -1255,8 +1643,13 @@ class CreateAccount(web.RequestHandler):
                     'remember_me': q_client.remember_me,
                     'roles': roles,
                     'role': role,
+                    'dict_roles': dict_roles,
+                    'roles_id': roles_id,
                     'activated': q_user.activated,
                     'image': user_image.id_image,
+                    'two_factor': q_user.two_factor_login,
+                    'multiple_login': q_user.permit_mult_login,
+                    'locale': q_user.locale,
                     'social_login': None
                 },
                 'i18n': {
@@ -1326,7 +1719,9 @@ class RequestAccount(web.RequestHandler):
         if self.i18nTranslator:
             self.i18nTranslator.direct_translation = self.phanterpwa_language
         self.phanterpwa_user_agent = str(self.request.headers.get('User-Agent'))
-        self.phanterpwa_remote_ip = str(self.request.remote_ip)
+        self.phanterpwa_remote_ip = self.request.headers.get("X-Real-IP") or \
+            self.request.headers.get("X-Forwarded-For") or \
+            self.request.remote_ip
 
     def check_origin(self, origin):
         return True
@@ -1525,12 +1920,14 @@ class ActiveAccount(web.RequestHandler):
         if self.i18nTranslator:
             self.i18nTranslator.direct_translation = self.phanterpwa_language
         self.phanterpwa_user_agent = str(self.request.headers.get('User-Agent'))
-        self.phanterpwa_remote_ip = str(self.request.remote_ip)
+        self.phanterpwa_remote_ip = self.request.headers.get("X-Real-IP") or \
+            self.request.headers.get("X-Forwarded-For") or \
+            self.request.remote_ip
 
     def check_origin(self, origin):
         return True
 
-    @check_user_token()
+    @check_user_token(ignore_activation=True)
     def get(self, *args, **kargs):
         now = datetime.now()
         t_expires = self.projectConfig['BACKEND'][self.app_name]['default_time_activation_code_expire']
@@ -1653,7 +2050,7 @@ class ActiveAccount(web.RequestHandler):
                     }
                 })
 
-    @check_private_csrf_token(form_identify="phanterpwa-form-activation")
+    @check_private_csrf_token(form_identify="phanterpwa-form-activation", ignore_activation=True)
     def post(self, *args, **kargs):
         dict_arguments = {k: self.request.arguments.get(k)[0].decode('utf-8') for k in self.request.arguments}
         activation_code = dict_arguments.get("activation_code", None)
@@ -1663,8 +2060,12 @@ class ActiveAccount(web.RequestHandler):
                 q_role = self.DALDatabase(
                     (self.DALDatabase.auth_membership.auth_user == q_user.id) &
                     (self.DALDatabase.auth_group.id == self.DALDatabase.auth_membership.auth_group)
-                ).select(self.DALDatabase.auth_group.role, orderby=self.DALDatabase.auth_group.grade)
+                ).select(
+                    self.DALDatabase.auth_group.id, self.DALDatabase.auth_group.role, orderby=self.DALDatabase.auth_group.grade
+                )
                 roles = [x.role for x in q_role]
+                dict_roles = {x.id: x.role for x in q_role}
+                roles_id = [x.id for x in q_role]
                 role = None
                 if roles:
                     role = roles[-1]
@@ -1685,8 +2086,13 @@ class ActiveAccount(web.RequestHandler):
                         'remember_me': q_client.remember_me,
                         'roles': roles,
                         'role': role,
+                        'dict_roles': dict_roles,
+                        'roles_id': roles_id,
                         'activated': q_user.activated,
                         'image': user_image.id_image,
+                        'two_factor': q_user.two_factor_login,
+                        'multiple_login': q_user.permit_mult_login,
+                        'locale': q_user.locale,
                         'social_login': None
                     },
                     'message': 'The Account are active',
@@ -1744,8 +2150,12 @@ class ActiveAccount(web.RequestHandler):
                     q_role = self.DALDatabase(
                         (self.DALDatabase.auth_membership.auth_user == q_user.id) &
                         (self.DALDatabase.auth_group.id == self.DALDatabase.auth_membership.auth_group)
-                    ).select(self.DALDatabase.auth_group.role, orderby=self.DALDatabase.auth_group.grade)
+                    ).select(
+                        self.DALDatabase.auth_group.id, self.DALDatabase.auth_group.role, orderby=self.DALDatabase.auth_group.grade
+                    )
                     roles = [x.role for x in q_role]
+                    dict_roles = {x.id: x.role for x in q_role}
+                    roles_id = [x.id for x in q_role]
                     role = None
                     if roles:
                         role = roles[-1]
@@ -1767,8 +2177,13 @@ class ActiveAccount(web.RequestHandler):
                             'remember_me': q_client.remember_me,
                             'roles': roles,
                             'role': role,
+                            'dict_roles': dict_roles,
+                            'roles_id': roles_id,
                             'activated': q_user.activated,
                             'image': user_image.id_image,
+                            'two_factor': q_user.two_factor_login,
+                            'multiple_login': q_user.permit_mult_login,
+                            'locale': q_user.locale,
                             'social_login': None
                         },
                         'message': 'The Account has been activated',
@@ -1850,7 +2265,9 @@ class ChangePassword(web.RequestHandler):
         if self.i18nTranslator:
             self.i18nTranslator.direct_translation = self.phanterpwa_language
         self.phanterpwa_user_agent = str(self.request.headers.get('User-Agent'))
-        self.phanterpwa_remote_ip = str(self.request.remote_ip)
+        self.phanterpwa_remote_ip = self.request.headers.get("X-Real-IP") or \
+            self.request.headers.get("X-Forwarded-For") or \
+            self.request.remote_ip
 
     def check_origin(self, origin):
         return True
@@ -1893,8 +2310,8 @@ class ChangePassword(web.RequestHandler):
             dict_arguments,
             Field('password',
                 'string',
-                requires=PASSWORD_MATCH_WITH_HASH(
-                    self.phanterpwa_current_user.password_hash, error_message=self.T('The password is not valid!')
+                requires=VALID_PASSWORD(
+                    self.phanterpwa_current_user, error_message=self.T('The password is not valid!')
                 )
             ),
             Field(
@@ -1910,17 +2327,7 @@ class ChangePassword(web.RequestHandler):
 
         )
         r = check_passwords.validate()
-        if r and r.get("password", None):
-            if self.phanterpwa_current_user.temporary_password_expire and\
-                (datetime.now() < self.phanterpwa_current_user.temporary_password_expire) and\
-                self.phanterpwa_current_user.temporary_password_hash:
-                result = pbkdf2_sha512.verify(
-                    "password{0}{1}".format(
-                        password, self.projectConfig['BACKEND'][self.app_name]['secret_key']),
-                    self.phanterpwa_current_user.temporary_password_hash
-                )
-                if result:
-                    del check_passwords.errors[x]["password"]
+        password_fail = True
         if r:
             if not self.phanterpwa_current_user.login_attempts:
                 self.phanterpwa_current_user.update_record(login_attempts=1)
@@ -1945,13 +2352,11 @@ class ChangePassword(web.RequestHandler):
             self.DALDatabase.commit()
             self.set_status(400)
             return self.write({
-                'status': 'Bad Request',
+                'status': 'Bad Requests',
                 'code': 400,
                 'message': msg,
-                'errors': check_passwords.errors,
                 'i18n': {
-                    'message': msg_i18n,
-                    'errors': i18n_errors
+                    'message': msg_i18n
                 }
             })
         else:

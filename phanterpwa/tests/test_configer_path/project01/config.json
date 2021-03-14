@@ -1,12 +1,12 @@
 {
     "CONFIG_INDENTIFY": "project_config",
     "ENVIRONMENT": {
-        "python": "D:\\Github\\phanterpwadeveloper\\Scripts\\python.exe",
-        "path": "D:\\Github\\phanterpwadeveloper\\Scripts"
+        "python": "C:\\virtualenv\\py37\\phanterpwaenv\\Scripts\\python.exe",
+        "path": "C:\\virtualenv\\py37\\phanterpwaenv\\Scripts"
     },
     "PROJECT": {
         "name": "project01",
-        "title": "PhanterPWA2",
+        "title": "PhanterPWA",
         "version": "0.0.1",
         "compilation": 0,
         "author": "PhanterJR<phanterjr@conexaodidata.com.br>",
@@ -15,11 +15,11 @@
         "minify": false,
         "baseport": 10000,
         "basehost": "127.0.0.1",
-        "path": "D:\\Github\\phanterpwadeveloper\\lib\\site-packages\\phanterpwa\\tests\\test_configer_path\\project01"
+        "path": "C:\\virtualenv\\py37\\phanterpwaenv\\lib\\site-packages\\phanterpwa\\tests\\test_configer_path\\project01"
     },
     "FRONTEND": {
         "app01": {
-            "build_folder": "D:\\Github\\phanterpwadeveloper\\lib\\site-packages\\phanterpwa\\tests\\test_configer_path\\project01\\frontend\\app01\\www",
+            "build_folder": "C:\\virtualenv\\py37\\phanterpwaenv\\lib\\site-packages\\phanterpwa\\tests\\test_configer_path\\project01\\frontapps\\app01\\www",
             "title": "app01",
             "transcrypt_main_file": "application",
             "styles_main_file": "application",
@@ -29,7 +29,7 @@
             "port": 10001
         },
         "app02": {
-            "build_folder": "D:\\Github\\phanterpwadeveloper\\lib\\site-packages\\phanterpwa\\tests\\test_configer_path\\project01\\frontend\\app02\\www",
+            "build_folder": "C:\\virtualenv\\py37\\phanterpwaenv\\lib\\site-packages\\phanterpwa\\tests\\test_configer_path\\project01\\frontapps\\app02\\www",
             "title": "app02",
             "transcrypt_main_file": "application",
             "styles_main_file": "application",
@@ -58,8 +58,7 @@
             "max_activation_attempts": 5,
             "host": "127.0.0.1",
             "port": 10000,
-            "secret_key": "{{secret_key}}",
-            "url_secret_key": "{{url_secret_key}}"
+            "secret_key": "58c2234e82c6ae544b082144"
         }
     }
 }

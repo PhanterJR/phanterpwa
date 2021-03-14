@@ -59,7 +59,9 @@ class SignClient(web.RequestHandler):
         if self.i18nTranslator:
             self.i18nTranslator.direct_translation = self.phanterpwa_language
         self.phanterpwa_user_agent = str(self.request.headers.get('User-Agent'))
-        self.phanterpwa_remote_ip = str(self.request.remote_ip)
+        self.phanterpwa_remote_ip = self.request.headers.get("X-Real-IP") or \
+            self.request.headers.get("X-Forwarded-For") or \
+            self.request.remote_ip
 
     def check_origin(self, origin):
         return True
@@ -154,10 +156,12 @@ class SignClient(web.RequestHandler):
                                             (self.DALDatabase.auth_group.id ==
                                                 self.DALDatabase.auth_membership.auth_group)
                                         ).select(
+                                            self.DALDatabase.auth_group.id,
                                             self.DALDatabase.auth_group.role,
                                             orderby=self.DALDatabase.auth_group.grade
                                         )
                                         roles = [x.role for x in q_role]
+                                        dict_roles = {x.id: x.role for x in q_role}
                                         role = None
                                         if roles:
                                             role = roles[-1]
@@ -177,8 +181,12 @@ class SignClient(web.RequestHandler):
                                                 'remember_me': q_client.remember_me,
                                                 'roles': roles,
                                                 'role': role,
+                                                'dict_roles': dict_roles,
                                                 'activated': q_user.activated,
                                                 'image': user_image.id_image,
+                                                'two_factor': q_user.two_factor_login,
+                                                'multiple_login': q_user.permit_mult_login,
+                                                'locale': q_user.locale,
                                                 'social_login': None
                                             },
                                             'i18n': {
@@ -264,10 +272,12 @@ class SignClient(web.RequestHandler):
                                         (self.DALDatabase.auth_membership.auth_user == q_user.id) &
                                         (self.DALDatabase.auth_group.id == self.DALDatabase.auth_membership.auth_group)
                                     ).select(
+                                        self.DALDatabase.auth_group.id,
                                         self.DALDatabase.auth_group.role,
                                         orderby=self.DALDatabase.auth_group.grade
                                     )
                                     roles = [x.role for x in q_role]
+                                    dict_roles = {x.id: x.role for x in q_role}
                                     role = None
                                     if roles:
                                         role = roles[-1]
@@ -289,8 +299,12 @@ class SignClient(web.RequestHandler):
                                             'remember_me': q.remember_me,
                                             'roles': roles,
                                             'role': role,
+                                            'dict_roles': dict_roles,
                                             'activated': q_user.activated,
                                             'image': user_image.id_image,
+                                            'two_factor': q_user.two_factor_login,
+                                            'multiple_login': q_user.permit_mult_login,
+                                            'locale': q_user.locale,
                                             'social_login': None
                                         },
                                         'i18n': {
@@ -376,20 +390,21 @@ class SignForms(web.RequestHandler):
         if self.i18nTranslator:
             self.i18nTranslator.direct_translation = self.phanterpwa_language
         self.phanterpwa_user_agent = str(self.request.headers.get('User-Agent'))
-        self.phanterpwa_remote_ip = str(self.request.remote_ip)
+        self.phanterpwa_remote_ip = self.request.headers.get("X-Real-IP") or \
+            self.request.headers.get("X-Forwarded-For") or \
+            self.request.remote_ip
         self.list_forms = [*{
             "phanterpwa-form-activation",
             "phanterpwa-form-profile",
             "phanterpwa-form-change_password",
-            "phanterpwa-form-search_alunos",
-            "phanterpwa-form-socios",
+            "phanterpwa-form-change_account",
             *list_forms
         }]
 
     def check_origin(self, origin):
         return True
 
-    @check_user_token()
+    @check_user_token(ignore_activation=True)
     def get(self, *args, **kargs):
         """
         Receive request to create and response with a token csrf or captcha
@@ -484,7 +499,9 @@ class SignLockForm(web.RequestHandler):
         if self.i18nTranslator:
             self.i18nTranslator.direct_translation = self.phanterpwa_language
         self.phanterpwa_user_agent = str(self.request.headers.get('User-Agent'))
-        self.phanterpwa_remote_ip = str(self.request.remote_ip)
+        self.phanterpwa_remote_ip = self.request.headers.get("X-Real-IP") or \
+            self.request.headers.get("X-Forwarded-For") or \
+            self.request.remote_ip
 
     def check_origin(self, origin):
         return True
@@ -585,7 +602,9 @@ class SignCaptchaForms(web.RequestHandler):
         if self.Translator_captcha:
             self.Translator_captcha.direct_translation = self.phanterpwa_language
         self.phanterpwa_user_agent = str(self.request.headers.get('User-Agent'))
-        self.phanterpwa_remote_ip = str(self.request.remote_ip)
+        self.phanterpwa_remote_ip = self.request.headers.get("X-Real-IP") or \
+            self.request.headers.get("X-Forwarded-For") or \
+            self.request.remote_ip
         self.list_forms = [*{
             "phanterpwa-form-login",
             "phanterpwa-form-register",
@@ -803,7 +822,9 @@ class ReSing(web.RequestHandler):
         if self.i18nTranslator:
             self.i18nTranslator.direct_translation = self.phanterpwa_language
         self.phanterpwa_user_agent = str(self.request.headers.get('User-Agent'))
-        self.phanterpwa_remote_ip = str(self.request.remote_ip)
+        self.phanterpwa_remote_ip = self.request.headers.get("X-Real-IP") or \
+            self.request.headers.get("X-Forwarded-For") or \
+            self.request.remote_ip
 
     def check_origin(self, origin):
         return True
@@ -849,7 +870,7 @@ class ReSing(web.RequestHandler):
             token_user = token_user.decode('utf-8')
             token_client = self.phanterpwa_client_token
             token_url = t_url.dumps(content_client)
-            msg = 'Resign just user token'
+            msg = 'Re-sign just user token'
             q_client.update_record(
                 last_resign=datetime.now()
             )
@@ -907,7 +928,7 @@ class ReSing(web.RequestHandler):
                 token=token_client
             )
             self.phanterpwa_client_token = token_client
-            msg = 'Resign client token, user token and url token'
+            msg = 'Re-sign client token, user token and url token'
             if not self.phanterpwa_current_user.permit_mult_login:
                 self.DALDatabase(
                     (self.DALDatabase.client.auth_user == self.phanterpwa_current_user.id) &
@@ -926,7 +947,7 @@ class ReSing(web.RequestHandler):
                 }
             })
         else:
-            msg = "This is not the time to resign"
+            msg = "This is not the time to re-sign"
             self.set_status(202)
             return self.write({
                 'status': 'Accepted',

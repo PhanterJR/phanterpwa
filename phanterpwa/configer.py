@@ -142,13 +142,15 @@ class ProjectConfig():
                         cfg["PROJECT"][k] = self._ini_project["PROJECT"].getboolean(
                             k, self.project_config_sample["PROJECT"][k])
                     elif k == "baseport":
-                        v = self._ini_project["PROJECT"].getboolean(
+                        v = self._ini_project["PROJECT"].get(
                             k, self.project_config_sample["PROJECT"][k])
                         if str(v).isdigit():
                             cfg["PROJECT"][k] = int(v)
                     else:
                         cfg["PROJECT"][k] = self._ini_project["PROJECT"].get(
                             k, self.project_config_sample["PROJECT"][k])
+                for i in self._ini_project.items("PROJECT"):
+                    cfg["PROJECT"][i[0]] = self._dict_value(i[1])
             else:
                 cfg["PROJECT"] = self.project_config_sample["PROJECT"]
                 cfg["PROJECT"]["path"] = normpath(dirname(join(self._file)))
@@ -169,7 +171,7 @@ class ProjectConfig():
             self._ini_apps_backend = dict()
             self._ini_secret_apps_backend = dict()
             apps_backend_list = []
-            for a in glob(join(cfg["PROJECT"]["path"], "backend", "*")):
+            for a in glob(join(cfg["PROJECT"]["path"], "backapps", "*")):
                 if isdir(a):
                     app_name = basename(a)
                     apps_backend_list.append(app_name)
@@ -210,7 +212,7 @@ class ProjectConfig():
                             cfg["BACKEND"][app_name] = self.project_config_sample["BACKEND"]["sample_app"]
                         for k in required_on_ini:
                             ini_app["APP"][k] = str(cfg["BACKEND"][app_name][k])
-                        cfg["BACKEND"][app_name]["host"] = "127.0.0.1"
+                        cfg["BACKEND"][app_name]["host"] = cfg["PROJECT"]["basehost"] or "127.0.0.1"
                         while current_port in ports:
                             current_port += 1
                         else:
@@ -235,6 +237,13 @@ class ProjectConfig():
                             ini_secret_app.write(configfile)
 
                         self._ini_secret_apps_backend[app_name] = ini_secret_app
+                    else:
+                        ini_secret_app = configparser.ConfigParser()
+                        ini_secret_app["APP"] = {
+                            'secret_key': os.urandom(12).hex()
+                        }
+                        with open(join(a, "secret.ini"), 'w', encoding="utf-8") as configfile:
+                            ini_secret_app.write(configfile)
 
             current_apps = list(cfg['BACKEND'].keys())
             for ha in current_apps:
@@ -245,7 +254,7 @@ class ProjectConfig():
             self._ini_secret_apps_frontend = dict()
             apps_frontend_list = []
 
-            for a in glob(join(cfg["PROJECT"]["path"], "frontend", "*")):
+            for a in glob(join(cfg["PROJECT"]["path"], "frontapps", "*")):
                 if isdir(a):
                     app_name = basename(a)
                     apps_frontend_list.append(app_name)
@@ -261,7 +270,7 @@ class ProjectConfig():
                         ]
                         if "APP" in app_sections:
                             cfg["FRONTEND"][app_name] = {"build_folder":
-                                normpath(join(cfg["PROJECT"]["path"], "frontend", app_name, "www"))}
+                                normpath(join(cfg["PROJECT"]["path"], "frontapps", app_name, "www"))}
 
                             for k in required_on_ini:
                                 v = ini_app["APP"].get(k, None)
@@ -289,11 +298,11 @@ class ProjectConfig():
                             ini_app["APP"] = {}
                             cfg["FRONTEND"][app_name] = self.project_config_sample["FRONTEND"]["sample_app"]
                             cfg["FRONTEND"][app_name]["build_folder"] = \
-                                normpath(join(cfg["PROJECT"]["path"], "frontend", app_name, "www"))
+                                normpath(join(cfg["PROJECT"]["path"], "frontapps", app_name, "www"))
                         for k in required_on_ini:
                             ini_app["APP"][k] = str(cfg["FRONTEND"][app_name][k])
 
-                        cfg["FRONTEND"][app_name]["host"] = "127.0.0.1"
+                        cfg["FRONTEND"][app_name]["host"] = cfg["PROJECT"]["basehost"] or "127.0.0.1"
                         while current_port in ports:
                             current_port += 1
                         else:
@@ -493,7 +502,7 @@ class ProjectConfig():
                     for y in self.backend_ini[a].items(x):
                         v = str(self._config['BACKEND'][a][y[0]])
                         self.backend_ini[a][x][y[0]] = v
-            with open(join(self._config["PROJECT"]["path"], 'backend', a, 'app.ini'), 'w', encoding="utf-8") as configfile:
+            with open(join(self._config["PROJECT"]["path"], "backapps", a, 'app.ini'), 'w', encoding="utf-8") as configfile:
                 self.backend_ini[a].write(configfile)
 
         for a in self.frontend_ini:
@@ -502,7 +511,7 @@ class ProjectConfig():
                     for y in self.frontend_ini[a].items(x):
                         v = str(self._config['FRONTEND'][a][y[0]])
                         self.frontend_ini[a][x][y[0]] = v
-            with open(join(self._config["PROJECT"]["path"], 'frontend', a, 'app.ini'), 'w', encoding="utf-8") as configfile:
+            with open(join(self._config["PROJECT"]["path"], "frontapps", a, 'app.ini'), 'w', encoding="utf-8") as configfile:
                 self.frontend_ini[a].write(configfile)
 
         # for a in self.backend_secret_ini:
@@ -511,7 +520,7 @@ class ProjectConfig():
         #             for y in self.backend_secret_ini[a].items(x):
         #                 v = str(self._config['BACKEND'][a][y[0]])
         #                 self.backend_secret_ini[a][x][y[0]] = v
-        #     with open(join(self._config["PROJECT"]["path"], 'backend', a, 'secret.ini'), 'w', encoding="utf-8") as configfile:
+        #     with open(join(self._config["PROJECT"]["path"], "backapps", a, 'secret.ini'), 'w', encoding="utf-8") as configfile:
         #         self.backend_secret_ini[a].write(configfile)
 
         # for a in self.frontend_secret_ini:
@@ -520,7 +529,7 @@ class ProjectConfig():
         #             for y in self.frontend_secret_ini[a].items(x):
         #                 v = str(self._config['FRONTEND'][a][y[0]])
         #                 self.frontend_secret_ini[a][x][y[0]] = v
-        #     with open(join(self._config["PROJECT"]["path"], 'frontend', a, 'secret.ini'), 'w', encoding="utf-8") as configfile:
+        #     with open(join(self._config["PROJECT"]["path"], "frontapps", a, 'secret.ini'), 'w', encoding="utf-8") as configfile:
         #         self.frontend_secret_ini[a].write(configfile)
 
     def __iter__(self):

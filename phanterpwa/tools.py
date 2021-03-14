@@ -240,7 +240,7 @@ def app_name_from_relative_child(project_path, child_path):
     :param project_path: Project path
     :child_path: Child folder of the project folder
     """
-    apps_list_basedir = os.path.join(project_path, "frontend")
+    apps_list_basedir = os.path.join(project_path, "frontapps")
     p = PurePath(child_path)
     r = p.relative_to(os.path.join(apps_list_basedir))
     return r.parts[0]
@@ -744,3 +744,288 @@ def one_space(value):
         spl = value.split(" ")
         result = " ".join([x for x in spl if x])
     return result
+
+def user_agent_parse(user_agent):
+    if not isinstance(user_agent, str):
+        return "Unknown (Unknown)"
+    keys =[
+        "Edg",
+        "CrOS",
+        "Linux",
+        "Edge",
+        "Chromium",
+        "OpenBSD",
+        "Waterfox",
+        "Lumia",
+        "Trident",
+        "Nexus",
+        "Opera",
+        "Android",
+        "PaleMoon",
+        "BingPreview",
+        "Fedora",
+        "Ubuntu",
+        "Mac OS X",
+        "Firefox",
+        "iPhone",
+        "IEMobile",
+        "Tablet",
+        "Safari",
+        "Instagram",
+        "iPad",
+        "MSIE",
+        "X11",
+        "SeaMonkey",
+        "Iceweasel",
+        "SAMSUNG",
+        "Win64",
+        "Windows",
+        "Puffin",
+        "Maxthon",
+        "Chrome",
+        "MacX11",
+        "PhantomJS",
+        "Mobile",
+        "OPR",
+        "PlayStation",
+        "WOW64",
+        "UCBrowser",
+        "FB",
+        "iPhone OS",
+        "YaBrowser",
+        "Redmi",
+        "Konqueror",
+        "Macintosh"
+    ]
+    tagx = set(keys)
+
+
+    for_print = list()
+    for y in tagx:
+        if y.upper() in user_agent.upper():
+            if y == "Trident" or y == "MSIE":
+                if "MSIE" not in for_print:
+                    for_print.append("MSIE")
+            elif y == "WOW64" or y == "Win64" or y == "Windows":
+                if "Windows" not in for_print:
+                    for_print.append("Windows")
+            else:
+                for_print.append(y.strip())
+    if for_print:
+        change = False
+        if "Windows" in for_print:
+            for_print.pop(for_print.index("Windows"))
+            for_print.append("(Windows)")
+        if "iPhone OS" in for_print:
+            if "iPhone OS" in for_print:
+                for_print.pop(for_print.index("iPhone OS"))
+            if "Mac OS X" in for_print:
+                for_print.pop(for_print.index("Mac OS X"))
+            if "Macintosh" in for_print:
+                for_print.pop(for_print.index("Macintosh"))
+            if "Safari" in for_print and "Chrome" in for_print:
+                for_print.pop(for_print.index("Chrome"))
+            for_print.append("(iOS)")
+        if "Mobile" in for_print:
+            if "iPad" in for_print:
+                for_print.pop(for_print.index("Mobile"))
+                for_print.pop(for_print.index("iPad"))
+                if "iPhone" in for_print:
+                    for_print.pop(for_print.index("iPhone"))
+                for_print.insert(0, "iPad")
+            if "iPhone" in for_print:
+                for_print.pop(for_print.index("Mobile"))
+                for_print.pop(for_print.index("iPhone"))
+                for_print.insert(0, "iPhone")
+            if "Android" in for_print:
+                for_print.pop(for_print.index("Mobile"))
+                for_print.pop(for_print.index("Android"))
+                if "Safari" in for_print:
+                    for_print.pop(for_print.index("Safari"))
+                if "Linux" in for_print:
+                    for_print.pop(for_print.index("Linux"))
+                for_print.append("(Android)")
+        if "Android" in for_print:
+            for_print.pop(for_print.index("Android"))
+            if "Chrome" in for_print and "Safari" in for_print:
+                for_print.pop(for_print.index("Safari"))
+            if "Linux" in for_print:
+                for_print.pop(for_print.index("Linux"))
+            for_print.append("(Android)")           
+        if "Edg" in for_print or "Edge" in for_print:
+            if "Edg" in for_print:
+                for_print.pop(for_print.index("Edg"))
+            if "Edge" in for_print:
+                for_print.pop(for_print.index("Edge"))
+            if "Chrome" in for_print:
+                for_print.pop(for_print.index("Chrome"))
+            if "Safari" in for_print:
+                for_print.pop(for_print.index("Safari"))
+            for_print.insert(0, "Edge")         
+        if "X11" in for_print and "Linux" in for_print:
+            for_print.pop(for_print.index("X11"))
+            for_print.pop(for_print.index("Linux"))
+            for_print.append("(Linux)")
+        if "X11" in for_print and "CrOS" in for_print:
+            for_print.pop(for_print.index("X11"))
+            for_print.pop(for_print.index("CrOS"))
+            for_print.append("(ChromeOS)")
+        if "X11" in for_print and "OpenBSD" in for_print:
+            for_print.pop(for_print.index("X11"))
+            for_print.pop(for_print.index("OpenBSD"))
+            for_print.append("(OpenBSD)")
+
+        if "Chromium" in for_print:
+            change=True
+            if "Chrome" in for_print:
+                for_print.pop(for_print.index("Chrome"))
+            if "Safari" in for_print:
+                for_print.pop(for_print.index("Safari"))
+            if "Chromium" in for_print:
+                for_print.pop(for_print.index("Chromium"))
+            for_print.insert(0, "Chromium")
+
+        if "Macintosh" in for_print or "Mac OS X" in for_print:
+            if "Mac OS X" in for_print:
+                for_print.pop(for_print.index("Mac OS X"))
+            if "Macintosh" in for_print:
+                for_print.pop(for_print.index("Macintosh"))
+            if "Safari" in for_print and "Chrome" in for_print:
+                for_print.pop(for_print.index("Chrome"))
+            for_print.append("(Mac OS X)")
+        if "Safari" in for_print and "Chrome" in for_print:
+            if "Safari" in for_print:
+                for_print.pop(for_print.index("Safari"))
+        if "OPR" in for_print or "Opera" in for_print:
+            if "OPR" in for_print:
+                for_print.pop(for_print.index("OPR"))
+            if "Opera" in for_print:
+                for_print.pop(for_print.index("Opera"))
+            if "Chrome" in for_print:
+                for_print.pop(for_print.index("Chrome"))
+            if "Safari" in for_print:
+                for_print.pop(for_print.index("Safari"))
+            for_print.insert(0, "Opera")
+        if "Nexus" in for_print:
+            if "Chrome" in for_print:
+                for_print.pop(for_print.index("Chrome"))
+            if "Safari" in for_print:
+                for_print.pop(for_print.index("Safari"))
+            if "Firefox" in for_print:
+                for_print.pop(for_print.index("Firefox"))
+        if "PhantomJS" in for_print:
+            if "Chrome" in for_print:
+                for_print.pop(for_print.index("Chrome"))
+            if "Safari" in for_print:
+                for_print.pop(for_print.index("Safari"))
+            if "Firefox" in for_print:
+                for_print.pop(for_print.index("Firefox"))
+        if "Maxthon" in for_print:
+            if "Chrome" in for_print:
+                for_print.pop(for_print.index("Chrome"))
+            if "Safari" in for_print:
+                for_print.pop(for_print.index("Safari"))
+            if "Firefox" in for_print:
+                for_print.pop(for_print.index("Firefox"))
+        if "Puffin" in for_print:
+            if "Chrome" in for_print:
+                for_print.pop(for_print.index("Chrome"))
+            if "Safari" in for_print:
+                for_print.pop(for_print.index("Safari"))
+            if "Firefox" in for_print:
+                for_print.pop(for_print.index("Firefox"))
+        if "SeaMonkey" in for_print:
+            if "Chrome" in for_print:
+                for_print.pop(for_print.index("Chrome"))
+            if "Safari" in for_print:
+                for_print.pop(for_print.index("Safari"))
+            if "Firefox" in for_print:
+                for_print.pop(for_print.index("Firefox"))
+        if "SAMSUNG" in for_print:
+            if "Chrome" in for_print:
+                for_print.pop(for_print.index("Chrome"))
+            if "Safari" in for_print:
+                for_print.pop(for_print.index("Safari"))
+            if "Firefox" in for_print:
+                for_print.pop(for_print.index("Firefox"))
+        if "BingPreview" in for_print:
+            if "Chrome" in for_print:
+                for_print.pop(for_print.index("Chrome"))
+            if "Safari" in for_print:
+                for_print.pop(for_print.index("Safari"))
+            if "Firefox" in for_print:
+                for_print.pop(for_print.index("Firefox"))
+        if "PaleMoon" in for_print:
+            if "Chrome" in for_print:
+                for_print.pop(for_print.index("Chrome"))
+            if "Safari" in for_print:
+                for_print.pop(for_print.index("Safari"))
+            if "Firefox" in for_print:
+                for_print.pop(for_print.index("Firefox"))
+        if "Iceweasel" in for_print:
+            if "Chrome" in for_print:
+                for_print.pop(for_print.index("Chrome"))
+            if "Safari" in for_print:
+                for_print.pop(for_print.index("Safari"))
+            if "Firefox" in for_print:
+                for_print.pop(for_print.index("Firefox"))
+        if "PhantomJS" in for_print:
+            if "Chrome" in for_print:
+                for_print.pop(for_print.index("Chrome"))
+            if "Safari" in for_print:
+                for_print.pop(for_print.index("Safari"))
+            if "Firefox" in for_print:
+                for_print.pop(for_print.index("Firefox"))
+        if "UCBrowser" in for_print:
+            if "Chrome" in for_print:
+                for_print.pop(for_print.index("Chrome"))
+            if "Safari" in for_print:
+                for_print.pop(for_print.index("Safari"))
+            if "Firefox" in for_print:
+                for_print.pop(for_print.index("Firefox"))
+        if "YaBrowser" in for_print:
+            if "Chrome" in for_print:
+                for_print.pop(for_print.index("Chrome"))
+            if "Safari" in for_print:
+                for_print.pop(for_print.index("Safari"))
+            if "Firefox" in for_print:
+                for_print.pop(for_print.index("Firefox"))
+        if "Instagram" in for_print:
+            if "Chrome" in for_print:
+                for_print.pop(for_print.index("Chrome"))
+            if "Safari" in for_print:
+                for_print.pop(for_print.index("Safari"))
+            if "Firefox" in for_print:
+                for_print.pop(for_print.index("Firefox"))
+        if "Waterfox" in for_print:
+            if "Chrome" in for_print:
+                for_print.pop(for_print.index("Chrome"))
+            if "Safari" in for_print:
+                for_print.pop(for_print.index("Safari"))
+            if "Firefox" in for_print:
+                for_print.pop(for_print.index("Firefox"))
+        if "Lumia" in for_print:
+
+            for_print.pop(for_print.index("Lumia"))
+            if "Mobile" in for_print:
+                for_print.pop(for_print.index("Mobile"))
+            if "IEMobile" in for_print and "MSIE" in for_print:
+                for_print.pop(for_print.index("IEMobile"))
+            for_print.insert(0, "Lumia")
+        if "Redmi" in for_print:
+            for_print.pop(for_print.index("Redmi"))
+            for_print.insert(0, "Redmi")
+        if "Tablet" in for_print:
+            if "Tablet" in for_print:
+                for_print.pop(for_print.index("Tablet"))
+            for_print.insert(0, "Tablet")
+        if "Linux" in for_print:
+            for_print.pop(for_print.index("Linux"))
+            for_print.append("(Linux)")
+        if "FB" in for_print:
+            for_print[for_print.index("FB")] = "Facebook"
+        return " ".join([z for z in for_print])
+    else:
+        return "Unknown (Unknown)"
+
+

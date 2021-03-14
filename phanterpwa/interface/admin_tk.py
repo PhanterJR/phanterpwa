@@ -50,9 +50,6 @@ class ProjectsFolderTk():
         if not os.path.isdir(self._projectdata_dir_gui):
             os.makedirs(self._projectdata_dir_gui, exist_ok=True)
         self._projects_path = None
-
-
-
         self.ProjectsPWA = None
         self.ProjectPWA = None
         self.ConfigAPI = None
@@ -139,6 +136,7 @@ class ProjectsFolderTk():
         )
 
     def open_window_projects(self):
+        print(self.CONFIG)
         if self.app_folder_input.get():
             self.CONFIG = config(self._projectdata_dir_gui, {"projects_folder": os.path.normpath(self.projects_folder)})
             self.tkInstance.destroy()

@@ -43,7 +43,7 @@ class AuthTables():
         )
 
         def delete_upload_folder(s):
-            upload_folder = os.path.join(projectConfig["PROJECT"]["path"], "api", "uploads")
+            upload_folder = os.path.join(projectConfig["PROJECT"]["path"], "backapps", "api", "uploads")
             target = os.path.join(upload_folder, "user_{0}".format(s.select().first().id))
             if os.path.exists(target) and os.path.isdir(target):
                 try:

@@ -84,7 +84,7 @@ setuptools.setup(
     description='Tools for the phanterpwadeveloper framework',
     long_description=long_description,
     long_description_content_type="text/markdown",
-    packages=[*packs()],
+    packages=packs(),
     entry_points={
         "console_scripts": [
             "phanterpwa = phanterpwa.__main__:main",

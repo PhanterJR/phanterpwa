@@ -32,8 +32,10 @@ I = helpers.XmlConstructor.tagger("i")
 
 class PhanterPWA():
     def __init__(self, config, gates, **parameters):
+
         self.get_inicial_config_uri()
         self.initialize()
+        self._thewidgets = dict()
         if config is js_undefined or config is None:
             raise ValueError("The config is required")
         if gates is js_undefined or gates is None:
@@ -66,12 +68,15 @@ class PhanterPWA():
         #     lambda event, xhr, options: self._after_ajax_complete(event, xhr, options)
         # )
         window.PhanterPWA = self
+        window.onpopstate = self._onPopState
+        self._onPopState()
+
         if self.DEBUG:
             console.info("starting {0} application (version: {1}, compilation: {2})".format(
                 self.CONFIG.PROJECT.title, self.CONFIG.PROJECT.version, self.CONFIG.PROJECT.compilation)
             )
         self.add_event(events.Waves())
-        self.add_event(events.WidgetsInput())
+        # self.add_event(events.WidgetsInput())
         self.add_event(events.WayHiperlinks())
         self.ApiServer = server.ApiServer()
         self.ApiServer.getClientToken()
@@ -479,8 +484,9 @@ class PhanterPWA():
 
     def request_password(self, csrf_token, email, **parameters):
         last_auth_user = self.get_last_auth_user()
-        if email != last_auth_user.email:
-            self.remove_last_auth_user()
+        if last_auth_user is not None:
+            if email != last_auth_user.email:
+                self.remove_last_auth_user()
         callback = None
         if "callback" in parameters:
             callback = parameters["callback"]
@@ -622,11 +628,16 @@ class PhanterPWA():
         if str(code).isdigit():
             code = int(code)
         if code not in window.PhanterPWA.Gates:
+            auth_user = window.PhanterPWA.Components.auth_user
             if window.PhanterPWA.DEBUG:
                 console.info(code, request, response)
             if code == 401:
+                if auth_user is not None and auth_user is not js_undefined:
+                    auth_user.start()
                 gatehandler.Error_401(request, response)
             elif code == 403:
+                if auth_user is not None and auth_user is not js_undefined:
+                    auth_user.start()
                 gatehandler.Error_403(request, response)
             elif code == 404:
                 gatehandler.Error_404(request, response)
@@ -686,6 +697,39 @@ class PhanterPWA():
             return None
 
     @staticmethod
+    def logged():
+        if window.PhanterPWA.get_auth_user() is None:
+            return False
+        else:
+            return True
+
+    @staticmethod
+    def auth_user_has_id(ids):
+        if window.PhanterPWA.logged():
+            auth_user = window.PhanterPWA.get_auth_user()
+            if isinstance(ids, int):
+                if int(auth_user.id) == ids:
+                    return True
+            elif isinstance(ids, str) and ids.isdigit() and str(auth_user.id) == ids:
+                return True
+            elif isinstance(ids, list):
+                for x in ids:
+                    if window.PhanterPWA.auth_user_has_id(x):
+                        return True
+        return False
+
+    @staticmethod
+    def auth_user_has_role(roles):
+        if window.PhanterPWA.logged():
+            auth_user = window.PhanterPWA.get_auth_user()
+            if isinstance(roles, str) and roles in auth_user.roles:
+                return True
+            elif isinstance(roles, list) and len(
+                    set(auth_user.roles).intersection(set(roles))) > 0:
+                return True
+        return False
+
+    @staticmethod
     def update_auth_user(auth_user):
         if auth_user is not None and auth_user is not js_undefined:
             if auth_user["remember_me"] is True:
@@ -735,9 +779,14 @@ class PhanterPWA():
             return None
 
     def open_way(self, way):
+        window.location = "#_phanterpwa:/{0}".format(way)
+
+    def _onPopState(self):
+        console.log("acionadooooooo")
+        way = self._get_way_from_url_hash()
         self.Request = WayRequest()
         self.Request.open_way(way)
-        self._after_ajax_complete()
+        # self._after_ajax_complete()
         if self._after_open_way is not None and self._after_open_way is not js_undefined:
             self._after_open_way(self.Request)
 
@@ -772,11 +821,31 @@ class PhanterPWA():
 
     def parse_way(self, way):
         gate = way
-        if "?" in way or "/" in way:
-            url = "{0}/{1}".format(window.PhanterPWA.CONFIG.APP.http_address, way)
-            return self.parse_url(url)
-        else:
-            return {gate, [], {}, way}
+        origin = window.location.origin
+        url = "{0}/{1}".format(origin, way)
+        tway = self.parse_url(url)
+        tway[3] = "{0}/#_phanterpwa:/{1}".format(origin, way)
+        return tway
+
+    def _get_way_from_url_hash(self):
+        url_hash = window.location.hash
+        console.log(url_hash)
+        way = self.default_way
+        if url_hash is not js_undefined and url_hash is not None and url_hash != "":
+            if url_hash.startswith("#_phanterpwa:/"):
+                way = url_hash[14:]
+        console.log(way)
+        return way
+
+    def _set_way_to_url_hash(self, way):
+        console.log("mudando o url hash")
+        current = self._get_way_from_url_hash()
+        if way != current:
+            window.history.pushState("", self.TITLE, "#_phanterpwa:/{0}".format(way))
+
+
+    def onPopState(self):
+        self.open_way(self._get_way_from_url_hash())
 
     def GET(self, **parameters):
         self.ApiServer.GET(**parameters)
@@ -988,8 +1057,8 @@ class WayRequest():
     def add_widget(self, widget):
         if isinstance(widget, widgets.Widget):
             self.widgets[widget.identifier] = widget
-            if callable(widget.start):
-                widget.start()
+            if callable(widget.initialize):
+                widget.initialize()
 
     def _process_way(self, way):
         self.application_info = "{0} (version: {1}, compilation: {2})".format(
@@ -1041,12 +1110,19 @@ class WayRequest():
         last_way = window.PhanterPWA.get_current_way()
         self.last_way = last_way
         if self.gate in window.PhanterPWA.Gates:
-            sessionStorage.setItem("current_way", self.way)
-            try:
+            if window.PhanterPWA.DEBUG:
+                sessionStorage.setItem("current_way", self.way)
+
                 window.PhanterPWA.Gates[self.gate](self)
-            except Exception:
-                console.error("Error on try open '{0}'".format(way))
-                window.PhanterPWA.Gates[404](self)
+            else:
+                try:
+                    window.PhanterPWA.Gates[self.gate](self)
+                except Exception:
+                    console.error("Error on try open '{0}'".format(way))
+                    window.PhanterPWA.Gates[404](self)
+                else:
+                    sessionStorage.setItem("current_way", self.way)
+
         else:
             self.error = 404
             window.PhanterPWA.Gates[404](self)

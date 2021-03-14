@@ -743,11 +743,3 @@ class FieldsDALValidateDictArgs(object):
                 raise "The dbtable must be pydal.Objects.Set instance. given: {0}.".format(type(dbset))
 
 
-if __name__ == '__main__':
-    import os
-    import sys
-    sys.path.append(os.path.join("D:\\GitHub\\PhanterEDU"))
-    os.chdir(os.path.join("D:\\GitHub\\PhanterEDU"))
-
-    from api.models import *
-    print(dir(Field))
