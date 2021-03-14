@@ -112,6 +112,7 @@ apenas_enviar.bat
 *secret.ini
 phanterpwa/interface/Admin/frontapps/admin/statics*
 phanterpwa/interface/Admin/frontapps/admin/sources*
+*.map
 *.sublime-project
 *.sublime-workspace
 phanterpwa.sublime-project
