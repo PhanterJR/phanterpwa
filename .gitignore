@@ -121,3 +121,9 @@ phanterpwa/interface/Admin/config.json
 .apenas_enviar.bat
 .setup.bat
 phanterpwa/interface/Admin/backapps/api/app.ini
+phanterpwa/interface/Admin/temp/project_config_admin.json
+phanterpwa/interface/Admin/temp/project_config_admin.json
+phanterpwa/interface/Admin/temp/statics_mtime_admin.json
+phanterpwa/interface/Admin/temp/styles_mtime_admin.json
+phanterpwa/interface/Admin/temp/templates_mtime_admin.json
+phanterpwa/interface/Admin/temp/transcrypts_mtime_admin.json
