@@ -110,8 +110,8 @@ phanterpwa/interface/*.json
 apenas_enviar.bat
 *.table
 *secret.ini
-phanterpwa/interface/Admin/apps/admin/statics*
-phanterpwa/interface/Admin/apps/admin/sources*
+phanterpwa/interface/Admin/frontapps/admin/statics*
+phanterpwa/interface/Admin/frontapps/admin/sources*
 *.sublime-project
 *.sublime-workspace
 phanterpwa.sublime-project
