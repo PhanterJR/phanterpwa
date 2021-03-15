@@ -181,12 +181,14 @@ def check_client_token(ignore_locked=True):
                                         self.phanterpwa_client_token_checked = token_content
                                 else:
                                     self.phanterpwa_client_token_checked = token_content
+
                 if self.phanterpwa_client_token_checked:
                     if q and q.locked and not ignore_locked:
                         msg = "The user has locked your session!"
                         dict_response = {
                             'status': 'Unauthorized',
                             'code': 401,
+                            'specification': 'client locked',
                             'message': msg,
                             'i18n': {
                                 'message': self.i18nTranslator.T(msg) if self.i18nTranslator else msg
@@ -220,8 +222,9 @@ def check_client_token(ignore_locked=True):
                         self.DALDatabase.commit()
                     msg = "The phanterpwa-client-token is invalid!"
                     dict_response = {
-                        'status': 'Forbidden',
-                        'code': 403,
+                        'status': 'Unauthorized',
+                        'code': 401,
+                        'specification': 'client deleted',
                         'message': msg,
                         'i18n': {
                             'message': self.i18nTranslator.T(msg) if self.i18nTranslator else msg
@@ -245,7 +248,7 @@ def check_client_token(ignore_locked=True):
                             fi.lineno + 19
                         )
                     dict_response['help_debug'] = help_debug
-                    self.set_status(403)
+                    self.set_status(401)
                     return self.write(dict_response)
             else:
                 return f(self, *args, **kargs)

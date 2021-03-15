@@ -24,7 +24,8 @@ from phanterpwa.tools import (
     interpolate,
     generate_activation_code,
     check_activation_code,
-    user_agent_parse
+    user_agent_parse,
+    checkbox_bool
 )
 from phanterpwa.backend.pydal.extra_validations import (
     PASSWORD_MATCH_WITH_HASH,
@@ -538,10 +539,8 @@ class Auth(web.RequestHandler):
                 if result:
                     remember_me = False
                     timeout_token_user = self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire']
-                    rem_me = dict_arguments['remember_me']
-                    if any([rem_me is True,
-                            rem_me == "on",
-                            rem_me == "true"]):
+                    rem_me = checkbox_bool(dict_arguments['remember_me'])
+                    if rem_me:
                         remember_me = True
                         timeout_token_user = self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire_remember_me']
                     t_user = Serialize(
@@ -1251,6 +1250,9 @@ class ChangeAccount(web.RequestHandler):
         last_name = dict_arguments['last_name']
         email_now = self.phanterpwa_current_user.email
         new_email = dict_arguments['email']
+        two_factor = checkbox_bool(dict_arguments.get('two_factor', False))
+        multiple_login = checkbox_bool(dict_arguments.get('multiple_login', False))
+
         table = self.DALDatabase.auth_user
         result = FieldsDALValidateDictArgs(
             dict_arguments,
@@ -1280,6 +1282,8 @@ class ChangeAccount(web.RequestHandler):
             first_name_change = False
             last_name_change = False
             image_change = False
+            two_factor_change = False
+            multiple_login_change = False
 
             if(first_name != self.phanterpwa_current_user.first_name):
                 self.phanterpwa_current_user.update_record(first_name=first_name)
@@ -1288,6 +1292,15 @@ class ChangeAccount(web.RequestHandler):
             if(last_name != self.phanterpwa_current_user.last_name):
                 self.phanterpwa_current_user.update_record(last_name=last_name)
                 last_name_change = True
+
+            if(two_factor != self.phanterpwa_current_user.two_factor_login):
+                self.phanterpwa_current_user.update_record(two_factor_login=two_factor)
+                two_factor_change = True
+
+            if(multiple_login != self.phanterpwa_current_user.permit_mult_login):
+                self.phanterpwa_current_user.update_record(permit_mult_login=multiple_login)
+                multiple_login_change = True
+
             if self.request.files and\
                 "phanterpwa-gallery-file-input" in self.request.files:
                 imageBytes = self.request.files["phanterpwa-gallery-file-input"][0]['body']
@@ -1423,7 +1436,9 @@ class ChangeAccount(web.RequestHandler):
             if any([email_change,
                     first_name_change,
                     last_name_change,
-                    image_change]):
+                    image_change,
+                    two_factor_change,
+                    multiple_login_change]):
                 q_role = self.DALDatabase(
                     (self.DALDatabase.auth_membership.auth_user == self.phanterpwa_current_user.id) &
                     (self.DALDatabase.auth_group.id == self.DALDatabase.auth_membership.auth_group)
@@ -1944,6 +1959,14 @@ class ActiveAccount(web.RequestHandler):
                 'message': 'The user was not found',
                 'i18n': {'message': self.T('The user was not found')}
             })
+        elif self.phanterpwa_current_user.activated:
+            self.set_status(400)
+            return self.write({
+                'status': 'Bad Request',
+                'code': 400,
+                'message': 'Account is activated',
+                'i18n': {'message': self.T('Account is activated')}
+            })            
         elif self.phanterpwa_current_user.timeout_to_resend_activation_email and\
             now < (self.phanterpwa_current_user.timeout_to_resend_activation_email - delta_time_wait):
             t_delta = (self.phanterpwa_current_user.timeout_to_resend_activation_email - delta_time_wait) - now
@@ -2095,9 +2118,9 @@ class ActiveAccount(web.RequestHandler):
                         'locale': q_user.locale,
                         'social_login': None
                     },
-                    'message': 'The Account are active',
+                    'message': 'Account is activated',
                     'i18n': {
-                        'message': self.T('The Account are active'),
+                        'message': self.T('Account is activated'),
                         'auth_user': {'role': self.T(role)}
                     }
                 })
@@ -2128,6 +2151,7 @@ class ActiveAccount(web.RequestHandler):
                         tna = int(t_delta.total_seconds())
                         message = msg.format(time_next_attempt=humanize_seconds(tna))
                         message_i18n = self.T(msg).format(time_next_attempt=humanize_seconds(tna, self.i18nTranslator))
+                        
                         self.DALDatabase.commit()
                         self.set_status(400)
                         return self.write({
@@ -2145,6 +2169,8 @@ class ActiveAccount(web.RequestHandler):
                     q_user.update_record(
                         activation_attempts=0,
                         activated=True,
+                        activation_code=None,
+                        timeout_to_resend_activation_email=None
                     )
 
                     q_role = self.DALDatabase(

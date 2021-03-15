@@ -223,6 +223,12 @@ class PhanterPWA():
                         console.info("Reload Components {0}".format(c))
                     self.Components[c].actived = True
                     self.Components[c].reload(**context)
+    def reload_component(self, component):
+        comp = self.Components[component]
+        if comp is not js_undefined:
+            if self.DEBUG:
+                console.info("Reload Component: {0}".format(component))
+            comp.reload()
 
     def reload_events(self, **context):
         for c in self.Events.keys():
@@ -404,7 +410,6 @@ class PhanterPWA():
     def _after_get_social_login(self, data, ajax_status, callback=None):
         json = data.responseJSON
         if ajax_status == "success":
-            console.log(json)
             window.location = json.redirect
         if callable(callback):
             callback(data, ajax_status)
@@ -512,6 +517,7 @@ class PhanterPWA():
             auth_user = json.auth_user
             sessionStorage.setItem("auth_user", JSON.stringify(auth_user))
             localStorage.setItem("last_auth_user", JSON.stringify(auth_user))
+            self.update_current_way()
         if self.DEBUG:
             console.info(data.status, json.i18n.message)
         if callback is not None:
@@ -645,6 +651,8 @@ class PhanterPWA():
                 gatehandler.Error_502(request, response)
         else:
             if isinstance(request, WayRequest):
+                if window.PhanterPWA.DEBUG:
+                    console.info(code, request, response)
                 window.PhanterPWA.Gates[code](request, response)
             else:
                 if window.PhanterPWA.DEBUG:
@@ -779,10 +787,12 @@ class PhanterPWA():
             return None
 
     def open_way(self, way):
-        window.location = "#_phanterpwa:/{0}".format(way)
+        if way==self.get_current_way():
+            self.open_current_way()
+        else:
+            window.location = "#_phanterpwa:/{0}".format(way)
 
     def _onPopState(self):
-        console.log("acionadooooooo")
         way = self._get_way_from_url_hash()
         self.Request = WayRequest()
         self.Request.open_way(way)
@@ -791,7 +801,13 @@ class PhanterPWA():
             self._after_open_way(self.Request)
 
     def open_current_way(self):
-        self.open_way(self.get_current_way())
+        way = self._get_way_from_url_hash()
+        self.Request = WayRequest()
+        self.Request.open_way(way)
+        #self.open_way(self.get_current_way())
+
+    def update_current_way(self):
+        window.location.reload()
 
     def open_default_way(self):
         self.open_way(self.default_way)
@@ -829,16 +845,13 @@ class PhanterPWA():
 
     def _get_way_from_url_hash(self):
         url_hash = window.location.hash
-        console.log(url_hash)
         way = self.default_way
         if url_hash is not js_undefined and url_hash is not None and url_hash != "":
             if url_hash.startswith("#_phanterpwa:/"):
                 way = url_hash[14:]
-        console.log(way)
         return way
 
     def _set_way_to_url_hash(self, way):
-        console.log("mudando o url hash")
         current = self._get_way_from_url_hash()
         if way != current:
             window.history.pushState("", self.TITLE, "#_phanterpwa:/{0}".format(way))

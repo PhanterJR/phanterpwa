@@ -745,6 +745,7 @@ def one_space(value):
         result = " ".join([x for x in spl if x])
     return result
 
+
 def user_agent_parse(user_agent):
     if not isinstance(user_agent, str):
         return "Unknown (Unknown)"
@@ -1029,3 +1030,8 @@ def user_agent_parse(user_agent):
         return "Unknown (Unknown)"
 
 
+def checkbox_bool(value):
+    if str(value).upper() in ["TRUE", "ON"]:
+        return True
+    else:
+        return False

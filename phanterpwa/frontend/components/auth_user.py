@@ -83,6 +83,8 @@ class AuthUser(application.Component):
             if context["ajax"][1][0] == "client" or context["ajax"][1][0] == "auth":
                 self.element_target = jQuery(self.target_selector)
                 self.start()
+        else:
+            self.start()
 
     @staticmethod
     def _open_menu():
@@ -650,34 +652,64 @@ class ModalPersonalInformation(modal.Modal):
         first_name = ""
         last_name = ""
         email = ""
+        two_factor = False
+        multiple_login = False
         if self.auth_user is not None and self.auth_user is not js_undefined:
             first_name = self.auth_user.first_name
             last_name = self.auth_user.last_name
             email = self.auth_user.email
+            two_factor = self.auth_user.two_factor
+            multiple_login = self.auth_user.multiple_login
+        hidden_fields = parameters.get("hidden_fields", None)
+        information = parameters.get('information', "")
+        first_name_hidden = None
+        last_name_hidden = None
+        email_hidden = None
+        two_factor_hidden = None
+        multiple_login_hidden = None
+        if hidden_fields is not None:
+            if "first_name" in hidden_fields:
+                first_name_hidden = " e-hidden"
+            if "last_name" in hidden_fields:
+                last_name_hidden = " e-hidden"
+            if "email" in hidden_fields:
+                email_hidden = " e-hidden"
+            if "two_factor" in hidden_fields:
+                two_factor_hidden = " e-hidden"
+            if "multiple_login" in hidden_fields:
+                multiple_login_hidden = " e-hidden"
+
         tcontent = DIV(
+            P(information),
             DIV(
                 DIV(
-                    forms.FormWidget(
-                        "change_account",
-                        "first_name",
-                        **{
-                            "type": "string",
-                            "label": I18N("First Name"),
-                            "value": first_name,
-                            "validators": ["IS_NOT_EMPTY"],
-                            "_class": "p-col w1p100 w3p50"
-                        },
+                    DIV(
+                        forms.FormWidget(
+                            "change_account",
+                            "first_name",
+                            **{
+                                "type": "string",
+                                "label": I18N("First Name"),
+                                "value": first_name,
+                                "validators": ["IS_NOT_EMPTY"],
+                                "_class": "p-col w1p100 w3p50"
+                            },
+                        ),
+                        _class=first_name_hidden
                     ),
-                    forms.FormWidget(
-                        "change_account",
-                        "last_name",
-                        **{
-                            "type": "string",
-                            "label": I18N("Last Name"),
-                            "value": last_name,
-                            "validators": ["IS_NOT_EMPTY"],
-                            "_class": "p-col w1p100 w3p50"
-                        },
+                    DIV(
+                        forms.FormWidget(
+                            "change_account",
+                            "last_name",
+                            **{
+                                "type": "string",
+                                "label": I18N("Last Name"),
+                                "value": last_name,
+                                "validators": ["IS_NOT_EMPTY"],
+                                "_class": "p-col w1p100 w3p50"
+                            },
+                        ),
+                        _class=last_name_hidden
                     ),
                     DIV(
                         forms.FormWidget(
@@ -691,7 +723,31 @@ class ModalPersonalInformation(modal.Modal):
                                 "_class": "p-col w1p100"
                             }
                         ),
-                        _class="e-hidden"
+                        _class=email_hidden
+                    ),
+                    DIV(
+                        forms.FormWidget(
+                            "change_account",
+                            "two_factor",
+                            **{
+                                "value": two_factor,
+                                "label": I18N("Two-step authentication", **{"_pt-br": "Autenticação em duas etapas"}),
+                                "type": "boolean"
+                            }
+                        ),
+                        _class=two_factor_hidden
+                    ),
+                    DIV(
+                        forms.FormWidget(
+                            "change_account",
+                            "multiple_login",
+                            **{
+                                "value": multiple_login,
+                                "label": I18N("Multiple logins", **{"_pt-br": "Múltiplos logins"}),
+                                "type": "boolean"
+                            }
+                        ),
+                        _class=multiple_login_hidden
                     ),
                     _class="p-row change_account_inputs_container"
                 ),
@@ -747,6 +803,8 @@ class ModalPersonalInformation(modal.Modal):
                         LeftBar.reload()
                     self.reload()
                     self.close()
+                    if self.AuthUser is not None:
+                        self.AuthUser.AlertActivationAccount.check_activation()
                 else:
                     forms.SignForm("#form-change_account")
 
@@ -789,170 +847,38 @@ class ModalPersonalInformation(modal.Modal):
         first_name = ""
         last_name = ""
         email = ""
+        two_factor = False
+        multiple_login = False
         if self.auth_user is not None and self.auth_user is not js_undefined:
             first_name = self.auth_user.first_name
             last_name = self.auth_user.last_name
             email = self.auth_user.email
+            two_factor = self.auth_user.two_factor
+            multiple_login = self.auth_user.multiple_login
+
+        two_factor_represent = I(_class="fas fa-times")
+        multiple_login_represent = I(_class="fas fa-times")
+        if self.auth_user.two_factor is not None and self.auth_user.two_factor is not js_undefined: 
+            two_factor = self.auth_user.two_factor
+            if two_factor:
+                two_factor_represent = I(_class="fas fa-check")
+
+
+        if self.auth_user.multiple_login is not None and self.auth_user.multiple_login is not js_undefined: 
+            multiple_login = self.auth_user.multiple_login
+            if multiple_login:
+                multiple_login_represent = I(_class="fas fa-check")
 
         jQuery("#phanterpwa-widget-input-input-profile-first_name").val(first_name)
         jQuery("#phanterpwa-widget-input-input-profile-last_name").val(last_name)
+        jQuery("#phanterpwa-widget-input-input-profile-email").val(email)
         jQuery("#phanterpwa-tagger-span-first_name").text(first_name)
         jQuery("#phanterpwa-tagger-span-last_name").text(last_name)
-
-
-class ModalChangeEmail(modal.Modal):
-    def __init__(self, target_element, **parameters):
-        AuthUserCmp = window.PhanterPWA.Components['auth_user']
-        self.AuthUser = None
-        if AuthUserCmp is not None and AuthUserCmp is not js_undefined and not isinstance(AuthUserCmp, AuthUser):
-            console.error("Need AuthUser instance on window.PhanterPWA.Components")
-        else:
-            self.AuthUser = AuthUserCmp
-        self.element_target = jQuery(target_element)
-        self.auth_user = window.PhanterPWA.get_last_auth_user()
-        first_name = ""
-        last_name = ""
-        email = ""
-        if self.auth_user is not None and self.auth_user is not js_undefined:
-            first_name = self.auth_user.first_name
-            last_name = self.auth_user.last_name
-            email = self.auth_user.email
-        tcontent = DIV(
-            DIV(
-                DIV(
-                    DIV(
-                        forms.FormWidget(
-                            "change_account",
-                            "first_name",
-                            **{
-                                "type": "string",
-                                "label": I18N("First Name"),
-                                "value": first_name,
-                                "validators": ["IS_NOT_EMPTY"],
-                                "_class": "p-col w1p100 w3p50"
-                            },
-                        ),
-                        forms.FormWidget(
-                            "change_account",
-                            "last_name",
-                            **{
-                                "type": "string",
-                                "label": I18N("Last Name"),
-                                "value": last_name,
-                                "validators": ["IS_NOT_EMPTY"],
-                                "_class": "p-col w1p100 w3p50"
-                            },
-                        ),
-                        _class="e-hidden"
-                    ),
-                    forms.FormWidget(
-                        "change_account",
-                        "email",
-                        **{
-                            "type": "string",
-                            "label": I18N("E-Mail"),
-                            "value": email,
-                            "validators": ["IS_EMAIL"],
-                            "_class": "p-col w1p100"
-                        }
-                    ),
-                    _class="p-row change_account_inputs_container"
-                ),
-                _class="p-col w1p100"
-            ),
-
-            _class="phanterpwa-change_account-form-inputs p-row"
-        ).jquery()
-        if self.auth_user is not None and self.auth_user is not js_undefined:
-            tcontent.addClass("has_auth_user")
-
-        tfooter = DIV(
-            DIV(
-                forms.SubmitButton(
-                    "change_account",
-                    I18N("Save Changes", **{"_pt-br": "Salvar Mudanças"}),
-                    _class="btn-autoresize wave_on_click waves-phanterpwa"
-                ),
-                _class='phanterpwa-form-buttons-container'
-            ),
-            _class="p-col w1p100"
-        ).jquery()
-        modal.Modal.__init__(
-            self,
-            self.element_target,
-            **{
-                "form": "change_account",
-                "header_height": 50,
-                "title": I18N("Personal Information", **{"_pt-br": "Informações Pessoais"}),
-                "content": tcontent,
-                "footer": tfooter,
-                "after_open": self.binds
-            }
-        )
-
-    def after_submit(self, data, ajax_status):
-            if ajax_status == "success":
-                json = data.responseJSON
-                message = json.i18n.message
-                window.PhanterPWA.flash(**{'html': message})
-                if data.status == 200:
-                    jQuery(".phanterpwa-gallery-upload-input-file").val('')
-                    auth_user = json.auth_user
-                    window.PhanterPWA.update_auth_user(auth_user)
-                    self.reload()
-                    self.close()
-                    if self.AuthUser is not None:
-                        self.AuthUser.AlertActivationAccount.check_activation()
-                        window.PhanterPWA.ApiServer.GET(**{
-                            'url_args': ["api", "auth", "active-account"],
-                            'onComplete': lambda: window.PhanterPWA.flash(
-                                **{'html': I18N(
-                                    "Email sent with activation code",
-                                    **{"_pt-br": "Email enviado com o código de ativação"}
-                                )}
-                            )
-                        })
-                else:
-                    forms.SignForm("#form-change_account")
-
-            else:
-                forms.SignForm("#form-change_account")
-                json = data.responseJSON
-                message = json.i18n.message
-                window.PhanterPWA.flash(**{'html': message})
-
-    def submit(self):
-        formdata = __new__(FormData(jQuery("#form-change_account")[0]))
-        window.PhanterPWA.ApiServer.PUT(**{
-            'url_args': ["api", "auth", "change"],
-            'form_data': formdata,
-            'onComplete': self.after_submit
-        })
-
-    def binds(self):
-        forms.ValidateForm("#form-change_account")
-        jQuery(
-            "#phanterpwa-widget-form-submit_button-change_account"
-        ).off(
-            "click.profile_button_save"
-        ).on(
-            "click.profile_button_save",
-            self.submit
-        )
-
-    def reload(self):
-        forms.SignForm("#form-change_account")
-        self.auth_user = window.PhanterPWA.get_last_auth_user()
-        first_name = ""
-        last_name = ""
-        email = ""
-        if self.auth_user is not None and self.auth_user is not js_undefined:
-            first_name = self.auth_user.first_name
-            last_name = self.auth_user.last_name
-            email = self.auth_user.email
-
-        jQuery("#phanterpwa-widget-input-input-profile-email").val(email)
         jQuery("#phanterpwa-tagger-span-email").text(email)
+        jQuery("#phanterpwa-tagger-span-two_factor").html(two_factor_represent.jquery())
+        jQuery("#phanterpwa-tagger-span-multiple_login").html(multiple_login_represent.jquery())
+        window.PhanterPWA.Request.widgets['profile-two_factor'].set_value(two_factor)
+        window.PhanterPWA.Request.widgets['profile-multiple_login'].set_value(multiple_login)
 
 
 class ModalRegister(modal.Modal):
@@ -1408,10 +1334,13 @@ class AlertActivationAccount(top_slide.TopSlide):
     def check_activation(self):
         auth_user = window.PhanterPWA.get_auth_user()
         if auth_user is not None:
+            if window.PhanterPWA.DEBUG:
+                console.info("cheking", auth_user)
             if not auth_user.activated:
-                if window.PhanterPWA.DEBUG:
-                    console.info("cheking", auth_user)
                 self.open()
+                return False
+            else:
+                return True
 
 
 class ModalChangePassword(modal.Modal):
@@ -1993,6 +1922,24 @@ class Profile(gatehandler.Handler):
                                                 "_class": "p-col w1p100"
                                             }
                                         ),
+                                        forms.FormWidget(
+                                            "profile",
+                                            "two_factor",
+                                            **{
+                                                "value": two_factor,
+                                                "label": I18N("Two-step authentication", **{"_pt-br": "Autenticação em duas etapas"}),
+                                                "type": "boolean"
+                                            }
+                                        ),
+                                        forms.FormWidget(
+                                            "profile",
+                                            "multiple_login",
+                                            **{
+                                                "value": multiple_login,
+                                                "label": I18N("Multiple logins", **{"_pt-br": "Múltiplos logins"}),
+                                                "type": "boolean"
+                                            }
+                                        ),
                                         _class="p-row profile_inputs_container"
                                     ),
 
@@ -2022,7 +1969,27 @@ class Profile(gatehandler.Handler):
                                             ),
                                             DIV(
                                                 I(_class="fas fa-pen"),
-                                                _class="e-tagger-button e-link open-model-edit-security"
+                                                _class="e-tagger-button e-link open-model-edit-two_factor"
+                                            ),
+                                            _class="e-tagger-wrapper"
+                                        ),
+                                        _class="p-col w1p100"
+                                    ),
+                                    _class="p-row"
+                                ),
+                                DIV(
+                                    DIV(
+                                        DIV(
+                                            STRONG(I18N("Password")),
+                                            SPAN(
+                                                I(_class="fas fa-ellipsis-h", _style="margin-right: 1px;"),
+                                                I(_class="fas fa-ellipsis-h", _style="margin-right: 1px;"),
+                                                I(_class="fas fa-ellipsis-h"),
+                                                _id="phanterpwa-tagger-span-password"
+                                            ),
+                                            DIV(
+                                                I(_class="fas fa-pen"),
+                                                _class="e-tagger-button e-link open-model-edit-password"
                                             ),
                                             _class="e-tagger-wrapper"
                                         ),
@@ -2040,7 +2007,7 @@ class Profile(gatehandler.Handler):
                                             ),
                                             DIV(
                                                 I(_class="fas fa-pen"),
-                                                _class="e-tagger-button e-link open-model-edit-security"
+                                                _class="e-tagger-button e-link open-model-edit-multiple_login"
                                             ),
                                             _class="e-tagger-wrapper"
                                         ),
@@ -2113,7 +2080,6 @@ class Profile(gatehandler.Handler):
                 )
                 cont = 0
                 for x in json.sessions:
-                    console.log(x)
                     cont += 1
                     date_created = __new__(Date(x["date_created"]))
                     date_created = date_created.toLocaleDateString(
@@ -2227,23 +2193,71 @@ class Profile(gatehandler.Handler):
             "click.open-model-edit-change_email",
             lambda: self.modal_change_email()
         )
-
+        jQuery(
+            ".open-model-edit-two_factor"
+        ).off(
+            "click.open-model-edit-two_factor"
+        ).on(
+            "click.open-model-edit-two_factor",
+            lambda: self.modal_change_two_factor()
+        )
+        jQuery(
+            ".open-model-edit-multiple_login"
+        ).off(
+            "click.open-model-edit-multiple_login"
+        ).on(
+            "click.open-model-edit-multiple_login",
+            lambda: self.modal_change_multiple_login()
+        )
+        jQuery(
+            ".open-model-edit-password"
+        ).off(
+            "click.open-model-edit-password"
+        ).on(
+            "click.open-model-edit-password",
+            lambda: self.open_modal_change_password()
+        )
     def modal_personal_information(self):
         self.Modal = ModalPersonalInformation(
-            "#modal-container"
+            "#modal-container",
+            hidden_fields=["email", "two_factor", "multiple_login"]
         )
         self.Modal.open()
         forms.SignForm("#form-change_account")
         forms.ValidateForm("#form-change_account")
 
     def modal_change_email(self):
-        self.Modal = ModalChangeEmail(
-            "#modal-container"
+        self.Modal = ModalPersonalInformation(
+            "#modal-container",
+            hidden_fields=["first_name", "last_name", "two_factor", "multiple_login"]
         )
         self.Modal.open()
         forms.SignForm("#form-change_account")
         forms.ValidateForm("#form-change_account")
 
+    def modal_change_two_factor(self):
+        self.Modal = ModalPersonalInformation(
+            "#modal-container",
+            hidden_fields=["first_name", "last_name", "email", "multiple_login"],
+            information=I18N("When activated, upon login, a code will be sent to the" +
+                " registered email. The login will only be effective if the correct " +
+                "code is added in the appropriate place."),
+        )
+        self.Modal.open()
+        forms.SignForm("#form-change_account")
+        forms.ValidateForm("#form-change_account")
+
+    def modal_change_multiple_login(self):
+        self.Modal = ModalPersonalInformation(
+            "#modal-container",
+            hidden_fields=["first_name", "last_name", "email", "two_factor"],
+            information=I18N("When enabled, it allows you to log in and stay logged" +
+                " in on several different devices. When deactivated, when you " +
+                "log in to a certain device, you are automatically logged out of the others.")
+        )
+        self.Modal.open()
+        forms.SignForm("#form-change_account")
+        forms.ValidateForm("#form-change_account")
 
 class Lock(gatehandler.Handler):
     def initialize(self):

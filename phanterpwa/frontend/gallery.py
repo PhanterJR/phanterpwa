@@ -83,8 +83,9 @@ class phanterpwaInput():
                         img1.alt = img_name + " (" + img_type + ")"
                         if is_to_cut:
                             def onImageLoad(img):
-                                console.log(img.width)
-                                console.log(img.height)
+                                if window.PhanterPWA.DEBUG:
+                                    console.info(img.width)
+                                    console.info(img.height)
                             img1.onload = lambda: onImageLoad(this)
 
                             __new__(phanterpwaGalleryCutter(
@@ -472,8 +473,6 @@ class phanterpwaGalleryCutter():
         )
 
     def gestureMoving(self, event):
-        console.log(event.gesture.deltaX)
-        console.log(event.gesture.deltaY)
         self.deslocationPositionXBackground = event.gesture.deltaX * (-1)
         self.deslocationPositionYBackground = event.gesture.deltaY * (-1)
         self.deslocationPositionXImgToCut = event.gesture.deltaX * (-1)
@@ -506,7 +505,6 @@ class phanterpwaGalleryCutter():
 
     def prepareGestureSize(self, event):
         event.preventDefault()
-        console.log(event)
         inicialPosition = self.positionDefaultZoom
         width = self.widthImg
         height = self.heightImg

@@ -384,7 +384,6 @@ class PhanterPWA():
     def _after_get_social_login(self, data, ajax_status, callback=None):
         json = data.responseJSON
         if ajax_status == "success":
-            console.log(json)
             window.location = json.redirect
         if callable(callback):
             callback(data, ajax_status)

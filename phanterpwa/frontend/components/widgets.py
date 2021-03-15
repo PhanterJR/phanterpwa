@@ -1376,8 +1376,6 @@ class MultSelect(Widget):
             self._xml_values.html_to("#phanterpwa-widget-multselect-value-{0}".format(self.identifier))
             self._binds_values_content()
             self._check_value()
-        else:
-            console.log(v)
 
     def _binds_values_content(self):
         jQuery(self.target_selector).find(
