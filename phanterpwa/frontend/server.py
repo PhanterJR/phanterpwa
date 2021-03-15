@@ -353,7 +353,6 @@ class ApiServer():
                 })
 
     def on_ajax_error(self, data, status):
-        console.log("caralho", data.status, status)
         if data.status==401 or data.status==403:
             json = data.responseJSON
             if window.PhanterPWA.logged():

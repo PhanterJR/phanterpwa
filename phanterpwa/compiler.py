@@ -1009,6 +1009,7 @@ class Compiler():
             print("\n============ APP COMPILATION: {0} ==============".format(app))
             current_debug = self.config["PROJECT"]["debug"]
             self.minify = self.config["PROJECT"].get("minify", False)
+            print("DEBUG:", current_debug, "\t\t MINIFY:", self.minify)
             if current_debug:
                 self.full_compilation = False
             else:

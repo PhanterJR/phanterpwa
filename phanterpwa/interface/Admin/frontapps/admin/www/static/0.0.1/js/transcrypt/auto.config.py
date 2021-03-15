@@ -11,7 +11,7 @@ CONFIG = {
         "name": "Admin",
         "title": "PhanterPWA",
         "version": "0.0.1",
-        "compilation": 29,
+        "compilation": 1,
         "debug": True,
         "author": "PhanterJR<phanterjr@conexaodidata.com.br>"
     },

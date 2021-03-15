@@ -8,7 +8,7 @@
     "name": "Admin",
     "title": "PhanterPWA",
     "version": "0.0.1",
-    "compilation": 8,
+    "compilation": 1,
     "author": "PhanterJR<phanterjr@conexaodidata.com.br>",
     "debug": true,
     "packaged": true,
@@ -30,18 +30,6 @@
       "host": "127.0.0.1",
       "port": 10001
     }
-  },
-  "EMAIL": {
-    "server": "mail.yourservermail.com",
-    "username": "username@yourservermail.com",
-    "default_sender": "contato@conexaodidata.com.br",
-    "port": 465,
-    "use_tls": false,
-    "use_ssl": true
-  },
-  "CONTENT_EMAILS": {
-    "copyright": "Conex\u00e3o Didata \u00a9 2011-{{now}}",
-    "link_to_your_site": "https://phanterpwa.conexaodidata.com.br"
   },
   "BACKEND": {
     "api": {

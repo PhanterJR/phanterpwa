@@ -1,4 +1,4 @@
-// Transcrypt'ed from Python, 2021-03-10 09:46:27
+// Transcrypt'ed from Python, 2021-03-15 14:32:42
 import {AssertionError, AttributeError, BaseException, DeprecationWarning, Exception, IndexError, IterableError, KeyError, NotImplementedError, RuntimeWarning, StopIteration, UserWarning, ValueError, Warning, __JsIterator__, __PyIterator__, __Terminal__, __add__, __and__, __call__, __class__, __envir__, __eq__, __floordiv__, __ge__, __get__, __getcm__, __getitem__, __getslice__, __getsm__, __gt__, __i__, __iadd__, __iand__, __idiv__, __ijsmod__, __ilshift__, __imatmul__, __imod__, __imul__, __in__, __init__, __ior__, __ipow__, __irshift__, __isub__, __ixor__, __jsUsePyNext__, __jsmod__, __k__, __kwargtrans__, __le__, __lshift__, __lt__, __matmul__, __mergefields__, __mergekwargtrans__, __mod__, __mul__, __ne__, __neg__, __nest__, __or__, __pow__, __pragma__, __proxy__, __pyUseJsNext__, __rshift__, __setitem__, __setproperty__, __setslice__, __sort__, __specialattrib__, __sub__, __super__, __t__, __terminal__, __truediv__, __withblock__, __xor__, abs, all, any, assert, bool, bytearray, bytes, callable, chr, copy, deepcopy, delattr, dict, dir, divmod, enumerate, filter, float, getattr, hasattr, input, int, isinstance, issubclass, len, list, map, max, min, object, ord, pow, print, property, py_TypeError, py_iter, py_metatype, py_next, py_reversed, py_typeof, range, repr, round, set, setattr, sorted, str, sum, tuple, zip} from './org.transcrypt.__runtime__.js';
 import * as validations from './phanterpwa.frontend.validations.js';
 import * as helpers from './phanterpwa.frontend.helpers.js';
@@ -55,9 +55,7 @@ export var Datepickers =  __class__ ('Datepickers', [object], {
 		if ($ (self.target_selector).length > 0) {
 			if ($ (self.target_selector) [0].hasAttribute ('phanterpwa-datetimepicker-iso')) {
 				var phanterpwa_datetimepicker_iso = $ (self.target_selector).attr ('phanterpwa-datetimepicker-iso');
-				console.log (phanterpwa_datetimepicker_iso);
 				self.selected_date = new Date (phanterpwa_datetimepicker_iso);
-				console.log (self.selected_date);
 				self.current_date = new Date (self._apply_format ('yyyy-MM-01 HH:ss:mm'));
 			}
 		}
@@ -398,7 +396,6 @@ export var Datepickers =  __class__ ('Datepickers', [object], {
 			var value = value.py_replace ('MMM', self._sanitize_i18ns (self.months [smonth].__getslice__ (0, 3, 1)));
 		}
 		if (__in__ ('MM', value)) {
-			console.log (smonth);
 			var value = value.py_replace ('MM', self._zfill (smonth + 1, 2));
 		}
 		if (__in__ ('Mo', value)) {
@@ -454,7 +451,6 @@ export var Datepickers =  __class__ ('Datepickers', [object], {
 		}
 		else {
 		}
-		console.log (number);
 		var number = int (number);
 		var number = str (number);
 		var s = number;

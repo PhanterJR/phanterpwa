@@ -504,7 +504,6 @@ class GalleryCutter():
 
     def prepareGestureSize(self, event):
         event.preventDefault()
-        console.log(event)
         inicialPosition = self.positionDefaultZoom
         width = self.widthImg
         height = self.heightImg

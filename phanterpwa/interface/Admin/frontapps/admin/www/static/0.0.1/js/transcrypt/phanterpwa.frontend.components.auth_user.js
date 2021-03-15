@@ -1,5 +1,6 @@
-// Transcrypt'ed from Python, 2021-03-12 14:18:21
+// Transcrypt'ed from Python, 2021-03-15 14:32:47
 import {AssertionError, AttributeError, BaseException, DeprecationWarning, Exception, IndexError, IterableError, KeyError, NotImplementedError, RuntimeWarning, StopIteration, UserWarning, ValueError, Warning, __JsIterator__, __PyIterator__, __Terminal__, __add__, __and__, __call__, __class__, __envir__, __eq__, __floordiv__, __ge__, __get__, __getcm__, __getitem__, __getslice__, __getsm__, __gt__, __i__, __iadd__, __iand__, __idiv__, __ijsmod__, __ilshift__, __imatmul__, __imod__, __imul__, __in__, __init__, __ior__, __ipow__, __irshift__, __isub__, __ixor__, __jsUsePyNext__, __jsmod__, __k__, __kwargtrans__, __le__, __lshift__, __lt__, __matmul__, __mergefields__, __mergekwargtrans__, __mod__, __mul__, __ne__, __neg__, __nest__, __or__, __pow__, __pragma__, __proxy__, __pyUseJsNext__, __rshift__, __setitem__, __setproperty__, __setslice__, __sort__, __specialattrib__, __sub__, __super__, __t__, __terminal__, __truediv__, __withblock__, __xor__, abs, all, any, assert, bool, bytearray, bytes, callable, chr, copy, deepcopy, delattr, dict, dir, divmod, enumerate, filter, float, getattr, hasattr, input, int, isinstance, issubclass, len, list, map, max, min, object, ord, pow, print, property, py_TypeError, py_iter, py_metatype, py_next, py_reversed, py_typeof, range, repr, round, set, setattr, sorted, str, sum, tuple, zip} from './org.transcrypt.__runtime__.js';
+import * as widgets from './phanterpwa.frontend.components.widgets.js';
 import * as decorators from './phanterpwa.frontend.decorators.js';
 import * as gatehandler from './phanterpwa.frontend.gatehandler.js';
 import * as application from './phanterpwa.frontend.application.js';
@@ -15,6 +16,7 @@ export var DIV = helpers.XmlConstructor.tagger ('div');
 export var FORM = helpers.XmlConstructor.tagger ('form');
 export var SPAN = helpers.XmlConstructor.tagger ('span');
 export var IMG = helpers.XmlConstructor.tagger ('img', true);
+export var HR = helpers.XmlConstructor.tagger ('hr', true);
 export var I = helpers.XmlConstructor.tagger ('i');
 export var H2 = helpers.XmlConstructor.tagger ('h2');
 export var P = helpers.XmlConstructor.tagger ('p');
@@ -23,6 +25,9 @@ export var STRONG = helpers.XmlConstructor.tagger ('strong');
 export var I18N = helpers.I18N;
 export var CONCATENATE = helpers.CONCATENATE;
 export var XSECTION = helpers.XSECTION;
+export var Table = widgets.Table;
+export var TableHead = widgets.TableHead;
+export var TableData = widgets.TableData;
 export var AuthUser =  __class__ ('AuthUser', [application.Component], {
 	__module__: __name__,
 	get __init__ () {return __get__ (this, function (self, target_selector) {
@@ -130,6 +135,9 @@ export var AuthUser =  __class__ ('AuthUser', [application.Component], {
 				self.element_target = $ (self.target_selector);
 				self.start ();
 			}
+		}
+		else {
+			self.start ();
 		}
 	});},
 	get _open_menu () {return function () {
@@ -471,7 +479,7 @@ export var ModalLogin =  __class__ ('ModalLogin', [modal.Modal], {
 				self.xml_social_logins.append (DIV (DIV (icon, I18N ('Login with {0}'.format (str (social_name).capitalize ()), __kwargtrans__ (dict ({'_pt-br': 'Login com o {0}'.format (str (social_name).capitalize ())}))), __kwargtrans__ (dict ({'_class': 'btn btn-social_login link', '_data-social_login': social_name}))), __kwargtrans__ ({_class: 'btn-social_login-wrapper'})));
 			}
 		}
-		var tcontent = DIV (self.xml_social_logins, DIV (DIV (DIV (DIV (IMG (__kwargtrans__ ({_src: user_image, _id: 'form-login-image-user-url'})), __kwargtrans__ ({_class: 'form-image-user-img'})), __kwargtrans__ ({_class: 'form-image-user-img-container'})), DIV (DIV ('{0} {1}'.format (first_name, last_name), __kwargtrans__ ({_id: 'form-login-profile-user-name', _class: 'form-profile-user-name'})), DIV (role, __kwargtrans__ ({_id: 'form-login-profile-user-role', _class: 'form-profile-user-role'})), __kwargtrans__ ({_class: 'form-profile-user-info'})), __kwargtrans__ ({_class: 'form-profile-container'})), __kwargtrans__ ({_id: 'form-login-image-user-container', _class: 'form-image-user-container'})), DIV (DIV (forms.FormButton ('form-login-button-other-user', I18N ('Other account', __kwargtrans__ (dict ({'_pt-br': 'Outra Conta'}))), __kwargtrans__ ({_class: 'wave_on_click waves-phanterpwa btn-s'})), __kwargtrans__ ({_class: 'buttons-form-container'})), __kwargtrans__ ({_id: 'form-login-button-other-user-container', _class: 'p-col w1p100'})), forms.FormWidget ('login', 'email', __kwargtrans__ (dict ({'type': 'string', 'label': I18N ('E-mail'), 'value': email, 'validators': ['IS_NOT_EMPTY', 'IS_EMAIL']}))), DIV (forms.FormWidget ('login', 'password', __kwargtrans__ (dict ({'label': I18N ('Password', __kwargtrans__ (dict ({'_pt-br': 'Senha'}))), 'type': 'password', 'validators': ['IS_NOT_EMPTY']}))), __kwargtrans__ ({_class: 'p-col w1p100'})), DIV (forms.FormWidget ('login', 'remember_me', __kwargtrans__ (dict ({'value': remember_me, 'label': I18N ('Remember-me', __kwargtrans__ (dict ({'_pt-br': 'Lembre-me'}))), 'type': 'boolean'}))), __kwargtrans__ ({_class: 'input-field p-col w1p100'})), __kwargtrans__ ({_class: 'phanterpwa-auth_user-form-inputs'})).jquery ();
+		var tcontent = DIV (self.xml_social_logins, DIV (DIV (DIV (DIV (IMG (__kwargtrans__ ({_src: user_image, _id: 'form-login-image-user-url'})), __kwargtrans__ ({_class: 'form-image-user-img'})), __kwargtrans__ ({_class: 'form-image-user-img-container'})), DIV (DIV ('{0} {1}'.format (first_name, last_name), __kwargtrans__ ({_id: 'form-login-profile-user-name', _class: 'form-profile-user-name'})), DIV (role, __kwargtrans__ ({_id: 'form-login-profile-user-role', _class: 'form-profile-user-role'})), __kwargtrans__ ({_class: 'form-profile-user-info'})), __kwargtrans__ ({_class: 'form-profile-container'})), __kwargtrans__ ({_id: 'form-login-image-user-container', _class: 'form-image-user-container'})), DIV (DIV (forms.FormButton ('form-login-button-other-user', I18N ('Other account', __kwargtrans__ (dict ({'_pt-br': 'Outra Conta'}))), __kwargtrans__ ({_class: 'wave_on_click waves-phanterpwa btn-s'})), __kwargtrans__ ({_class: 'buttons-form-container'})), __kwargtrans__ ({_id: 'form-login-button-other-user-container', _class: 'p-col w1p100'})), forms.FormWidget ('login', 'email', __kwargtrans__ (dict ({'type': 'string', 'label': I18N ('E-mail'), 'value': email, 'validators': ['IS_NOT_EMPTY', 'IS_EMAIL']}))), DIV (forms.FormWidget ('login', 'password', __kwargtrans__ (dict ({'label': I18N ('Password', __kwargtrans__ (dict ({'_pt-br': 'Senha'}))), 'type': 'password', 'validators': ['IS_NOT_EMPTY'], 'icon': I (__kwargtrans__ ({_class: 'fas fa-eye'}))}))), __kwargtrans__ ({_class: 'p-col w1p100'})), DIV (forms.FormWidget ('login', 'remember_me', __kwargtrans__ (dict ({'value': remember_me, 'label': I18N ('Remember-me', __kwargtrans__ (dict ({'_pt-br': 'Lembre-me'}))), 'type': 'boolean'}))), __kwargtrans__ ({_class: 'input-field p-col w1p100'})), __kwargtrans__ ({_class: 'phanterpwa-auth_user-form-inputs'})).jquery ();
 		if (self._has_social_logins) {
 			tcontent.addClass ('has_social_logins');
 		}
@@ -728,22 +736,58 @@ export var ModalPersonalInformation =  __class__ ('ModalPersonalInformation', [m
 		}
 		else {
 		}
+		var AuthUserCmp = window.PhanterPWA.Components ['auth_user'];
+		self.AuthUser = null;
+		if (AuthUserCmp !== null && AuthUserCmp !== undefined && !(isinstance (AuthUserCmp, AuthUser))) {
+			console.error ('Need AuthUser instance on window.PhanterPWA.Components');
+		}
+		else {
+			self.AuthUser = AuthUserCmp;
+		}
 		self.element_target = $ (target_element);
 		self.auth_user = window.PhanterPWA.get_last_auth_user ();
 		var first_name = '';
 		var last_name = '';
 		var email = '';
+		var two_factor = false;
+		var multiple_login = false;
 		if (self.auth_user !== null && self.auth_user !== undefined) {
 			var first_name = self.auth_user.first_name;
 			var last_name = self.auth_user.last_name;
 			var email = self.auth_user.email;
+			var two_factor = self.auth_user.two_factor;
+			var multiple_login = self.auth_user.multiple_login;
 		}
-		var tcontent = DIV (DIV (DIV (DIV (forms.FormWidget ('change_account', 'first_name', __kwargtrans__ (dict ({'type': 'string', 'label': I18N ('First Name'), 'value': first_name, 'validators': ['IS_NOT_EMPTY'], '_class': 'p-col w1p100 w3p50'}))), forms.FormWidget ('change_account', 'last_name', __kwargtrans__ (dict ({'type': 'string', 'label': I18N ('Last Name'), 'value': last_name, 'validators': ['IS_NOT_EMPTY'], '_class': 'p-col w1p100 w3p50'}))), forms.FormWidget ('change_account', 'email', __kwargtrans__ (dict ({'type': 'string', 'label': I18N ('E-Mail'), 'value': email, 'validators': ['IS_EMAIL'], '_class': 'p-col w1p100'}))), __kwargtrans__ ({_class: 'p-row change_account_inputs_container'})), __kwargtrans__ ({_class: 'p-col w1p100'}))), __kwargtrans__ ({_class: 'phanterpwa-change_account-form-inputs p-row'})).jquery ();
+		var hidden_fields = parameters.py_get ('hidden_fields', null);
+		var information = parameters.py_get ('information', '');
+		var first_name_hidden = null;
+		var last_name_hidden = null;
+		var email_hidden = null;
+		var two_factor_hidden = null;
+		var multiple_login_hidden = null;
+		if (hidden_fields !== null) {
+			if (__in__ ('first_name', hidden_fields)) {
+				var first_name_hidden = ' e-hidden';
+			}
+			if (__in__ ('last_name', hidden_fields)) {
+				var last_name_hidden = ' e-hidden';
+			}
+			if (__in__ ('email', hidden_fields)) {
+				var email_hidden = ' e-hidden';
+			}
+			if (__in__ ('two_factor', hidden_fields)) {
+				var two_factor_hidden = ' e-hidden';
+			}
+			if (__in__ ('multiple_login', hidden_fields)) {
+				var multiple_login_hidden = ' e-hidden';
+			}
+		}
+		var tcontent = DIV (P (information), DIV (DIV (DIV (forms.FormWidget ('change_account', 'first_name', __kwargtrans__ (dict ({'type': 'string', 'label': I18N ('First Name'), 'value': first_name, 'validators': ['IS_NOT_EMPTY'], '_class': 'p-col w1p100 w3p50'}))), __kwargtrans__ ({_class: first_name_hidden})), DIV (forms.FormWidget ('change_account', 'last_name', __kwargtrans__ (dict ({'type': 'string', 'label': I18N ('Last Name'), 'value': last_name, 'validators': ['IS_NOT_EMPTY'], '_class': 'p-col w1p100 w3p50'}))), __kwargtrans__ ({_class: last_name_hidden})), DIV (forms.FormWidget ('change_account', 'email', __kwargtrans__ (dict ({'type': 'string', 'label': I18N ('E-Mail'), 'value': email, 'validators': ['IS_EMAIL'], '_class': 'p-col w1p100'}))), __kwargtrans__ ({_class: email_hidden})), DIV (forms.FormWidget ('change_account', 'two_factor', __kwargtrans__ (dict ({'value': two_factor, 'label': I18N ('Two-step authentication', __kwargtrans__ (dict ({'_pt-br': 'Autenticação em duas etapas'}))), 'type': 'boolean'}))), __kwargtrans__ ({_class: two_factor_hidden})), DIV (forms.FormWidget ('change_account', 'multiple_login', __kwargtrans__ (dict ({'value': multiple_login, 'label': I18N ('Multiple logins', __kwargtrans__ (dict ({'_pt-br': 'Múltiplos logins'}))), 'type': 'boolean'}))), __kwargtrans__ ({_class: multiple_login_hidden})), __kwargtrans__ ({_class: 'p-row change_account_inputs_container'})), __kwargtrans__ ({_class: 'p-col w1p100'})), __kwargtrans__ ({_class: 'phanterpwa-change_account-form-inputs p-row'})).jquery ();
 		if (self.auth_user !== null && self.auth_user !== undefined) {
 			tcontent.addClass ('has_auth_user');
 		}
 		var tfooter = DIV (DIV (forms.SubmitButton ('change_account', I18N ('Save Changes', __kwargtrans__ (dict ({'_pt-br': 'Salvar Mudanças'}))), __kwargtrans__ ({_class: 'btn-autoresize wave_on_click waves-phanterpwa'})), __kwargtrans__ ({_class: 'phanterpwa-form-buttons-container'})), __kwargtrans__ ({_class: 'p-col w1p100'})).jquery ();
-		modal.Modal.__init__ (self, self.element_target, __kwargtrans__ (dict ({'_phanterpwa-form': 'change_account', '_id': 'form-change_account', 'header_height': 50, 'title': I18N ('Personal Information', __kwargtrans__ (dict ({'_pt-br': 'Informações Pessoais'}))), 'content': tcontent, 'footer': tfooter, 'after_open': self.binds})));
+		modal.Modal.__init__ (self, self.element_target, __kwargtrans__ (dict ({'form': 'change_account', 'header_height': 50, 'title': I18N ('Personal Information', __kwargtrans__ (dict ({'_pt-br': 'Informações Pessoais'}))), 'content': tcontent, 'footer': tfooter, 'after_open': self.binds})));
 	});},
 	get after_submit () {return __get__ (this, function (self, data, ajax_status) {
 		if (arguments.length) {
@@ -769,7 +813,19 @@ export var ModalPersonalInformation =  __class__ ('ModalPersonalInformation', [m
 				$ ('.phanterpwa-gallery-upload-input-file').val ('');
 				var auth_user = json.auth_user;
 				window.PhanterPWA.update_auth_user (auth_user);
+				self.AuthUser.start ();
+				var LeftBar = window.PhanterPWA.Components ['left_bar'];
+				if (LeftBar !== null && LeftBar !== undefined) {
+					LeftBar.reload ();
+				}
 				self.reload ();
+				self.close ();
+				if (self.AuthUser !== null) {
+					self.AuthUser.AlertActivationAccount.check_activation ();
+				}
+			}
+			else {
+				forms.SignForm ('#form-change_account');
 			}
 		}
 		else {
@@ -812,6 +868,59 @@ export var ModalPersonalInformation =  __class__ ('ModalPersonalInformation', [m
 		}
 		forms.ValidateForm ('#form-change_account');
 		$ ('#phanterpwa-widget-form-submit_button-change_account').off ('click.profile_button_save').on ('click.profile_button_save', self.submit);
+	});},
+	get reload () {return __get__ (this, function (self) {
+		if (arguments.length) {
+			var __ilastarg0__ = arguments.length - 1;
+			if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+				var __allkwargs0__ = arguments [__ilastarg0__--];
+				for (var __attrib0__ in __allkwargs0__) {
+					switch (__attrib0__) {
+						case 'self': var self = __allkwargs0__ [__attrib0__]; break;
+					}
+				}
+			}
+		}
+		else {
+		}
+		forms.SignForm ('#form-change_account');
+		self.auth_user = window.PhanterPWA.get_last_auth_user ();
+		var first_name = '';
+		var last_name = '';
+		var email = '';
+		var two_factor = false;
+		var multiple_login = false;
+		if (self.auth_user !== null && self.auth_user !== undefined) {
+			var first_name = self.auth_user.first_name;
+			var last_name = self.auth_user.last_name;
+			var email = self.auth_user.email;
+			var two_factor = self.auth_user.two_factor;
+			var multiple_login = self.auth_user.multiple_login;
+		}
+		var two_factor_represent = I (__kwargtrans__ ({_class: 'fas fa-times'}));
+		var multiple_login_represent = I (__kwargtrans__ ({_class: 'fas fa-times'}));
+		if (self.auth_user.two_factor !== null && self.auth_user.two_factor !== undefined) {
+			var two_factor = self.auth_user.two_factor;
+			if (two_factor) {
+				var two_factor_represent = I (__kwargtrans__ ({_class: 'fas fa-check'}));
+			}
+		}
+		if (self.auth_user.multiple_login !== null && self.auth_user.multiple_login !== undefined) {
+			var multiple_login = self.auth_user.multiple_login;
+			if (multiple_login) {
+				var multiple_login_represent = I (__kwargtrans__ ({_class: 'fas fa-check'}));
+			}
+		}
+		$ ('#phanterpwa-widget-input-input-profile-first_name').val (first_name);
+		$ ('#phanterpwa-widget-input-input-profile-last_name').val (last_name);
+		$ ('#phanterpwa-widget-input-input-profile-email').val (email);
+		$ ('#phanterpwa-tagger-span-first_name').text (first_name);
+		$ ('#phanterpwa-tagger-span-last_name').text (last_name);
+		$ ('#phanterpwa-tagger-span-email').text (email);
+		$ ('#phanterpwa-tagger-span-two_factor').html (two_factor_represent.jquery ());
+		$ ('#phanterpwa-tagger-span-multiple_login').html (multiple_login_represent.jquery ());
+		window.PhanterPWA.Request.widgets ['profile-two_factor'].set_value (two_factor);
+		window.PhanterPWA.Request.widgets ['profile-multiple_login'].set_value (multiple_login);
 	});}
 });
 export var ModalRegister =  __class__ ('ModalRegister', [modal.Modal], {
@@ -1383,11 +1492,15 @@ export var AlertActivationAccount =  __class__ ('AlertActivationAccount', [top_s
 		}
 		var auth_user = window.PhanterPWA.get_auth_user ();
 		if (auth_user !== null) {
+			if (window.PhanterPWA.DEBUG) {
+				console.info ('cheking', auth_user);
+			}
 			if (!(auth_user.activated)) {
-				if (window.PhanterPWA.DEBUG) {
-					console.info ('cheking', auth_user);
-				}
 				self.open ();
+				return false;
+			}
+			else {
+				return true;
 			}
 		}
 	});}
@@ -2198,14 +2311,35 @@ export var Profile =  __class__ ('Profile', [gatehandler.Handler], {
 		var first_name = '';
 		var last_name = '';
 		var email = '';
+		var locale = 'Automatic';
+		var two_factor = false;
+		var two_factor_represent = I (__kwargtrans__ ({_class: 'fas fa-times'}));
+		var multiple_login = false;
+		var multiple_login_represent = I (__kwargtrans__ ({_class: 'fas fa-times'}));
 		if (self.auth_user !== null && self.auth_user !== undefined) {
 			var first_name = self.auth_user.first_name;
 			var last_name = self.auth_user.last_name;
 			var email = self.auth_user.email;
+			if (self.auth_user.locale !== null && self.auth_user.locale !== undefined) {
+				var locale = self.auth_user.locale;
+			}
+			if (self.auth_user.two_factor !== null && self.auth_user.two_factor !== undefined) {
+				var two_factor = self.auth_user.two_factor;
+				if (two_factor) {
+					var two_factor_represent = I (__kwargtrans__ ({_class: 'fas fa-check'}));
+				}
+			}
+			if (self.auth_user.multiple_login !== null && self.auth_user.multiple_login !== undefined) {
+				var multiple_login = self.auth_user.multiple_login;
+				if (multiple_login) {
+					var multiple_login_represent = I (__kwargtrans__ ({_class: 'fas fa-check'}));
+				}
+			}
 		}
-		var xml_content = CONCATENATE (DIV (DIV (DIV (DIV (I18N ('Profile', __kwargtrans__ (dict ({'_pt-br': 'Perfil'}))), __kwargtrans__ ({_class: 'phanterpwa-breadcrumb'})), __kwargtrans__ ({_class: 'phanterpwa-breadcrumb-wrapper'})), __kwargtrans__ ({_class: 'container'})), __kwargtrans__ ({_class: 'title_page_container card'})), DIV (DIV (XSECTION (LABEL (I18N ('Personal Information', __kwargtrans__ (dict ({'_pt-br': 'Informações Pessoais'})))), FORM (DIV (DIV (DIV (DIV (preloaders.android, __kwargtrans__ ({_style: 'text-align:center;'})), __kwargtrans__ ({_id: 'profile-image-user-container', _class: 'p-row'})), __kwargtrans__ ({_class: 'p-col w1p100 l4'})), DIV (DIV (DIV (STRONG (I18N ('First Name')), SPAN (first_name), DIV (I (__kwargtrans__ ({_class: 'fas fa-pen'})), __kwargtrans__ ({_class: 'e-tagger-button e-link open-model-edit-personal-information'})), __kwargtrans__ ({_class: 'e-tagger-wrapper'})), __kwargtrans__ ({_class: 'p-col w1p100'})), __kwargtrans__ ({_class: 'p-row'})), DIV (DIV (DIV (STRONG (I18N ('Last Name')), SPAN (last_name), DIV (I (__kwargtrans__ ({_class: 'fas fa-pen'})), __kwargtrans__ ({_class: 'e-tagger-button e-link open-model-edit-personal-information'})), __kwargtrans__ ({_class: 'e-tagger-wrapper'})), __kwargtrans__ ({_class: 'p-col w1p100'})), __kwargtrans__ ({_class: 'p-row'})), DIV (DIV (DIV (STRONG (I18N ('E-Mail')), SPAN (email), DIV (I (__kwargtrans__ ({_class: 'fas fa-pen'})), __kwargtrans__ ({_class: 'e-tagger-button e-link open-model-edit-personal-information'})), __kwargtrans__ ({_class: 'e-tagger-wrapper'})), __kwargtrans__ ({_class: 'p-col w1p100'})), __kwargtrans__ ({_class: 'p-row'})), __kwargtrans__ ({_class: 'e-padding_20'})), DIV (DIV (DIV (forms.FormWidget ('profile', 'first_name', __kwargtrans__ (dict ({'type': 'string', 'label': I18N ('First Name'), 'value': first_name, 'validators': ['IS_NOT_EMPTY'], '_class': 'p-col w1p100 w3p50'}))), forms.FormWidget ('profile', 'last_name', __kwargtrans__ (dict ({'type': 'string', 'label': I18N ('Last Name'), 'value': last_name, 'validators': ['IS_NOT_EMPTY'], '_class': 'p-col w1p100 w3p50'}))), forms.FormWidget ('profile', 'email', __kwargtrans__ (dict ({'type': 'string', 'label': I18N ('E-Mail'), 'value': email, 'validators': ['IS_EMAIL'], '_class': 'p-col w1p100'}))), __kwargtrans__ ({_class: 'p-row profile_inputs_container'})), __kwargtrans__ ({_class: 'p-col w1p100'})), __kwargtrans__ ({_class: 'e-padding_20 e-hidden'})), __kwargtrans__ (dict ({'_phanterpwa-form': 'profile', '_id': 'form-profile', '_class': 'p-row', '_autocomplete': 'off'})))), __kwargtrans__ ({_class: 'e-margin_bottom_20 phanterpwa-card-container e-padding_20 card'})), __kwargtrans__ ({_class: 'phanterpwa-container container'})));
+		var xml_content = CONCATENATE (DIV (DIV (DIV (DIV (I18N ('Profile', __kwargtrans__ (dict ({'_pt-br': 'Perfil'}))), __kwargtrans__ ({_class: 'phanterpwa-breadcrumb'})), __kwargtrans__ ({_class: 'phanterpwa-breadcrumb-wrapper'})), __kwargtrans__ ({_class: 'container'})), __kwargtrans__ ({_class: 'title_page_container card'})), DIV (DIV (XSECTION (LABEL (I18N ('Personal Information', __kwargtrans__ (dict ({'_pt-br': 'Informações Pessoais'})))), FORM (DIV (DIV (DIV (DIV (preloaders.android, __kwargtrans__ ({_style: 'text-align:center;'})), __kwargtrans__ ({_id: 'profile-image-user-container', _class: 'p-row'})), __kwargtrans__ ({_class: 'p-col w1p100 l4'})), DIV (DIV (DIV (STRONG (I18N ('First Name')), SPAN (first_name, __kwargtrans__ ({_id: 'phanterpwa-tagger-span-first_name'})), DIV (I (__kwargtrans__ ({_class: 'fas fa-pen'})), __kwargtrans__ ({_class: 'e-tagger-button e-link open-model-edit-personal_information'})), __kwargtrans__ ({_class: 'e-tagger-wrapper'})), __kwargtrans__ ({_class: 'p-col w1p100'})), __kwargtrans__ ({_class: 'p-row'})), DIV (DIV (DIV (STRONG (I18N ('Last Name')), SPAN (last_name, __kwargtrans__ ({_id: 'phanterpwa-tagger-span-last_name'})), DIV (I (__kwargtrans__ ({_class: 'fas fa-pen'})), __kwargtrans__ ({_class: 'e-tagger-button e-link open-model-edit-personal_information'})), __kwargtrans__ ({_class: 'e-tagger-wrapper'})), __kwargtrans__ ({_class: 'p-col w1p100'})), __kwargtrans__ ({_class: 'p-row'})), DIV (DIV (DIV (STRONG (I18N ('E-Mail')), SPAN (email, __kwargtrans__ ({_id: 'phanterpwa-tagger-span-email'})), DIV (I (__kwargtrans__ ({_class: 'fas fa-pen'})), __kwargtrans__ ({_class: 'e-tagger-button e-link open-model-edit-change_email'})), __kwargtrans__ ({_class: 'e-tagger-wrapper'})), __kwargtrans__ ({_class: 'p-col w1p100'})), __kwargtrans__ ({_class: 'p-row'})), __kwargtrans__ ({_class: 'e-padding_20'})), DIV (DIV (DIV (forms.FormWidget ('profile', 'first_name', __kwargtrans__ (dict ({'type': 'string', 'label': I18N ('First Name'), 'value': first_name, 'validators': ['IS_NOT_EMPTY'], '_class': 'p-col w1p100 w3p50'}))), forms.FormWidget ('profile', 'last_name', __kwargtrans__ (dict ({'type': 'string', 'label': I18N ('Last Name'), 'value': last_name, 'validators': ['IS_NOT_EMPTY'], '_class': 'p-col w1p100 w3p50'}))), forms.FormWidget ('profile', 'email', __kwargtrans__ (dict ({'type': 'string', 'label': I18N ('E-Mail'), 'value': email, 'validators': ['IS_EMAIL'], '_class': 'p-col w1p100'}))), forms.FormWidget ('profile', 'two_factor', __kwargtrans__ (dict ({'value': two_factor, 'label': I18N ('Two-step authentication', __kwargtrans__ (dict ({'_pt-br': 'Autenticação em duas etapas'}))), 'type': 'boolean'}))), forms.FormWidget ('profile', 'multiple_login', __kwargtrans__ (dict ({'value': multiple_login, 'label': I18N ('Multiple logins', __kwargtrans__ (dict ({'_pt-br': 'Múltiplos logins'}))), 'type': 'boolean'}))), __kwargtrans__ ({_class: 'p-row profile_inputs_container'})), __kwargtrans__ ({_class: 'p-col w1p100'})), __kwargtrans__ ({_class: 'e-padding_20 e-hidden'})), __kwargtrans__ (dict ({'_phanterpwa-form': 'profile', '_id': 'form-profile', '_class': 'p-row', '_autocomplete': 'off'})))), XSECTION (LABEL (I18N ('Segurity', __kwargtrans__ (dict ({'_pt-br': 'Segurança'})))), FORM (DIV (DIV (DIV (DIV (STRONG (I18N ('Two-step authentication')), SPAN (two_factor_represent, __kwargtrans__ ({_id: 'phanterpwa-tagger-span-two_factor'})), DIV (I (__kwargtrans__ ({_class: 'fas fa-pen'})), __kwargtrans__ ({_class: 'e-tagger-button e-link open-model-edit-two_factor'})), __kwargtrans__ ({_class: 'e-tagger-wrapper'})), __kwargtrans__ ({_class: 'p-col w1p100'})), __kwargtrans__ ({_class: 'p-row'})), DIV (DIV (DIV (STRONG (I18N ('Password')), SPAN (I (__kwargtrans__ ({_class: 'fas fa-ellipsis-h', _style: 'margin-right: 1px;'})), I (__kwargtrans__ ({_class: 'fas fa-ellipsis-h', _style: 'margin-right: 1px;'})), I (__kwargtrans__ ({_class: 'fas fa-ellipsis-h'})), __kwargtrans__ ({_id: 'phanterpwa-tagger-span-password'})), DIV (I (__kwargtrans__ ({_class: 'fas fa-pen'})), __kwargtrans__ ({_class: 'e-tagger-button e-link open-model-edit-password'})), __kwargtrans__ ({_class: 'e-tagger-wrapper'})), __kwargtrans__ ({_class: 'p-col w1p100'})), __kwargtrans__ ({_class: 'p-row'})), DIV (DIV (DIV (STRONG (I18N ('Multiple logins')), SPAN (multiple_login_represent, __kwargtrans__ ({_id: 'phanterpwa-tagger-span-multiple_login'})), DIV (I (__kwargtrans__ ({_class: 'fas fa-pen'})), __kwargtrans__ ({_class: 'e-tagger-button e-link open-model-edit-multiple_login'})), __kwargtrans__ ({_class: 'e-tagger-wrapper'})), __kwargtrans__ ({_class: 'p-col w1p100'})), DIV (HR (), H2 (I18N ('Active sessions')), DIV (DIV (preloaders.android, __kwargtrans__ ({_style: 'text-align:center; overflow: hidden;'})), __kwargtrans__ ({_id: 'active_sessions_wrapper'})), __kwargtrans__ ({_class: 'p-col w1p100'})), __kwargtrans__ ({_class: 'p-row'})), __kwargtrans__ ({_class: 'e-padding_20'})), __kwargtrans__ (dict ({'_phanterpwa-form': 'security', '_id': 'form-security', '_class': 'p-row', '_autocomplete': 'off'})))), __kwargtrans__ ({_class: 'e-margin_bottom_20 phanterpwa-card-container e-padding_20 card'})), __kwargtrans__ ({_class: 'phanterpwa-container container'})));
 		xml_content.html_to ('#main-container');
 		self.reload ();
+		self.get_active_sessions ();
 	}));},
 	get after_submit () {return __get__ (this, function (self, data, ajax_status) {
 		if (arguments.length) {
@@ -2240,6 +2374,118 @@ export var Profile =  __class__ ('Profile', [gatehandler.Handler], {
 			var message = json.i18n.message;
 			window.PhanterPWA.flash (__kwargtrans__ (dict ({'html': message})));
 		}
+	});},
+	get get_active_sessions () {return __get__ (this, function (self) {
+		if (arguments.length) {
+			var __ilastarg0__ = arguments.length - 1;
+			if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+				var __allkwargs0__ = arguments [__ilastarg0__--];
+				for (var __attrib0__ in __allkwargs0__) {
+					switch (__attrib0__) {
+						case 'self': var self = __allkwargs0__ [__attrib0__]; break;
+					}
+				}
+			}
+		}
+		else {
+		}
+		window.PhanterPWA.ApiServer.GET (__kwargtrans__ (dict ({'url_args': ['api', 'auth'], 'onComplete': self._active_sessions_xml})));
+	});},
+	get _active_sessions_xml () {return __get__ (this, function (self, data, ajax_status) {
+		if (arguments.length) {
+			var __ilastarg0__ = arguments.length - 1;
+			if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+				var __allkwargs0__ = arguments [__ilastarg0__--];
+				for (var __attrib0__ in __allkwargs0__) {
+					switch (__attrib0__) {
+						case 'self': var self = __allkwargs0__ [__attrib0__]; break;
+						case 'data': var data = __allkwargs0__ [__attrib0__]; break;
+						case 'ajax_status': var ajax_status = __allkwargs0__ [__attrib0__]; break;
+					}
+				}
+			}
+		}
+		else {
+		}
+		if (ajax_status == 'success') {
+			var json = data.responseJSON;
+			if (json.sessions !== null && json.sessions !== undefined) {
+				var MyTable = Table ('session_table');
+				var cont = 0;
+				for (var x of json.sessions) {
+					cont++;
+					var date_created = new Date (x ['date_created']);
+					var date_created = date_created.toLocaleDateString (window.PhanterPWA.I18N.load_storage (), dict ({'year': 'numeric', 'month': '2-digit', 'day': 'numeric'}));
+					var identify = x ['identify'];
+					if (x ['this_session']) {
+						var agent = STRONG (x ['agent']);
+						var date_created = STRONG (date_created);
+						var remote_addr = STRONG (x ['remote_addr']);
+						var this_session = DIV (STRONG (I18N ('This Session', __kwargtrans__ (dict ({'_pt-br': 'Esta sessão'})))), __kwargtrans__ (__mergekwargtrans__ ({_class: 'btn'}, dict ({'_data-session_id': identify, '_disabled': 'disabled'}))));
+					}
+					else {
+						var agent = x ['agent'];
+						var date_created = date_created;
+						var remote_addr = x ['remote_addr'];
+						var this_session = DIV (I18N ('Cancel', __kwargtrans__ (dict ({'_pt-br': 'Cancelar'}))), __kwargtrans__ (__mergekwargtrans__ ({_class: 'phanterpwa_cancel_session e-link btn wave_on_click'}, dict ({'_data-session_id': identify}))));
+					}
+					MyTable.append (TableData ('data_{0}'.format (cont), agent, date_created, remote_addr, this_session, __kwargtrans__ ({drag_and_drop: false})));
+				}
+				MyTable.html_to ('#active_sessions_wrapper');
+				$ ('.phanterpwa_cancel_session').off ('click.cancel_session').on ('click.cancel_session', (function __lambda__ () {
+					if (arguments.length) {
+						var __ilastarg0__ = arguments.length - 1;
+						if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+							var __allkwargs0__ = arguments [__ilastarg0__--];
+							for (var __attrib0__ in __allkwargs0__) {
+							}
+						}
+					}
+					else {
+					}
+					return self.delete_session ($ (this).attr ('data-session_id'));
+				}));
+			}
+		}
+	});},
+	get _after_delete_session () {return __get__ (this, function (self, data, ajax_status) {
+		if (arguments.length) {
+			var __ilastarg0__ = arguments.length - 1;
+			if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+				var __allkwargs0__ = arguments [__ilastarg0__--];
+				for (var __attrib0__ in __allkwargs0__) {
+					switch (__attrib0__) {
+						case 'self': var self = __allkwargs0__ [__attrib0__]; break;
+						case 'data': var data = __allkwargs0__ [__attrib0__]; break;
+						case 'ajax_status': var ajax_status = __allkwargs0__ [__attrib0__]; break;
+					}
+				}
+			}
+		}
+		else {
+		}
+		var json = data.responseJSON;
+		if (ajax_status == 'success') {
+			self._active_sessions_xml (data, ajax_status);
+		}
+		window.PhanterPWA.flash (__kwargtrans__ (dict ({'html': json.i18n.message})));
+	});},
+	get delete_session () {return __get__ (this, function (self, identify) {
+		if (arguments.length) {
+			var __ilastarg0__ = arguments.length - 1;
+			if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+				var __allkwargs0__ = arguments [__ilastarg0__--];
+				for (var __attrib0__ in __allkwargs0__) {
+					switch (__attrib0__) {
+						case 'self': var self = __allkwargs0__ [__attrib0__]; break;
+						case 'identify': var identify = __allkwargs0__ [__attrib0__]; break;
+					}
+				}
+			}
+		}
+		else {
+		}
+		window.PhanterPWA.ApiServer.DELETE (__kwargtrans__ (dict ({'url_args': ['api', 'auth', identify], 'onComplete': self._after_delete_session})));
 	});},
 	get submit () {return __get__ (this, function (self) {
 		if (arguments.length) {
@@ -2317,10 +2563,10 @@ export var Profile =  __class__ ('Profile', [gatehandler.Handler], {
 		}
 		$ ('#url_image_user').attr ('src', user_image);
 		$ ('#phanterpwa-component-left_bar-url-imagem-user').attr ('src', user_image);
-		$ ('#phanterpwa-widget-input-profile-first_name').val (first_name);
-		$ ('#phanterpwa-widget-input-profile-last_name').val (last_name);
-		$ ('#phanterpwa-widget-input-profile-email').val (email).trigger ('keyup');
-		$ ('.open-model-edit-personal-information').off ('click.open-model-edit-personal-information').on ('click.open-model-edit-personal-information', (function __lambda__ () {
+		$ ('#phanterpwa-widget-input-input-profile-first_name').val (first_name);
+		$ ('#phanterpwa-widget-input-input-profile-last_name').val (last_name);
+		$ ('#phanterpwa-widget-input-input-profile-email').val (email).trigger ('keyup');
+		$ ('.open-model-edit-personal_information').off ('click.open-model-edit-personal_information').on ('click.open-model-edit-personal_information', (function __lambda__ () {
 			if (arguments.length) {
 				var __ilastarg0__ = arguments.length - 1;
 				if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
@@ -2332,6 +2578,58 @@ export var Profile =  __class__ ('Profile', [gatehandler.Handler], {
 			else {
 			}
 			return self.modal_personal_information ();
+		}));
+		$ ('.open-model-edit-change_email').off ('click.open-model-edit-change_email').on ('click.open-model-edit-change_email', (function __lambda__ () {
+			if (arguments.length) {
+				var __ilastarg0__ = arguments.length - 1;
+				if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+					var __allkwargs0__ = arguments [__ilastarg0__--];
+					for (var __attrib0__ in __allkwargs0__) {
+					}
+				}
+			}
+			else {
+			}
+			return self.modal_change_email ();
+		}));
+		$ ('.open-model-edit-two_factor').off ('click.open-model-edit-two_factor').on ('click.open-model-edit-two_factor', (function __lambda__ () {
+			if (arguments.length) {
+				var __ilastarg0__ = arguments.length - 1;
+				if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+					var __allkwargs0__ = arguments [__ilastarg0__--];
+					for (var __attrib0__ in __allkwargs0__) {
+					}
+				}
+			}
+			else {
+			}
+			return self.modal_change_two_factor ();
+		}));
+		$ ('.open-model-edit-multiple_login').off ('click.open-model-edit-multiple_login').on ('click.open-model-edit-multiple_login', (function __lambda__ () {
+			if (arguments.length) {
+				var __ilastarg0__ = arguments.length - 1;
+				if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+					var __allkwargs0__ = arguments [__ilastarg0__--];
+					for (var __attrib0__ in __allkwargs0__) {
+					}
+				}
+			}
+			else {
+			}
+			return self.modal_change_multiple_login ();
+		}));
+		$ ('.open-model-edit-password').off ('click.open-model-edit-password').on ('click.open-model-edit-password', (function __lambda__ () {
+			if (arguments.length) {
+				var __ilastarg0__ = arguments.length - 1;
+				if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+					var __allkwargs0__ = arguments [__ilastarg0__--];
+					for (var __attrib0__ in __allkwargs0__) {
+					}
+				}
+			}
+			else {
+			}
+			return self.open_modal_change_password ();
 		}));
 	});},
 	get modal_personal_information () {return __get__ (this, function (self) {
@@ -2348,8 +2646,67 @@ export var Profile =  __class__ ('Profile', [gatehandler.Handler], {
 		}
 		else {
 		}
-		self.Modal = ModalPersonalInformation ('#modal-container');
+		self.Modal = ModalPersonalInformation ('#modal-container', __kwargtrans__ ({hidden_fields: ['email', 'two_factor', 'multiple_login']}));
 		self.Modal.open ();
+		forms.SignForm ('#form-change_account');
+		forms.ValidateForm ('#form-change_account');
+	});},
+	get modal_change_email () {return __get__ (this, function (self) {
+		if (arguments.length) {
+			var __ilastarg0__ = arguments.length - 1;
+			if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+				var __allkwargs0__ = arguments [__ilastarg0__--];
+				for (var __attrib0__ in __allkwargs0__) {
+					switch (__attrib0__) {
+						case 'self': var self = __allkwargs0__ [__attrib0__]; break;
+					}
+				}
+			}
+		}
+		else {
+		}
+		self.Modal = ModalPersonalInformation ('#modal-container', __kwargtrans__ ({hidden_fields: ['first_name', 'last_name', 'two_factor', 'multiple_login']}));
+		self.Modal.open ();
+		forms.SignForm ('#form-change_account');
+		forms.ValidateForm ('#form-change_account');
+	});},
+	get modal_change_two_factor () {return __get__ (this, function (self) {
+		if (arguments.length) {
+			var __ilastarg0__ = arguments.length - 1;
+			if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+				var __allkwargs0__ = arguments [__ilastarg0__--];
+				for (var __attrib0__ in __allkwargs0__) {
+					switch (__attrib0__) {
+						case 'self': var self = __allkwargs0__ [__attrib0__]; break;
+					}
+				}
+			}
+		}
+		else {
+		}
+		self.Modal = ModalPersonalInformation ('#modal-container', __kwargtrans__ ({hidden_fields: ['first_name', 'last_name', 'email', 'multiple_login'], information: I18N (('When activated, upon login, a code will be sent to the' + ' registered email. The login will only be effective if the correct ') + 'code is added in the appropriate place.')}));
+		self.Modal.open ();
+		forms.SignForm ('#form-change_account');
+		forms.ValidateForm ('#form-change_account');
+	});},
+	get modal_change_multiple_login () {return __get__ (this, function (self) {
+		if (arguments.length) {
+			var __ilastarg0__ = arguments.length - 1;
+			if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+				var __allkwargs0__ = arguments [__ilastarg0__--];
+				for (var __attrib0__ in __allkwargs0__) {
+					switch (__attrib0__) {
+						case 'self': var self = __allkwargs0__ [__attrib0__]; break;
+					}
+				}
+			}
+		}
+		else {
+		}
+		self.Modal = ModalPersonalInformation ('#modal-container', __kwargtrans__ ({hidden_fields: ['first_name', 'last_name', 'email', 'two_factor'], information: I18N (('When enabled, it allows you to log in and stay logged' + ' in on several different devices. When deactivated, when you ') + 'log in to a certain device, you are automatically logged out of the others.')}));
+		self.Modal.open ();
+		forms.SignForm ('#form-change_account');
+		forms.ValidateForm ('#form-change_account');
 	});}
 });
 export var Lock =  __class__ ('Lock', [gatehandler.Handler], {

@@ -23,7 +23,6 @@ class ApiServer():
             s_args = "/".join(args)
         if s_args != "":
             s_args = "{0}/".format(s_args)
-        console.log(args, s_args)
         return s_args
 
     def _serialize_vars(self, _vars):
@@ -92,13 +91,17 @@ class ApiServer():
 
             window.PhanterPWA.ProgressBar.removeEventProgressBar("GET_" + date_stamp)
 
+        def _after_error(data, ajax_status):
+            window.PhanterPWA.ProgressBar.removeEventProgressBar("GET_" + date_stamp)
+            self.on_ajax_error(data, ajax_status)
+
         __pragma__('jsiter')
         ajax_param = {
             'url': url,
             'type': "GET",
             'complete': lambda a, b, c: (onComplete(a, b, c), window.PhanterPWA.reload()),
             'success': _after_sucess,
-            'error': lambda: window.PhanterPWA.ProgressBar.removeEventProgressBar("GET_" + date_stamp),
+            'error': _after_error,
             'datatype': 'json',
             'crossDomain': True,
             'headers': headers
@@ -138,14 +141,16 @@ class ApiServer():
         client_token = localStorage.getItem("phanterpwa-client-token")
         authorization = sessionStorage.getItem("phanterpwa-authorization")
         url = "{0}/{1}{2}".format(self.remote_address, self._process_args(url_args), self._serialize_vars(url_vars))
-
+        def _after_error(data, ajax_status):
+            window.PhanterPWA.ProgressBar.removeEventProgressBar("DELETE_" + date_stamp)
+            self.on_ajax_error(data, ajax_status)
         __pragma__('jsiter')
         ajax_param = {
             'url': url,
             'type': "DELETE",
             'complete': lambda a, b, c: (onComplete(a, b, c), window.PhanterPWA.reload()),
             'success': lambda: window.PhanterPWA.ProgressBar.removeEventProgressBar("DELETE_" + date_stamp),
-            'error': lambda: window.PhanterPWA.ProgressBar.removeEventProgressBar("DELETE_" + date_stamp),
+            'error': _after_error,
             'datatype': 'json',
             'crossDomain': True,
             'headers': headers
@@ -185,7 +190,9 @@ class ApiServer():
         client_token = localStorage.getItem("phanterpwa-client-token")
         authorization = sessionStorage.getItem("phanterpwa-authorization")
         url = "{0}/{1}".format(self.remote_address, self._process_args(url_args))
-
+        def _after_error(data, ajax_status):
+            window.PhanterPWA.ProgressBar.removeEventProgressBar("POST_" + date_stamp)
+            self.on_ajax_error(data, ajax_status)
         __pragma__('jsiter')
         ajax_param = {
             'url': url,
@@ -193,7 +200,7 @@ class ApiServer():
             'data': form_data,
             'complete': lambda a, b, c: (onComplete(a, b, c), window.PhanterPWA.reload()),
             'success': lambda: window.PhanterPWA.ProgressBar.removeEventProgressBar("POST_" + date_stamp),
-            'error': lambda: window.PhanterPWA.ProgressBar.removeEventProgressBar("POST_" + date_stamp),
+            'error': _after_error,
             'datatype': 'json',
             'crossDomain': True,
             'headers': headers
@@ -237,7 +244,9 @@ class ApiServer():
         client_token = localStorage.getItem("phanterpwa-client-token")
         authorization = sessionStorage.getItem("phanterpwa-authorization")
         url = "{0}/{1}".format(self.remote_address, self._process_args(url_args))
-
+        def _after_error(data, ajax_status):
+            window.PhanterPWA.ProgressBar.removeEventProgressBar("PUT_" + date_stamp)
+            self.on_ajax_error(data, ajax_status)
         __pragma__('jsiter')
         ajax_param = {
             'url': url,
@@ -245,7 +254,7 @@ class ApiServer():
             'data': form_data,
             'complete': lambda a, b, c: (onComplete(a, b, c), window.PhanterPWA.reload()),
             'success': lambda: window.PhanterPWA.ProgressBar.removeEventProgressBar("PUT_" + date_stamp),
-            'error': lambda: window.PhanterPWA.ProgressBar.removeEventProgressBar("PUT_" + date_stamp),
+            'error': _after_error,
             'datatype': 'json',
             'crossDomain': True,
             'headers': headers
@@ -342,6 +351,21 @@ class ApiServer():
                     "url_vars": {"_": date_stamp},
                     "onComplete": onComplete
                 })
+
+    def on_ajax_error(self, data, status):
+        if data.status==401 or data.status==403:
+            json = data.responseJSON
+            if window.PhanterPWA.logged():
+                if data.status==401:
+                    if json.specification == "client deleted":
+                        self.getClientToken(callback=lambda: (
+                                window.PhanterPWA.reload_component("auth_user"),
+                                window.PhanterPWA.reload_component("left_bar")
+                            )
+                        )
+
+                window.PhanterPWA.open_code_way(data.status, window.PhanterPWA.Request, window.PhanterPWA.Response)
+
 
 
 __pragma__('nokwargs')

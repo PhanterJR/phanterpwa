@@ -47,9 +47,9 @@ class WebSocketPhanterPWA():
                 self._ws.send(str('{0}'.format(msg)))
                 if window.PhanterPWA.DEBUG:
                     if message is "command_online":
-                        console.log("__ Server, I'm online?")
+                        console.info("__ Server, I'm online?")
                     elif message is "command_offline":
-                        console.log("__ Server, I'm stay offline. Bye.")
+                        console.info("__ Server, I'm stay offline. Bye.")
             else:
                 if message not in ["command_online", "command_offline"]:
                     __pragma__("jsiter")
@@ -64,7 +64,7 @@ class WebSocketPhanterPWA():
     def _onClose(self, evt):
         self._opened = False
         if window.PhanterPWA.DEBUG:
-            console.log("Closing websocket")
+            console.info("Closing websocket")
         if not self.manual_close:
             setTimeout(lambda: self.start(), self.comulative_time)
         else:
@@ -74,19 +74,18 @@ class WebSocketPhanterPWA():
 
     def _onError(self, evt):
         if window.PhanterPWA.DEBUG:
-            console.log("Error on websocket", evt)
+            console.info("Error on websocket", evt)
         if self.comulative_time > 9000 and not self.manual_connection:
                 window.PhanterPWA.flash("Lost server connection!")
                 self.manual_connection = True
         else:
             self.comulative_time = self.comulative_time + 1000
-        console.log(self.comulative_time)
         if callable(self.onError):
             self.onError(evt)
 
     def _onMessage(self, evt):
         if window.PhanterPWA.DEBUG:
-            console.log(evt.data)
+            console.info(evt.data)
         if callable(self.onMessage):
             self.onMessage(evt)
 
@@ -94,7 +93,7 @@ class WebSocketPhanterPWA():
         self.comulative_time = 0
         self._opened = True
         if window.PhanterPWA.DEBUG:
-            console.log("Opening websocket")
+            console.info("Opening websocket")
         self.send("command_online")
         if callable(self.onOpen):
             self.onOpen(evt)

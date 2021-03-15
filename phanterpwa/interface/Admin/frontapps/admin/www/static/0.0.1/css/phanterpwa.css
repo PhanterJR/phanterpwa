@@ -1061,7 +1061,7 @@ button.btn {
   .phanterpwa-widget-captcha-container {
     overflow-x: auto;
     overflow-y: hidden;
-    margin: 0px;
+    margin: 2px auto 2px auto;
     border: 1px #d5d3d0 solid;
   }
 }
@@ -1070,7 +1070,7 @@ button.btn {
   .phanterpwa-widget-captcha-container {
     overflow-x: auto;
     overflow-y: hidden;
-    margin: 1px;
+    margin: 2px auto 2px auto;
     border: 1px #d5d3d0 solid;
   }
 }

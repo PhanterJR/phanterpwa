@@ -450,6 +450,7 @@ class ModalLogin(modal.Modal):
                         "label": I18N("Password", **{"_pt-br": "Senha"}),
                         "type": "password",
                         "validators": ["IS_NOT_EMPTY"],
+                        "icon": I(_class="fas fa-eye")
 
                     }
                 ),

@@ -1,4 +1,4 @@
-// Transcrypt'ed from Python, 2021-03-10 09:46:19
+// Transcrypt'ed from Python, 2021-03-15 14:32:35
 import {AssertionError, AttributeError, BaseException, DeprecationWarning, Exception, IndexError, IterableError, KeyError, NotImplementedError, RuntimeWarning, StopIteration, UserWarning, ValueError, Warning, __JsIterator__, __PyIterator__, __Terminal__, __add__, __and__, __call__, __class__, __envir__, __eq__, __floordiv__, __ge__, __get__, __getcm__, __getitem__, __getslice__, __getsm__, __gt__, __i__, __iadd__, __iand__, __idiv__, __ijsmod__, __ilshift__, __imatmul__, __imod__, __imul__, __in__, __init__, __ior__, __ipow__, __irshift__, __isub__, __ixor__, __jsUsePyNext__, __jsmod__, __k__, __kwargtrans__, __le__, __lshift__, __lt__, __matmul__, __mergefields__, __mergekwargtrans__, __mod__, __mul__, __ne__, __neg__, __nest__, __or__, __pow__, __pragma__, __proxy__, __pyUseJsNext__, __rshift__, __setitem__, __setproperty__, __setslice__, __sort__, __specialattrib__, __sub__, __super__, __t__, __terminal__, __truediv__, __withblock__, __xor__, abs, all, any, assert, bool, bytearray, bytes, callable, chr, copy, deepcopy, delattr, dict, dir, divmod, enumerate, filter, float, getattr, hasattr, input, int, isinstance, issubclass, len, list, map, max, min, object, ord, pow, print, property, py_TypeError, py_iter, py_metatype, py_next, py_reversed, py_typeof, range, repr, round, set, setattr, sorted, str, sum, tuple, zip} from './org.transcrypt.__runtime__.js';
 import * as validations from './phanterpwa.frontend.validations.js';
 import * as websocket from './phanterpwa.frontend.websocket.js';
@@ -435,6 +435,29 @@ export var PhanterPWA =  __class__ ('PhanterPWA', [object], {
 					self.Components [c].reload (__kwargtrans__ (context));
 				}
 			}
+		}
+	});},
+	get reload_component () {return __get__ (this, function (self, component) {
+		if (arguments.length) {
+			var __ilastarg0__ = arguments.length - 1;
+			if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+				var __allkwargs0__ = arguments [__ilastarg0__--];
+				for (var __attrib0__ in __allkwargs0__) {
+					switch (__attrib0__) {
+						case 'self': var self = __allkwargs0__ [__attrib0__]; break;
+						case 'component': var component = __allkwargs0__ [__attrib0__]; break;
+					}
+				}
+			}
+		}
+		else {
+		}
+		var comp = self.Components [component];
+		if (comp !== undefined) {
+			if (self.DEBUG) {
+				console.info ('Reload Component: {0}'.format (component));
+			}
+			comp.reload ();
 		}
 	});},
 	get reload_events () {return __get__ (this, function (self) {
@@ -898,7 +921,6 @@ export var PhanterPWA =  __class__ ('PhanterPWA', [object], {
 		}
 		var json = data.responseJSON;
 		if (ajax_status == 'success') {
-			console.log (json);
 			window.location = json.redirect;
 		}
 		if (callable (callback)) {
@@ -1115,6 +1137,7 @@ export var PhanterPWA =  __class__ ('PhanterPWA', [object], {
 			var auth_user = json.auth_user;
 			sessionStorage.setItem ('auth_user', JSON.stringify (auth_user));
 			localStorage.setItem ('last_auth_user', JSON.stringify (auth_user));
+			self.update_current_way ();
 		}
 		if (self.DEBUG) {
 			console.info (data.status, json.i18n.message);
@@ -1424,13 +1447,20 @@ export var PhanterPWA =  __class__ ('PhanterPWA', [object], {
 			var code = int (code);
 		}
 		if (!__in__ (code, window.PhanterPWA.Gates)) {
+			var auth_user = window.PhanterPWA.Components.auth_user;
 			if (window.PhanterPWA.DEBUG) {
 				console.info (code, request, response);
 			}
 			if (code == 401) {
+				if (auth_user !== null && auth_user !== undefined) {
+					auth_user.start ();
+				}
 				gatehandler.Error_401 (request, response);
 			}
 			else if (code == 403) {
+				if (auth_user !== null && auth_user !== undefined) {
+					auth_user.start ();
+				}
 				gatehandler.Error_403 (request, response);
 			}
 			else if (code == 404) {
@@ -1441,6 +1471,9 @@ export var PhanterPWA =  __class__ ('PhanterPWA', [object], {
 			}
 		}
 		else if (isinstance (request, WayRequest)) {
+			if (window.PhanterPWA.DEBUG) {
+				console.info (code, request, response);
+			}
 			window.PhanterPWA.Gates [code] (request, response);
 		}
 		else {
@@ -1720,7 +1753,12 @@ export var PhanterPWA =  __class__ ('PhanterPWA', [object], {
 		}
 		else {
 		}
-		window.location = '#_phanterpwa:/{0}'.format (way);
+		if (way == self.get_current_way ()) {
+			self.open_current_way ();
+		}
+		else {
+			window.location = '#_phanterpwa:/{0}'.format (way);
+		}
 	});},
 	get _onPopState () {return __get__ (this, function (self) {
 		if (arguments.length) {
@@ -1736,7 +1774,6 @@ export var PhanterPWA =  __class__ ('PhanterPWA', [object], {
 		}
 		else {
 		}
-		console.log ('acionadooooooo');
 		var way = self._get_way_from_url_hash ();
 		self.Request = WayRequest ();
 		self.Request.open_way (way);
@@ -1758,7 +1795,25 @@ export var PhanterPWA =  __class__ ('PhanterPWA', [object], {
 		}
 		else {
 		}
-		self.open_way (self.get_current_way ());
+		var way = self._get_way_from_url_hash ();
+		self.Request = WayRequest ();
+		self.Request.open_way (way);
+	});},
+	get update_current_way () {return __get__ (this, function (self) {
+		if (arguments.length) {
+			var __ilastarg0__ = arguments.length - 1;
+			if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+				var __allkwargs0__ = arguments [__ilastarg0__--];
+				for (var __attrib0__ in __allkwargs0__) {
+					switch (__attrib0__) {
+						case 'self': var self = __allkwargs0__ [__attrib0__]; break;
+					}
+				}
+			}
+		}
+		else {
+		}
+		window.location.reload ();
 	});},
 	get open_default_way () {return __get__ (this, function (self) {
 		if (arguments.length) {
@@ -1896,14 +1951,12 @@ export var PhanterPWA =  __class__ ('PhanterPWA', [object], {
 		else {
 		}
 		var url_hash = window.location.hash;
-		console.log (url_hash);
 		var way = self.default_way;
 		if (url_hash !== undefined && url_hash !== null && url_hash != '') {
 			if (url_hash.startswith ('#_phanterpwa:/')) {
 				var way = url_hash.__getslice__ (14, null, 1);
 			}
 		}
-		console.log (way);
 		return way;
 	});},
 	get _set_way_to_url_hash () {return __get__ (this, function (self, way) {
@@ -1921,7 +1974,6 @@ export var PhanterPWA =  __class__ ('PhanterPWA', [object], {
 		}
 		else {
 		}
-		console.log ('mudando o url hash');
 		var current = self._get_way_from_url_hash ();
 		if (way != current) {
 			window.history.pushState ('', self.TITLE, '#_phanterpwa:/{0}'.format (way));

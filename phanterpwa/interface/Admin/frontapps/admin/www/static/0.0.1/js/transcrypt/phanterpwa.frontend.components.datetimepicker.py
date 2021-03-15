@@ -81,10 +81,7 @@ class Datepickers():
         if jQuery(self.target_selector).length > 0:
             if jQuery(self.target_selector)[0].hasAttribute("phanterpwa-datetimepicker-iso"):
                 phanterpwa_datetimepicker_iso = jQuery(self.target_selector).attr("phanterpwa-datetimepicker-iso")
-                console.log(phanterpwa_datetimepicker_iso)
-
                 self.selected_date = __new__(Date(phanterpwa_datetimepicker_iso))
-                console.log(self.selected_date)
                 self.current_date = __new__(Date(self._apply_format("yyyy-MM-01 HH:ss:mm")))
         self.format = "yyyy-MM-dd"
         if self.date_type == "datetime":
@@ -308,7 +305,6 @@ class Datepickers():
         if "MMM" in value:
             value = value.replace("MMM", self._sanitize_i18ns(self.months[smonth][0:3]))
         if "MM" in value:
-            console.log(smonth)
             value = value.replace("MM", self._zfill(smonth + 1, 2))
         if "Mo" in value:
             if (smonth + 1) == 1:
@@ -343,7 +339,6 @@ class Datepickers():
         return self._unsanitize_str(value)
 
     def _zfill(self, number, size):
-        console.log(number)
         number = int(number)
         number = str(number)
         s = number

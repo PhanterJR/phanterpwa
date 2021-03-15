@@ -13,7 +13,12 @@ from phanterpwa.tools import (
 )
 from phanterpwa.compiler import Compiler
 #from phanterpwa.interface.graphic import start
-from phanterpwa.interface.admin_tk import start
+try:
+    import tkinter as Tk
+    from phanterpwa.interface.admin_tk import start
+except:
+    def start():
+        print("The tkinter fails. Your Python may not be configured for Tk")
 from phanterpwa.interface.cli import Cli
 CURRENT_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__)))
 CWD = os.path.join(CURRENT_DIR, "interface")

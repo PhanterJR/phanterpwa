@@ -335,6 +335,7 @@ class FormWidget(helpers.XmlConstructor):
         self.icon_button = None
         self.validators = json_widget.get("validators", None)
         self._value = json_widget.get("value", None)
+        self._icon = json_widget.get("icon", None)
         self._editable = json_widget.get("editable", False)
         self._can_empty = json_widget.get("can_empty", False)
         self._mask = json_widget.get("mask", None)
@@ -467,7 +468,8 @@ class FormWidget(helpers.XmlConstructor):
                 value=self._value,
                 form=self.table_name,
                 validators=self.validators,
-                kind="password"
+                kind="password",
+                icon=self._icon
             )
 
         elif self._widget_type == "hidden":

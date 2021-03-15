@@ -1,4 +1,4 @@
-// Transcrypt'ed from Python, 2021-03-10 09:46:31
+// Transcrypt'ed from Python, 2021-03-15 14:32:44
 import {AssertionError, AttributeError, BaseException, DeprecationWarning, Exception, IndexError, IterableError, KeyError, NotImplementedError, RuntimeWarning, StopIteration, UserWarning, ValueError, Warning, __JsIterator__, __PyIterator__, __Terminal__, __add__, __and__, __call__, __class__, __envir__, __eq__, __floordiv__, __ge__, __get__, __getcm__, __getitem__, __getslice__, __getsm__, __gt__, __i__, __iadd__, __iand__, __idiv__, __ijsmod__, __ilshift__, __imatmul__, __imod__, __imul__, __in__, __init__, __ior__, __ipow__, __irshift__, __isub__, __ixor__, __jsUsePyNext__, __jsmod__, __k__, __kwargtrans__, __le__, __lshift__, __lt__, __matmul__, __mergefields__, __mergekwargtrans__, __mod__, __mul__, __ne__, __neg__, __nest__, __or__, __pow__, __pragma__, __proxy__, __pyUseJsNext__, __rshift__, __setitem__, __setproperty__, __setslice__, __sort__, __specialattrib__, __sub__, __super__, __t__, __terminal__, __truediv__, __withblock__, __xor__, abs, all, any, assert, bool, bytearray, bytes, callable, chr, copy, deepcopy, delattr, dict, dir, divmod, enumerate, filter, float, getattr, hasattr, input, int, isinstance, issubclass, len, list, map, max, min, object, ord, pow, print, property, py_TypeError, py_iter, py_metatype, py_next, py_reversed, py_typeof, range, repr, round, set, setattr, sorted, str, sum, tuple, zip} from './org.transcrypt.__runtime__.js';
 var __name__ = 'phanterpwa.frontend.server';
 export var ApiServer =  __class__ ('ApiServer', [object], {
@@ -41,7 +41,6 @@ export var ApiServer =  __class__ ('ApiServer', [object], {
 		if (s_args != '') {
 			var s_args = '{0}/'.format (s_args);
 		}
-		console.log (args, s_args);
 		return s_args;
 	});},
 	get _serialize_vars () {return __get__ (this, function (self, _vars) {
@@ -164,6 +163,24 @@ export var ApiServer =  __class__ ('ApiServer', [object], {
 			}
 			window.PhanterPWA.ProgressBar.removeEventProgressBar ('GET_' + date_stamp);
 		};
+		var _after_error = function (data, ajax_status) {
+			if (arguments.length) {
+				var __ilastarg0__ = arguments.length - 1;
+				if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+					var __allkwargs0__ = arguments [__ilastarg0__--];
+					for (var __attrib0__ in __allkwargs0__) {
+						switch (__attrib0__) {
+							case 'data': var data = __allkwargs0__ [__attrib0__]; break;
+							case 'ajax_status': var ajax_status = __allkwargs0__ [__attrib0__]; break;
+						}
+					}
+				}
+			}
+			else {
+			}
+			window.PhanterPWA.ProgressBar.removeEventProgressBar ('GET_' + date_stamp);
+			self.on_ajax_error (data, ajax_status);
+		};
 		var ajax_param = {'url': url, 'type': 'GET', 'complete': (function __lambda__ (a, b, c) {
 			if (arguments.length) {
 				var __ilastarg0__ = arguments.length - 1;
@@ -181,19 +198,7 @@ export var ApiServer =  __class__ ('ApiServer', [object], {
 			else {
 			}
 			return tuple ([onComplete (a, b, c), window.PhanterPWA.reload ()]);
-		}), 'success': _after_sucess, 'error': (function __lambda__ () {
-			if (arguments.length) {
-				var __ilastarg0__ = arguments.length - 1;
-				if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
-					var __allkwargs0__ = arguments [__ilastarg0__--];
-					for (var __attrib0__ in __allkwargs0__) {
-					}
-				}
-			}
-			else {
-			}
-			return window.PhanterPWA.ProgressBar.removeEventProgressBar ('GET_' + date_stamp);
-		}), 'datatype': 'json', 'crossDomain': true, 'headers': headers};
+		}), 'success': _after_sucess, 'error': _after_error, 'datatype': 'json', 'crossDomain': true, 'headers': headers};
 		if (client_token !== null) {
 			ajax_param ['headers'] ['phanterpwa-client-token'] = client_token;
 		}
@@ -250,6 +255,24 @@ export var ApiServer =  __class__ ('ApiServer', [object], {
 		var client_token = localStorage.getItem ('phanterpwa-client-token');
 		var authorization = sessionStorage.getItem ('phanterpwa-authorization');
 		var url = '{0}/{1}{2}'.format (self.remote_address, self._process_args (url_args), self._serialize_vars (url_vars));
+		var _after_error = function (data, ajax_status) {
+			if (arguments.length) {
+				var __ilastarg0__ = arguments.length - 1;
+				if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+					var __allkwargs0__ = arguments [__ilastarg0__--];
+					for (var __attrib0__ in __allkwargs0__) {
+						switch (__attrib0__) {
+							case 'data': var data = __allkwargs0__ [__attrib0__]; break;
+							case 'ajax_status': var ajax_status = __allkwargs0__ [__attrib0__]; break;
+						}
+					}
+				}
+			}
+			else {
+			}
+			window.PhanterPWA.ProgressBar.removeEventProgressBar ('DELETE_' + date_stamp);
+			self.on_ajax_error (data, ajax_status);
+		};
 		var ajax_param = {'url': url, 'type': 'DELETE', 'complete': (function __lambda__ (a, b, c) {
 			if (arguments.length) {
 				var __ilastarg0__ = arguments.length - 1;
@@ -279,19 +302,7 @@ export var ApiServer =  __class__ ('ApiServer', [object], {
 			else {
 			}
 			return window.PhanterPWA.ProgressBar.removeEventProgressBar ('DELETE_' + date_stamp);
-		}), 'error': (function __lambda__ () {
-			if (arguments.length) {
-				var __ilastarg0__ = arguments.length - 1;
-				if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
-					var __allkwargs0__ = arguments [__ilastarg0__--];
-					for (var __attrib0__ in __allkwargs0__) {
-					}
-				}
-			}
-			else {
-			}
-			return window.PhanterPWA.ProgressBar.removeEventProgressBar ('DELETE_' + date_stamp);
-		}), 'datatype': 'json', 'crossDomain': true, 'headers': headers};
+		}), 'error': _after_error, 'datatype': 'json', 'crossDomain': true, 'headers': headers};
 		if (client_token !== null) {
 			ajax_param ['headers'] ['phanterpwa-client-token'] = client_token;
 		}
@@ -348,6 +359,24 @@ export var ApiServer =  __class__ ('ApiServer', [object], {
 		var client_token = localStorage.getItem ('phanterpwa-client-token');
 		var authorization = sessionStorage.getItem ('phanterpwa-authorization');
 		var url = '{0}/{1}'.format (self.remote_address, self._process_args (url_args));
+		var _after_error = function (data, ajax_status) {
+			if (arguments.length) {
+				var __ilastarg0__ = arguments.length - 1;
+				if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+					var __allkwargs0__ = arguments [__ilastarg0__--];
+					for (var __attrib0__ in __allkwargs0__) {
+						switch (__attrib0__) {
+							case 'data': var data = __allkwargs0__ [__attrib0__]; break;
+							case 'ajax_status': var ajax_status = __allkwargs0__ [__attrib0__]; break;
+						}
+					}
+				}
+			}
+			else {
+			}
+			window.PhanterPWA.ProgressBar.removeEventProgressBar ('POST_' + date_stamp);
+			self.on_ajax_error (data, ajax_status);
+		};
 		var ajax_param = {'url': url, 'type': 'POST', 'data': form_data, 'complete': (function __lambda__ (a, b, c) {
 			if (arguments.length) {
 				var __ilastarg0__ = arguments.length - 1;
@@ -377,19 +406,7 @@ export var ApiServer =  __class__ ('ApiServer', [object], {
 			else {
 			}
 			return window.PhanterPWA.ProgressBar.removeEventProgressBar ('POST_' + date_stamp);
-		}), 'error': (function __lambda__ () {
-			if (arguments.length) {
-				var __ilastarg0__ = arguments.length - 1;
-				if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
-					var __allkwargs0__ = arguments [__ilastarg0__--];
-					for (var __attrib0__ in __allkwargs0__) {
-					}
-				}
-			}
-			else {
-			}
-			return window.PhanterPWA.ProgressBar.removeEventProgressBar ('POST_' + date_stamp);
-		}), 'datatype': 'json', 'crossDomain': true, 'headers': headers};
+		}), 'error': _after_error, 'datatype': 'json', 'crossDomain': true, 'headers': headers};
 		if (client_token !== null) {
 			ajax_param ['headers'] ['phanterpwa-client-token'] = client_token;
 		}
@@ -451,6 +468,24 @@ export var ApiServer =  __class__ ('ApiServer', [object], {
 		var client_token = localStorage.getItem ('phanterpwa-client-token');
 		var authorization = sessionStorage.getItem ('phanterpwa-authorization');
 		var url = '{0}/{1}'.format (self.remote_address, self._process_args (url_args));
+		var _after_error = function (data, ajax_status) {
+			if (arguments.length) {
+				var __ilastarg0__ = arguments.length - 1;
+				if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+					var __allkwargs0__ = arguments [__ilastarg0__--];
+					for (var __attrib0__ in __allkwargs0__) {
+						switch (__attrib0__) {
+							case 'data': var data = __allkwargs0__ [__attrib0__]; break;
+							case 'ajax_status': var ajax_status = __allkwargs0__ [__attrib0__]; break;
+						}
+					}
+				}
+			}
+			else {
+			}
+			window.PhanterPWA.ProgressBar.removeEventProgressBar ('PUT_' + date_stamp);
+			self.on_ajax_error (data, ajax_status);
+		};
 		var ajax_param = {'url': url, 'type': 'PUT', 'data': form_data, 'complete': (function __lambda__ (a, b, c) {
 			if (arguments.length) {
 				var __ilastarg0__ = arguments.length - 1;
@@ -480,19 +515,7 @@ export var ApiServer =  __class__ ('ApiServer', [object], {
 			else {
 			}
 			return window.PhanterPWA.ProgressBar.removeEventProgressBar ('PUT_' + date_stamp);
-		}), 'error': (function __lambda__ () {
-			if (arguments.length) {
-				var __ilastarg0__ = arguments.length - 1;
-				if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
-					var __allkwargs0__ = arguments [__ilastarg0__--];
-					for (var __attrib0__ in __allkwargs0__) {
-					}
-				}
-			}
-			else {
-			}
-			return window.PhanterPWA.ProgressBar.removeEventProgressBar ('PUT_' + date_stamp);
-		}), 'datatype': 'json', 'crossDomain': true, 'headers': headers};
+		}), 'error': _after_error, 'datatype': 'json', 'crossDomain': true, 'headers': headers};
 		if (client_token !== null) {
 			ajax_param ['headers'] ['phanterpwa-client-token'] = client_token;
 		}
@@ -659,6 +682,46 @@ export var ApiServer =  __class__ ('ApiServer', [object], {
 		if (lets_go_resign && authorization !== null && authorization !== undefined) {
 			if (auth_user !== null && auth_user !== undefined) {
 				self.GET (__kwargtrans__ (dict ({'url_args': ['api', 'resigncredentials'], 'url_vars': dict ({'_': date_stamp}), 'onComplete': onComplete})));
+			}
+		}
+	});},
+	get on_ajax_error () {return __get__ (this, function (self, data, status) {
+		if (arguments.length) {
+			var __ilastarg0__ = arguments.length - 1;
+			if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+				var __allkwargs0__ = arguments [__ilastarg0__--];
+				for (var __attrib0__ in __allkwargs0__) {
+					switch (__attrib0__) {
+						case 'self': var self = __allkwargs0__ [__attrib0__]; break;
+						case 'data': var data = __allkwargs0__ [__attrib0__]; break;
+						case 'status': var status = __allkwargs0__ [__attrib0__]; break;
+					}
+				}
+			}
+		}
+		else {
+		}
+		if (data.status == 401 || data.status == 403) {
+			var json = data.responseJSON;
+			if (window.PhanterPWA.logged ()) {
+				if (data.status == 401) {
+					if (json.specification == 'client deleted') {
+						self.getClientToken (__kwargtrans__ ({callback: (function __lambda__ () {
+							if (arguments.length) {
+								var __ilastarg0__ = arguments.length - 1;
+								if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {
+									var __allkwargs0__ = arguments [__ilastarg0__--];
+									for (var __attrib0__ in __allkwargs0__) {
+									}
+								}
+							}
+							else {
+							}
+							return tuple ([window.PhanterPWA.reload_component ('auth_user'), window.PhanterPWA.reload_component ('left_bar')]);
+						})}));
+					}
+				}
+				window.PhanterPWA.open_code_way (data.status, window.PhanterPWA.Request, window.PhanterPWA.Response);
 			}
 		}
 	});}
