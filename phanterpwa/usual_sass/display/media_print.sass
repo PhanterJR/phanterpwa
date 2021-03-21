@@ -1,0 +1,36 @@
+.phanterpwa-paper-a4
+    width: 210mm
+    height: 297mm
+    overflow: hidden
+    display: table
+    margin: 10px auto
+    background-color: white
+    padding: 20px
+    page-break-after: always
+
+
+@page
+    margin: 0 !important
+@media print
+    body
+        padding: 0 !important
+        margin: 0 !important
+        background-color: transparent !important
+        *
+            visibility: hidden
+        .phanterpwa-media-print-container
+            position: absolute
+            left: 0
+            top: 0
+
+        .phanterpwa-media-print
+            padding: 0
+            margin: 0
+            .a4
+                margin: 0
+                padding: 0
+                visibility: visible
+                width: 210mm
+                height: 297mm
+                *
+                    visibility: visible

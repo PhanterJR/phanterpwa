@@ -279,3 +279,4 @@ def force_minify_string_content(target: XmlConstructor) -> XmlConstructor:
         return target
     else:
         raise ValueError("The target must be XmlConstructor instance.")
+

@@ -27,7 +27,6 @@ from os.path import (
 ENV_PYTHON = normpath(sys.executable)
 PATH_PHANTERPWA = dirname(phanterpwa.__file__)
 
-
 class Compiler():
     """
         pt-BR: A classe Compilar, baseado na configuração do projeto (project.ini, api.ini e app.ini), axecuta as seguintes ações:
@@ -36,17 +35,25 @@ class Compiler():
             -
     """
 
-    def __init__(self, projectpath, build_apps_folder=None):
+    def __init__(self, projectpath, build_apps_folder=None, reset_compilation=False):
         self.ProjectConfig = ProjectConfig(projectpath)
         self.projectpath = projectpath
         self.config = self.ProjectConfig.config
         self._check_app_list()
         self.build_apps_folder = build_apps_folder
-        self.current_compilation = self.config['PROJECT'].get("compilation", 0)
-        self.current_compilation += 1
+        if reset_compilation:
+            self.current_compilation = 0
+
+        else:
+            self.current_compilation = self.config['PROJECT'].get("compilation", 0)
+            self.current_compilation += 1
         self.config['PROJECT']["compilation"] = self.current_compilation
+        self.config['PROJECT']['versioning'] = "{0}.{1}".format(
+            self.config["PROJECT"].get("version", "0.0.1"),
+            self.current_compilation
+        )
         self.debug = self.config['PROJECT']["debug"]
-        self.version = self.config["PROJECT"]["version"]
+        self.versioning = self.config['PROJECT']['versioning']
         self.tempfolder = join(self.projectpath, "temp")
         if self.debug:
             self.minify = False
@@ -174,6 +181,7 @@ class Compiler():
             except OSError as e:
                 raise e("Problem on create folder '{0}'.".format(target_dir))
         target_css = join(target_dir, "phanterpwa.css")
+
         sfiles = self.get_files_dir(
             join(PATH_PHANTERPWA, "usual_sass"), ignore_files=["__init__.py"], ignore_paths=["__pycache__"])
         sass_files = (normpath(x) for x in sfiles if x.endswith(".sass"))
@@ -185,16 +193,16 @@ class Compiler():
                 "",
                 txt
             )
-            if re.search(r"\$app-version: [\"\'][0-9]{0, 3}\.[0-9]{0, 3}\.[0-9]{0, }\"", txt):
+            if re.search(r"\$app-version: [\"\'][0-9]{0, 3}\.[0-9]{0, 3}\.[0-9]{0, }\.[0-9]{0, }\"", txt):
                 new_text_to_save = re.sub(
-                    r"\$app-version: [\"\'][0-9]{0, 3}\.[0-9]{0, 3}\.[0-9]{0, }\"",
-                    "$app-version: \"{0}\"".format(self.version),
+                    r"\$app-version: [\"\'][0-9]{0, 3}\.[0-9]{0, 3}\.[0-9]{0, }\.[0-9]{0, }\"",
+                    "$app-version: \"{0}\"".format(self.versioning),
                     txt
                 )
             else:
                 new_text_to_save = "".join([
                     "/* start change programmatically */\n",
-                    "$app-version: \"{0}\"\n".format(self.version),
+                    "$app-version: \"{0}\"\n".format(self.versioning),
                     "/* end change programmatically */",
                     txt
                 ])
@@ -306,15 +314,15 @@ class Compiler():
 
     def path_build_styles_folder(self, app):
         if self.build_apps_folder:
-            return join(self.build_apps_folder, app, "www", "static", self.version, "css")
+            return join(self.build_apps_folder, app, "www", "static", self.versioning, "css")
         else:
-            return join(self.config["FRONTEND"][app]["build_folder"], "static", self.version, "css")
+            return join(self.config["FRONTEND"][app]["build_folder"], "static", self.versioning, "css")
 
     def path_build_transcrypt_folder(self, app):
         if self.build_apps_folder:
-            return join(self.build_apps_folder, app, "www", "static", self.version, "js", "transcrypt")
+            return join(self.build_apps_folder, app, "www", "static", self.versioning, "js", "transcrypt")
         else:
-            return join(self.config["FRONTEND"][app]["build_folder"], "static", self.version, "js", "transcrypt")
+            return join(self.config["FRONTEND"][app]["build_folder"], "static", self.versioning, "js", "transcrypt")
 
     def path_templates_folder(self, app):
         return join(self.projectpath, "frontapps", app, "sources", "templates")
@@ -347,7 +355,7 @@ class Compiler():
 
     def target_static_file_by_source(self, src, app) -> str:
         relative_to = self.path_statics_folder(app)
-        target_path = join(self.path_build_statics_folder(app), self.version)
+        target_path = join(self.path_build_statics_folder(app), self.versioning)
         p = PurePath(src)
         p = p.relative_to(relative_to)
         target_file = join(target_path, *p.parts)
@@ -447,36 +455,36 @@ class Compiler():
             return True
         return False
 
-    def modules_files_monitor(self):
-        t = join(dirname(phanterpwa.__file__), "frontapps")
-        lfi = self.get_files_dir(t, ignore_files=["__init__.py"], ignore_paths=["__pycache__"])
-        return [x for x in lfi] + [
-            join(dirname(phanterpwa.__file__), "xmlconstructor.py"),
-            join(dirname(phanterpwa.__file__), "helpers.py")
-        ]
+    # def modules_files_monitor(self):
+    #     t = join(dirname(phanterpwa.__file__), "frontapps")
+    #     lfi = self.get_files_dir(t, ignore_files=["__init__.py"], ignore_paths=["__pycache__"])
+    #     return [x for x in lfi] + [
+    #         join(dirname(phanterpwa.__file__), "xmlconstructor.py"),
+    #         join(dirname(phanterpwa.__file__), "helpers.py")
+    #     ]
 
-    def _check_phanterpwa_modules(self):
-        t_files = self.modules_files_monitor()
-        has_change = False
-        if isfile(join(self.tempfolder, "phanterpwa_modules_mtime.json")):
-            with open(join(self.tempfolder,
-                    "phanterpwa_modules_mtime.json"), "r", encoding="utf-8") as f:
-                content = json.load(f)
-                for x in t_files:
-                    if x in content:
-                        if getmtime(x) != content[x]:
-                            has_change = True
-                    else:
-                        has_change = True
-        else:
-            has_change = True
-        if has_change:
-            for app in self.app_list:
-                if exists(join(self.tempfolder, "transcrypts_mtime_{0}.json".format(app))):
-                    os.unlink(join(self.tempfolder, "transcrypts_mtime_{0}.json".format(app)))
+    # def _check_phanterpwa_modules(self):
+    #     t_files = self.modules_files_monitor()
+    #     has_change = False
+    #     if isfile(join(self.tempfolder, "phanterpwa_modules_mtime.json")):
+    #         with open(join(self.tempfolder,
+    #                 "phanterpwa_modules_mtime.json"), "r", encoding="utf-8") as f:
+    #             content = json.load(f)
+    #             for x in t_files:
+    #                 if x in content:
+    #                     if getmtime(x) != content[x]:
+    #                         has_change = True
+    #                 else:
+    #                     has_change = True
+    #     else:
+    #         has_change = True
+    #     if has_change:
+    #         for app in self.app_list:
+    #             if exists(join(self.tempfolder, "transcrypts_mtime_{0}.json".format(app))):
+    #                 os.unlink(join(self.tempfolder, "transcrypts_mtime_{0}.json".format(app)))
 
-                if exists(join(self.tempfolder, "templates_mtime_{0}.json".format(app))):
-                    os.unlink(join(self.tempfolder, "templates_mtime_{0}.json".format(app)))
+    #             if exists(join(self.tempfolder, "templates_mtime_{0}.json".format(app))):
+    #                 os.unlink(join(self.tempfolder, "templates_mtime_{0}.json".format(app)))
 
     def _check_template_extends_change(self, app):
         extends_files = self.extends_files(app)
@@ -498,7 +506,7 @@ class Compiler():
         print("\nProcess statics...")
         self.create_statics_to_update_generator(app)
         if self.full_compilation:
-            path_build_statics_folder_versioned = join(self.path_build_statics_folder(app), self.version)
+            path_build_statics_folder_versioned = join(self.path_build_statics_folder(app), self.versioning)
             path_statics_folder = self.path_statics_folder(app)
             if exists(path_build_statics_folder_versioned) and isdir(path_build_statics_folder_versioned):
                 shutil.rmtree(path_build_statics_folder_versioned)
@@ -511,7 +519,7 @@ class Compiler():
         else:
             paths_on_static_folder = (x for x in glob(join(self.path_build_statics_folder(app), "*")) if isdir(x))
             for pat in paths_on_static_folder:
-                if basename(pat) != self.version:
+                if basename(pat) != self.versioning:
                     try:
                         shutil.rmtree(pat)
                     except Exception as e:
@@ -549,7 +557,7 @@ class Compiler():
     def copy_languages(self, app):
         print("\nCopying languages...")
         appConfig = self.config
-        version = appConfig['PROJECT']['version']
+        version = self.versioning
         apps_list_basedir = join(appConfig['PROJECT']['path'], "frontapps")
         source_apps = join(
             apps_list_basedir,
@@ -608,16 +616,16 @@ class Compiler():
                     "",
                     txt
                 )
-                if re.search(r"\$app-version: [\"\'][0-9]{0, 3}\.[0-9]{0, 3}\.[0-9]{0, }\"", txt):
+                if re.search(r"\$app-version: [\"\'][0-9]{0, 3}\.[0-9]{0, 3}\.[0-9]{0, }\.[0-9]{0, }\"", txt):
                     new_text_to_save = re.sub(
-                        r"\$app-version: [\"\'][0-9]{0, 3}\.[0-9]{0, 3}\.[0-9]{0, }\"",
-                        "$app-version: \"{0}\"".format(self.version),
+                        r"\$app-version: [\"\'][0-9]{0, 3}\.[0-9]{0, 3}\.[0-9]{0, }\.[0-9]{0, }\"",
+                        "$app-version: \"{0}\"".format(self.versioning),
                         txt
                     )
                 else:
                     new_text_to_save = "".join([
                         "/* start change programmatically */\n",
-                        "$app-version: \"{0}\"\n".format(self.version),
+                        "$app-version: \"{0}\"\n".format(self.versioning),
                         "/* end change programmatically */",
                         txt
                     ])
@@ -787,7 +795,6 @@ class Compiler():
 
         print("Finish!!!\n\n\n")
 
-
     def transcrypts_config(self, app=None):
         if app:
             self._has_config_changed[app] = self._process_transcrypt_config(app)
@@ -812,6 +819,7 @@ class Compiler():
                 "title": self.config["PROJECT"]["title"],
                 "version": self.config["PROJECT"]["version"],
                 "compilation": self.config["PROJECT"]["compilation"],
+                "versioning": self.config["PROJECT"]["versioning"],
                 "debug": self.config["PROJECT"]["debug"],
                 "author": self.config["PROJECT"]["author"],
             },
@@ -927,10 +935,10 @@ class Compiler():
                 else:
                     raise "The scripts_mtime content must be dict type. Given: {0}".format(content)
 
-            content = {x: getmtime(x) for x in self.modules_files_monitor()}
-            with open(join(self.tempfolder,
-                    "phanterpwa_modules_mtime.json"), "w", encoding="utf-8") as f:
-                json.dump(content, f, ensure_ascii=True, indent=2)
+            # content = {x: getmtime(x) for x in self.modules_files_monitor()}
+            # with open(join(self.tempfolder,
+            #         "phanterpwa_modules_mtime.json"), "w", encoding="utf-8") as f:
+            #     json.dump(content, f, ensure_ascii=True, indent=2)
 
     def compile_by_step(self, app=None, full_compilation=False, minify=False):
         app_list = self.app_list
@@ -945,11 +953,11 @@ class Compiler():
                 yield [msg, False, traceback.format_tb(e.__traceback__)]
             current_debug = self.config["PROJECT"]["debug"]
             self.minify = self.config['PROJECT'].get("minify", False)
-            if current_debug:
-                self.full_compilation = False
-            else:
-                self.full_compilation = True
-            self._check_phanterpwa_modules()
+            # if current_debug:
+            #     self.full_compilation = False
+            # else:
+            #     self.full_compilation = True
+            # self._check_phanterpwa_modules()
             if full_compilation is not None:
                 self.full_compilation = bool(full_compilation)
             if minify is not None:
@@ -1000,7 +1008,12 @@ class Compiler():
                 yield [msg, True, "".join(traceback.format_tb(e.__traceback__))]
         self._save_mtimes()
 
-    def compile(self, app=None, full_compilation=None, minify=None):
+    def compile(self,
+        app=None, full_compilation=None,
+        minify=None,
+        force_transcrypt_compilation=True,
+        ):
+
         app_list = self.app_list
         if app:
             app_list = [app]
@@ -1010,18 +1023,17 @@ class Compiler():
             current_debug = self.config["PROJECT"]["debug"]
             self.minify = self.config["PROJECT"].get("minify", False)
             print("DEBUG:", current_debug, "\t\t MINIFY:", self.minify)
-            if current_debug:
-                self.full_compilation = False
-            else:
-                self.full_compilation = True
-            self._check_phanterpwa_modules()
+            # if current_debug:
+            #     self.full_compilation = False
+            # else:
+            #     self.full_compilation = True
+            # self._check_phanterpwa_modules()
             if full_compilation is not None:
                 self.full_compilation = bool(full_compilation)
             if minify is not None:
                 self.minify = bool(minify)
             self.delete_compiled_app_folder(app)
-            if current_debug or not exists(join(self.projectpath, "frontapps", app, "statics", "css", "phanterpwa.css")):
-                self.phanterpwa_usual_sass(app)
+            self.phanterpwa_usual_sass(app)
             self.copy_statics(app)
             self.copy_languages(app)
             self.compile_styles(app)

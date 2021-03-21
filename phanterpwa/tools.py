@@ -1035,3 +1035,11 @@ def checkbox_bool(value):
         return True
     else:
         return False
+
+def normalize_names(name, not_captilize=[]):
+    return " ".join([
+        x if x in not_captilize or len(x) < 3 else x.capitalize() for x in x.lower().strip().split(" ") if x])
+
+if __name__ == '__main__':
+    import ast
+    print(ast.literal_eval('["$1616117399578:samiraaa (18/03/2021)"]'))

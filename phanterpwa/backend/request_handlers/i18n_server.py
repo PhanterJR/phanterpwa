@@ -13,7 +13,7 @@ from phanterpwa.i18n import (
 
 
 class I18N(web.RequestHandler):
-    def initialize(self, app_name, projectConfig):
+    def initialize(self, app_name, projectConfig, ignore_debug=False):
         self.app_name = app_name
         self.projectConfig = projectConfig
         self.set_header("Access-Control-Allow-Origin", "*")
@@ -58,7 +58,7 @@ class I18N(web.RequestHandler):
                 translator_instance.add_language(lang)
                 translator_instance.direct_translation = lang
                 translator_instance.translator(word, lang)
-            if self.projectConfig["PROJECT"]["debug"]:
+            if self.projectConfig["PROJECT"]["debug"] or ignore_debug:
                 return self.write(translator_instance.languages)
             else:
                 return self.set_status(503)

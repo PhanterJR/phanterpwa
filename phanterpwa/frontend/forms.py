@@ -687,6 +687,10 @@ class ValidateForm():
         validate_test = list(jQuery(el).data("validators"))
         input_name = jQuery(el).attr("name")
         table_name = jQuery(el).data("form")
+        instances_wg = window.PhanterPWA.Request.widgets
+        widget_instance = instances_wg[jQuery("#phanterpwa-widget-{0}-{1}".format(
+                table_name, input_name)).attr("phanterpwa-widget")]
+
         value_for_validate = self.element_target.find("input[name='{0}']".format(input_name)).val()
         is_empty_or = False
         if "IS_EMPTY_OR" in validate_test:
@@ -698,7 +702,7 @@ class ValidateForm():
         if not is_empty_or:
             for x in validate_test:
                 if x is not None and x is not js_undefined:
-                    validate_test_pass.append(self._validates(x, value_for_validate, el))
+                    validate_test_pass.append(self._validates(x, value_for_validate, el, widget_instance))
 
         if all(validate_test_pass):
             self.formtests.append(True)
@@ -720,7 +724,7 @@ class ValidateForm():
             if self.submit_button is not None and self.submit_button is not js_undefined:
                 self.submit_button.attr("disabled", "disabled")
 
-    def _validates(self, validate_name, value_for_validate, el):
+    def _validates(self, validate_name, value_for_validate, el, widget_instance):
         validate_test_pass = list()
         if validate_name == "PROGRAMMATICALLY":
             if jQuery(el)[0].hasAttribute("phanterpwa-validate-programmatically"):
@@ -729,9 +733,9 @@ class ValidateForm():
                 validate_test_pass.append(False)
         if validate_name.startswith("IS_IN_SET:"):
             res = False
-            list_options = JSON.parse(validate_name[10:])
+            list_options =  [x[1] for x in widget_instance._data]
+
             if list_options is not None or list_options is not js_undefined:
-                list_options = JSON.parse(list_options)
                 if list_options.indexOf(value_for_validate) > -1:
                     res = True
             validate_test_pass.append(res)

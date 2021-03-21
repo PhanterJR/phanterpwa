@@ -1527,16 +1527,16 @@ class ListString(Widget):
                 xml = CONCATENATE()
                 for x in self._value:
                     if isinstance(x, (list, tuple)) and len(x) == 2:
-                        self._input_value.append(x[0])
-                        self._dict_input_value[x[0]] = x[1]
-                        new_value.append([x[0], x[1]])
+                        self._input_value.append(str(x[0]))
+                        self._dict_input_value[str(x[0])] = x[1]
+                        new_value.append([str(x[0]), x[1]])
                         xml.append(
                             DIV(
                                 x[1],
                                 DIV(I(_class="fas fa-times"),
                                     _class="phanterpwa-widget-list_string-value-icon_close icon_button wave_on_click"),
                                 **{
-                                    "_data-value": x[0],
+                                    "_data-value": str(x[0]),
                                     "_class": "phanterpwa-widget-list_string-value-content",
                                     "_tabindex": "0"
                                 }
@@ -1544,8 +1544,8 @@ class ListString(Widget):
                         )
                     else:
                         self._input_value.append(x)
-                        self._dict_input_value[x] = x
-                        new_value.append([x, x])
+                        self._dict_input_value[str(x)] = x
+                        new_value.append([str(x), x])
                         xml.append(
                             DIV(
                                 x,
@@ -1559,13 +1559,13 @@ class ListString(Widget):
                             )
                         )
             elif isinstance(self._value, dict):
-                for x in self._value:
-                    self._input_value.append(x)
-                    new_value.append([x, self._value[x]])
-                    self._dict_input_value[x] = self._value[x]
+                for x in self._value.keys():
+                    self._input_value.append(str(x))
+                    new_value.append([str(x), self._value[str(x)]])
+                    self._dict_input_value[str(x)] = self._value[str(x)]
                     xml.append(
                         DIV(
-                            self._value[x],
+                            self._value[str(x)],
                             DIV(I(_class="fas fa-times"),
                                 _class="phanterpwa-widget-list_string-value-icon_close icon_button wave_on_click"),
                             **{
@@ -1608,18 +1608,18 @@ class ListString(Widget):
             new_data = []
             for vdata in data:
                 if isinstance(vdata, list) and len(vdata) == 2:
-                    self._data_dict[vdata[0]] = vdata[1]
-                    new_data.append([vdata[0], vdata[1]])
+                    self._data_dict[str(vdata[0])] = vdata[1]
+                    new_data.append([str(vdata[0]), vdata[1]])
                 else:
-                    self._data_dict[vdata] = vdata
-                    new_data.append([vdata, vdata])
+                    self._data_dict[str(vdata)] = vdata
+                    new_data.append([str(vdata), vdata])
                 self._data = new_data
         elif isinstance(data, dict):
             new_data = []
             for vdata in data.keys():
-                new_data.append([vdata, data[vdata]])
-                if self._value == vdata:
-                    self._alias_value = data[vdata]
+                new_data.append([str(vdata), data[str(vdata)]])
+                if self._value == str(vdata):
+                    self._alias_value = data[str(vdata)]
             self._data = new_data
             self._data_dict = data
 
@@ -1627,15 +1627,16 @@ class ListString(Widget):
         xml = CONCATENATE()
         data_dict_keys = self._data_dict.keys()
         for x in self._input_value:
-            if x not in data_dict_keys:
-                self._data_dict[x] = self._dict_input_value[x]
-                self._data.append([x, self._dict_input_value[x]])
+            console.log(x, data_dict_keys)
+            if str(x) not in data_dict_keys:
+                self._data_dict[str(x)] = self._dict_input_value[str(x)]
+                self._data.append([str(x), self._dict_input_value[x]])
         data_dict_keys = self._data_dict.keys()
         for x in data_dict_keys:
-            if x not in self._input_value:
+            if str(x) not in self._input_value:
                 xml.append(
                     DIV(
-                        self._data_dict[x],
+                        self._data_dict[str(x)],
                         DIV(I(_class="fas fa-plus"),
                             _class="phanterpwa-widget-list_string-value-icon_plus_predifinition icon_button wave_on_click"),
                         **{
@@ -1778,15 +1779,15 @@ class ListString(Widget):
 
     def _on_click_remove(self, el):
         p = jQuery(el).parent()
-        val = p.data("value")
+        val = str(p.data("value"))
         new_value = []
         self._dict_input_value = {}
         for x in self._value:
             if x[0] is not val:
-                self._dict_input_value[x[0]] = x[1]
-                new_value.append([x[0], x[1]])
+                self._dict_input_value[str(x[0])] = x[1]
+                new_value.append([str(x[0]), x[1]])
             else:
-                self._data_dict[x[0]] = x[1]
+                self._data_dict[str(x[0])] = x[1]
         self._value = new_value
         self._process_list_string()
         self._process_list_predefinition_string()
@@ -2270,8 +2271,6 @@ class CheckBox(Widget):
             jQuery(self.target_selector).find(".phanterpwa-widget-checkbox-wrapper").addClass("has_true")
 
 
-
-
 class RadioBox(Widget):
     def __init__(self, identifier, **parameters):
         self._label = parameters.get("label", None)
@@ -2397,9 +2396,13 @@ class RadioBox(Widget):
 
 class MenuBox(Widget):
     def __init__(self, identifier, button, *options, **parameters):
+        class_button = ""
         if button is js_undefined or button is None:
             self._button = I(_class="fas fa-ellipsis-v")
+            class_button = " icon_button"
         else:
+            if isinstance(button, helpers.XmlConstructor) and button.tag=="i":
+                class_button = " icon_button"
             self._button = button
         self._custom_menu = parameters.get("custom_menu", None)
         self._xml_menu = []
@@ -2416,7 +2419,7 @@ class MenuBox(Widget):
 
         html = DIV(
             self._button,
-            _class="phanterpwa-widget-menubox-button",
+            _class="phanterpwa-widget-menubox-button{0}".format(class_button),
             _phanterpwa_dowpdown_target="drop_{0}".format(identifier)
         )
         if "_class" in parameters:
@@ -2426,7 +2429,10 @@ class MenuBox(Widget):
         Widget.__init__(self, identifier, html, **parameters)
 
     def add_option(self, option):
-        self._xml_menu.append(DIV(option, _class="phanterpwa-widget-menubox-option"))
+        if isinstance(option, MenuOption):
+            self._xml_menu.append(option)
+        else:
+            self._xml_menu.append(DIV(option, _class="phanterpwa-widget-menubox-option wave_on_click"))
 
     def _on_click(self, el):
         if self._custom_menu is None:
@@ -2505,7 +2511,10 @@ class MenuOption(helpers.XmlConstructor):
             attributes['_class'] = "phanterpwa-widget-menubox-option {0}".format(attributes['_class'])
         else:
             attributes['_class'] = "phanterpwa-widget-menubox-option"
-        helpers.XmlConstructor.__init__(self, 'div', False, *content, **attributes)
+        tag = "div"
+        if "_href" in attributes:
+            tag = "a"
+        helpers.XmlConstructor.__init__(self, tag, False, *content, **attributes)
 
 
 class PseudoModal():

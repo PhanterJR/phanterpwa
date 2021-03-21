@@ -15,7 +15,9 @@ from os.path import (
 from phanterpwa.samples.project_config_sample import project_config_sample
 
 ENV_PYTHON = normpath(sys.executable)
+VERSION_PYTHON = "{0}.{1}.{2}".format(sys.version_info[0], sys.version_info[1], sys.version_info[2])
 PATH_PHANTERPWA = dirname(phanterpwa.__file__)
+VERSION_PHANTERPWA = phanterpwa.__version__
 
 
 class ProjectConfig():
@@ -116,7 +118,9 @@ class ProjectConfig():
             cfg["CONFIG_INDENTIFY"] = "project_config"
             cfg["ENVIRONMENT"] = {
                 "python": ENV_PYTHON,
-                "path": normpath(dirname(ENV_PYTHON))
+                "path": normpath(dirname(ENV_PYTHON)),
+                "python_version": VERSION_PYTHON,
+                "phanterpwa_version": VERSION_PHANTERPWA
             }
             self._ini_secret = configparser.ConfigParser()
             self._ini_secret.read(join(cfg["PROJECT"]["path"], 'secret.ini'), encoding='utf-8')
@@ -160,6 +164,10 @@ class ProjectConfig():
                 self._ini_project["PROJECT"][k] = str(cfg["PROJECT"][k])
             if "compilation" not in cfg["PROJECT"]:
                 cfg["PROJECT"]["compilation"] = 0
+                cfg["PROJECT"]["versioning"] = "{0}.{1}".format(
+                    cfg["PROJECT"].get("version", "0.0.1"),
+                    0
+                )
             if "baseport" not in cfg["PROJECT"]:
                 cfg["PROJECT"]["baseport"] = self.project_config_sample["PROJECT"]["baseport"]
             if "basehost" not in cfg["PROJECT"]:

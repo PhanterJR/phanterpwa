@@ -554,6 +554,7 @@ include phanterpwa/usual_sass/components/snippet.sass
 include phanterpwa/usual_sass/components/widgets.sass
 include phanterpwa/usual_sass/components/xtable.sass
 include phanterpwa/usual_sass/display/grid.sass
+include phanterpwa/usual_sass/display/media_print.sass
 include phanterpwa/usual_sass/events/waves.sass
 include phanterpwa/usual_sass/extends/capcha_preload.sass
 include phanterpwa/usual_sass/extends/logo.sass

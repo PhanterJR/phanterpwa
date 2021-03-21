@@ -178,7 +178,13 @@ class WidgetFromFieldDALFromTableDAL():
         elif isinstance(validator, IS_IN_DB):
             validator.build_set()
             table_name = validator.ktable
-            theset = [x.id for x in self._db(self._db[table_name].id > 0).select()]
+            if callable(self._db[table_name]._format):
+                theset = [self._db[table_name]._format(x) for x in self._db(self._db[table_name].id > 0).select()]
+            elif self._db[table_name]._format and isinstance(self._db[table_name]._format, str):
+                theset = [self._db[table_name]._format % x.as_dict() for x in self._db(self._db[table_name].id > 0).select()]
+            else:
+                theset = [x.id for x in self._db(self._db[table_name].id > 0).select()]
+
             return ["IS_IN_SET:{0}".format(json.dumps("{0}".format(theset)))]
         elif isinstance(validator, IS_IN_SET):
             return ["IS_IN_SET:{0}".format(json.dumps("{0}".format(validator.theset)))]

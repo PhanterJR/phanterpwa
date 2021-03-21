@@ -76,8 +76,8 @@ class WebSocketPhanterPWA():
         if window.PhanterPWA.DEBUG:
             console.info("Error on websocket", evt)
         if self.comulative_time > 9000 and not self.manual_connection:
-                window.PhanterPWA.flash("Lost server connection!")
-                self.manual_connection = True
+            window.PhanterPWA.flash("Lost server connection!")
+            self.manual_connection = True
         else:
             self.comulative_time = self.comulative_time + 1000
         if callable(self.onError):
