@@ -247,7 +247,10 @@ class WidgetFromFieldDALFromTableDAL():
                     if (self.db[ref_table][z].type == "datetime") or\
                             (self.db[ref_table][z].type == "date") or\
                             (self.db[ref_table][z].type == "time"):
-                        row.append(q[z].isoformat())
+                        if q[z]:
+                            row.append(q[z].isoformat())
+                        else:
+                            row.append(q[z])
                     else:
                         row.append(q[z])
                     f_format[z] = q[z]
@@ -300,7 +303,7 @@ class WidgetFromFieldDALFromTableDAL():
                 formato_saida = FieldInst.phanterpwa["validator_format"]
                 json_field["validator_format"] = formato_saida
                 if t == "datetime":
-                    tempo = time.strptime(str(default), '%Y-%m-%d %H:%M:%S')
+                    tempo = time.strptime(str(default).replace("T", " "), '%Y-%m-%d %H:%M:%S')
                     resultado = time.strftime(formato_saida, tempo)
                 elif t == "date":
                     tempo = time.strptime(str(default), '%Y-%m-%d')
@@ -354,6 +357,14 @@ class WidgetFromFieldDALFromTableDAL():
                     json_field["type"] = FieldInst.phanterpwa["type"]
                 if "cutter" in FieldInst.phanterpwa:
                     json_field["cutter"] = FieldInst.phanterpwa["cutter"]
+                if "width" in FieldInst.phanterpwa:
+                    json_field["width"] = FieldInst.phanterpwa["width"]
+                if "height" in FieldInst.phanterpwa:
+                    json_field["height"] = FieldInst.phanterpwa["height"]
+                if "view_width" in FieldInst.phanterpwa:
+                    json_field["view_width"] = FieldInst.phanterpwa["view_width"]
+                if "view_height" in FieldInst.phanterpwa:
+                    json_field["view_height"] = FieldInst.phanterpwa["view_height"]
         if "extra" in FieldInst.phanterpwa and self.record and callable(FieldInst.phanterpwa['extra']):
             json_field["extra"] = FieldInst.phanterpwa['extra'](self.record)
         if "url" in FieldInst.phanterpwa and self.record and callable(FieldInst.phanterpwa['url']):

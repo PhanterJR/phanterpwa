@@ -354,13 +354,63 @@ class Auth(web.RequestHandler):
                                 identify=x.id
                             )
                         )
+                    q_role = db(
+                        (db.auth_membership.auth_user == self.phanterpwa_current_user.id) &
+                        (db.auth_group.id == db.auth_membership.auth_group)
+                    ).select(
+                        db.auth_group.id, db.auth_group.role, orderby=db.auth_group.grade
+                    )
+                    roles = [x.role for x in q_role]
+                    dict_roles = {x.id: x.role for x in q_role}
+                    roles_id = [x.id for x in q_role]
+                    role = None
 
+                    if roles:
+                        role = roles[-1]
+
+                    t_url = URLSafeSerializer(
+                        self.projectConfig['BACKEND'][self.app_name]["secret_key"],
+                        salt="url_secret_key"
+                    )
+                    id_client = q.id
+                    content = {
+                        'id_user': str(self.phanterpwa_current_user.id),
+                        'id_client': str(q.id),
+                        'user_agent': self.phanterpwa_user_agent,
+                        'remote_addr': self.phanterpwa_remote_ip
+                    }
+                    token_url = t_url.dumps(content)
+                    user_image = PhanterpwaGalleryUserImage(self.phanterpwa_current_user.id, db, self.projectConfig)
                     self.set_status(200)
                     self.write({
                         'status': 'OK',
                         'code': 200,
-                        'message': 'Session list',
-                        "sessions": sessions
+                        'message': 'Session list and user',
+                        'sessions': sessions,
+                        'authorization': self.phanterpwa_authorization,
+                        'client_token': self.phanterpwa_client_token,
+                        'url_token': token_url,
+                        'auth_user': {
+                            'id': str(self.phanterpwa_current_user.id),
+                            'first_name': E(self.phanterpwa_current_user.first_name),
+                            'last_name': E(self.phanterpwa_current_user.last_name),
+                            'email': self.phanterpwa_current_user.email,
+                            'remember_me': q.remember_me,
+                            'roles': roles,#
+                            'role': role,#
+                            'dict_roles': dict_roles,#
+                            'roles_id': roles_id,#
+                            'activated': self.phanterpwa_current_user.activated,
+                            'image': user_image.id_image,#
+                            'two_factor': self.phanterpwa_current_user.two_factor_login,
+                            'multiple_login': self.phanterpwa_current_user.permit_mult_login,
+                            'locale': self.phanterpwa_current_user.locale,
+                            'social_login': None
+                        },
+                        'i18n': {
+                            'message': self.T('Lista de sessões e usuário'),
+                            'auth_user': {'role': self.T(role)}
+                        }
                     })
 
 

@@ -670,7 +670,7 @@ class PhanterPWA():
             return None
 
     @staticmethod
-    def update_auth_user(auth_user):
+    def store_auth_user(auth_user):
         if auth_user is not None and auth_user is not js_undefined:
             if auth_user["remember_me"] is True:
                 localStorage.setItem("auth_user", JSON.stringify(auth_user))
@@ -683,7 +683,7 @@ class PhanterPWA():
     @staticmethod
     def get_auth_user_image():
         image_user = "/static/{0}/images/user.png".format(
-            window.PhanterPWA.CONFIG.PROJECT.version)
+            window.PhanterPWA.VERSIONING)
         auth_user = window.PhanterPWA.get_auth_user()
         if auth_user is not None and auth_user['image'] is not None:
             url_token = localStorage.getItem("phanterpwa-url-token")
@@ -698,7 +698,7 @@ class PhanterPWA():
     @staticmethod
     def get_last_auth_user_image():
         image_user = "/static/{0}/images/user.png".format(
-            window.PhanterPWA.CONFIG.PROJECT.version)
+            window.PhanterPWA.VERSIONING)
         auth_user = window.PhanterPWA.get_last_auth_user()
         if auth_user is not None and auth_user['image'] is not None:
             url_token = localStorage.getItem("phanterpwa-url-token")

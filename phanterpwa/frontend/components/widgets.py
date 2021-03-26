@@ -144,9 +144,10 @@ class Input(Widget):
                 self._type = "password"
             elif self._kind == "hidden":
                 parameters["_class"] = "{0}{1}".format(parameters["_class"], " e-display_hidden")
-
         else:
             self._type = "text"
+        if self._mask == "fone":
+            self._maks = masks.maskFone(self._value)
         label = ""
         if self._label is not None:
             wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " has_label")
@@ -305,7 +306,10 @@ class Input(Widget):
             lambda: self._on_click_label(this)
         )
         if self._mask is not "" and self._mask is not None:
-            masks.Mask(target.find("input")["selector"], lambda val: masks.baseCustom(val, self._mask))
+            if self._mask == "fone":
+                masks.Mask(target.find("input")["selector"], lambda val: masks.maskFone(val))
+            else:
+                masks.Mask(target.find("input")["selector"], lambda val: masks.baseCustom(val, self._mask))
 
         if self._icon is not None:
             target.find(".phanterpwa-widget-icon-wrapper").off("click.phanterpwa-widget-icon-wrapper").on(
@@ -1627,7 +1631,6 @@ class ListString(Widget):
         xml = CONCATENATE()
         data_dict_keys = self._data_dict.keys()
         for x in self._input_value:
-            console.log(x, data_dict_keys)
             if str(x) not in data_dict_keys:
                 self._data_dict[str(x)] = self._dict_input_value[str(x)]
                 self._data.append([str(x), self._dict_input_value[x]])
@@ -3359,6 +3362,8 @@ class Image(Widget):
         self._form = parameters.get("form", None)
         self._cutter = parameters.get("cutter", False)
         self._nocache = parameters.get("nocache", False)
+        self._width = parameters.get("width", 190)
+        self._height = parameters.get("height", 200)
         self.identifier = identifier
         self.__child_html = DIV(
             _id="phanterpwa-widget-image-wrapper-{0}".format(identifier),
@@ -3381,7 +3386,9 @@ class Image(Widget):
                 "name": self._name,
                 "cutter": self._cutter,
                 "current_image": self._value,
-                "img_name": "Image_{0}".format(self.identifier)
+                "img_name": "Image_{0}".format(self.identifier),
+                "width": self._width,
+                "height": self._height
             }
         )
 

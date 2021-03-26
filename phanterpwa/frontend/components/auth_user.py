@@ -628,6 +628,10 @@ class ModalLogin(modal.Modal):
                         id_error = "#phanterpwa-widget-login-{0} .phanterpwa-widget-error".format(x)
                         message = SPAN(errors[x]).xml()
                         jQuery("#form-{0}".format(self._form)).find(id_error).html(message).addClass("enabled")
+            elif data.status == 401:
+                json = data.responseJSON
+                window.PhanterPWA.flash(**{'html': json.i18n.message})
+                forms.SignForm("#form-login", has_captcha=True)
 
     def submit(self):
         self.clear_errors()
@@ -797,11 +801,7 @@ class ModalPersonalInformation(modal.Modal):
                 if data.status == 200:
                     jQuery(".phanterpwa-gallery-upload-input-file").val('')
                     auth_user = json.auth_user
-                    window.PhanterPWA.update_auth_user(auth_user)
-                    self.AuthUser.start()
-                    LeftBar = window.PhanterPWA.Components['left_bar']
-                    if LeftBar is not None and LeftBar is not js_undefined:
-                        LeftBar.reload()
+                    window.PhanterPWA.store_auth_user(auth_user)
                     self.reload()
                     self.close()
                     if self.AuthUser is not None:
@@ -1527,7 +1527,8 @@ class LeftBar(left_bar.LeftBar):
                 "home",
                 I18N("Home", **{"_pt-br": "Principal"}),
                 I(_class="fas fa-home"),
-                **{"_phanterpwa-way": "home",
+                **{"tag": "a",
+                    "_href": "#_phanterpwa:/home",
                     "position": "top"}
             )
         )
@@ -2057,7 +2058,7 @@ class Profile(gatehandler.Handler):
                 if data.status == 200:
                     jQuery(".phanterpwa-gallery-upload-input-file").val('')
                     auth_user = json.auth_user
-                    window.PhanterPWA.update_auth_user(auth_user)
+                    window.PhanterPWA.store_auth_user(auth_user)
                     self.reload()
 
             else:
@@ -2259,6 +2260,7 @@ class Profile(gatehandler.Handler):
         self.Modal.open()
         forms.SignForm("#form-change_account")
         forms.ValidateForm("#form-change_account")
+
 
 class Lock(gatehandler.Handler):
     def initialize(self):

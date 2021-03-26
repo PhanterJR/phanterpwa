@@ -738,7 +738,7 @@ class PhanterPWA():
         return False
 
     @staticmethod
-    def update_auth_user(auth_user):
+    def store_auth_user(auth_user):
         if auth_user is not None and auth_user is not js_undefined:
             if auth_user["remember_me"] is True:
                 localStorage.setItem("auth_user", JSON.stringify(auth_user))

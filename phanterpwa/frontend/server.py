@@ -1,3 +1,4 @@
+from phanterpwa.frontend import helpers
 from org.transcrypt.stubs.browser import __pragma__
 __pragma__('alias', "jQuery", "$")
 __pragma__('skip')
@@ -12,6 +13,7 @@ __pragma__('noskip')
 __pragma__('kwargs')
 
 
+I18N = helpers.I18N
 class ApiServer():
 
     def __init__(self):
@@ -353,6 +355,14 @@ class ApiServer():
                 })
 
     def on_ajax_error(self, data, status):
+        json = data.responseJSON
+        message = I18N("Unexpected error!", **{"_pt-br": "Erro inesperado!"})
+        if json is not None and json is not js_undefined:
+            if json.i18n is not None and json.i18n is not js_undefined:
+                if json.i18n.message is not None and json.i18n is not js_undefined:
+                    message = json.i18n.message
+            elif json.message is not None and json.message is not js_undefined:
+                message = json.message
         if data.status==401 or data.status==403:
             json = data.responseJSON
             if window.PhanterPWA.logged():
@@ -365,7 +375,9 @@ class ApiServer():
                         )
 
                 window.PhanterPWA.open_code_way(data.status, window.PhanterPWA.Request, window.PhanterPWA.Response)
+        elif data.status==409:
 
+            window.PhanterPWA.flash(**{'html': message})
 
 
 __pragma__('nokwargs')

@@ -797,7 +797,7 @@ class ModalPersonalInformation(modal.Modal):
                 if data.status == 200:
                     jQuery(".phanterpwa-gallery-upload-input-file").val('')
                     auth_user = json.auth_user
-                    window.PhanterPWA.update_auth_user(auth_user)
+                    window.PhanterPWA.store_auth_user(auth_user)
                     self.AuthUser.start()
                     LeftBar = window.PhanterPWA.Components['left_bar']
                     if LeftBar is not None and LeftBar is not js_undefined:
@@ -2057,7 +2057,7 @@ class Profile(gatehandler.Handler):
                 if data.status == 200:
                     jQuery(".phanterpwa-gallery-upload-input-file").val('')
                     auth_user = json.auth_user
-                    window.PhanterPWA.update_auth_user(auth_user)
+                    window.PhanterPWA.store_auth_user(auth_user)
                     self.reload()
 
             else:

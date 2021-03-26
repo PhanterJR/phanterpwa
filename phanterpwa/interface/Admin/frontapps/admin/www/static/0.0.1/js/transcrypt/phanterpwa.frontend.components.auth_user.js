@@ -812,7 +812,7 @@ export var ModalPersonalInformation =  __class__ ('ModalPersonalInformation', [m
 			if (data.status == 200) {
 				$ ('.phanterpwa-gallery-upload-input-file').val ('');
 				var auth_user = json.auth_user;
-				window.PhanterPWA.update_auth_user (auth_user);
+				window.PhanterPWA.store_auth_user (auth_user);
 				self.AuthUser.start ();
 				var LeftBar = window.PhanterPWA.Components ['left_bar'];
 				if (LeftBar !== null && LeftBar !== undefined) {
@@ -2364,7 +2364,7 @@ export var Profile =  __class__ ('Profile', [gatehandler.Handler], {
 			if (data.status == 200) {
 				$ ('.phanterpwa-gallery-upload-input-file').val ('');
 				var auth_user = json.auth_user;
-				window.PhanterPWA.update_auth_user (auth_user);
+				window.PhanterPWA.store_auth_user (auth_user);
 				self.reload ();
 			}
 		}

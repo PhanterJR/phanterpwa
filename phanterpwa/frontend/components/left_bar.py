@@ -223,6 +223,7 @@ class LeftBarButton(helpers.XmlConstructor):
         self.ways = ["all"]
         self.position = "bottom"
         self._on_start = parameters.get("onStart", None)
+        tag = parameters.get("tag", "div")
         parameters["_id"] = "phanterpwa-component-left_bar-menu_button-{0}".format(self.identifier)
         if "_class" in parameters:
             parameters["_class"] = "{0} {1}".format(
@@ -250,9 +251,9 @@ class LeftBarButton(helpers.XmlConstructor):
 
         if "position" in parameters:
             self.position = parameters["position"]
-
+        MY_TAG = helpers.XmlConstructor.tagger(tag)
         content = [
-            DIV(
+            MY_TAG(
                 DIV(self.icon,
                     _class="phanterpwa-component-left_bar-icon-container"),
                 DIV(self.label, _class="phanterpwa-component-left_bar-label"),
@@ -261,7 +262,7 @@ class LeftBarButton(helpers.XmlConstructor):
         ]
 
         helpers.XmlConstructor.__init__(
-            self, 'div', False, *content, _class="phanterpwa-component-left_bar-menu_button-wrapper"
+            self, "div", False, *content, _class="phanterpwa-component-left_bar-menu_button-wrapper"
         )
 
     def start(self):
@@ -430,7 +431,7 @@ class LeftBarUserMenu(helpers.XmlConstructor):
 
         self._image = IMG(_id="phanterpwa-component-left_bar-url-imagem-user",
             _src="/static/{0}/images/user.png".format(
-                window.PhanterPWA.CONFIG.PROJECT.version),
+                window.PhanterPWA.VERSIONING),
             _alt="user avatar")
 
         helpers.XmlConstructor.__init__(
@@ -512,7 +513,7 @@ class LeftBarUserMenu(helpers.XmlConstructor):
         user_name = "Anonymous"
         role = I18N("User")
         user_image = "/static/{0}/images/user.png".format(
-            window.PhanterPWA.CONFIG.PROJECT.version)
+            window.PhanterPWA.VERSIONING)
         if self.auth_user is not None:
             first_name = self.auth_user.first_name
             last_name = self.auth_user.last_name

@@ -298,30 +298,6 @@ class CSRFInput(helpers.XmlConstructor):
                 form=self.table_name,
                 validators=['IS_NOT_EMPTY']
             ),
-            # DIV(
-            #     I(
-            #         _class="fas fa-check"
-            #     ),
-            #     _id="phanterpwa-widget-check-{0}-csrf_token".format(self.table_name),
-            #     _class="phanterpwa-widget-check"
-            # ),
-            # DIV(
-            #     INPUT(
-            #         **{
-            #             "_id": "phanterpwa-widget-input-input{0}-csrf_token".format(self.table_name),
-            #             "_name": "csrf_token",
-            #             "_type": "hidden",
-            #             "_data-validators": JSON.stringify(['IS_NOT_EMPTY']),
-            #             "_data-form": self.table_name
-            #         }
-            #     ),
-            #     LABEL(
-            #         "CSRF Token",
-            #         _for="phanterpwa-widget-input-input-{0}-csrf_token".format(self.table_name),
-            #     ),
-            #     _class='input-field'
-            # ),
-            # DIV(_class="phanterpwa-widget-error"),
             **attributes
         )
 
@@ -343,6 +319,8 @@ class FormWidget(helpers.XmlConstructor):
         self._cutter = json_widget.get("cutter", False)
         self._url = json_widget.get("url", None)
         self._nocache = json_widget.get("no-cache", False)
+        self._width = json_widget.get("width", 190)
+        self._height = json_widget.get("height", 200)
         if "_id" not in json_widget:
             json_widget["_id"] = "phanterpwa-widget-wrapper-{0}-{1}".format(self.table_name, self.input_name)
         if "type" not in json_widget:
@@ -495,7 +473,9 @@ class FormWidget(helpers.XmlConstructor):
                 value=self._url,
                 form=self.table_name,
                 cutter=self._cutter,
-                nocache=self._nocache
+                nocache=self._nocache,
+                width=self._width,
+                height=self._height
             )
 
         else:

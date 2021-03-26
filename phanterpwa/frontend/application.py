@@ -219,11 +219,9 @@ class PhanterPWA():
     def reload_components(self, **context):
         for c in self.Components.keys():
             if callable(self.Components[c].reload):
-                if self.Components[c].actived is False:
-                    if self.DEBUG:
-                        console.info("Reload Components {0}".format(c))
-                    self.Components[c].actived = True
-                    self.Components[c].reload(**context)
+                if self.DEBUG:
+                    console.info("Reload Components {0}".format(c))
+                self.Components[c].reload(**context)
     def reload_component(self, component):
         comp = self.Components[component]
         if comp is not js_undefined:
@@ -292,6 +290,9 @@ class PhanterPWA():
 
     def remove_last_auth_user(self):
         localStorage.removeItem("last_auth_user")
+
+    def reload_auth_user():
+        pass
 
     def _after_submit_login(self, data, ajax_status, callback=None):
         json = data.responseJSON
@@ -585,6 +586,12 @@ class PhanterPWA():
         localStorage.removeItem("phanterpwa-authorization")
         localStorage.removeItem("auth_user")
         self.open_default_way()
+        AuthUser = self.Components['auth_user']
+        if AuthUser is not None and AuthUser is not js_undefined:
+            AuthUser.start()
+        LeftBar = self.Components['left_bar']
+        if LeftBar is not None and LeftBar is not js_undefined:
+            LeftBar.reload()
         if callback is not None:
             callback()
 
@@ -738,8 +745,7 @@ class PhanterPWA():
                 return True
         return False
 
-    @staticmethod
-    def update_auth_user(auth_user):
+    def store_auth_user(self, auth_user=None):
         if auth_user is not None and auth_user is not js_undefined:
             if auth_user["remember_me"] is True:
                 localStorage.setItem("auth_user", JSON.stringify(auth_user))
@@ -748,6 +754,46 @@ class PhanterPWA():
                 sessionStorage.setItem("auth_user", JSON.stringify(auth_user))
                 localStorage.removeItem("auth_user")
             localStorage.setItem("last_auth_user", JSON.stringify(auth_user))
+        AuthUser = self.Components['auth_user']
+        if AuthUser is not None and AuthUser is not js_undefined:
+            AuthUser.start()
+        LeftBar = self.Components['left_bar']
+        if LeftBar is not None and LeftBar is not js_undefined:
+            LeftBar.reload()
+
+    def update_auth_user(self, callback=None):
+        window.PhanterPWA.GET(
+            **{
+                'url_args':['api', 'auth'],
+                "onComplete": lambda data, ajax_status: self._after_get_auth_user(data, ajax_status, callback)
+            }
+        )
+
+    def _after_get_auth_user(self, data, ajax_status, callback=None):
+        json = data.responseJSON
+        if ajax_status == "success":
+            if data.status == 200:
+                authorization = json.authorization
+                auth_user = json.auth_user
+                client_token = json.client_token
+                url_token = json.url_token
+                if (auth_user is not js_undefined) and (auth_user is not None):
+                    localStorage.setItem('phanterpwa-client-token', client_token)
+                    localStorage.setItem('phanterpwa-url-token', url_token)
+                    self.store_auth_user(auth_user)
+                    if auth_user["remember_me"] is True:
+                        localStorage.setItem("phanterpwa-authorization", authorization)
+                        sessionStorage.removeItem("phanterpwa-authorization")
+                    else:
+                        sessionStorage.setItem("phanterpwa-authorization", authorization)
+                        localStorage.removeItem("phanterpwa-authorization")
+                    self.WS.send("command_online")
+                    localStorage.setItem("last_auth_user", JSON.stringify(auth_user))
+        if self.DEBUG:
+            console.info(data.status, json.i18n.message)
+        if callable(callback):
+            callback(data, ajax_status)
+
 
     @staticmethod
     def get_auth_user_image():
@@ -1131,9 +1177,12 @@ class WayRequest():
             else:
                 try:
                     window.PhanterPWA.Gates[self.gate](self)
-                except Exception:
-                    console.error("Error on try open '{0}'".format(way))
-                    window.PhanterPWA.Gates[404](self)
+                except Exception as e:
+                    if window.PhanterPWA.DEBUG:
+                        console.error("Error on try open '{0}'".format(way), e)
+                    else:
+                        console.error("Error on try open '{0}'".format(way))
+                    window.PhanterPWA.Gates[500](self)
                 else:
                     sessionStorage.setItem("current_way", self.way)
 

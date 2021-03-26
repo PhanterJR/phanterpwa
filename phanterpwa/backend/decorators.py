@@ -23,8 +23,9 @@ def check_application():
                     if self.phanterpwa_application_version != project_version:
                         msg = 'The client needs update ({0}).'
                         dict_response = {
-                            'status': 'Bad Request',
-                            'code': 400,
+                            'status': 'Conflict',
+                            'code': 409,
+                            'specification': 'client needs update',
                             'message': msg.format(project_version),
                             'i18n': {
                                 'message': self.i18nTranslator.T(msg).format(project_version)

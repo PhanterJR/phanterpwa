@@ -1653,7 +1653,7 @@ export var PhanterPWA =  __class__ ('PhanterPWA', [object], {
 		}
 		return false;
 	};},
-	get update_auth_user () {return function (auth_user) {
+	get store_auth_user () {return function (auth_user) {
 		if (arguments.length) {
 			var __ilastarg0__ = arguments.length - 1;
 			if (arguments [__ilastarg0__] && arguments [__ilastarg0__].hasOwnProperty ("__kwargtrans__")) {

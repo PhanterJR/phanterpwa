@@ -88,7 +88,7 @@ def check_authorization(authorization_test=False, on_error=None):
                     code = 403
 
                 if callable(on_error):
-                    on_error(code, self)
+                    on_error(code,  responseObj._request, responseObj)
                 else:
                     window.PhanterPWA.open_code_way(code, responseObj._request, responseObj)
                 

@@ -32,6 +32,7 @@ class Mask():
     def onKeyPress(self, event, el):
         code = event.keyCode or event.which
         element = jQuery(el)
+        # console.log("veio aqui10")
         pos = element[0].selectionStart
         end = element[0].selectionEnd
         if pos == end:
@@ -41,7 +42,7 @@ class Mask():
             text1 = current_value[pos:]
             numbers = [str(x) for x in range(10)]
             if v in numbers:
-                print(current_value[pos])
+                # print(current_value[pos])
                 if current_value[pos] in numbers or current_value[pos] == "_":
                     pos = pos + 1
                 else:
@@ -61,12 +62,10 @@ class Mask():
             element.val(new_value)
         else:
             element.val("")
-        if pos > self.mask_function(pure_value)[1]:
-            element[0].selectionStart = self.mask_function(pure_value)[1]
-            element[0].selectionEnd = self.mask_function(pure_value)[1]
-        else:
-            element[0].selectionStart = pos
-            element[0].selectionEnd = pos
+
+        element[0].selectionStart = self.mask_function(pure_value)[1]
+        element[0].selectionEnd = self.mask_function(pure_value)[1]
+
         event.preventDefault()
 
     def onNonPrintingKeysIn(self, event, el):
@@ -77,39 +76,21 @@ class Mask():
             if code == 8:
                 current_value = element.val()
                 if self.stringFilter(current_value) is not "":
-                    pos = element[0].selectionStart
-                    end = element[0].selectionEnd
-                    text0 = current_value[0:pos - 1]
-                    numbers = [str(x) for x in range(10)]
-                    if pos == end:
-                        if current_value[pos - 1] in numbers:
-                            text0 = current_value[0: pos - 1]
-                        elif current_value[pos - 1] is not "":
-                            text0 = current_value[0: pos - 2]
-                            pos = pos - 1
-                        text1 = current_value[pos:]
-                        new_value = "{0}{1}".format(text0, text1)
-                        element[0].selectionStart = pos - 1
-                        element[0].selectionEnd = pos - 1
-                    else:
-                        text0 = current_value[0: pos]
-                        text1 = current_value[end:]
-                        new_value = "{0}{1}".format(text0, text1)
-                        element[0].selectionStart = pos
-                        element[0].selectionEnd = pos
-                    pure_value = self.stringFilter(new_value)
+                    pure_value = self.stringFilter(current_value)
+                    pure_value = pure_value[0:-1]
                     new_value = self.mask_function(pure_value)[0]
                     if pure_value is not "":
                         element.val(new_value)
                     else:
                         element.val("")
-                    element[0].selectionStart = pos - 1
-                    element[0].selectionEnd = pos - 1
+                    element[0].selectionStart = self.mask_function(pure_value)[1]
+                    element[0].selectionEnd = self.mask_function(pure_value)[1]
                 else:
                     element.val("")
             elif code == 46:
                 current_value = element.val()
                 if self.stringFilter(current_value) is not "":
+                    # console.log("veio aqui16")
                     pos = element[0].selectionStart
                     end = element[0].selectionEnd
                     if pos == end:
@@ -121,12 +102,14 @@ class Mask():
                             text1 = current_value[pos + 2:]
 
                         new_value = "{0}{1}".format(text0, text1)
+                        # console.log("veio aqui17")
                         element[0].selectionStart = pos
                         element[0].selectionEnd = pos
                     else:
                         text0 = current_value[0: pos]
                         text1 = current_value[end:]
                         new_value = "{0}{1}".format(text0, text1)
+                        # console.log("veio aqui18")
                         element[0].selectionStart = pos
                         element[0].selectionEnd = pos
                     pure_value = self.stringFilter(new_value)
@@ -135,52 +118,13 @@ class Mask():
                         element.val(new_value)
                     else:
                         element.val("")
+                    # console.log("veio aqui19")
                     element[0].selectionStart = pos
                     element[0].selectionEnd = pos
                 else:
                     element.val("")
 
             event.preventDefault()
-        # else:
-            # pos = element[0].selectionStart
-            # end = element[0].selectionEnd
-            # if pos == end:
-            #     current_value = element.val()
-            #     v = String.fromCharCode(code)
-            #     text0 = current_value[0: pos] + v
-            #     text1 = current_value[pos:]
-            #     numbers = [str(x) for x in range(10)]
-            #     if v in numbers:
-            #         print(current_value[pos])
-            #         if current_value[pos] in numbers or current_value[pos] == "_":
-            #             pos = pos + 1
-            #         else:
-            #             pos = pos + 2
-            # else:
-            #     current_value = element.val()
-            #     v = String.fromCharCode(code)
-            #     text0 = current_value[0: pos] + v
-            #     text1 = current_value[end:]
-            #     numbers = [str(x) for x in range(10)]
-            #     if v in numbers:
-            #         if current_value[end] in numbers or current_value[end] == "_":
-            #             pos = pos + 1
-            #         else:
-            #             pos = pos + 2
-            # new_value = "{0}{1}".format(text0, text1)
-            # pure_value = self.stringFilter(new_value)
-            # new_value = self.mask_function(pure_value)[0]
-            # if pure_value is not "":
-            #     element.val(new_value)
-            # else:
-            #     element.val("")
-            # if pos > self.mask_function(pure_value)[1]:
-            #     element[0].selectionStart = self.mask_function(pure_value)[1]
-            #     element[0].selectionEnd = self.mask_function(pure_value)[1]
-            # else:
-            #     element[0].selectionStart = pos
-            #     element[0].selectionEnd = pos
-            # event.preventDefault()
 
     def onNonPrintingKeys(self, event, el):
         event.preventDefault()
@@ -204,9 +148,11 @@ class Mask():
                 selection_pos = self.mask_function(pure_value)[1]
                 element.val(new_value)
                 if (self.reverse):
+                    # console.log("veio aqui20")
                     element[0].selectionStart = -len(new_value)
                     element[0].selectionEnd = -len(new_value)
                 else:
+                    # console.log("veio aqui21")
                     element[0].selectionStart = selection_pos
                     element[0].selectionEnd = selection_pos
                 if(code != 9):
@@ -226,9 +172,11 @@ class Mask():
         if(self.apply_on_init):
             element.val(new_value)
             if(reverse):
+                # console.log("veio aqui22")
                 element[0].selectionStart = -len(new_value)
                 element[0].selectionEnd = -len(new_value)
             else:
+                # console.log("veio aqui23")
                 element[0].selectionStart = selection_pos
                 element[0].selectionEnd = selection_pos
 
@@ -412,6 +360,7 @@ def floatToCurrency(value, casas_decimais=2, separador_decimal=",", separador_mi
 
 
 def baseCustom(value, custom_mask, cursorPosition=0):
+    # console.log(value)
     value = str(value)
     size = len(value)
     char_plus = 0
@@ -430,7 +379,12 @@ def baseCustom(value, custom_mask, cursorPosition=0):
                 char_plus += 1
 
             new_value += custom_mask[i]
-    cursorPosition = int(size) + char_plus
+    # console.log(new_value)
+    if new_value.indexOf("_") > 0:
+        cursorPosition = new_value.indexOf("_")
+    else:
+        cursorPosition = int(size) + char_plus
+    # console.log(new_value.indexOf("_"), int(size) + char_plus)
     return [new_value, cursorPosition]
 
 
@@ -496,9 +450,11 @@ def applyMask(jq_select, maskfunction, reverse=False, apply_on_init=False):
                 selection_pos = maskfunction(pure_value)[1]
                 element.val(new_value)
                 if (reverse):
+                    # console.log("veio aqui1")
                     element[0].selectionStart = -len(new_value)
                     element[0].selectionEnd = -len(new_value)
                 else:
+                    # console.log("veio aqui2")
                     element[0].selectionStart = selection_pos
                     element[0].selectionEnd = selection_pos
                 if(code != 9):
@@ -524,9 +480,11 @@ def applyMask(jq_select, maskfunction, reverse=False, apply_on_init=False):
                 selection_pos = maskfunction(pure_value)[1]
                 element.val(new_value)
                 if (reverse):
+                    # console.log("veio aqui3")
                     element[0].selectionStart = -len(new_value)
                     element[0].selectionEnd = -len(new_value)
                 else:
+                    # console.log("veio aqui4")
                     element[0].selectionStart = selection_pos
                     element[0].selectionEnd = selection_pos
                 if(code != 9):
@@ -542,9 +500,11 @@ def applyMask(jq_select, maskfunction, reverse=False, apply_on_init=False):
         if(apply_on_init):
             element.val(new_value)
             if(reverse):
+                # console.log("veio aqui5")
                 element[0].selectionStart = -len(new_value)
                 element[0].selectionEnd = -len(new_value)
             else:
+                # console.log("veio aqui6")
                 element[0].selectionStart = selection_pos
                 element[0].selectionEnd = selection_pos
 
@@ -684,6 +644,7 @@ def phanterDecimals(
                         l_currency)
                 )
             element.attr("phantermaskValue", stringToFloatstringLimitDecimals(new_value, casas_decimais))
+        # console.log("veio aqui7", new_value)
         element[0].selectionStart = -len(new_value)
         element[0].selectionEnd = -len(new_value)
         if (code != 9):
@@ -721,6 +682,7 @@ def phanterDecimals(
                 element.text(floatToCurrency(stringToFloatstringLimitDecimals(
                     new_value, casas_decimais), casas_decimais, separador_decimal, separador_milhar, l_currency))
             element.attr("phantermaskValue", stringToFloatstringLimitDecimals(value, casas_decimais))
+        # console.log("veio aqui8", new_value)
         element[0].selectionStart = -len(new_value)
         element[0].selectionEnd = -len(new_value)
 
@@ -758,6 +720,7 @@ def phanterDecimals(
                 element.text(floatToCurrency(stringToFloatstringLimitDecimals(
                     new_value, casas_decimais), casas_decimais, separador_decimal, separador_milhar, l_currency))
             element.attr("phantermaskValue", stringToFloatstringLimitDecimals(value, casas_decimais))
+        # console.log("veio aqui9")
         element[0].selectionStart = -len(new_value)
         element[0].selectionEnd = -len(new_value)
         element.off(
