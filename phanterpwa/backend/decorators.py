@@ -728,16 +728,16 @@ def requires_authentication(users_id=None, users_email=None, roles_id=None, role
             if any([users_id, users_email, roles_id, roles_name]):
                 msg = "User does not have sufficient privileges!"
                 if isinstance(users_id, (list, tuple)):
-                    if self.current_user.id in users_id:
+                    if self.phanterpwa_current_user.id in users_id:
                         return f(self, *args, **kargs)
                 if isinstance(users_id, int):
-                    if self.current_user.id == users_id:
+                    if self.phanterpwa_current_user.id == users_id:
                         return f(self, *args, **kargs)
                 if isinstance(users_email, (list, tuple)):
-                    if self.current_user.email in users_email:
+                    if self.phanterpwa_current_user.email in users_email:
                         return f(self, *args, **kargs)
                 if isinstance(users_email, str):
-                    if users_email == self.current_user.email:
+                    if users_email == self.phanterpwa_current_user.email:
                         return f(self, *args, **kargs)
                 if self.phanterpwa_current_user_groups:
                     if isinstance(roles_id, int):

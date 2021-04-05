@@ -328,11 +328,11 @@ class Auth(web.RequestHandler):
                     token_content_client = None
                 if token_content_client:
                     sessions = []
-                    q_sessions = db(db.client.auth_user==self.phanterpwa_current_user.id).select(orderby=db.client.date_created)
+                    q_sessions = db(db.client.auth_user == self.phanterpwa_current_user.id).select(orderby=db.client.date_created)
                     for x in q_sessions:
-                        this_session=False
+                        this_session = False
                         if x.token == self.phanterpwa_client_token:
-                            this_session=True
+                            this_session = True
                         tc = None
                         try:
                             tc = t_client.loads(x.token)
@@ -396,12 +396,12 @@ class Auth(web.RequestHandler):
                             'last_name': E(self.phanterpwa_current_user.last_name),
                             'email': self.phanterpwa_current_user.email,
                             'remember_me': q.remember_me,
-                            'roles': roles,#
-                            'role': role,#
-                            'dict_roles': dict_roles,#
-                            'roles_id': roles_id,#
+                            'roles': roles,
+                            'role': role,
+                            'dict_roles': dict_roles,
+                            'roles_id': roles_id,
                             'activated': self.phanterpwa_current_user.activated,
-                            'image': user_image.id_image,#
+                            'image': user_image.id_image,
                             'two_factor': self.phanterpwa_current_user.two_factor_login,
                             'multiple_login': self.phanterpwa_current_user.permit_mult_login,
                             'locale': self.phanterpwa_current_user.locale,
@@ -1236,7 +1236,7 @@ class ImageUser(web.RequestHandler):
                 return
         self.set_status(202)
         file = os.path.join(self.projectConfig['PROJECT']['path'],
-                "backapps", self.app_name, 'statics', 'images', 'user.png')
+                "backapps", self.app_name, 'static', 'images', 'user.png')
         with open(file, 'rb') as f:
             while True:
                 data = f.read(buf_size)

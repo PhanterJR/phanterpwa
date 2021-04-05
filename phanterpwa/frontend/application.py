@@ -57,6 +57,8 @@ class PhanterPWA():
         self.Response = None
         self.default_way = parameters.get("default_way", "home")
         self._after_open_way = parameters.get("after_open_way", None)
+        self._after_login = parameters.get("after_login", None)
+        self._after_logout = parameters.get("after_logout", None)
         self.counter = 0
         self.states = dict()
         self._social_login_icons = {
@@ -222,6 +224,7 @@ class PhanterPWA():
                 if self.DEBUG:
                     console.info("Reload Components {0}".format(c))
                 self.Components[c].reload(**context)
+
     def reload_component(self, component):
         comp = self.Components[component]
         if comp is not js_undefined:
@@ -318,6 +321,8 @@ class PhanterPWA():
                         localStorage.removeItem("auth_user")
                     self.WS.send("command_online")
                     localStorage.setItem("last_auth_user", JSON.stringify(auth_user))
+                    if callable(self._after_login):
+                        self._after_login(self, json)
                 window.PhanterPWA.open_current_way()
             elif data.status == 206:
                 client_token = json.client_token
@@ -577,9 +582,7 @@ class PhanterPWA():
         })
 
     def logout(self, **parameters):
-        callback = None
-        if "callback" in parameters:
-            callback = parameters["callback"]
+        callback = parameters.get("callback", None)
         self.WS.send("command_offline")
         sessionStorage.removeItem("phanterpwa-authorization")
         sessionStorage.removeItem("auth_user")
@@ -592,8 +595,10 @@ class PhanterPWA():
         LeftBar = self.Components['left_bar']
         if LeftBar is not None and LeftBar is not js_undefined:
             LeftBar.reload()
-        if callback is not None:
-            callback()
+        if callable(callback):
+            callback(self)
+        if callable(self._after_logout):
+            self._after_logout(self)
 
     def _after_get_csrf_token(self, data, ajax_status, callback=None):
         json = data.responseJSON
@@ -903,6 +908,12 @@ class PhanterPWA():
         if way != current:
             window.history.pushState("", self.TITLE, "#_phanterpwa:/{0}".format(way))
 
+    def check_duplicates_ids(self):
+        def check(el):
+            ids = jQuery("[id='{0}']".format(el.id))
+            if ids.length > 1 and ids[0] == el:
+                console.warn('Multiple IDs #{0}'.format(el.id))
+        jQuery('[id]').each(lambda: check(this))
 
     def onPopState(self):
         self.open_way(self._get_way_from_url_hash())

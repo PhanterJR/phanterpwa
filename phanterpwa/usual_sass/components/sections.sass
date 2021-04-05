@@ -4,13 +4,17 @@
     padding: 10px 0
     width: 100%
     overflow: auto
+
     .phanterpwa-xsection
-        padding: 0 10px
         border: 1px solid #d7d7d7
         overflow: auto
         border-radius: 5px
         width: 100%
         padding: 15px 0px 10px 0px
+        .phanterpwa-xsection-menu_buttom
+            position: absolute
+            top: 15px
+            right: 7px
         &>label
             padding: 5px
             color: $components
@@ -26,6 +30,10 @@
             font-size: 0.8rem
         &>hr
             border: 0.5px solid #eeeded
+
+    &.has_menu_button
+        .phanterpwa-xsection
+            padding: 50px 0px 10px 0px
     &.e-padding_20
         .phanterpwa-xsection
             padding: 20px

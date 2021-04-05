@@ -94,9 +94,10 @@ class DataForm():
 
 
 class WidgetFromFieldDALFromTableDAL():
-    def __init__(self, table, field, record_id=None):
+    def __init__(self, table, field, record_id=None, data_view=False):
         self.table = table
         self._db = self.table._db
+        self._data_view = data_view
         self._field = field
         self._record = None
         self.record_id = record_id
@@ -374,7 +375,10 @@ class WidgetFromFieldDALFromTableDAL():
         for x in FieldInst.phanterpwa:
             if x.startswith("_"):
                 json_field[x] = FieldInst.phanterpwa[x]
-
+        if self._data_view:
+            json_field["data_view"] = True
+        else:
+            json_field["data_view"] = False
         return json_field
 
     def as_xml(self):
@@ -382,9 +386,10 @@ class WidgetFromFieldDALFromTableDAL():
 
 
 class FormFromTableDAL():
-    def __init__(self, table, record_id=None, fields=None, custom_validates={}):
+    def __init__(self, table, record_id=None, fields=None, custom_validates={}, data_view=False):
         self.table = table
         self._db = self.table._db
+        self._data_view = data_view
         if fields:
             self.fields = fields
         else:
@@ -583,12 +588,13 @@ class FormFromTableDAL():
         self.dict = {
             "table": self.table._tablename,
             "id": self.record_id,
+            "data_view": self._data_view,
             "widgets": self.json_widgets
         }
         section = {}
         group = {}
         for x in self.fields:
-            json_widget = WidgetFromFieldDALFromTableDAL(self.table, x, self.record_id)
+            json_widget = WidgetFromFieldDALFromTableDAL(self.table, x, self.record_id, data_view=self._data_view)
             self._widgets[x] = json_widget.as_dict()
             if x is not "id" or self.record_id:
                 if json_widget.section:

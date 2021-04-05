@@ -48,6 +48,9 @@ class Modal():
             parameters["_class"] = "phanterpwa-component-modal-wrapper phanterpwa-container"
         if "after_open" in parameters:
             self._after_open = parameters["after_open"]
+
+        self._on_close = parameters.get("on_close", None)
+        self._after_close = parameters.get("after_close", None)
         self._z_index = parameters.get("z_index", 1006)
         wrapper_content = CONCATENATE(
             DIV(
@@ -112,12 +115,16 @@ class Modal():
             self.open()
 
     def close(self):
+        if callable(self._on_close):
+            self._on_close(self)
         modal_container = jQuery(self.target_selector).find(".phanterpwa-component-modal-container")
         modal_container.addClass("closing")
         setTimeout(
             lambda: modal_container.removeClass("enabled"),
             500
         )
+        if callable(self._after_close):
+            self._after_close(self)
 
     def _close_on_click_container(self, event, target_element):
         if (event.target is target_element):

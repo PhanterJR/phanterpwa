@@ -2160,6 +2160,7 @@ class Inert(Widget):
                 "_data-form": self._form,
                 "_disabled": "disabled"
             }),
+            HR(_class="material-widgets-animation-offfocus"),
             label,
             **wrapper_attr
         )
@@ -3364,6 +3365,7 @@ class Image(Widget):
         self._nocache = parameters.get("nocache", False)
         self._width = parameters.get("width", 190)
         self._height = parameters.get("height", 200)
+        self._data_view = parameters.get("data_view", False)
         self.identifier = identifier
         self.__child_html = DIV(
             _id="phanterpwa-widget-image-wrapper-{0}".format(identifier),
@@ -3388,7 +3390,8 @@ class Image(Widget):
                 "current_image": self._value,
                 "img_name": "Image_{0}".format(self.identifier),
                 "width": self._width,
-                "height": self._height
+                "height": self._height,
+                "data_view": self._data_view
             }
         )
 
@@ -3423,7 +3426,8 @@ class GalleryInput():
             },
             "onError": None,
             "beforeCut": None,
-            "afterCut": None
+            "afterCut": None,
+            "data_view": False
         }
         if self.config is js_undefined:
             self.config = dict()
@@ -3436,6 +3440,7 @@ class GalleryInput():
             self.config["view-width"] = self.config["width"]
         if self.config["view-height"] is None or self.config["view-height"] is js_undefined:
             self.config["view-height"] = self.config["height"]
+        self._data_view = self.config.get("data_view", False)
         self.addInputPanel()
 
     def getNewImage(self):
@@ -3669,8 +3674,9 @@ class GalleryInput():
                         "background-size", "auto 100%"
                     )
         cutted_img.onload = lambda: onImageLoad(this, namespace, width, height)
-        html_simple_view = DIV(
-            DIV(
+        xml_icons_view = ""
+        if not self._data_view:
+            xml_icons_view = DIV(
                 DIV(
                     I(_class="fas fa-sync"),
                     _id="phanterpwa-gallery-upload-image-simple-view-button-reload-{0}".format(namespace),
@@ -3686,7 +3692,9 @@ class GalleryInput():
                     )
                 ),
                 _class="phanterpwa-gallery-upload-image-simple-view-buttons"
-            ),
+            )
+        html_simple_view = DIV(
+            xml_icons_view,
             _id="phanterpwa-gallery-upload-image-simple-view-{0}".format(namespace),
             _class="phanterpwa-gallery-upload-image-simple-view",
             _alt=img_name,

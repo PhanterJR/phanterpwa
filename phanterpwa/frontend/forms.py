@@ -310,6 +310,7 @@ class FormWidget(helpers.XmlConstructor):
         self.placeholder = None
         self.icon_button = None
         self.validators = json_widget.get("validators", None)
+        self._data_view = json_widget.get("data_view", False)
         self._value = json_widget.get("value", None)
         self._icon = json_widget.get("icon", None)
         self._editable = json_widget.get("editable", False)
@@ -360,136 +361,209 @@ class FormWidget(helpers.XmlConstructor):
         self._process()
 
     def _process(self):
-        if self._widget_type == "date" or self._widget_type == "datetime":
-            dformat = "yyyy-MM-dd"
-            dvalue = self.json_widget['value']
-            if self._widget_type == "datetime":
-                dformat = "{0} HH:mm:ss".format(dformat)
-            if self.fmt is not None and self.fmt is not js_undefined:
-                dformat = self.fmt
-                if isinstance(dvalue, str):
-                    dvalue = validations.format_iso_date_datetime(dvalue, dformat, self._widget_type)
+        if self._data_view:
+            if self._widget_type == "date" or self._widget_type == "datetime":
+                dformat = "yyyy-MM-dd"
+                dvalue = self.json_widget['value']
+                if self._widget_type == "datetime":
+                    dformat = "{0} HH:mm:ss".format(dformat)
+                if self.fmt is not None and self.fmt is not js_undefined:
+                    dformat = self.fmt
+                    if isinstance(dvalue, str):
+                        dvalue = validations.format_iso_date_datetime(dvalue, dformat, self._widget_type)
 
-            w = widgets.Input(
-                "{0}-{1}".format(self.table_name, self.input_name),
-                label=self.json_widget['label'],
-                name=self.input_name,
-                value=dvalue,
-                format=dformat,
-                kind=self._widget_type,
-                mask=dformat,
-                form=self.table_name,
-                icon=I(_class="fas fa-calendar-alt"),
-                validators=self.validators
-            )
+                w = widgets.Inert(
+                    "{0}-{1}".format(self.table_name, self.input_name),
+                    label=self.json_widget['label'],
+                    name=self.input_name,
+                    value=dvalue,
+                    form=self.table_name,
+                )
+            elif self._widget_type == "reference" or self._widget_type == "select":
+                va = ""
+                for x in self.json_widget['data_set']:
+                    if x[0] == self._value:
+                        va = x[1]
 
-        elif self._widget_type == "reference" or self._widget_type == "select":
-            w = widgets.Select(
-                "{0}-{1}".format(self.table_name, self.input_name),
-                label=self.json_widget['label'],
-                name=self.input_name,
-                editable=self._editable,
-                can_empty=self._can_empty,
-                value=self._value,
-                data_set=self.json_widget['data_set'],
-                form=self.table_name,
-                validators=self.validators
-            )
-        elif self._widget_type == "list_string":
-            w = widgets.ListString(
-                "{0}-{1}".format(self.table_name, self.input_name),
-                label=self.json_widget['label'],
-                name=self.input_name,
-                #editable=self._editable,
-                #can_empty=self._can_empty,
-                value=self._value,
-                #mask=self._mask,
-                form=self.table_name,
-                #validators=self.validators
-            )
-        elif self._widget_type == "text":
-            w = widgets.Textarea(
-                "{0}-{1}".format(self.table_name, self.input_name),
-                label=self.json_widget['label'],
-                name=self.input_name,
-                editable=self._editable,
-                can_empty=self._can_empty,
-                value=self._value,
-                mask=self._mask,
-                form=self.table_name,
-                validators=self.validators
-            )
+                w = widgets.Inert(
+                    "{0}-{1}".format(self.table_name, self.input_name),
+                    label=self.json_widget['label'],
+                    name=self.input_name,
+                    value=va,
+                    form=self.table_name,
+                )
+            elif self._widget_type == "list_string":
+                va = ""
 
-        elif self._widget_type == "id":
-            w = widgets.Inert(
-                "{0}-{1}".format(self.table_name, self.input_name),
-                label=self.json_widget['label'],
-                name=self.input_name,
-                value=self._value,
-                form=self.table_name,
-            )
+                if isinstance(self._value, list):
+                    if len(self._value) == 1:
+                        va = self._value[0][1]
+                    elif len(self._value) > 1:
+                        va = "; ".join([x[1] for x in self._value])
+                        va += "."
 
-        elif self._widget_type == "boolean":
-            w = widgets.CheckBox(
-                "{0}-{1}".format(self.table_name, self.input_name),
-                label=self.json_widget['label'],
-                name=self.input_name,
-                value=self._value is True,
-                form=self.table_name
-            )
+                w = widgets.Inert(
+                    "{0}-{1}".format(self.table_name, self.input_name),
+                    label=self.json_widget['label'],
+                    name=self.input_name,
+                    value=va,
+                    form=self.table_name,
+                )
+            elif self._widget_type == "image":
 
-        elif self._widget_type == "password":
-            w = widgets.Input(
-                "{0}-{1}".format(self.table_name, self.input_name),
-                label=self.json_widget['label'],
-                name=self.input_name,
-                value=self._value,
-                form=self.table_name,
-                validators=self.validators,
-                kind="password",
-                icon=self._icon
-            )
-
-        elif self._widget_type == "hidden":
-            w = widgets.Input(
-                "{0}-{1}".format(self.table_name, self.input_name),
-                label=self.json_widget['label'],
-                name=self.input_name,
-                value=self._value,
-                editable=self._editable,
-                can_empty=self._can_empty,                
-                mask=self._mask,
-                form=self.table_name,
-                kind="hidden",
-                validators=self.validators
-            )
-
-        elif self._widget_type == "image":
-
-            w = widgets.Image(
-                "{0}-{1}".format(self.table_name, self.input_name),
-                label=self.json_widget['label'],
-                name=self.input_name,
-                value=self._url,
-                form=self.table_name,
-                cutter=self._cutter,
-                nocache=self._nocache,
-                width=self._width,
-                height=self._height
-            )
-
+                w = widgets.Image(
+                    "{0}-{1}".format(self.table_name, self.input_name),
+                    label=self.json_widget['label'],
+                    name=self.input_name,
+                    value=self._url,
+                    form=self.table_name,
+                    cutter=False,
+                    nocache=self._nocache,
+                    width=self._width,
+                    height=self._height,
+                    data_view=True
+                )
+            else:
+                w = widgets.Inert(
+                    "{0}-{1}".format(self.table_name, self.input_name),
+                    label=self.json_widget['label'],
+                    name=self.input_name,
+                    value=self._value,
+                    form=self.table_name,
+                )
         else:
-            w = widgets.Input(
-                "{0}-{1}".format(self.table_name, self.input_name),
-                label=self.json_widget['label'],
-                name=self.input_name,
-                value=self._value,
-                editable=self._editable,
-                can_empty=self._can_empty,                
-                mask=self._mask,
-                form=self.table_name,
-                validators=self.validators
-            )
+            if self._widget_type == "date" or self._widget_type == "datetime":
+                dformat = "yyyy-MM-dd"
+                dvalue = self.json_widget['value']
+                if self._widget_type == "datetime":
+                    dformat = "{0} HH:mm:ss".format(dformat)
+                if self.fmt is not None and self.fmt is not js_undefined:
+                    dformat = self.fmt
+                    if isinstance(dvalue, str):
+                        dvalue = validations.format_iso_date_datetime(dvalue, dformat, self._widget_type)
+
+                w = widgets.Input(
+                    "{0}-{1}".format(self.table_name, self.input_name),
+                    label=self.json_widget['label'],
+                    name=self.input_name,
+                    value=dvalue,
+                    format=dformat,
+                    kind=self._widget_type,
+                    mask=dformat,
+                    form=self.table_name,
+                    icon=I(_class="fas fa-calendar-alt"),
+                    validators=self.validators
+                )
+
+            elif self._widget_type == "reference" or self._widget_type == "select":
+                w = widgets.Select(
+                    "{0}-{1}".format(self.table_name, self.input_name),
+                    label=self.json_widget['label'],
+                    name=self.input_name,
+                    editable=self._editable,
+                    can_empty=self._can_empty,
+                    value=self._value,
+                    data_set=self.json_widget['data_set'],
+                    form=self.table_name,
+                    validators=self.validators
+                )
+            
+            elif self._widget_type == "list_string":
+                w = widgets.ListString(
+                    "{0}-{1}".format(self.table_name, self.input_name),
+                    label=self.json_widget['label'],
+                    name=self.input_name,
+                    #editable=self._editable,
+                    #can_empty=self._can_empty,
+                    value=self._value,
+                    #mask=self._mask,
+                    form=self.table_name,
+                    #validators=self.validators
+                )
+            
+            elif self._widget_type == "text":
+                w = widgets.Textarea(
+                    "{0}-{1}".format(self.table_name, self.input_name),
+                    label=self.json_widget['label'],
+                    name=self.input_name,
+                    editable=self._editable,
+                    can_empty=self._can_empty,
+                    value=self._value,
+                    mask=self._mask,
+                    form=self.table_name,
+                    validators=self.validators
+                )
+
+            elif self._widget_type == "id":
+                w = widgets.Inert(
+                    "{0}-{1}".format(self.table_name, self.input_name),
+                    label=self.json_widget['label'],
+                    name=self.input_name,
+                    value=self._value,
+                    form=self.table_name,
+                )
+
+            elif self._widget_type == "boolean":
+                w = widgets.CheckBox(
+                    "{0}-{1}".format(self.table_name, self.input_name),
+                    label=self.json_widget['label'],
+                    name=self.input_name,
+                    value=self._value is True,
+                    form=self.table_name
+                )
+
+            elif self._widget_type == "password":
+                w = widgets.Input(
+                    "{0}-{1}".format(self.table_name, self.input_name),
+                    label=self.json_widget['label'],
+                    name=self.input_name,
+                    value=self._value,
+                    form=self.table_name,
+                    validators=self.validators,
+                    kind="password",
+                    icon=self._icon
+                )
+
+            elif self._widget_type == "hidden":
+                w = widgets.Input(
+                    "{0}-{1}".format(self.table_name, self.input_name),
+                    label=self.json_widget['label'],
+                    name=self.input_name,
+                    value=self._value,
+                    editable=self._editable,
+                    can_empty=self._can_empty,                
+                    mask=self._mask,
+                    form=self.table_name,
+                    kind="hidden",
+                    validators=self.validators
+                )
+
+            elif self._widget_type == "image":
+
+                w = widgets.Image(
+                    "{0}-{1}".format(self.table_name, self.input_name),
+                    label=self.json_widget['label'],
+                    name=self.input_name,
+                    value=self._url,
+                    form=self.table_name,
+                    cutter=self._cutter,
+                    nocache=self._nocache,
+                    width=self._width,
+                    height=self._height
+                )
+
+            else:
+                w = widgets.Input(
+                    "{0}-{1}".format(self.table_name, self.input_name),
+                    label=self.json_widget['label'],
+                    name=self.input_name,
+                    value=self._value,
+                    editable=self._editable,
+                    can_empty=self._can_empty,                
+                    mask=self._mask,
+                    form=self.table_name,
+                    validators=self.validators
+                )
         self.append(w)
 
 
@@ -503,6 +577,7 @@ class Form(helpers.XmlConstructor):
         self.after_sign = None
         self.element = None
         self.table_name = json_form.table
+        self._data_view = json_form.data_view
         if "fields" in parameters:
             fields = parameters["fields"]
         if "show_id" in parameters:
@@ -541,19 +616,22 @@ class Form(helpers.XmlConstructor):
             self.table_name,
             self.preload
         )
-        if submit_button is not None and submit_button is not js_undefined:
-            self._buttons_container = DIV(
-                submit_button,
-                _class='buttons-form-container'
-            )
+        if self._data_view:
+            self._buttons_container = ""
         else:
-            self._buttons_container = DIV(
-                SubmitButton(
-                    self.table_name,
-                    I18N("Submit")
-                ),
-                _class='buttons-form-container'
-            )
+            if submit_button is not None and submit_button is not js_undefined:
+                self._buttons_container = DIV(
+                    submit_button,
+                    _class='buttons-form-container'
+                )
+            else:
+                self._buttons_container = DIV(
+                    SubmitButton(
+                        self.table_name,
+                        I18N("Submit")
+                    ),
+                    _class='buttons-form-container'
+                )
         self._process()
 
     def extra_button(self, _id, label, **attributes):
@@ -584,6 +662,7 @@ class Form(helpers.XmlConstructor):
 
     def _process(self):
         for x in self.json_widgets:
+            x['data_view'] = self._data_view
             w = self._process_widget(x)
             self.widgets[x] = w
             if self.fields is not None and self.fields is not js_undefined:

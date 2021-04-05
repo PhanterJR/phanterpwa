@@ -42,7 +42,8 @@ class GalleryInput():
             },
             "onError": None,
             "beforeCut": None,
-            "afterCut": None
+            "afterCut": None,
+            "data_view": False
         }
         if self.config is js_undefined:
             self.config = dict()
@@ -55,6 +56,7 @@ class GalleryInput():
             self.config["view-width"] = self.config["width"]
         if self.config["view-height"] is None or self.config["view-height"] is js_undefined:
             self.config["view-height"] = self.config["height"]
+        self._data_view = self.config.get("data_view", False)
         self.addInputPanel()
 
     def getNewImage(self):
@@ -288,24 +290,27 @@ class GalleryInput():
                         "background-size", "auto 100%"
                     )
         cutted_img.onload = lambda: onImageLoad(this, namespace, width, height)
-        html_simple_view = DIV(
-            DIV(
+        xml_icons_view = ""
+        if not self._data_view:
+            xml_icons_view = DIV(
                 DIV(
                     I(_class="fas fa-sync"),
-                    _id="phanterpwa-gallery-upload-image-simple-view-button-reload-" + namespace,
+                    _id="phanterpwa-gallery-upload-image-simple-view-button-reload-{0}".format(namespace),
                     _class="phanterpwa-gallery-upload-image-simple-view-button {0}".format(
                         "phanterpwa-gallery-upload-image-simple-view-button-reload"
                     )
                 ),
                 DIV(
                     I(_class="fas fa-trash-alt"),
-                    _id="phanterpwa-gallery-upload-image-simple-view-button-delete-" + namespace,
+                    _id="phanterpwa-gallery-upload-image-simple-view-button-delete-{0}".format(namespace),
                     _class="phanterpwa-gallery-upload-image-simple-view-button {0}".format(
                         "phanterpwa-gallery-upload-image-simple-view-button-delete"
                     )
                 ),
                 _class="phanterpwa-gallery-upload-image-simple-view-buttons"
-            ),
+            )
+        html_simple_view = DIV(
+            xml_icons_view,
             _id="phanterpwa-gallery-upload-image-simple-view-" + namespace,
             _class="phanterpwa-gallery-upload-image-simple-view",
             _alt=img_name,
