@@ -79,7 +79,8 @@ class SignForm():
         window.PhanterPWA.ApiServer.GET(
             **{
                 "url_args": ["api", "signforms", "phanterpwa-form-{0}".format(self.table_name)],
-                "onComplete": self.after_try_sign
+                "onComplete": self.after_try_sign,
+                "reload": False
             }
         )
 
@@ -174,7 +175,8 @@ class SignForm():
             **{
                 "url_args": ["api", "signcaptchaforms", id_form],
                 "form_data": captcha_vars,
-                "onComplete": self.after_post_captcha_option
+                "onComplete": self.after_post_captcha_option,
+                "reload": False
             }
         )
 
@@ -193,7 +195,8 @@ class SignForm():
                     "url_args": ["api", "signcaptchaforms", "phanterpwa-form-{0}".format(
                         self.table_name)
                     ],
-                    "onComplete": self.after_get_captcha_html
+                    "onComplete": self.after_get_captcha_html,
+                    "reload": False
                 }
             )
 
@@ -209,7 +212,8 @@ class SignLockForm():
         window.PhanterPWA.ApiServer.GET(
             **{
                 "url_args": ["api", "signlockform"],
-                "onComplete": self.after_sign
+                "onComplete": self.after_sign,
+                "reload": False
             }
         )
 

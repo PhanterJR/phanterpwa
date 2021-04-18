@@ -209,9 +209,9 @@ class Translator(object):
         return os.path.exists(os.path.join(self.path, "entries.json"))
 
 
-def browser_language(header_langugage, default="en-US"):
-    if header_langugage:
-        languages = header_langugage.split(",")
+def browser_language(header_language, default="en-US"):
+    if header_language:
+        languages = header_language.split(",")
         locales = []
         for language in languages:
             parts = language.strip().split(";")
@@ -226,6 +226,6 @@ def browser_language(header_langugage, default="en-US"):
         if locales:
             locales.sort(key=lambda pair: pair[1], reverse=True)
             codes = [l[0] for l in locales]
-            if len(codes) > 1:
+            if len(codes) > 0:
                 return codes[0]
     return default

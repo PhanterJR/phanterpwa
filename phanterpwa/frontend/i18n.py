@@ -17,22 +17,11 @@ class I18NServer():
 
     @staticmethod
     def load_storage(self):
-        result = dict(default_lang=None)
-        t = localStorage.getItem("phanterpwa_i18n")
-        if t is not None and t is not js_undefined:
-            try:
-                t = JSON.parse(t)
-                result = t
-            except Exception:
-                localStorage.removeItem("phanterpwa_i18n")
-                console.error("the phanterpwa_i18n is corrupted")
-        else:
-            localStorage.setItem("phanterpwa_i18n", JSON.stringify(window.PhanterPWA.CONFIG['I18N']))
-            result = window.PhanterPWA.CONFIG['I18N']
+        result = window.PhanterPWA.CONFIG['I18N']
         return result
 
     def save_storage(self):
-        localStorage.setItem("phanterpwa_i18n", JSON.stringify(self.storage))
+        window.PhanterPWA.CONFIG['I18N'] = self.storage
 
     def set_default_user_lang(self, lang):
         self.storage["default_lang"] = lang
@@ -41,7 +30,7 @@ class I18NServer():
     @staticmethod
     def get_user_lang():
         userLang = navigator.language or navigator.userLanguage
-        storage = I18NServer.load_storage()["default_lang"]
+        storage = I18NServer.load_storage()
         if "default_lang" in storage:
             userLang = storage["default_lang"]
         return userLang
@@ -53,7 +42,7 @@ class I18NServer():
             self.storage = json
             if default_lang is None or default_lang is js_undefined:
                 self.storage["default_lang"] = default_lang
-            self.save_storage(self)
+            self.save_storage()
 
     def get_translations_on_server(self, new_word=None):
         if window.PhanterPWA is not js_undefined:

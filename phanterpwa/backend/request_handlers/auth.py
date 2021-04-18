@@ -1,7 +1,7 @@
 import os
-import urllib.request
 import base64
 import json
+from urllib.request import urlopen
 from passlib.hash import pbkdf2_sha512
 from phanterpwa.backend.decorators import (
     check_client_token,
@@ -511,7 +511,7 @@ class Auth(web.RequestHandler):
             )
             googlecaptcha_response = {}
             try:
-                with urllib.request.urlopen(url_google_captcha) as req:
+                with urlopen(url_google_captcha) as req:
                     googlecaptcha_response = req.read()
                     googlecaptcha_response = json.loads(googlecaptcha_response)
             except Exception as e:
@@ -536,7 +536,9 @@ class Auth(web.RequestHandler):
             used_temporary = None
             edata = dict_arguments['edata']
             email, password = edata.split(":")
-            email = base64.b64decode(email).decode('utf-8')
+            if email:
+                email = base64.b64decode(email).decode('utf-8')
+                email = email.strip().lower()
             password = base64.b64decode(password).decode('utf-8')
             q_user = self.DALDatabase(self.DALDatabase.auth_user.email == email).select().first()
             if q_user:
@@ -1299,7 +1301,7 @@ class ChangeAccount(web.RequestHandler):
         first_name = dict_arguments['first_name']
         last_name = dict_arguments['last_name']
         email_now = self.phanterpwa_current_user.email
-        new_email = dict_arguments['email']
+        new_email = dict_arguments['email'].strip().lower()
         two_factor = checkbox_bool(dict_arguments.get('two_factor', False))
         multiple_login = checkbox_bool(dict_arguments.get('multiple_login', False))
 
@@ -1606,6 +1608,7 @@ class CreateAccount(web.RequestHandler):
         pass_hash = pbkdf2_sha512.hash("password{0}{1}".format(
             dict_arguments['password'], self.projectConfig['BACKEND'][self.app_name]['secret_key']))
         dict_arguments['password_hash'] = pass_hash
+        dict_arguments['email'] = dict_arguments['email'].strip().lower()
         result = FieldsDALValidateDictArgs(
             dict_arguments,
             *[table[x] for x in table.fields if x in ["first_name", "last_name", "email", "password_hash"]] + [

@@ -257,6 +257,102 @@ def check_client_token(ignore_locked=True):
     return decorator
 
 
+def check_cas_token(ignore_locked=True):
+    def decorator(f):
+        @wraps(f)
+        def check_cas_token_decorator(self, *args, **kargs):
+            self.phanterpwa_cas_token_checked = None
+            self.phanterpwa_cas_authorization = self.request.headers.get('phanterpwa-cas-authorization')
+            if not self.phanterpwa_cas_authorization:
+                msg = 'CAS authorization is not in the header. "phanterpwa-cas-authorization"'
+                dict_response = {
+                    'status': 'Bad Request',
+                    'code': 400,
+                    'message': msg,
+                    'i18n': {
+                        'message': self.i18nTranslator.T(msg) if self.i18nTranslator else msg
+                    }
+                }
+                fi = getframeinfo(currentframe())
+                if not self.projectConfig['PROJECT']['debug']:
+                    help_debug = "({0}){1}.{2}->({3})@{4}:{5}".format(
+                        getfile(self.__class__),
+                        self.__class__.__name__,
+                        f.__name__,
+                        fi.filename,
+                        fi.function,
+                        fi.lineno + 19
+                    )
+                else:
+                    help_debug = "{0}.{1}@{2}:{3}".format(
+                        self.__class__.__name__,
+                        f.__name__,
+                        fi.function,
+                        fi.lineno + 19
+                    )
+                dict_response['help_debug'] = help_debug
+                self.set_status(400)
+                return self.write(dict_response)
+            t = Serialize(
+                self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                self.projectConfig['BACKEND'][self.app_name]['default_time_cas_token_expire']
+            )
+            self.DALDatabase._adapter.reconnect()
+            q = self.DALDatabase(self.DALDatabase.apps_authorization.authorization == self.phanterpwa_cas_authorization).select().first()
+            if q:
+                token_content = None
+                try:
+                    token_content = t.loads(self.phanterpwa_cas_authorization)
+                except BadSignature:
+                    token_content = None
+                except SignatureExpired:
+                    token_content = None
+                if token_content:
+                    if "user_agent" in token_content and "id_client" in token_content:
+                        if token_content['app_name'] == q.app_name:
+                            self.phanterpwa_cas_token_checked = token_content
+
+            if self.phanterpwa_cas_token_checked:
+                return f(self, *args, **kargs)
+            else:
+                if q:
+                    q.delete_record()
+                    self.DALDatabase.commit()
+                msg = "The phanterpwa-cas-authorization is invalid!"
+                dict_response = {
+                    'status': 'Unauthorized',
+                    'code': 401,
+                    'specification': 'cas deleted',
+                    'message': msg,
+                    'i18n': {
+                        'message': self.i18nTranslator.T(msg) if self.i18nTranslator else msg
+                    }
+                }
+                fi = getframeinfo(currentframe())
+                if not self.projectConfig['PROJECT']['debug']:
+                    help_debug = "({0}){1}.{2}->({3})@{4}:{5}".format(
+                        getfile(self.__class__),
+                        self.__class__.__name__,
+                        f.__name__,
+                        fi.filename,
+                        fi.function,
+                        fi.lineno + 19
+                    )
+                else:
+                    help_debug = "{0}.{1}@{2}:{3}".format(
+                        self.__class__.__name__,
+                        f.__name__,
+                        fi.function,
+                        fi.lineno + 19
+                    )
+                dict_response['help_debug'] = help_debug
+                self.set_status(401)
+                return self.write(dict_response)
+
+        return check_client_token_decorator
+    return decorator
+
+
 def check_url_token():
     def decorator(f):
         @wraps(f)

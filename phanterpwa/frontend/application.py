@@ -159,6 +159,9 @@ class PhanterPWA():
             salt = "phanterpwa"
         return "{0}-{1}-{2}".format(salt, self.counter, timestamp)
 
+    def get_widget(self, widget_identifier):
+        return self.Request.widgets.get(widget_identifier, None)
+
     def social_login_list(self):
         social_logins = window.PhanterPWA["CONFIG"]["SOCIAL_LOGINS"]
         if social_logins is not None and social_logins is not js_undefined:
@@ -586,6 +589,7 @@ class PhanterPWA():
         self.WS.send("command_offline")
         sessionStorage.removeItem("phanterpwa-authorization")
         sessionStorage.removeItem("auth_user")
+        sessionStorage.removeItem("_phanterpwa-user-try-activation")
         localStorage.removeItem("phanterpwa-authorization")
         localStorage.removeItem("auth_user")
         self.open_default_way()
@@ -918,25 +922,28 @@ class PhanterPWA():
     def onPopState(self):
         self.open_way(self._get_way_from_url_hash())
 
-    def GET(self, **parameters):
-        self.ApiServer.GET(**parameters)
+    def GET(self, *args, **parameters):
+        self.ApiServer.GET(*args, **parameters)
 
-    def DELETE(self, **parameters):
-        self.ApiServer.DEL(**parameters)
+    def DELETE(self, *args, **parameters):
+        self.ApiServer.DEL(*args, **parameters)
 
-    def POST(self, **parameters):
-        self.ApiServer.POST(**parameters)
+    def POST(self, *args, **parameters):
+        self.ApiServer.POST(*args, **parameters)
 
-    def PUT(self, **parameters):
-        self.ApiServer.PUT(**parameters)
+    def PUT(self, *args, **parameters):
+        self.ApiServer.PUT(*args, **parameters)
 
-    def LOAD(self, **parameters):
-        Loads(**parameters)
+    def LOAD(self, *args, **parameters):
+        Loads(*args, **parameters)
 
 
 class Loads():
-    def __init__(self, **parameters):
-        self.url_args = parameters.get("args", None)
+    def __init__(self, *args, **parameters):
+        if len(args) > 0:
+            self.url_args = args
+        else:
+            self.url_args = parameters.get("args", None)
         self.url_vars = parameters.get("vars", {})
         self.onComplete = parameters.get("onComplete", None)
         pro_args = self._process_args()

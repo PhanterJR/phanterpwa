@@ -15,6 +15,7 @@ from datetime import datetime
 class AuthTables():
     def __init__(self, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
         self.DALDatabase = DALDatabase
+        default_language = projectConfig["PROJECT"].get("default_language", "en-US")
         self.logger_api = logger_api
         self.DALDatabase.define_table('auth_user',
             Field('first_name', 'string', notnull=True, requires=IS_NOT_EMPTY()),
@@ -38,7 +39,7 @@ class AuthTables():
             Field('permit_mult_login', 'boolean', default=True),
             Field('activated', 'boolean', default=False, notnull=True),
             Field('websocket_opened', 'boolean', default=False, notnull=True),
-            Field('locale', 'string', default='en-US'),
+            Field('locale', 'string', default=default_language),
             Field('two_factor_login', 'boolean', default=False)
         )
 

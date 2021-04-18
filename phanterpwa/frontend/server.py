@@ -21,11 +21,24 @@ class ApiServer():
 
     def _process_args(self, args):
         s_args = ""
-        if isinstance(args, list):
+        ISINSTANCEOF = __pragma__("js", "{}", "args instanceof Array")
+        if isinstance(args, list) or ISINSTANCEOF:
             s_args = "/".join(args)
         if s_args != "":
             s_args = "{0}/".format(s_args)
         return s_args
+
+    def _process_parameters(self, parameters):
+        _vars = dict()
+        for x in parameters.keys():
+            if x == "_":
+                _vars[x] = parameters[x]
+            elif x.startswith("_") and len(x) > 1:
+                _vars[x[1:]] = parameters[x]
+        if len(_vars.keys()) > 1:
+            return _vars
+        else:
+            return parameters.get("url_vars", None)
 
     def _serialize_vars(self, _vars):
         ISTYPEOF = __pragma__("js", "{}", "_vars instanceof FormData")
@@ -48,8 +61,7 @@ class ApiServer():
             else:
                 return ""
 
-    def GET(self, **parameters):
-        url_args = None
+    def GET(self, *args, **parameters):
         url_vars = None
         onComplete = None
         headers = {
@@ -57,12 +69,12 @@ class ApiServer():
             'phanterpwa-application': window.PhanterPWA.CONFIG['PROJECT']['name'],
             'phanterpwa-application-version': window.PhanterPWA.CONFIG['PROJECT']['version']
         }
-        if "url_args" in parameters:
-            url_args = parameters["url_args"]
-        if "url_vars" in parameters:
-            url_vars = parameters["url_vars"]
-        if "onComplete" in parameters:
-            onComplete = parameters["onComplete"]
+        reload_phanterpwa = parameters.get("reload", True)
+        url_args = parameters.get("url_args", None)
+        if len(args) > 0:
+            url_args = args
+        url_vars = self._process_parameters(parameters)
+        onComplete = parameters.get("onComplete", lambda: console.info("GET") if window.PhanterPWA.DEBUG else "")
         if "headers" in parameters:
             if parameters["headers"] is not None:
                 for x in parameters["headers"]:
@@ -101,7 +113,7 @@ class ApiServer():
         ajax_param = {
             'url': url,
             'type': "GET",
-            'complete': lambda a, b, c: (onComplete(a, b, c), window.PhanterPWA.reload()),
+            'complete': lambda a, b, c: (onComplete(a, b, c), window.PhanterPWA.reload() if reload_phanterpwa else None),
             'success': _after_sucess,
             'error': _after_error,
             'datatype': 'json',
@@ -119,8 +131,7 @@ class ApiServer():
         __pragma__('nojsiter')
         jQuery.ajax(ajax_param)
 
-    def DELETE(self, **parameters):
-        url_args = None
+    def DELETE(self, *args, **parameters):
         url_vars = None
         onComplete = None
         headers = {
@@ -128,12 +139,12 @@ class ApiServer():
             'phanterpwa-application': window.PhanterPWA.CONFIG['PROJECT']['name'],
             'phanterpwa-application-version': window.PhanterPWA.CONFIG['PROJECT']['version']
         }
-        if "url_args" in parameters:
-            url_args = parameters["url_args"]
-        if "url_vars" in parameters:
-            url_vars = parameters["url_vars"]
-        if "onComplete" in parameters:
-            onComplete = parameters["onComplete"]
+        reload_phanterpwa = parameters.get("reload", True)
+        url_args = parameters.get("url_args", None)
+        if len(args) > 0:
+            url_args = args
+        url_vars = self._process_parameters(parameters)
+        onComplete = parameters.get("onComplete", lambda: console.info("DELETE") if window.PhanterPWA.DEBUG else "")
         if "headers" in parameters:
             if parameters["headers"] is not None:
                 for x in parameters["headers"]:
@@ -150,7 +161,7 @@ class ApiServer():
         ajax_param = {
             'url': url,
             'type': "DELETE",
-            'complete': lambda a, b, c: (onComplete(a, b, c), window.PhanterPWA.reload()),
+            'complete': lambda a, b, c: (onComplete(a, b, c), window.PhanterPWA.reload() if reload_phanterpwa else None),
             'success': lambda: window.PhanterPWA.ProgressBar.removeEventProgressBar("DELETE_" + date_stamp),
             'error': _after_error,
             'datatype': 'json',
@@ -168,8 +179,7 @@ class ApiServer():
         __pragma__('nojsiter')
         jQuery.ajax(ajax_param)
 
-    def POST(self, **parameters):
-        url_args = None
+    def POST(self, *args, **parameters):
         form_data = None
         onComplete = None
         headers = {
@@ -177,12 +187,13 @@ class ApiServer():
             'phanterpwa-application': window.PhanterPWA.CONFIG['PROJECT']['name'],
             'phanterpwa-application-version': window.PhanterPWA.CONFIG['PROJECT']['version']
         }
-        if "url_args" in parameters:
-            url_args = parameters["url_args"]
+        reload_phanterpwa = parameters.get("reload", True)
+        url_args = parameters.get("url_args", None)
+        if len(args) > 0:
+            url_args = args
         if "form_data" in parameters:
             form_data = parameters["form_data"]
-        if "onComplete" in parameters:
-            onComplete = parameters["onComplete"]
+        onComplete = parameters.get("onComplete", lambda: console.info("POST") if window.PhanterPWA.DEBUG else "")
         if "headers" in parameters:
             if parameters["headers"] is not None:
                 for x in parameters["headers"]:
@@ -200,7 +211,7 @@ class ApiServer():
             'url': url,
             'type': "POST",
             'data': form_data,
-            'complete': lambda a, b, c: (onComplete(a, b, c), window.PhanterPWA.reload()),
+            'complete': lambda a, b, c: (onComplete(a, b, c), window.PhanterPWA.reload() if reload_phanterpwa else None),
             'success': lambda: window.PhanterPWA.ProgressBar.removeEventProgressBar("POST_" + date_stamp),
             'error': _after_error,
             'datatype': 'json',
@@ -222,8 +233,7 @@ class ApiServer():
         __pragma__('nojsiter')
         jQuery.ajax(ajax_param)
 
-    def PUT(self, **parameters):
-        url_args = None
+    def PUT(self, *args, **parameters):
         form_data = None
         onComplete = None
         headers = {
@@ -231,12 +241,13 @@ class ApiServer():
             'phanterpwa-application': window.PhanterPWA.CONFIG['PROJECT']['name'],
             'phanterpwa-application-version': window.PhanterPWA.CONFIG['PROJECT']['version']
         }
-        if "url_args" in parameters:
-            url_args = parameters["url_args"]
+        reload_phanterpwa = parameters.get("reload", True)
+        url_args = parameters.get("url_args", None)
+        if len(args) > 0:
+            url_args = args
         if "form_data" in parameters:
             form_data = parameters["form_data"]
-        if "onComplete" in parameters:
-            onComplete = parameters["onComplete"]
+        onComplete = parameters.get("onComplete", lambda: console.info("PUT") if window.PhanterPWA.DEBUG else "")
         if "headers" in parameters:
             if parameters["headers"] is not None:
                 for x in parameters["headers"]:
@@ -254,7 +265,7 @@ class ApiServer():
             'url': url,
             'type': "PUT",
             'data': form_data,
-            'complete': lambda a, b, c: (onComplete(a, b, c), window.PhanterPWA.reload()),
+            'complete': lambda a, b, c: (onComplete(a, b, c), window.PhanterPWA.reload() if reload_phanterpwa else None),
             'success': lambda: window.PhanterPWA.ProgressBar.removeEventProgressBar("PUT_" + date_stamp),
             'error': _after_error,
             'datatype': 'json',
@@ -363,10 +374,10 @@ class ApiServer():
                     message = json.i18n.message
             elif json.message is not None and json.message is not js_undefined:
                 message = json.message
-        if data.status==401 or data.status==403:
+        if data.status == 401 or data.status == 403:
             json = data.responseJSON
             if window.PhanterPWA.logged():
-                if data.status==401:
+                if data.status == 401:
                     if json.specification == "client deleted":
                         self.getClientToken(callback=lambda: (
                                 window.PhanterPWA.reload_component("auth_user"),

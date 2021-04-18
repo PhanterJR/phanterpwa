@@ -826,6 +826,7 @@ class Compiler():
             "APP": {
             },
             "I18N": {
+                "default_lang": self.config["PROJECT"].get("default_language", None)
 
             }
         }
@@ -844,9 +845,9 @@ class Compiler():
             "# file for this.",
             "#\n\n",
         ])
-        i18n_files = join(self.projectpath, "frontapps", "languages")
+        i18n_files = join(self.projectpath, "frontapps", app, "languages")
         files = glob(join(i18n_files, "*.json"))
-        i18n_languages = {}
+        i18n_languages = {"default_lang": self.config["PROJECT"].get("default_language", None)}
         for x in files:
             if basename(x) != "entries.json":
                 lang = basename(x)[0:-5]
@@ -858,7 +859,7 @@ class Compiler():
         content = "".join([ini, "CONFIG = {0}".format(json.dumps(CONFIG, ensure_ascii=True, indent=4)), end])
         content = re.sub(r"(:[\t\n\r ]{0,}true[\t\n\r ]{0,})[,}]", ": True,", content)
         content = re.sub(r"(:[\t\n\r ]{0,}false[\t\n\r ]{0,})[,}]", ": False,", content)
-        content = re.sub(r"(:[\t\n\r ]{0,}null[\t\n\r ]{0,})[,}]", ": None", content)
+        content = re.sub(r"(:[\t\n\r ]{0,}null[\t\n\r ]{0,})[,}]", ": None,", content)
         with open(path_app_config_file, "w", encoding="utf-8") as f:
             f.write(content)
         if not isfile(last_app_config):

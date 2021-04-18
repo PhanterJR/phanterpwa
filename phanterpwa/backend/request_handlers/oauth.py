@@ -129,8 +129,6 @@ class Prompt(web.RequestHandler):
                 "state": state
             })
 
-
-
         message = "An error occurred while trying to authenticate."
         self.set_status(400)
         return self.write({
