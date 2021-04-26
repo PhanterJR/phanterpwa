@@ -473,6 +473,8 @@ class FormWidget(helpers.XmlConstructor):
                 )
             
             elif self._widget_type == "list_string":
+                ds = self.json_widget.get('data_set', [])
+                console.log(ds)
                 w = widgets.ListString(
                     "{0}-{1}".format(self.table_name, self.input_name),
                     label=self.json_widget['label'],
@@ -480,7 +482,7 @@ class FormWidget(helpers.XmlConstructor):
                     #editable=self._editable,
                     #can_empty=self._can_empty,
                     value=self._value,
-                    #mask=self._mask,
+                    data_set=ds,
                     form=self.table_name,
                     #validators=self.validators
                 )

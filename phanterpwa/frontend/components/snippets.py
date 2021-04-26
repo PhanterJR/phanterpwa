@@ -9,6 +9,7 @@ __pragma__('noskip')
 
 DIV = helpers.XmlConstructor.tagger("div")
 I = helpers.XmlConstructor.tagger("i")
+H2 = helpers.XmlConstructor.tagger("h2")
 
 
 __pragma__('kwargs')
@@ -43,6 +44,29 @@ class Centralizer(helpers.XmlConstructor):
 
     def insert(self, pos, value):
         self._centralizer_html.insert(pos, value)
+
+
+class PromoOption(helpers.XmlConstructor):
+    def __init__(self, identifier, icon, title, description = None, **attributes):
+        attributes["_id"] = "phanterpwa-snippet-{0}".format(identifier)
+        if "_class" in attributes:
+            attributes["_class"] = "{0}{1}".format(attributes["_class"], " phanterpwa-snippet-promooption link p-col w1p100")
+        else:
+            attributes["_class"] = "phanterpwa-snippet-promooption link p-col w1p100"
+        html = DIV(
+            DIV(
+                icon,
+                H2(title, _class="promo-title"),
+                _class="promo-icon_and_title"
+            ),
+            **{"_class": "promo-container"}
+        )
+        if not (description is None or description == ""):
+            html.append(DIV(description, _class='promo-content'))
+        tag = "div"
+        if "_href" in attributes:
+            tag = "a"
+        helpers.XmlConstructor.__init__(self, tag, False, html, **attributes)
 
 
 __pragma__('nokwargs')

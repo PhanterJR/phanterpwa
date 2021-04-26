@@ -398,6 +398,8 @@ class SignForms(web.RequestHandler):
             "phanterpwa-form-profile",
             "phanterpwa-form-change_password",
             "phanterpwa-form-change_account",
+            "phanterpwa-form-auth_user",
+            "phanterpwa-form-auth_group",
             *list_forms
         }]
 

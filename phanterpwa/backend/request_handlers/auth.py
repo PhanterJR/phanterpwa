@@ -73,7 +73,7 @@ def arbritary_login(app_name, projectConfig, db, email, user_agent, remote_ip, c
         q_role = db(
             (db.auth_membership.auth_user == q_user.id) &
             (db.auth_group.id == db.auth_membership.auth_group)
-        ).select(db.auth_group.role, orderby=db.auth_group.grade)
+        ).select(db.auth_group.id, db.auth_group.role, orderby=db.auth_group.grade)
         roles = [x.role for x in q_role]
         dict_roles = {x.id: x.role for x in q_role}
         roles_id = [x.id for x in q_role]
@@ -122,8 +122,6 @@ def arbritary_login(app_name, projectConfig, db, email, user_agent, remote_ip, c
                 ).delete()
         db.commit()
         user_image = PhanterpwaGalleryUserImage(q_user.id, db, projectConfig)
-        social_image = googleapi_user.get("picture", None)
-
         return {
             'authorization': token_user,
             'client_token': token_client,

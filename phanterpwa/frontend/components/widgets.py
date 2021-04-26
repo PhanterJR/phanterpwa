@@ -1605,6 +1605,7 @@ class ListString(Widget):
         self._value = new_value
 
     def _data_set(self, data):
+        console.log(data)
         valid_data = True
         self._data = []
         self._data_dict = {}

@@ -67,7 +67,8 @@ class LeftBar(application.Component):
 
             if all([self._check_button_requires_login(x),
                     self._check_button_ways(x),
-                    self._check_button_roles(x)]):
+                    self._check_button_roles(x),
+                    x.show_if()]):
                 position = self._get_button_position(x)
                 b = self.element_target.find(
                     "#phanterpwa-component-left_bar-{0}".format(position)
@@ -248,9 +249,9 @@ class LeftBarButton(helpers.XmlConstructor):
             else:
                 if window.PhanterPWA.DEBUG:
                     console.error("The parameter 'ways' must be type list")
-
         if "position" in parameters:
             self.position = parameters["position"]
+        self._show_if = parameters.get("show_if", True)
         MY_TAG = helpers.XmlConstructor.tagger(tag)
         content = [
             MY_TAG(
@@ -264,6 +265,17 @@ class LeftBarButton(helpers.XmlConstructor):
         helpers.XmlConstructor.__init__(
             self, "div", False, *content, _class="phanterpwa-component-left_bar-menu_button-wrapper"
         )
+
+    def show_if(self):
+        if callable(self._show_if):
+            show = self._show_if(self)
+            if show is True:
+                return True
+            else:
+                return False
+        elif self._show_if is True:
+            return True
+        return False
 
     def start(self):
         if window.PhanterPWA.DEBUG:
@@ -326,6 +338,7 @@ class LeftBarMenu(helpers.XmlConstructor):
                     console.error("The parameter 'ways' must be type list")
         if "position" in parameters:
             self.position = parameters["position"]
+        self._show_if = parameters.get("show_if", True)
 
         helpers.XmlConstructor.__init__(self, 'div', False, _class="phanterpwa-component-left_bar-menu_button-wrapper")
         self._update_content()
@@ -375,6 +388,17 @@ class LeftBarMenu(helpers.XmlConstructor):
                 ".phanterpwa-component-left_bar-menu_button-wrapper.enabled").length == 0:
             jQuery("#phanterpwa-component-left_bar").removeClass("enabled_submenu").removeClass("enabled")
             jQuery("#phanterpwa-component-left_bar-main_button").removeClass("enabled")
+
+    def show_if(self):
+        if callable(self._show_if):
+            show = self._show_if(self)
+            if show is True:
+                return True
+            else:
+                return False
+        elif self._show_if is True:
+            return True
+        return False
 
     def start(self):
 
@@ -428,6 +452,8 @@ class LeftBarUserMenu(helpers.XmlConstructor):
                     console.error("The parameter 'ways' must be type list")
         if "position" in parameters:
             self.position = parameters["position"]
+
+        self._show_if = parameters.get("show_if", True)
 
         self._image = IMG(_id="phanterpwa-component-left_bar-url-imagem-user",
             _src="/static/{0}/images/user.png".format(
@@ -492,6 +518,17 @@ class LeftBarUserMenu(helpers.XmlConstructor):
                 ".phanterpwa-component-left_bar-menu_button-wrapper.enabled").length == 0:
             jQuery("#phanterpwa-component-left_bar").removeClass("enabled_submenu").removeClass("enabled")
             jQuery("#phanterpwa-component-left_bar-main_button").removeClass("enabled")
+
+    def show_if(self):
+        if callable(self._show_if):
+            show = self._show_if(self)
+            if show is True:
+                return True
+            else:
+                return False
+        elif self._show_if is True:
+            return True
+        return False
 
     def start(self):
 

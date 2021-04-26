@@ -18,24 +18,50 @@ class AuthTables():
         default_language = projectConfig["PROJECT"].get("default_language", "en-US")
         self.logger_api = logger_api
         self.DALDatabase.define_table('auth_user',
-            Field('first_name', 'string', notnull=True, requires=IS_NOT_EMPTY()),
-            Field('last_name', 'string', notnull=True, requires=IS_NOT_EMPTY()),
-            Field('email', 'string', notnull=True, unique=True),
-            Field('password_hash', 'string', notnull=True, requires=IS_NOT_EMPTY()),
+            Field('first_name', 'string', notnull=True, requires=IS_NOT_EMPTY(), phanterpwa={
+                'group': 'group1',
+                '_class': 'p-col w1p100 w4p70 e-float_right'
+            }),
+            Field('last_name', 'string', notnull=True, requires=IS_NOT_EMPTY(), phanterpwa={
+                'group': 'group1',
+                '_class': 'p-col w1p100 w4p70 e-float_right'
+            }),
+            Field('email', 'string', notnull=True, unique=True, phanterpwa={
+                'group': 'group1',
+                '_class': 'p-col w1p100 w4p70 e-float_right'
+            }),
+            Field('password_hash', 'string', notnull=True, requires=IS_NOT_EMPTY(), phanterpwa={
+                'out_of_form': True
+            }),
             Field('login_attempts', 'integer', default=0),
-            Field('datetime_next_attempt_to_login', 'datetime', requires=IS_EMPTY_OR(IS_DATETIME())),
-            Field('temporary_password', 'text'),  # it's used in the debug
+            Field('datetime_next_attempt_to_login', 'datetime', requires=IS_EMPTY_OR(IS_DATETIME()), phanterpwa={
+                'validators': ['IS_EMPTY_OR', 'IS_DATETIME:yyyy-MM-dd HH:mm:ss'],
+                # '_class': 'p-col w1p100 w4p40',
+                # 'section': 'Identidade'
+
+            }),
+                    Field('temporary_password', 'text', phanterpwa={
+                'out_of_form': True
+            }),  # it's used in the debug
             Field('temporary_password_hash', 'text'),
 
             # datetime_next_attempt_to_login
-            Field('temporary_password_expire', 'datetime', requires=IS_EMPTY_OR(IS_DATETIME())),
-            Field('timeout_to_resend_temporary_password_mail', 'datetime', requires=IS_EMPTY_OR(IS_DATETIME())),
+            Field('temporary_password_expire', 'datetime', requires=IS_EMPTY_OR(IS_DATETIME()), phanterpwa={
+                'validators': ['IS_EMPTY_OR', 'IS_DATETIME:yyyy-MM-dd HH:mm:ss']
+            }),
+            Field('timeout_to_resend_temporary_password_mail', 'datetime', requires=IS_EMPTY_OR(IS_DATETIME()), phanterpwa={
+                'validators': ['IS_EMPTY_OR', 'IS_DATETIME:yyyy-MM-dd HH:mm:ss']
+            }),
             Field('activation_code', 'string', default=0),
             Field('activation_attempts', 'integer', default=0),
-            Field('timeout_to_resend_activation_email', 'datetime', requires=IS_EMPTY_OR(IS_DATETIME())),
+            Field('timeout_to_resend_activation_email', 'datetime', requires=IS_EMPTY_OR(IS_DATETIME()), phanterpwa={
+                'validators': ['IS_EMPTY_OR', 'IS_DATETIME:yyyy-MM-dd HH:mm:ss']
+            }),
 
             # wait_time_to_try_activate_again
-            Field('datetime_next_attempt_to_activate', 'datetime', requires=IS_EMPTY_OR(IS_DATETIME())),
+            Field('datetime_next_attempt_to_activate', 'datetime', requires=IS_EMPTY_OR(IS_DATETIME()), phanterpwa={
+                'validators': ['IS_EMPTY_OR', 'IS_DATETIME:yyyy-MM-dd HH:mm:ss']
+            }),
             Field('permit_mult_login', 'boolean', default=True),
             Field('activated', 'boolean', default=False, notnull=True),
             Field('websocket_opened', 'boolean', default=False, notnull=True),

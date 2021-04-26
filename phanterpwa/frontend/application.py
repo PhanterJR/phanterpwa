@@ -670,7 +670,10 @@ class PhanterPWA():
             if isinstance(request, WayRequest):
                 if window.PhanterPWA.DEBUG:
                     console.info(code, request, response)
-                window.PhanterPWA.Gates[code](request, response)
+                if callable(window.PhanterPWA.Gates[code]):
+                    window.PhanterPWA.Gates[code](request, response)
+                else:
+                    gatehandler.Error_500(request, response)
             else:
                 if window.PhanterPWA.DEBUG:
                     console.error("The request must be WayRequest instance.")
@@ -1195,18 +1198,18 @@ class WayRequest():
             else:
                 try:
                     window.PhanterPWA.Gates[self.gate](self)
-                except Exception as e:
+                except:
                     if window.PhanterPWA.DEBUG:
-                        console.error("Error on try open '{0}'".format(way), e)
+                        console.error("Error on try open '{0}'".format(way))
                     else:
                         console.error("Error on try open '{0}'".format(way))
-                    window.PhanterPWA.Gates[500](self)
+                    window.PhanterPWA.open_code_way(500, self)
                 else:
                     sessionStorage.setItem("current_way", self.way)
 
         else:
             self.error = 404
-            window.PhanterPWA.Gates[404](self)
+            window.PhanterPWA.open_code_way(404, self)
         if self.DEBUG:
             if self._element is not None:
                 console.info(
