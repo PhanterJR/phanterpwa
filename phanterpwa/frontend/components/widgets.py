@@ -435,6 +435,7 @@ class Select(Widget):
         self._data_dict = {}
         if isinstance(data, list):
             for vdata in data:
+                console.log(vdata)
                 if len(vdata) is not 2:
                     valid_data = False
                 else:
@@ -1444,6 +1445,7 @@ class ListString(Widget):
         self._name = parameters.get("name", None)
         self._value = parameters.get("value", [])
         self._data_set(parameters.get("data_set", []))
+        self._fixed = parameters.get("fixed", [])
         self._icon = parameters.get("icon", None)
         self._message_error = parameters.get("message_error", None)
         self._can_empty = parameters.get("can_empty", False)
@@ -1538,10 +1540,11 @@ class ListString(Widget):
                             DIV(
                                 x[1],
                                 DIV(I(_class="fas fa-times"),
-                                    _class="phanterpwa-widget-list_string-value-icon_close icon_button wave_on_click"),
+                                    _class="phanterpwa-widget-list_string-value-icon_close icon_button wave_on_click") if x[1] not in self._fixed else "",
                                 **{
                                     "_data-value": str(x[0]),
-                                    "_class": "phanterpwa-widget-list_string-value-content",
+                                    "_class": "phanterpwa-widget-list_string-value-content{0}".format(
+                                        "" if x[1] not in self._fixed else " widget-liststring-fixed"),
                                     "_tabindex": "0"
                                 }
                             )
@@ -1554,10 +1557,11 @@ class ListString(Widget):
                             DIV(
                                 x,
                                 DIV(I(_class="fas fa-times"),
-                                    _class="phanterpwa-widget-list_string-value-icon_close icon_button wave_on_click"),
+                                    _class="phanterpwa-widget-list_string-value-icon_close icon_button wave_on_click") if x not in self._fixed else "",
                                 **{
                                     "_data-value": x,
-                                    "_class": "phanterpwa-widget-list_string-value-content",
+                                    "_class": "phanterpwa-widget-list_string-value-content{0}".format(
+                                        "" if x not in self._fixed else " widget-liststring-fixed"),
                                     "_tabindex": "0"
                                 }
                             )
@@ -1571,10 +1575,11 @@ class ListString(Widget):
                         DIV(
                             self._value[str(x)],
                             DIV(I(_class="fas fa-times"),
-                                _class="phanterpwa-widget-list_string-value-icon_close icon_button wave_on_click"),
+                                _class="phanterpwa-widget-list_string-value-icon_close icon_button wave_on_click") if self._value[str(x)] not in self._fixed else "",
                             **{
                                 "_data-value": x,
-                                "_class": "phanterpwa-widget-list_string-value-content",
+                                "_class": "phanterpwa-widget-list_string-value-content{0}".format(
+                                    "" if self._value[str(x)] not in self._fixed else " widget-liststring-fixed"),
                                 "_tabindex": "0"
                             }
                         )
@@ -1940,7 +1945,6 @@ class ListString(Widget):
         self._binds()
 
     def value(self):
-        self._value = jQuery("#phanterpwa-widget-input-input-{0}".format(self.identifier)).val()
         return self._value
 
 

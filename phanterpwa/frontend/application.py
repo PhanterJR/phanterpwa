@@ -1166,12 +1166,18 @@ class WayRequest():
 
             if l.search is not "":
                 p = dict()
+                __pragma__("jsiter")
+                o = {}
+                __pragma__("nojsiter")
 
                 def add_in_p(k, v):
                     p[k] = v
+                    o[k] = v
                 t_params = l.searchParams
                 t_params.forEach(lambda v, k: add_in_p(k, v))
                 self.params = p
+                self.js_params = o
+                self.str_params = t_params.toString()
 
     def get_arg(self, arg):
         if arg is not None and arg is not js_undefined:

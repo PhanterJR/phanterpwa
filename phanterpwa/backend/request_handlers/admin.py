@@ -1,20 +1,30 @@
 import os
+import re
+import ast
 import json
 import hashlib
 from phanterpwa.backend.decorators import (
-    requires_authentication
+    requires_authentication,
+    check_private_csrf_token
 )
+
 from pydal.objects import (
     Field
 )
+from pydal.validators import (
+    IS_EMAIL
+)
+from phanterpwa.third_parties.xss import xssescape as E
 from phanterpwa.i18n import browser_language
 from tornado import (
     web
 )
 from phanterpwa.tools import (
+    generate_activation_code,
     checkbox_bool
 )
 from phanterpwa.backend.dataforms import (
+    FieldsDALValidateDictArgs,
     datetime_converter,
     FormFromTableDAL as jsonForm
 )
@@ -22,6 +32,11 @@ from phanterpwa.backend.dataforms import (
 from phanterpwa.backend.request_handlers.auth import (
     arbritary_login
 )
+from phanterpwa.gallery.cutter import PhanterpwaGalleryCutter
+from phanterpwa.gallery.integrationDAL import PhanterpwaGalleryUserImage
+new_group_re = re.compile(r"\$[0-9]{13}\:(.{0,})")
+
+
 class UserManager(web.RequestHandler):
     """
         url: '/api/admin/usermanager/<id_user>'
@@ -48,7 +63,7 @@ class UserManager(web.RequestHandler):
                 "cache-control"
             ])
         )
-        self.set_header('Access-Control-Allow-Methods', 'GET, OPTIONS, POST')
+        self.set_header('Access-Control-Allow-Methods', 'GET, OPTIONS, PUT')
         if self.request.headers.get("phanterpwa-language"):
             self.phanterpwa_language = self.request.headers.get("phanterpwa-language")
         else:
@@ -316,6 +331,325 @@ class UserManager(web.RequestHandler):
             self.set_status(200)
             return self.write(to_write)
 
+    @check_private_csrf_token(form_identify=["phanterpwa-form-auth_user"])
+    @requires_authentication(roles_name="root")
+    def put(self, *args, **kargs):
+        db = self.DALDatabase
+        id_user = args[0]
+        q_user = db(db.auth_user.id == id_user).select()
+        if not q_user:
+            message = "The id user not exist."
+            self.set_status(400)
+            return self.write({
+                'status': 'Bad Request',
+                'code': 400,
+                'message': message,
+                'i18n': {
+                    'message': self.T(message)
+                }
+            })
+        else:
+            q_user = q_user.first()
+        dict_arguments = {k: self.request.arguments.get(k)[0].decode('utf-8') for k in self.request.arguments}
+        dict_arguments['id'] = id_user
+        first_name = dict_arguments['first_name']
+        last_name = dict_arguments['last_name']
+        email_now = q_user.email
+        new_email = dict_arguments['email']
+        two_factor = checkbox_bool(dict_arguments.get('two_factor', False))
+        multiple_login = checkbox_bool(dict_arguments.get('permit_mult_login', False))
+        db.auth_user.email.requires = [IS_EMAIL()]
+        table = db.auth_user
+        result = FieldsDALValidateDictArgs(
+            dict_arguments,
+            *[table[x] for x in table.fields if x in ["first_name", "last_name"]],
+            table["email"] if new_email != email_now else None
+        )
+        r = result.validate()
+        if r:
+            message = 'The form has errors'
+            i18n_errors = {}
+            for x in result.errors:
+                tran = self.T(result.errors[x])
+                i18n_errors[x] = tran
+            self.set_status(400)
+            return self.write({
+                'status': 'Bad Request',
+                'code': 400,
+                'message': message,
+                'errors': result.errors,
+                'i18n': {
+                    'message': self.T(message),
+                    'errors': i18n_errors
+                }
+            })
+        else:
+            if dict_arguments["auth_group"]:
+                try:
+                    auth_group = ast.literal_eval(json.loads(dict_arguments["auth_group"]))
+                except Exception as e:
+                    auth_group = ast.literal_eval(dict_arguments["auth_group"])
+                if isinstance(auth_group, list):
+                    ids_groups = []
+                    for x in auth_group:
+                        role = None
+                        if new_group_re.match(x):
+                            role = new_group_re.findall(x)[0]
+                            q_group = db(db.auth_group.role == role).select()
+                            if q_group:
+                                ids_groups.append(q_group.first().id)
+                            else:
+                                id_new_group = db.auth_group.insert(
+                                    role=role,
+                                    grade=2
+                                )
+                                ids_groups.append(id_new_group)
+                        elif str(x).isdigit():
+                            ids_groups.append(int(x))
+                    if ids_groups:
+                        db(
+                            (db.auth_membership.auth_user == id_user) &
+                            (~db.auth_membership.auth_group.belongs(ids_groups))
+                        ).delete()
+                        q_auth_membership = db(
+                            (db.auth_membership.auth_user == id_user) &
+                            (db.auth_membership.auth_group.belongs(ids_groups))
+                        ).select()
+                        novos_dependentes = set(ids_groups).difference(set([x.auth_group for x in q_auth_membership]))
+                        for x in novos_dependentes:
+                            db.auth_membership.insert(
+                                auth_user=id_user,
+                                auth_group=x
+                            )
+                    else:
+                        db(
+                            (db.auth_membership.auth_user == id_user)
+                        ).delete()
+                    db.commit()
+
+            email_change = False
+            first_name_change = False
+            last_name_change = False
+            image_change = False
+            two_factor_change = False
+            multiple_login_change = False
+
+            if(first_name != q_user.first_name):
+                q_user.update_record(first_name=first_name)
+                first_name_change = True
+
+            if(last_name != q_user.last_name):
+                q_user.update_record(last_name=last_name)
+                last_name_change = True
+
+            if(two_factor != q_user.two_factor_login):
+                q_user.update_record(two_factor_login=two_factor)
+                two_factor_change = True
+
+            if(multiple_login != q_user.permit_mult_login):
+                q_user.update_record(permit_mult_login=multiple_login)
+                multiple_login_change = True
+
+            if self.request.files and\
+                "phanterpwa-gallery-file-input" in self.request.files:
+                imageBytes = self.request.files["phanterpwa-gallery-file-input"][0]['body']
+                filename = self.request.files["phanterpwa-gallery-file-input"][0]['filename']
+                cutterSizeX = dict_arguments['phanterpwa-gallery-input-cutterSizeX']
+                cutterSizeY = dict_arguments['phanterpwa-gallery-input-cutterSizeY']
+                cut_file = PhanterpwaGalleryCutter(
+                    imageName=filename,
+                    imageBytes=imageBytes,
+                    cutterSizeX=cutterSizeX,
+                    cutterSizeY=cutterSizeY
+                )
+                if 'phanterpwa-gallery-input-autoCut' in dict_arguments and\
+                    dict_arguments['phanterpwa-gallery-input-autoCut']:
+                    cutedImage = cut_file.auto_cut()
+                else:
+                    positionX = dict_arguments['phanterpwa-gallery-input-positionX']
+                    positionY = dict_arguments['phanterpwa-gallery-input-positionY']
+                    newSizeX = dict_arguments['phanterpwa-gallery-input-newSizeX']
+                    newSizeY = dict_arguments['phanterpwa-gallery-input-newSizeY']
+                    cutedImage = cut_file.specific_cut(
+                        newSizeX=newSizeX,
+                        newSizeY=newSizeY,
+                        positionX=positionX,
+                        positionY=positionY
+                    )
+                upload_image = PhanterpwaGalleryUserImage(
+                    id_user,
+                    self.DALDatabase,
+                    self.projectConfig
+                )
+                image_change = upload_image.set_image(
+                    *cutedImage
+                )
+            activate = q_user.activated
+            if new_email != email_now:
+                activation_code = generate_activation_code()
+                self.Translator_email.direct_translation = self.phanterpwa_language
+                keys_formatter = dict(
+                    app_name=self.projectConfig['PROJECT']['name'],
+                    user_name="{0} {1}".format(
+                        first_name,
+                        last_name
+                    ),
+                    code=activation_code,
+                    time_expires=humanize_seconds(
+                        self.projectConfig['BACKEND'][self.app_name]['default_time_activation_code_expire'],
+                        self.Translator_email
+                    ),
+                    copyright=interpolate(self.projectConfig['CONTENT_EMAILS']['copyright'], {'now': datetime.now().year}),
+                    link_to_your_page=self.projectConfig['CONTENT_EMAILS']['link_to_your_site']
+                )
+                email_password.text.formatter(keys_formatter)
+                text_email = email_activation_code.text.html(
+                    minify=True,
+                    translate=True,
+                    formatter=keys_formatter,
+                    i18nInstance=self.Translator_email,
+                    dictionary=self.phanterpwa_language,
+                    do_not_translate=["\n", " ", "\n\n", "&nbsp;"],
+                    escape_string=False
+                )
+                html_email = email_activation_code.html.html(
+                    minify=True,
+                    translate=True,
+                    formatter=keys_formatter,
+                    i18nInstance=self.Translator_email,
+                    dictionary=self.phanterpwa_language,
+                    do_not_translate=["\n", " ", "\n\n", "&nbsp;"],
+                    escape_string=False
+                )
+
+                e_mail = MailSender(
+                    self.projectConfig['EMAIL']['default_sender'],
+                    self.projectConfig['EMAIL']['password'],
+                    new_email,
+                    subject="Activation code",
+                    text_mensage=text_email,
+                    html_mensage=html_email,
+                    server=self.projectConfig['EMAIL']['server'],
+                    port=self.projectConfig['EMAIL']['port'],
+                    use_tls=self.projectConfig['EMAIL']['use_tls'],
+                    use_ssl=self.projectConfig['EMAIL']['use_ssl']
+                )
+                result = ""
+                try:
+                    if self.projectConfig["PROJECT"]["debug"]:
+                        self.logger_api.warning("ACTIVATION CODE: {0}".format(activation_code))
+                    else:
+                        self.logger_api.warning("Email from '{0}' to '{1}' -> Activation Code: {2}".format(
+                            self.projectConfig['EMAIL']['default_sender'],
+                            new_email,
+                            activation_code
+                        ))
+                        e_mail.send()
+                except Exception as e:
+                    result = "Email from '{0}' to '{1}' don't send! -> Error: {2} -> password: {3}".format(
+                        self.projectConfig['EMAIL']['default_sender'], dict_arguments['email'], e, activation_code)
+                    self.logger_api.error(result, exc_info=True)
+                    message = "There was an error trying to send the email."
+                    message_i18n = self.T("There was an error trying to send the email.")
+                    self.DALDatabase.rollback()
+                    self.set_status(400)
+                    return self.write({
+                        'status': 'Bad Request',
+                        'code': 400,
+                        'message': message,
+                        'i18n': {'message': message_i18n}
+                    })
+                else:
+                    q_user.update_record(
+                        activation_code=activation_code.split("-")[0],
+                        timeout_to_resend_activation_email=datetime.now() +
+                            timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['default_time_activation_code_expire'])
+                    )
+                    activate = False
+                    q_user.update_record(email=new_email, activated=activate)
+                    q_list = self.DALDatabase(
+                        (self.DALDatabase.email_user_list.auth_user == id_user) &
+                        (self.DALDatabase.email_user_list.email == email_now)
+                    ).select().first()
+                    if q_list:
+                        q_list.update_record(
+                            datetime_changed=datetime.now()
+                        )
+                    else:
+                        self.DALDatabase.email_user_list.insert(
+                            auth_user=id_user,
+                            email=email_now
+                        )
+                    email_change = True
+
+            if any([email_change,
+                    first_name_change,
+                    last_name_change,
+                    image_change,
+                    two_factor_change,
+                    multiple_login_change]):
+                q_role = self.DALDatabase(
+                    (self.DALDatabase.auth_membership.auth_user == id_user) &
+                    (self.DALDatabase.auth_group.id == self.DALDatabase.auth_membership.auth_group)
+                ).select(
+                    self.DALDatabase.auth_group.id, self.DALDatabase.auth_group.role, orderby=self.DALDatabase.auth_group.grade
+                )
+                roles = [x.role for x in q_role]
+                dict_roles = {x.id: x.role for x in q_role}
+                roles_id = [x.id for x in q_role]
+                role = None
+                if roles:
+                    role = roles[-1]
+                q_client = self.DALDatabase(
+                    (self.DALDatabase.client.auth_user == id_user)
+                ).delete()
+                self.DALDatabase.commit()
+                user_image = PhanterpwaGalleryUserImage(id_user, self.DALDatabase, self.projectConfig)
+                self.set_status(200)
+                return self.write({
+                    'status': 'OK',
+                    'code': 200,
+                    'message': 'Account was successfully changed',
+                    'auth_user': {
+                        'id': str(id_user),
+                        'first_name': E(first_name),
+                        'last_name': E(last_name),
+                        'email': new_email,
+                        'remember_me': False,
+                        'roles': roles,
+                        'role': role,
+                        'dict_roles': dict_roles,
+                        'roles_id': roles_id,
+                        'activated': activate,
+                        'image': user_image.id_image,
+                        'two_factor': q_user.two_factor_login,
+                        'multiple_login': q_user.permit_mult_login,
+                        'locale': q_user.locale,
+                        'social_login': None
+                    },
+                    'i18n': {
+                        'message': self.T('Account was successfully changed'),
+                        'auth_user': {'role': self.T(role)}
+                    }
+                })
+            else:
+                message = "Nothing has changed!"
+                self.DALDatabase.commit()
+                self.set_status(202)
+                return self.write({
+                    'status': 'Accepted',
+                    'code': 202,
+                    'message': message,
+                    'i18n': {
+                        'message': self.T(message)
+                    }
+                })
+
+    def options(self, *args):
+        self.set_status(200)
+        self.write({
+            "status": "OK",
+        })
 
 class UserImage(web.RequestHandler):
     """

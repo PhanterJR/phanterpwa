@@ -40,10 +40,12 @@ class AuthTables():
                 # 'section': 'Identidade'
 
             }),
-                    Field('temporary_password', 'text', phanterpwa={
+            Field('temporary_password', 'text', phanterpwa={
                 'out_of_form': True
             }),  # it's used in the debug
-            Field('temporary_password_hash', 'text'),
+            Field('temporary_password_hash', 'text', phanterpwa={
+                'out_of_form': True
+            }),
 
             # datetime_next_attempt_to_login
             Field('temporary_password_expire', 'datetime', requires=IS_EMPTY_OR(IS_DATETIME()), phanterpwa={
@@ -64,7 +66,9 @@ class AuthTables():
             }),
             Field('permit_mult_login', 'boolean', default=True),
             Field('activated', 'boolean', default=False, notnull=True),
-            Field('websocket_opened', 'boolean', default=False, notnull=True),
+            Field('websocket_opened', 'boolean', default=False, notnull=True, phanterpwa={
+                'out_of_form': True
+            }),
             Field('locale', 'string', default=default_language),
             Field('two_factor_login', 'boolean', default=False)
         )

@@ -31,7 +31,7 @@ class I18NServer():
     def get_user_lang():
         userLang = navigator.language or navigator.userLanguage
         storage = I18NServer.load_storage()
-        if "default_lang" in storage:
+        if "default_lang" in storage and storage['default_lang'] is not None:
             userLang = storage["default_lang"]
         return userLang
 
@@ -46,7 +46,7 @@ class I18NServer():
 
     def get_translations_on_server(self, new_word=None):
         if window.PhanterPWA is not js_undefined:
-            if window.PhanterPWA.DEBUG:
+            if window.PhanterPWA.DEBUG and self.userLang is not None:
                 window.PhanterPWA.ApiServer.GET(**{
                     'url_args': ["api", "i18n", window.PhanterPWA.get_app_name()],
                     'url_vars': {

@@ -701,7 +701,7 @@ def check_user_token(ignore_activation=False):
                                     r_client = self.DALDatabase(
                                         (self.DALDatabase.client.auth_user == id_user) &
                                         (self.DALDatabase.client.token != self.phanterpwa_client_token)
-                                    ).remove()
+                                    ).delete()
                             self.DALDatabase.commit()
                             return f(self, *args, **kargs)
                     else:
@@ -932,7 +932,7 @@ def requires_no_authentication(ids=None, ignore_locked=True):
                             r_client = self.DALDatabase(
                                 (self.DALDatabase.client.auth_user == id_user) &
                                 (self.DALDatabase.client.token != self.phanterpwa_client_token)
-                            ).remove()
+                            ).delete()
                     self.DALDatabase.commit()
                     msg = "The user must logout!"
                     dict_response = {

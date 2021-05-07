@@ -47,7 +47,7 @@ class Centralizer(helpers.XmlConstructor):
 
 
 class PromoOption(helpers.XmlConstructor):
-    def __init__(self, identifier, icon, title, description = None, **attributes):
+    def __init__(self, identifier, icon, title, description=None, **attributes):
         attributes["_id"] = "phanterpwa-snippet-{0}".format(identifier)
         if "_class" in attributes:
             attributes["_class"] = "{0}{1}".format(attributes["_class"], " phanterpwa-snippet-promooption link p-col w1p100")
@@ -61,7 +61,9 @@ class PromoOption(helpers.XmlConstructor):
             ),
             **{"_class": "promo-container"}
         )
-        if not (description is None or description == ""):
+        if isinstance(description, helpers.XmlConstructor):
+            html.append(DIV(description, _class='promo-content'))
+        elif not (description is None or description == ""):
             html.append(DIV(description, _class='promo-content'))
         tag = "div"
         if "_href" in attributes:

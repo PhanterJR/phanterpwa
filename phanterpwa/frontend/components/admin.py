@@ -883,9 +883,9 @@ class User():
         forms.SignForm("#form-auth_user")
         self.form.process_api_response(data)
         if data.status == 200 and self.user_id == 'new':
-            window.PhanterPWA.open_way("users/new")
+            window.PhanterPWA.open_way("admin/users/new")
         elif data.status == 200:
-            window.PhanterPWA.open_way("users")
+            window.PhanterPWA.open_way("admin/users")
 
 
 class Impersonate():
