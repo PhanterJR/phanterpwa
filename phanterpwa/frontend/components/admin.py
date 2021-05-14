@@ -308,17 +308,14 @@ class UsersList(helpers.XmlConstructor):
                 self.process_data(json)
 
     def _on_sort(self, table_head_instance):
-        console.log("acionado")
         widgets = window.PhanterPWA.Request.widgets
         page = widgets["users-table-footer"].page()
         search = widgets["search_users"].value()
         field = widgets["users_field"].value()
         sorted_field = widgets["users-table-head"].sorted_field()
-        console.log(sorted_field)
         self._get_data_search(search=search, field=field, orderby=sorted_field[0], sort=sorted_field[1], page=page)
 
     def _on_page(self, table_pagination_instance):
-        console.log("acionado")
         widgets = window.PhanterPWA.Request.widgets
         page = widgets["users-table-footer"].page()
         search = widgets["search_users"].value()
@@ -669,7 +666,6 @@ class User():
         if user_id == "new":
             self.get_form_user(user_id)
         elif action == "edit":
-            console.log(self.user_id, self.action)
             self.get_form_user(user_id, "edit")
         elif action == "view":
             self.view(user_id, index_instance.request.params)
@@ -840,7 +836,6 @@ class User():
         )
  
     def get_form_user(self, user_id, action=None):
-        console.log(user_id, action, "<--------")
         if action == "edit":
             window.PhanterPWA.ApiServer.GET(**{
                 'url_args': ["api", "admin", "usermanager", user_id, "edit"],

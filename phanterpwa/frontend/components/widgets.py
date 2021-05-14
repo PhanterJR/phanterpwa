@@ -435,7 +435,6 @@ class Select(Widget):
         self._data_dict = {}
         if isinstance(data, list):
             for vdata in data:
-                console.log(vdata)
                 if len(vdata) is not 2:
                     valid_data = False
                 else:
@@ -1610,7 +1609,6 @@ class ListString(Widget):
         self._value = new_value
 
     def _data_set(self, data):
-        console.log(data)
         valid_data = True
         self._data = []
         self._data_dict = {}
@@ -3087,6 +3085,7 @@ class TableHead(Widget):
 class TableData(Widget):
     def __init__(self, identifier, *content, **parameters):
         self.__dropable = parameters.get("drag_and_drop", True)
+        self._after_drop = parameters.get("after_drop", None)
         if self.__dropable:
             parameters["_draggable"] = "true"
         if "_class" in parameters:
@@ -3105,6 +3104,8 @@ class TableData(Widget):
             jQuery(window.PhanterPWA.drag["el"]).insertAfter(el)
         else:
             jQuery(window.PhanterPWA.drag["el"]).insertBefore(el)
+        if callable(self._after_drop):
+            self._after_drop(ev, el)
 
     def _ondragstart(self, ev, el):
         window.PhanterPWA.drag = {"el": el, "posY": ev.screenY}

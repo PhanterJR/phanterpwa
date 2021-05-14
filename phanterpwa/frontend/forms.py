@@ -474,7 +474,6 @@ class FormWidget(helpers.XmlConstructor):
             
             elif self._widget_type == "list_string":
                 ds = self.json_widget.get('data_set', [])
-                console.log(ds)
                 w = widgets.ListString(
                     "{0}-{1}".format(self.table_name, self.input_name),
                     label=self.json_widget['label'],

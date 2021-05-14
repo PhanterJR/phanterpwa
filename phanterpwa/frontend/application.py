@@ -911,6 +911,9 @@ class PhanterPWA():
         return way
 
     def _set_way_to_url_hash(self, way):
+        self.set_push_way(way)
+
+    def set_push_way(self, way):
         current = self._get_way_from_url_hash()
         if way != current:
             window.history.pushState("", self.TITLE, "#_phanterpwa:/{0}".format(way))
