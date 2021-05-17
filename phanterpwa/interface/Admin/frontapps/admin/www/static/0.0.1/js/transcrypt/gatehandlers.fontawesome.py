@@ -1730,6 +1730,7 @@ class Index(gatehandler.Handler):
 
 
     def _after_load(self, data):
+        console.log(data)
         XML(data).html_to("#icon_awesome_container")
 
 

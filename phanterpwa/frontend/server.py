@@ -19,7 +19,8 @@ class ApiServer():
     def __init__(self):
         self.remote_address = window.PhanterPWA.CONFIG["APP"]["http_address"]
 
-    def _process_args(self, args):
+    @staticmethod
+    def _process_args(args):
         s_args = ""
         ISINSTANCEOF = __pragma__("js", "{}", "args instanceof Array")
         if isinstance(args, list) or ISINSTANCEOF:
@@ -28,7 +29,8 @@ class ApiServer():
             s_args = "{0}/".format(s_args)
         return s_args
 
-    def _process_parameters(self, parameters):
+    @staticmethod
+    def _process_parameters(parameters):
         _vars = dict()
         for x in parameters.keys():
             if x == "_":
@@ -40,7 +42,8 @@ class ApiServer():
         else:
             return parameters.get("url_vars", None)
 
-    def _serialize_vars(self, _vars):
+    @staticmethod
+    def _serialize_vars(_vars):
         ISTYPEOF = __pragma__("js", "{}", "_vars instanceof FormData")
         if _vars is None or _vars is js_undefined:
             return ""
@@ -50,10 +53,15 @@ class ApiServer():
             __pragma__('jsiter')
             jsdict = {}
             __pragma__('nojsiter')
+            has_value = False
             for x in _vars.keys():
+                has_value = True
                 if _vars[x] is not None and _vars[x] is not js_undefined:
                     jsdict[x] = _vars[x]
-            return "?{0}".format(jQuery.param(jsdict))
+            if has_value:
+                return "?{0}".format(jQuery.param(jsdict))
+            else:
+                return ""
         else:
             t = jQuery.param(_vars)
             if t is not None or t is not js_undefined:

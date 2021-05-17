@@ -215,6 +215,9 @@ class WidgetFromFieldDALFromTableDAL():
 
                 return ["IS_IN_SET:{0}".format(json.dumps("{0}".format(theset)))]
         elif isinstance(validator, IS_IN_SET):
+            if "data_set" not in self.table[self._field].phanterpwa and "type" not in self.table[self._field].phanterpwa:
+                self.table[self._field].phanterpwa["type"] = "select"
+                self.table[self._field].phanterpwa["data_set"] = list(validator.theset)
             return ["IS_IN_SET:{0}".format(json.dumps("{0}".format(validator.theset)))]
         elif isinstance(validator, IS_EMPTY_OR):
             if "can_empty" not in self.table[self._field].phanterpwa and \
@@ -262,21 +265,33 @@ class WidgetFromFieldDALFromTableDAL():
                 json_field["can_empty"] = FieldInst.phanterpwa["can_empty"]
 
             if t.startswith("reference"):
+
                 if self._record_id:
                     if self._record[FieldInst]:
                         default = self._record[FieldInst].id
                     else:
                         default = None
                 json_field['editable'] = FieldInst.phanterpwa.get("editable", False)
+                ref_table = t.split(" ")[1]
                 if "data_set" in FieldInst.phanterpwa:
                     if callable(FieldInst.phanterpwa['data_set']):
                         data_ref_table_formated = FieldInst.phanterpwa['data_set'](self.record)
                     else:
                         data_ref_table_formated = FieldInst.phanterpwa["data_set"]
+                    if json_field['editable']:
+                        if 'reference_field' not in FieldInst.phanterpwa:
+                            raise SyntaxError("".join(["You placed in '", self._field,
+                                "' the reference field as editable, it is necessary to",
+                                    " define the field of the referenced table. e.g. ",
+                                        "phanterpwa = {'editable': True, 'refence_field': 'field_of_referenced_table'}"]))
+                        else:
+                            json_field['reference_field'] = FieldInst.phanterpwa["reference_field"]
+                    else:
+                        json_field['reference_field'] = 'id'
+                    json_field['reference_table'] = ref_table
                 else:
                     if not self.db:
                         raise SyntaxError("The db must be DAL database instance")
-                    ref_table = t.split(" ")[1]
                     ref_fields = []
                     for f in self.db[ref_table].fields:
                         ref_fields.append(f)
@@ -335,8 +350,9 @@ class WidgetFromFieldDALFromTableDAL():
                 default = FieldInst.default
                 if self._record_id:
                     default = self._record[FieldInst]
-                if default:
-                    default = default.isoformat()
+                # print(type(default))
+                # if default:
+                #     default = default.isoformat()
                 if "format" in FieldInst.phanterpwa:
                     dformat = FieldInst.phanterpwa["format"]
                 elif t == "datetime":
@@ -349,27 +365,59 @@ class WidgetFromFieldDALFromTableDAL():
                     formato_saida = FieldInst.phanterpwa["validator_format"]
                     json_field["validator_format"] = formato_saida
                     if t == "datetime":
-                        tempo = time.strptime(str(default).replace("T", " "), '%Y-%m-%d %H:%M:%S')
-                        resultado = time.strftime(formato_saida, tempo)
+                        if isinstance(default, datetime.datetime) or isinstance(default, datetime.date):
+                            resultado = str(default.strftime(formato_saida))
+                            default = default.strftime('%Y-%m-%d %H:%M:%S')
+                        else:
+                            tempo = time.strptime(str(default), '%Y-%m-%d %H:%M:%S')
+                            resultado = str(time.strftime(formato_saida, tempo))
                     elif t == "date":
-                        tempo = time.strptime(str(default), '%Y-%m-%d')
-                        resultado = time.strftime(formato_saida, tempo)
+                        if isinstance(default, datetime.datetime) or isinstance(default, datetime.date):
+                            resultado = str(default.strftime(formato_saida))
+                            default = default.strftime('%Y-%m-%d')
+                        else:
+                            tempo = time.strptime(str(default), '%Y-%m-%d')
+                            resultado = str(time.strftime(formato_saida, tempo))
                     elif t == "time":
-                        tempo = time.strptime(str(default), '%H:%M:%S')
-                        resultado = time.strftime(formato_saida, tempo)
+                        if isinstance(default, datetime.datetime) or isinstance(default, datetime.date):
+                            resultado = str(default.strftime(formato_saida))
+                            default = default.strftime('%H:%M:%S')
+                        else:
+                            tempo = time.strptime(str(default), '%H:%M:%S')
+                            resultado = str(time.strftime(formato_saida, tempo))
+                    json_field['formatted'] = resultado
+                elif default:
+                    if t == "datetime":
+                        general_format = '%Y-%m-%d %H:%M:%S'
+                        json_field["validator_format"] = general_format
+                        if isinstance(default, datetime.datetime) or isinstance(default, datetime.date):
+                            resultado = str(default.strftime(general_format))
+                            default = resultado
+                        else:
+                            tempo = time.strptime(str(default), general_format)
+                            resultado = str(time.strftime(general_format, tempo))
+                    elif t == "date":
+                        general_format = '%Y-%m-%d'
+                        json_field["validator_format"] = general_format
+                        if isinstance(default, datetime.datetime) or isinstance(default, datetime.date):
+                            resultado = str(default.strftime(general_format))
+                            default = resultado
+                        else:
+                            tempo = time.strptime(str(default), general_format)
+                            resultado = str(time.strftime(general_format, tempo))
+                    elif t == "time":
+                        general_format = '%H:%M:%S'
+                        json_field["validator_format"] = general_format
+                        if isinstance(default, datetime.datetime) or isinstance(default, datetime.date):
+                            resultado = str(default.strftime(general_format))
+                            default = resultado
+                        else:
+                            tempo = time.strptime(str(default), general_format)
+                            resultado = str(time.strftime(formato_saida, tempo))
                     json_field['formatted'] = resultado
                 else:
-                    if "validator_format" not in FieldInst.phanterpwa:
-                        if t == "datetime":
-                            json_field["validator_format"] = '%Y-%m-%d %H:%M:%S'
-                        elif t == "date":
-                            json_field["validator_format"] = '%Y-%m-%d'
-                        elif t == "time":
-                            json_field["validator_format"] = '%H:%M:%S'
-                    else:
-                        formato_saida = FieldInst.phanterpwa["validator_format"]
-                        json_field["validator_format"] = formato_saida
-                    json_field['formatted'] = default
+                    formato_saida = FieldInst.phanterpwa["validator_format"]
+                    json_field["validator_format"] = formato_saida
 
                 json_field['label'] = FieldInst.label
                 json_field['value'] = default
@@ -420,6 +468,10 @@ class WidgetFromFieldDALFromTableDAL():
                 json_field["url"] = FieldInst.phanterpwa['url'](self.record)
             if "no-cache" in FieldInst.phanterpwa:
                 json_field["no-cache"] = FieldInst.phanterpwa['no-cache']
+            if "disabled" in FieldInst.phanterpwa:
+                json_field["disabled"] = FieldInst.phanterpwa['disabled']
+            if "editable" in FieldInst.phanterpwa:
+                json_field["editable"] = FieldInst.phanterpwa['editable']
             for x in FieldInst.phanterpwa:
                 if x.startswith("_"):
                     json_field[x] = FieldInst.phanterpwa[x]
@@ -543,9 +595,11 @@ class CustomField():
                 theset = [self._db[table_name]._format % x.as_dict() for x in self._db(self._db[table_name].id > 0).select()]
             else:
                 theset = [x.id for x in self._db(self._db[table_name].id > 0).select()]
-
             return ["IS_IN_SET:{0}".format(json.dumps("{0}".format(theset)))]
         elif isinstance(validator, IS_IN_SET):
+            if "data_set" not in self.table[self._field].phanterpwa and "type" not in self.table[self._field].phanterpwa:
+                self.table[self._field].phanterpwa["type"] = "select"
+                self.table[self._field].phanterpwa["data_set"] = list(validator.theset)
             return ["IS_IN_SET:{0}".format(json.dumps("{0}".format(validator.theset)))]
         elif isinstance(validator, IS_EMPTY_OR):
             if "can_empty" not in self._field.phanterpwa and \
@@ -593,6 +647,7 @@ class CustomField():
                 json_field["can_empty"] = FieldInst.phanterpwa["can_empty"]
 
             if t.startswith("reference"):
+
                 if self._record_id:
                     if self._record[FieldInst]:
                         default = self._record[FieldInst].id
@@ -659,8 +714,9 @@ class CustomField():
                 default = FieldInst.default
                 if self._record_id:
                     default = self._record[FieldInst]
-                if default:
-                    default = default.isoformat()
+                # print(type(default))
+                # if default:
+                #     default = default.isoformat()
                 if "format" in FieldInst.phanterpwa:
                     dformat = FieldInst.phanterpwa["format"]
                 elif t == "datetime":
@@ -673,27 +729,59 @@ class CustomField():
                     formato_saida = FieldInst.phanterpwa["validator_format"]
                     json_field["validator_format"] = formato_saida
                     if t == "datetime":
-                        tempo = time.strptime(str(default).replace("T", " "), '%Y-%m-%d %H:%M:%S')
-                        resultado = time.strftime(formato_saida, tempo)
+                        if isinstance(default, datetime.datetime) or isinstance(default, datetime.date):
+                            resultado = str(default.strftime(formato_saida))
+                            default = default.strftime('%Y-%m-%d %H:%M:%S')
+                        else:
+                            tempo = time.strptime(str(default), '%Y-%m-%d %H:%M:%S')
+                            resultado = str(time.strftime(formato_saida, tempo))
                     elif t == "date":
-                        tempo = time.strptime(str(default), '%Y-%m-%d')
-                        resultado = time.strftime(formato_saida, tempo)
+                        if isinstance(default, datetime.datetime) or isinstance(default, datetime.date):
+                            resultado = str(default.strftime(formato_saida))
+                            default = default.strftime('%Y-%m-%d')
+                        else:
+                            tempo = time.strptime(str(default), '%Y-%m-%d')
+                            resultado = str(time.strftime(formato_saida, tempo))
                     elif t == "time":
-                        tempo = time.strptime(str(default), '%H:%M:%S')
-                        resultado = time.strftime(formato_saida, tempo)
+                        if isinstance(default, datetime.datetime) or isinstance(default, datetime.date):
+                            resultado = str(default.strftime(formato_saida))
+                            default = default.strftime('%H:%M:%S')
+                        else:
+                            tempo = time.strptime(str(default), '%H:%M:%S')
+                            resultado = str(time.strftime(formato_saida, tempo))
+                    json_field['formatted'] = resultado
+                elif default:
+                    if t == "datetime":
+                        general_format = '%Y-%m-%d %H:%M:%S'
+                        json_field["validator_format"] = general_format
+                        if isinstance(default, datetime.datetime) or isinstance(default, datetime.date):
+                            resultado = str(default.strftime(general_format))
+                            default = resultado
+                        else:
+                            tempo = time.strptime(str(default), general_format)
+                            resultado = str(time.strftime(general_format, tempo))
+                    elif t == "date":
+                        general_format = '%Y-%m-%d'
+                        json_field["validator_format"] = general_format
+                        if isinstance(default, datetime.datetime) or isinstance(default, datetime.date):
+                            resultado = str(default.strftime(general_format))
+                            default = resultado
+                        else:
+                            tempo = time.strptime(str(default), general_format)
+                            resultado = str(time.strftime(general_format, tempo))
+                    elif t == "time":
+                        general_format = '%H:%M:%S'
+                        json_field["validator_format"] = general_format
+                        if isinstance(default, datetime.datetime) or isinstance(default, datetime.date):
+                            resultado = str(default.strftime(general_format))
+                            default = resultado
+                        else:
+                            tempo = time.strptime(str(default), general_format)
+                            resultado = str(time.strftime(formato_saida, tempo))
                     json_field['formatted'] = resultado
                 else:
-                    if "validator_format" not in FieldInst.phanterpwa:
-                        if t == "datetime":
-                            json_field["validator_format"] = '%Y-%m-%d %H:%M:%S'
-                        elif t == "date":
-                            json_field["validator_format"] = '%Y-%m-%d'
-                        elif t == "time":
-                            json_field["validator_format"] = '%H:%M:%S'
-                    else:
-                        formato_saida = FieldInst.phanterpwa["validator_format"]
-                        json_field["validator_format"] = formato_saida
-                    json_field['formatted'] = default
+                    formato_saida = FieldInst.phanterpwa["validator_format"]
+                    json_field["validator_format"] = formato_saida
 
                 json_field['label'] = FieldInst.label
                 json_field['value'] = default
@@ -745,6 +833,10 @@ class CustomField():
 
             if "no-cache" in FieldInst.phanterpwa:
                 json_field["no-cache"] = FieldInst.phanterpwa['no-cache']
+            if "disabled" in FieldInst.phanterpwa:
+                json_field["disabled"] = FieldInst.phanterpwa['disabled']
+            if "editable" in FieldInst.phanterpwa:
+                json_field["editable"] = FieldInst.phanterpwa['editable']
             for x in FieldInst.phanterpwa:
                 if x.startswith("_"):
                     json_field[x] = FieldInst.phanterpwa[x]
@@ -859,6 +951,7 @@ class FormFromTableDAL():
                 else:
                     w = self._widgets[key]
                     if ("type" in w) and w["type"] == "reference":
+                        
                         t_name = w['reference_table']
                         f_name = w['reference_field']
                         if "editable" in w and w["editable"]:

@@ -326,6 +326,7 @@ class FormWidget(helpers.XmlConstructor):
         self._nocache = json_widget.get("no-cache", False)
         self._width = json_widget.get("width", 190)
         self._height = json_widget.get("height", 200)
+        self._disabled = json_widget.get("disabled", None)
         if "_id" not in json_widget:
             json_widget["_id"] = "phanterpwa-widget-wrapper-{0}-{1}".format(self.table_name, self.input_name)
         if "type" not in json_widget:
@@ -564,7 +565,8 @@ class FormWidget(helpers.XmlConstructor):
                     name=self.input_name,
                     value=self._value,
                     editable=self._editable,
-                    can_empty=self._can_empty,                
+                    can_empty=self._can_empty,
+                    disabled=self._disabled,
                     mask=self._mask,
                     form=self.table_name,
                     validators=self.validators
@@ -708,15 +710,14 @@ class Form(helpers.XmlConstructor):
         self.signForm()
         return self.element
 
-    @staticmethod
-    def process_api_response(data):
+    def process_api_response(self, data):
         if data.status == 400:
             if data.responseJSON.message is not js_undefined:
                 window.PhanterPWA.flash(html=data.responseJSON.message)
             if data.responseJSON.errors is not js_undefined:
                 errors = dict(data.responseJSON.errors)
                 for x in errors.keys():
-                    target = jQuery("#phanterpwa-widget-socios-{0}".format(x))
+                    target = jQuery("#phanterpwa-widget-{0}-{1}".format(self.table_name, x))
                     target.find(".phanterpwa-widget-message_error").text(data.responseJSON.errors[x])
                     target.find(".phanterpwa-widget-wrapper").addClass("has_error")
         elif data.status == 200:
@@ -754,39 +755,42 @@ class ValidateForm():
         instances_wg = window.PhanterPWA.Request.widgets
         widget_instance = instances_wg[jQuery("#phanterpwa-widget-{0}-{1}".format(
                 table_name, input_name)).attr("phanterpwa-widget")]
+        if widget_instance is not js_undefined:
+            value_for_validate = self.element_target.find("input[name='{0}']".format(input_name)).val()
+            is_empty_or = False
+            if "IS_EMPTY_OR" in validate_test:
+                if (value_for_validate is js_undefined) or \
+                    (value_for_validate is None) or (value_for_validate == ""):
+                    validate_test_pass.append(True)
+                    is_empty_or = True
+                validate_test.pop("IS_EMPTY_OR")
+            if not is_empty_or:
+                for x in validate_test:
+                    if x is not None and x is not js_undefined:
+                        validate_test_pass.append(self._validates(x, value_for_validate, el, widget_instance))
 
-        value_for_validate = self.element_target.find("input[name='{0}']".format(input_name)).val()
-        is_empty_or = False
-        if "IS_EMPTY_OR" in validate_test:
-            if (value_for_validate is js_undefined) or \
-                (value_for_validate is None) or (value_for_validate == ""):
-                validate_test_pass.append(True)
-                is_empty_or = True
-            validate_test.pop("IS_EMPTY_OR")
-        if not is_empty_or:
-            for x in validate_test:
-                if x is not None and x is not js_undefined:
-                    validate_test_pass.append(self._validates(x, value_for_validate, el, widget_instance))
+            if all(validate_test_pass):
+                self.formtests.append(True)
+                jQuery("#phanterpwa-widget-{0}-{1}".format(
+                    table_name, input_name)).find(".phanterpwa-widget-wrapper").removeClass("no_pass")
+            else:
+                jQuery("#phanterpwa-widget-{0}-{1}".format(
+                    table_name, input_name)).find(".phanterpwa-widget-wrapper").addClass("no_pass").removeClass("has_error")
+                self.formtests.append(False)
+            if all(self.formtests):
+                self.formpass = True
 
-        if all(validate_test_pass):
-            self.formtests.append(True)
-            jQuery("#phanterpwa-widget-{0}-{1}".format(
-                table_name, input_name)).find(".phanterpwa-widget-wrapper").removeClass("no_pass")
-        else:
-            jQuery("#phanterpwa-widget-{0}-{1}".format(
-                table_name, input_name)).find(".phanterpwa-widget-wrapper").addClass("no_pass").removeClass("has_error")
-            self.formtests.append(False)
-        if all(self.formtests):
-            self.formpass = True
-
-            if self.submit_button is not None and self.submit_button is not js_undefined:
-                if self.formpass:
-                    self.submit_button.removeAttr("disabled")
-                else:
+                if self.submit_button is not None and self.submit_button is not js_undefined:
+                    if self.formpass:
+                        self.submit_button.removeAttr("disabled")
+                    else:
+                        self.submit_button.attr("disabled", "disabled")
+            else:
+                if self.submit_button is not None and self.submit_button is not js_undefined:
                     self.submit_button.attr("disabled", "disabled")
         else:
-            if self.submit_button is not None and self.submit_button is not js_undefined:
-                self.submit_button.attr("disabled", "disabled")
+            if window.PhanterPWA.DEBUG:
+                console.info("The widget_instance is undefined!")
 
     def _validates(self, validate_name, value_for_validate, el, widget_instance):
         validate_test_pass = list()

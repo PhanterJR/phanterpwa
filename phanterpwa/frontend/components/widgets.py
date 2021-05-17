@@ -118,6 +118,7 @@ class Input(Widget):
         self._icon_on_click = parameters.get("icon_on_click", None)
         self._onload = parameters.get("onLoad", None)
         self._checker = parameters.get("checker", True)
+        self._disabled = parameters.get("disabled", None)
         self._on_date_datetime_choice = parameters.get("onDateorDatetimeChoice", None)
         wrapper_attr = {
             "_class": "phanterpwa-widget-wrapper phanterpwa-widget-input-wrapper phanterpwa-widget-wear-{0}".format(
@@ -170,6 +171,7 @@ class Input(Widget):
                 "_name": self._name,
                 "_value": self._value,
                 "_placeholder": self._placeholder,
+                "_disabled": self._disabled,
                 "_type": self._type,
                 "_data-validators": JSON.stringify(self._validator),
                 "_data-form": self._form,
@@ -434,17 +436,24 @@ class Select(Widget):
         self._data = []
         self._data_dict = {}
         if isinstance(data, list):
+            new_data = []
             for vdata in data:
-                if len(vdata) is not 2:
+                if isinstance(vdata, str):
+                    if self._value == vdata:
+                        self._alias_value = vdata
+                    self._data_dict[vdata] = vdata
+                    new_data.append([vdata, vdata])
+                elif len(vdata) is not 2:
                     valid_data = False
                 else:
                     if self._value == vdata[0]:
                         self._alias_value = vdata[1]
-                self._data_dict[vdata[0]] = vdata[1]
+                    self._data_dict[vdata[0]] = vdata[1]
+                    new_data.append([vdata[0], vdata[1]])
             if not valid_data:
                 raise console.error("The data parameter is invalid!")
             else:
-                self._data = data
+                self._data = new_data
         elif isinstance(data, dict):
             new_data = []
             for vdata in data.keys():

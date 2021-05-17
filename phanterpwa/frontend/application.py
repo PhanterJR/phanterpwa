@@ -174,6 +174,14 @@ class PhanterPWA():
                     l.append([x, I(_class="fas fa-at")])
             return l
 
+    def XWAY(self, *args, **kargs):
+        all_args = self.ApiServer._process_args(args)
+        url_vars = self.ApiServer._process_parameters(kargs)
+        all_vars = self.ApiServer._serialize_vars(url_vars)
+        current_uri = "/#_phanterpwa:/{0}{1}".format(all_args, all_vars)
+        return current_uri
+
+
     @staticmethod
     def get_app_name(self):
         return window.PhanterPWA.CONFIG["APP"]["name"]
@@ -911,12 +919,13 @@ class PhanterPWA():
         return way
 
     def _set_way_to_url_hash(self, way):
-        self.set_push_way(way)
-
-    def set_push_way(self, way):
         current = self._get_way_from_url_hash()
         if way != current:
             window.history.pushState("", self.TITLE, "#_phanterpwa:/{0}".format(way))
+
+    def set_push_way(self, way):
+        sessionStorage.setItem("current_way", way)
+        self._set_way_to_url_hash(way)
 
     def check_duplicates_ids(self):
         def check(el):
