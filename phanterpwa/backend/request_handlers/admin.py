@@ -360,6 +360,8 @@ class UserManager(web.RequestHandler):
         new_email = dict_arguments['email']
         two_factor = checkbox_bool(dict_arguments.get('two_factor', False))
         multiple_login = checkbox_bool(dict_arguments.get('permit_mult_login', False))
+        activated = checkbox_bool(dict_arguments.get('activated', False))
+
         db.auth_user.email.requires = [IS_EMAIL()]
         table = db.auth_user
         result = FieldsDALValidateDictArgs(
@@ -435,6 +437,7 @@ class UserManager(web.RequestHandler):
             image_change = False
             two_factor_change = False
             multiple_login_change = False
+            activated_change = False
 
             if(first_name != q_user.first_name):
                 q_user.update_record(first_name=first_name)
@@ -451,6 +454,11 @@ class UserManager(web.RequestHandler):
             if(multiple_login != q_user.permit_mult_login):
                 q_user.update_record(permit_mult_login=multiple_login)
                 multiple_login_change = True
+
+            if(activated != q_user.activated):
+                q_user.update_record(activated=activated)
+                activated_change = True
+
 
             if self.request.files and\
                 "phanterpwa-gallery-file-input" in self.request.files:
@@ -589,7 +597,9 @@ class UserManager(web.RequestHandler):
                     last_name_change,
                     image_change,
                     two_factor_change,
-                    multiple_login_change]):
+                    multiple_login_change,
+                    activated_change
+                ]):
                 q_role = self.DALDatabase(
                     (self.DALDatabase.auth_membership.auth_user == id_user) &
                     (self.DALDatabase.auth_group.id == self.DALDatabase.auth_membership.auth_group)

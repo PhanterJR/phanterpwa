@@ -150,7 +150,6 @@ class Index(gatehandler.Handler):
 
     def _after_get_projects_folder(self, evt):
         str_json = JSON.parse(evt.data)
-        console.log(str_json)
         if str_json.command == "change_project_folder":
             if str_json.status == 200:
                 window.PhanterPWA.open_way("developer")
