@@ -151,19 +151,50 @@ class Administration(gatehandler.Handler):
                 )
             )
             html.html_to("#main-container")
-            BackButton = left_bar.LeftBarButton(
-                "back_localizar_roles",
-                "Voltar",
-                I(_class="fas fa-arrow-circle-left"),
-                **{"_phanterpwa-way": "admin",
-                    "position": "top",
-                    "show_if": lambda: True if window.PhanterPWA.get_current_way() == "admin/roles"
-                        and window.PhanterPWA.auth_user_has_role("root") else False
-                }
-            )
+            if arg1 == "new":
+                BackButton = left_bar.LeftBarButton(
+                    "back_admin_user",
+                    "Voltar",
+                    I(_class="fas fa-arrow-circle-left"),
+                    **{"_phanterpwa-way": "admin/users",
+                        "position": "top",
+                        "show_if": lambda: True if window.PhanterPWA.get_current_way() == "admin/users/new"
+                            and window.PhanterPWA.auth_user_has_role("root") else False
+                    }
+                )
 
-            window.PhanterPWA.Components['left_bar'].add_button(BackButton)
-            self.RolesList = RolesList(self)
+                window.PhanterPWA.Components['left_bar'].add_button(BackButton)
+                self.Role = Role(self, "new")
+
+            elif arg2 == "edit" and str(arg1).isdigit():
+                BackButton = left_bar.LeftBarButton(
+                    "back_admin_user_edit",
+                    "Voltar",
+                    I(_class="fas fa-arrow-circle-left"),
+                    **{"_phanterpwa-way": "admin/users",
+                        "position": "top",
+                        "show_if": lambda: True if window.PhanterPWA.get_current_way() == "admin/users/{0}/edit".format(arg1)
+                            and window.PhanterPWA.auth_user_has_role("root") else False
+                    }
+                )
+
+                window.PhanterPWA.Components['left_bar'].add_button(BackButton)
+                self.Role = Role(self, arg1, arg2)
+
+            else:
+                BackButton = left_bar.LeftBarButton(
+                    "back_localizar_roles",
+                    "Voltar",
+                    I(_class="fas fa-arrow-circle-left"),
+                    **{"_phanterpwa-way": "admin",
+                        "position": "top",
+                        "show_if": lambda: True if window.PhanterPWA.get_current_way() == "admin/roles"
+                            and window.PhanterPWA.auth_user_has_role("root") else False
+                    }
+                )
+
+                window.PhanterPWA.Components['left_bar'].add_button(BackButton)
+                self.RolesList = RolesList(self)
 
         else:
 
@@ -171,7 +202,7 @@ class Administration(gatehandler.Handler):
                 DIV(
                     DIV(
                         DIV(
-                            DIV("USER ADMINISTRATION", _class="phanterpwa-breadcrumb"),
+                            DIV("USERS ADMINISTRATION", _class="phanterpwa-breadcrumb"),
                             _class="phanterpwa-breadcrumb-wrapper"
                         ),
                         _class="p-container"),
@@ -516,7 +547,7 @@ class RolesList(helpers.XmlConstructor):
     def process_data(self, json):
         if self.current_hash is not json.hash:
             self.current_hash = json.hash
-            roles = json.roles
+            roles = json.groups
             jQuery("#lista-roles-subtitle").text(json.message)
             new_select_widget = widgets.Select(
                 "campos_roles",
@@ -535,7 +566,7 @@ class RolesList(helpers.XmlConstructor):
                     DIV(
                         I(_class="fas fa-plus"),
                         **{
-                            "_phanterpwa-way": "roles/new",
+                            "_phanterpwa-way": "admin/roles/new",
                             "_class": "icon_button wave_on_click"
                         }
                     ),
@@ -551,22 +582,24 @@ class RolesList(helpers.XmlConstructor):
                         XTRD(
                             "roles-table-data-{0}".format(x.id),
                             x.id,
-                            x.first_name,
-                            x.last_name,
-                            x.email,
-                            x.permit_mult_login,
-                            x.activated,
-                            x.websocket_opened,
+                            x.grade,
+                            x.role,
+                            x.description,
                             widgets.MenuBox(
                                 "drop_{0}".format(x.id),
-                                xml_menu=UL(
-                                    LI("Editar", **{
-                                        "_class": "botao_edit_role",
-                                        "_phanterpwa-way": "roles/{0}/edit".format(x.id)
-                                    }),
-                                    **{"data-menubox": "drop_{0}".format(x.id),
-                                    "_class": 'dropdown-content'},
-                                )
+                                I(_class="fas fa-ellipsis-v"),
+                                widgets.MenuOption("View", **{
+                                    "_class": "admin-button-user-edit wave_on_click",
+                                    "_href": "#_phanterpwa:/admin/roles/{0}/view".format(x.id)
+                                }),
+                                widgets.MenuOption("Edit", **{
+                                    "_class": "admin-button-user-edit wave_on_click",
+                                    "_href": "#_phanterpwa:/admin/roles/{0}/edit".format(x.id)
+                                }),
+                                widgets.MenuOption("Impersonate", **{
+                                    "_class": "admin-button-user-edit wave_on_click",
+                                    "_href": "#_phanterpwa:/admin/roles/{0}/impersonate".format(x.id)
+                                }),
                             )
                         )
                     )
@@ -640,7 +673,8 @@ class User():
             DIV(
                 DIV(
                     DIV(
-                        DIV("RESTRITO", _class="phanterpwa-breadcrumb"),
+                        DIV("USERS ADMINISTRATION", _class="phanterpwa-breadcrumb"),
+                        DIV("USER", _class="phanterpwa-breadcrumb"),
                         _class="phanterpwa-breadcrumb-wrapper"
                     ),
                     _class="p-container"),
@@ -895,6 +929,255 @@ class Impersonate():
             window.PhanterPWA._after_submit_login(data, ajax_status)
         else:
             window.PhanterPWA.flash(**{'html': "Impersonate Problem!"})
+
+class Role():
+    def __init__(self, index_instance, role_id=None, action=None):
+        self.index_instance = index_instance
+        html = CONCATENATE(
+            DIV(
+                DIV(
+                    DIV(
+                        DIV("ROLES ADMINISTRATION", _class="phanterpwa-breadcrumb"),
+                        _class="phanterpwa-breadcrumb-wrapper"
+                    ),
+                    _class="p-container"),
+                _class='title_page_container card'
+            ),
+            DIV(
+                DIV(
+                    DIV(
+                        DIV(preloaders.android, _style="width: 300px; height: 300px; overflow: hidden; margin: auto;"),
+                        _style="text-align:center; padding: 50px 0;"
+                    ),
+                    _id="content-roles",
+                    _class='p-row card e-padding_20'
+                ),
+
+                _class="phanterpwa-container p-container"
+            )
+        )
+        html.html_to("#main-container")
+
+        self.role_id = role_id
+        self.action = action
+        if role_id == "new":
+            self.get_form_role(role_id)
+        elif action == "edit":
+            self.get_form_role(role_id, "edit")
+        elif action == "view":
+            self.view(role_id, index_instance.request.params)
+
+    def view(self, role_id, params):
+        url_image = "{0}/api/admin/rolemanager/{1}/image".format(
+            window.PhanterPWA.get_api_address(),
+            role_id
+        )
+        nome_completo = params["nome_completo"]
+        nome_da_mae = params["nome_da_mae"]
+        matricula = params["matricula"]
+        cpf = params["cpf"]
+        qrcode = params["qrcode"]
+        rg_string = params["rg_string"]
+        data_de_nascimento = params["data_de_nascimento"]
+        self._carteira = DIV(
+            DIV(
+                DIV(
+                    DIV(
+                        DIV(
+                            DIV(
+                                DIV(
+                                    IMG(
+                                        _src=url_image
+                                    ),
+                                    _class="carteira-image"
+                                ),
+                                DIV(
+                                    DIV(
+                                        DIV(
+                                            DIV(
+                                                "NOME",
+                                                _class="carteira-data-field"
+                                            ),
+                                            DIV(
+                                                nome_completo,
+                                                _class="carteira-data-nome carteira-data-value"
+                                            ),
+                                            _class="carteira-data-col"
+                                        ),
+                                        _class="p-col w1p100"
+                                    ),
+                                    DIV(
+                                        DIV(
+                                            DIV(
+                                                "NOME DA MÃE",
+                                                _class="carteira-data-field"
+                                            ),
+                                            DIV(
+                                                nome_da_mae,
+                                                _class="carteira-data-nome_da_mae carteira-data-value"
+                                            ),
+                                            _class="carteira-data-col"
+                                        ),
+                                        _class="p-col w1p100"
+                                    ),
+                                    DIV(
+                                        DIV(
+                                            DIV(
+                                                'MATRÍCULA',
+                                                _class="carteira-data-field"
+                                            ),
+                                            DIV(
+                                                matricula,
+                                                _class="carteira-data-matricula carteira-data-value"
+                                            ),
+                                            _class="carteira-data-col"
+                                        ),
+                                        _class="p-col w1p40"
+                                    ),
+                                    DIV(
+                                        DIV(
+                                            DIV(
+                                                "CPF",
+                                                _class="carteira-data-field"
+                                            ),
+                                            DIV(cpf,
+                                                _class="carteira-data-cpf carteira-data-value"),
+                                            _class="carteira-data-col"
+                                        ),
+                                        _class="p-col w1p60"
+                                    ),
+                                    DIV(
+                                        DIV(
+                                            DIV(
+                                                "DATA DE NASCIMENTO",
+                                                _class="carteira-data-field"
+                                            ),
+                                            DIV(data_de_nascimento,
+                                                _class="carteira-data-data_de_nascimento carteira-data-value"),
+                                            _class="carteira-data-col"
+                                        ),
+                                        _class="p-col w1p40"
+                                    ),
+                                    DIV(
+                                        DIV(
+                                            DIV(
+                                                "RG",
+                                                _class="carteira-data-field"
+                                            ),
+                                            DIV(rg_string,
+                                                _class="carteira-data-rg_string carteira-data-value"),
+                                            _class="carteira-data-col"
+                                        ),
+                                        _class="p-col w1p60"
+                                    ),
+                                    _class="carteira-data-container p-row"
+                                ),
+                                _class="p-col w1p30"
+                            ),
+                            DIV(
+                                DIV(
+                                    _class="carteira-logo"
+                                ),
+                                DIV(_class="carteira-qrcode"),
+                                _class="p-col w1p70"
+                            ),
+                            _class="p-row"
+                        ),
+                        _class="carteira_containar"
+                    ),
+                    _class="view_role_container a4"
+                ),
+                _class="phanterpwa-media-print"
+            ),
+            _class="phanterpwa-media-print-container"
+        )
+
+        self._carteira.html_to("#content-roles")
+        window.PhanterPWA.LOAD(**{
+            "args": ["loads", "svg_logo.html"],
+            "onComplete": lambda data: jQuery("#content-roles").find(".carteira-logo").html(data),
+        })
+        url = "{0}/api/associado/{1}".format(
+            window.PhanterPWA.ApiServer.remote_address,
+            qrcode
+        )
+        qrcode = __new__(QRCode(jQuery("#content-roles").find(".carteira-qrcode")[0], {
+            "text": url,
+            "width": 125,
+            "height": 125,
+            "colorDark": "#000000",
+            "colorLight": "#ffffff",
+            "correctLevel": QRCode.CorrectLevel.H
+        }))
+
+    def after_get(self, data, ajax_status):
+        if ajax_status == "success":
+            json = data.responseJSON
+            self.process_data(json)
+
+    def process_data(self, json):
+        self.form = forms.Form(json.data.auth_role)
+        self.form.html_to("#content-roles")
+        self.binds()
+
+    def binds(self):
+        forms.SignForm("#form-auth_group")
+        forms.ValidateForm("#form-auth_group")
+        jQuery(
+            "#phanterpwa-widget-form-submit_button-auth_group"
+        ).off(
+            "click.submit_roles_button"
+        ).on(
+            "click.submit_roles_button",
+            lambda: self.submit(this)
+        )
+ 
+    def get_form_role(self, role_id, action=None):
+        if action == "edit":
+            window.PhanterPWA.ApiServer.GET(**{
+                'url_args': ["api", "admin", "rolemanager", role_id, "edit"],
+                'onComplete': self.after_get,
+                'get_cache': self.process_data
+            })
+        elif action == "view":
+            window.PhanterPWA.ApiServer.GET(**{
+                'url_args': ["api", "admin", "rolemanager", role_id, "view"],
+                'onComplete': self.after_get,
+                'get_cache': self.process_data
+            })
+        elif role_id == "new":
+            window.PhanterPWA.ApiServer.GET(**{
+                'url_args': ["api", "admin", "rolemanager", role_id],
+                'onComplete': self.after_get,
+                'get_cache': self.process_data
+            })
+
+    def submit(self, el):
+        if jQuery(el)[0].hasAttribute("disabled"):
+            window.PhanterPWA.flash(html=I18N("The form has errors!"))
+        else:
+            form_role = jQuery("#form-auth_group")[0]
+            form_role = __new__(FormData(form_role))
+            if self.role_id == "new":
+                window.PhanterPWA.ApiServer.POST(**{
+                    'url_args': ["api", "admin", "rolemanager"],
+                    'form_data': form_role,
+                    'onComplete': self.after_submit
+                })
+            elif self.role_id.isdigit():
+                window.PhanterPWA.ApiServer.PUT(**{
+                    'url_args': ["api", "admin", "rolemanager", self.role_id],
+                    'form_data': form_role,
+                    'onComplete': self.after_submit
+                })
+
+    def after_submit(self, data):
+        forms.SignForm("#form-auth_group")
+        self.form.process_api_response(data)
+        if data.status == 200 and self.role_id == 'new':
+            window.PhanterPWA.open_way("admin/roles/new")
+        elif data.status == 200:
+            window.PhanterPWA.open_way("admin/roles")
 
 
 __pragma__('nokwargs')

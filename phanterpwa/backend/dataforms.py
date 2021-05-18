@@ -1232,6 +1232,12 @@ class FieldsDALValidateDictArgs(object):
 
         if self._errors:
             return self._errors
+    def insert(self, dbtable, commit=True):
+        id_record = dbtable.insert(
+         **self.dict_args
+        )
+
+
 
     def validate_and_insert(self, dbtable, commit=True):
         self.validate()

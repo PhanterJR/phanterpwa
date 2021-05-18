@@ -12,7 +12,9 @@ from pydal.objects import (
     Field
 )
 from pydal.validators import (
-    IS_EMAIL
+    IS_EMAIL,
+    IS_NOT_EMPTY,
+    IS_NOT_IN_DB
 )
 from phanterpwa.third_parties.xss import xssescape as E
 from phanterpwa.i18n import browser_language
@@ -767,7 +769,7 @@ class RoleManager(web.RequestHandler):
                 "cache-control"
             ])
         )
-        self.set_header('Access-Control-Allow-Methods', 'GET, OPTIONS, POST')
+        self.set_header('Access-Control-Allow-Methods', 'GET, OPTIONS, POST, PUT')
         if self.request.headers.get("phanterpwa-language"):
             self.phanterpwa_language = self.request.headers.get("phanterpwa-language")
         else:
@@ -788,12 +790,65 @@ class RoleManager(web.RequestHandler):
     def get(self, *args, **kargs):
         dict_arguments = {k: self.request.arguments.get(k)[0].decode('utf-8') for k in self.request.arguments}
         id_group = args[0]
+        action = args[1]
         db = self.DALDatabase
+
         if id_group:
-            return self.write({
-                "status": 200,
-                "message": "Hello world!"
-            })
+            if id_group == "new":
+                msg = "New Role"
+
+                json_form = jsonForm(db.auth_group)
+                auth_group = db(
+                    (db.auth_group.role == "user")
+                ).select(db.auth_group.ALL)
+                json_form = json_form.as_dict()
+                to_write = {
+                    "status": "OK",
+                    "code": 200,
+                    "message": msg,
+                    "data": {
+                        "auth_role": json_form
+                    }
+                }
+                md5 = hashlib.md5()
+                md5.update(str(to_write).encode("utf-8"))
+                md5 = md5.hexdigest()
+                to_write["hash"] = md5
+                return self.write(to_write)
+            elif action == "edit" or action == "view":
+                q_auth_role = db(db.auth_group.id == id_group).select(db.auth_group.id).first()
+                if q_auth_role:
+                    msg = "Role (id:{0})".format(id_group)
+                    json_form = jsonForm(db.auth_group, q_auth_role.id)
+                    auth_group = db(
+                        (db.auth_membership.auth_group== id_group) &
+                        (db.auth_group.id == db.auth_membership.auth_group)
+                    ).select(db.auth_group.ALL)
+                    json_form = json_form.as_dict()
+
+                    to_write = {
+                        "status": "OK",
+                        "code": 200,
+                        "message": msg,
+                        "data": {
+                            "auth_role": json_form
+                        }
+                    }
+                    md5 = hashlib.md5()
+                    md5.update(str(to_write).encode("utf-8"))
+                    md5 = md5.hexdigest()
+                    to_write["hash"] = md5
+                    return self.write(to_write)
+                else:
+                    msg = "Role not found"
+                    self.set_status(404)
+                    return self.write({
+                        "status": "Not Found",
+                        "code": 404,
+                        "message": msg,
+                        "auth_role": None
+                    })
+
         else:
             limit = 100
             p_inicial = 0
@@ -895,6 +950,147 @@ class RoleManager(web.RequestHandler):
         to_write["hash"] = md5
         self.set_status(200)
         return self.write(to_write)
+
+
+    @check_private_csrf_token(form_identify=["phanterpwa-form-auth_group"])
+    @requires_authentication(roles_name="root")
+    def post(self, *args, **kargs):
+        db = self.DALDatabase
+
+        dict_arguments = {k: self.request.arguments.get(k)[0].decode('utf-8') for k in self.request.arguments}
+        grade = dict_arguments.get("grade", 0)
+        grade_error = None
+        if str(grade).isdigit() and int(grade) < 99:
+            dict_arguments['grade'] = int(grade)
+        else:
+            grade_error = "The grade must be an integer and less than 99"
+
+
+        db.auth_group.role.requires = [IS_NOT_EMPTY(), IS_NOT_IN_DB(db, db.auth_group.role)]
+        table = db.auth_group
+        result = FieldsDALValidateDictArgs(
+            dict_arguments,
+            *[table[x] for x in table.fields]
+        )
+        r = result.validate()
+        if r or grade_error:
+            if r and grade_error:
+                result.errors["grade"] = grade_error
+                data_error = result.errors
+            elif grade_error:
+                data_error = {"grade": grade_error}
+            else:
+                data_error = result.errors
+
+            i18n_errors = {}
+            for x in data_error:
+                tran = self.T(data_error[x])
+                i18n_errors[x] = tran
+            message = 'The form has errors'
+            self.set_status(400)
+            return self.write({
+                'status': 'Bad Request',
+                'code': 400,
+                'message': message,
+                'errors': data_error,
+                'i18n': {
+                    'message': self.T(message),
+                    'errors': i18n_errors
+                }
+            })
+        else:
+
+            q_role = db(db.auth_group.id == result.id).select().first()
+            if q_role:
+                self.set_status(200)
+                db.commit()
+                return self.write({
+                    'status': 'OK',
+                    'code': 200,
+                    'message': 'Group was successfully changed',
+                    'auth_group': {
+                        'id': str(id_role),
+                        'role': E(q_role.role),
+                        'grade': q_role.grade,
+                        'description': E(q_role.description)
+                    },
+                    'i18n': {
+                        'message': self.T('Group was successfully changed'),
+                        'auth_role': {'role': self.T(q_role.role)}
+                    }
+                })
+        self.set_status(400)
+        return self.write({
+            'status': 'Bad Request',
+            'code': 400,
+
+        })
+
+
+    @check_private_csrf_token(form_identify=["phanterpwa-form-auth_group"])
+    @requires_authentication(roles_name="root")
+    def put(self, *args, **kargs):
+        db = self.DALDatabase
+        id_role = args[0]
+        q_role = db(db.auth_group.id == id_role).select()
+        if not q_role:
+            message = "The id role not exist."
+            self.set_status(400)
+            return self.write({
+                'status': 'Bad Request',
+                'code': 400,
+                'message': message,
+                'i18n': {
+                    'message': self.T(message)
+                }
+            })
+        else:
+            q_role = q_role.first()
+        dict_arguments = {k: self.request.arguments.get(k)[0].decode('utf-8') for k in self.request.arguments}
+        dict_arguments['id'] = id_role
+
+        table = db.auth_group
+        result = FieldsDALValidateDictArgs(
+            dict_arguments,
+            *[table[x] for x in table.fields]
+        )
+        r = result.validate()
+        if r:
+            message = 'The form has errors'
+            i18n_errors = {}
+            for x in result.errors:
+                tran = self.T(result.errors[x])
+                i18n_errors[x] = tran
+            self.set_status(400)
+            return self.write({
+                'status': 'Bad Request',
+                'code': 400,
+                'message': message,
+                'errors': result.errors,
+                'i18n': {
+                    'message': self.T(message),
+                    'errors': i18n_errors
+                }
+            })
+        else:
+
+            q_role = db(db.auth_group.id == id_role).select().first()
+            self.set_status(200)
+            return self.write({
+                'status': 'OK',
+                'code': 200,
+                'message': 'Group was successfully changed',
+                'auth_group': {
+                    'id': str(id_role),
+                    'role': E(q_role.role),
+                    'grade': q_role.grade,
+                    'description': E(q_role.description)
+                },
+                'i18n': {
+                    'message': self.T('Group was successfully changed'),
+                    'auth_role': {'role': self.T(q_role.role)}
+                }
+            })
 
 
 class Impersonate(web.RequestHandler):
