@@ -16,7 +16,7 @@ import os
 import json
 import time
 import shutil
-from datetime import datetime
+from datetime import datetime, date
 from pathlib import PurePath
 from subprocess import Popen, PIPE, call
 from unicodedata import normalize
@@ -725,6 +725,8 @@ def string_escape(value):
         return new_dict
     elif isinstance(value, datetime):
         return value.isoformat(" ", "seconds")
+    elif isinstance(value, date):
+        return value.isoformat()
     else:
         return value
 

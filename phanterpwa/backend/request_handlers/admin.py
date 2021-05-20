@@ -16,14 +16,14 @@ from pydal.validators import (
     IS_NOT_EMPTY,
     IS_NOT_IN_DB
 )
-from phanterpwa.third_parties.xss import xssescape as E
 from phanterpwa.i18n import browser_language
 from tornado import (
     web
 )
 from phanterpwa.tools import (
     generate_activation_code,
-    checkbox_bool
+    checkbox_bool,
+    string_escape as E
 )
 from phanterpwa.backend.dataforms import (
     FieldsDALValidateDictArgs,
@@ -991,7 +991,7 @@ class RoleManager(web.RequestHandler):
                 }
             })
         else:
-
+            result.insert(table)
             q_role = db(db.auth_group.id == result.id).select().first()
             if q_role:
                 self.set_status(200)
@@ -1065,8 +1065,8 @@ class RoleManager(web.RequestHandler):
                 }
             })
         else:
-
             q_role = db(db.auth_group.id == id_role).select().first()
+            result.update(table, q_role.id)
             self.set_status(200)
             return self.write({
                 'status': 'OK',
