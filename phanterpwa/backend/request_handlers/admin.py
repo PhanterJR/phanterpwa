@@ -592,76 +592,58 @@ class UserManager(web.RequestHandler):
                         )
                     email_change = True
 
-            if any([email_change,
-                    first_name_change,
-                    last_name_change,
-                    image_change,
-                    two_factor_change,
-                    multiple_login_change,
-                    activated_change
-                ]):
-                q_role = self.DALDatabase(
-                    (self.DALDatabase.auth_membership.auth_user == id_user) &
-                    (self.DALDatabase.auth_group.id == self.DALDatabase.auth_membership.auth_group)
-                ).select(
-                    self.DALDatabase.auth_group.id, self.DALDatabase.auth_group.role, orderby=self.DALDatabase.auth_group.grade
-                )
-                roles = [x.role for x in q_role]
-                dict_roles = {x.id: x.role for x in q_role}
-                roles_id = [x.id for x in q_role]
-                role = None
-                if roles:
-                    role = roles[-1]
-                q_client = self.DALDatabase(
-                    (self.DALDatabase.client.auth_user == id_user)
-                ).delete()
-                self.DALDatabase.commit()
-                user_image = PhanterpwaGalleryUserImage(id_user, self.DALDatabase, self.projectConfig)
-                self.set_status(200)
-                return self.write({
-                    'status': 'OK',
-                    'code': 200,
-                    'message': 'Account was successfully changed',
-                    'auth_user': {
-                        'id': str(id_user),
-                        'first_name': E(first_name),
-                        'last_name': E(last_name),
-                        'email': new_email,
-                        'remember_me': False,
-                        'roles': roles,
-                        'role': role,
-                        'dict_roles': dict_roles,
-                        'roles_id': roles_id,
-                        'activated': activate,
-                        'image': user_image.id_image,
-                        'two_factor': q_user.two_factor_login,
-                        'multiple_login': q_user.permit_mult_login,
-                        'locale': q_user.locale,
-                        'social_login': None
-                    },
-                    'i18n': {
-                        'message': self.T('Account was successfully changed'),
-                        'auth_user': {'role': self.T(role)}
-                    }
-                })
-            else:
-                message = "Nothing has changed!"
-                self.DALDatabase.commit()
-                self.set_status(202)
-                return self.write({
-                    'status': 'Accepted',
-                    'code': 202,
-                    'message': message,
-                    'i18n': {
-                        'message': self.T(message)
-                    }
-                })
+            q_role = self.DALDatabase(
+                (self.DALDatabase.auth_membership.auth_user == id_user) &
+                (self.DALDatabase.auth_group.id == self.DALDatabase.auth_membership.auth_group)
+            ).select(
+                self.DALDatabase.auth_group.id, self.DALDatabase.auth_group.role, orderby=self.DALDatabase.auth_group.grade
+            )
+            roles = [x.role for x in q_role]
+            dict_roles = {x.id: x.role for x in q_role}
+            roles_id = [x.id for x in q_role]
+            role = None
+            if roles:
+                role = roles[-1]
+            q_client = self.DALDatabase(
+                (self.DALDatabase.client.auth_user == id_user)
+            ).delete()
+            self.DALDatabase.commit()
+            user_image = PhanterpwaGalleryUserImage(id_user, self.DALDatabase, self.projectConfig)
+            self.set_status(200)
+            return self.write({
+                'status': 'OK',
+                'code': 200,
+                'message': 'Account was successfully changed',
+                'auth_user': {
+                    'id': str(id_user),
+                    'first_name': E(first_name),
+                    'last_name': E(last_name),
+                    'email': new_email,
+                    'remember_me': False,
+                    'roles': roles,
+                    'role': role,
+                    'dict_roles': dict_roles,
+                    'roles_id': roles_id,
+                    'activated': activate,
+                    'image': user_image.id_image,
+                    'two_factor': q_user.two_factor_login,
+                    'multiple_login': q_user.permit_mult_login,
+                    'locale': q_user.locale,
+                    'social_login': None
+                },
+                'i18n': {
+                    'message': self.T('Account was successfully changed'),
+                    'auth_user': {'role': self.T(role)}
+                }
+            })
+
 
     def options(self, *args):
         self.set_status(200)
         self.write({
             "status": "OK",
         })
+
 
 class UserImage(web.RequestHandler):
     """

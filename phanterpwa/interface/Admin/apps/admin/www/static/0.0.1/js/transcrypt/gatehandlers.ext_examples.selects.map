@@ -1,8 +1,0 @@
-{
-	"version": 3,
-	"file": "gatehandlers.ext_examples.selects.js",
-	"sources": [
-		"gatehandlers.ext_examples.selects.py"
-	],
-	"mappings": "AAAA;AAAA;AAEA;AADA;AADA;AAAA;AAYA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AAGA;AAiBA;AAkBA;AAkBA;AAkBA;AAmBA;AAmBA;AAmBA;AAoBA;AAoBA;AAkBA;AAmBA;AAmBA;AAiBA;AAkBA;AAkBA;AAmBA;AAoBA;AAkBA;AAiBA;AAmBA;AAmLA;AAAA;AACA;AACA;AAssBA;AAyBA;AAAA;AAAA;AAxyCA"
-}

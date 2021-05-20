@@ -1127,6 +1127,7 @@ class WayRequest():
         self.last_way = "home"
         self._element = None
         self.widgets = {}
+        self.js_params = None
         self.error = None
 
     @staticmethod
@@ -1201,7 +1202,10 @@ class WayRequest():
             return None
 
     def get_param(self, k):
-        return self.params.get(k, None)
+        if self.params is not None and self.params is not js_undefined:
+            return self.params.get(k, None)
+        else:
+            return None
 
     def _open_way(self, way):
         self._process_way(way)
