@@ -619,6 +619,20 @@ def check_user_token(ignore_activation=False):
         @wraps(f)
         @check_client_token(ignore_locked=False)
         def check_user_token_decorator(self, *args, **kargs):
+            def has_role(obj, role):
+                if not obj.phanterpwa_current_user_groups:
+                    return False
+                if isinstance(role, (list, tuple, set)):
+                    if isinstance(role, (list, tuple)):
+                        role = set(role)
+                    auth_user_roles = set([x.role for x in obj.phanterpwa_current_user_groups])
+                    if role.intersection(auth_user_roles):
+                        return True
+                    else:
+                        return False
+                elif isinstance(role, str):
+                    return has_role(set([role]))
+            self.has_role = lambda role: has_role(self, role)
             if not hasattr(self, "phanterpwa_user_token_checked"):
                 self.phanterpwa_user_token_checked = None
                 self.phanterpwa_current_user = None
