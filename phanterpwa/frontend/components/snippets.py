@@ -8,6 +8,7 @@ jQuery = sessionStorage = JSON = js_undefined = setTimeout = window = this = con
 __pragma__('noskip')
 
 DIV = helpers.XmlConstructor.tagger("div")
+SPAN = helpers.XmlConstructor.tagger("span")
 I = helpers.XmlConstructor.tagger("i")
 H2 = helpers.XmlConstructor.tagger("h2")
 
@@ -70,5 +71,30 @@ class PromoOption(helpers.XmlConstructor):
             tag = "a"
         helpers.XmlConstructor.__init__(self, tag, False, html, **attributes)
 
+
+class ICombine(helpers.XmlConstructor):
+    def __init__(self, identifier, icon1, icon2,  **attributes):
+        attributes["_id"] = "phanterpwa-snippet-{0}".format(identifier)
+        if "_class" in attributes:
+            attributes["_class"] = "{0}{1}".format(attributes["_class"], " phanterpwa-snippet-icombine")
+        else:
+            attributes["_class"] = "phanterpwa-snippet-icombine"
+        if (isinstance(icon1, I) and isinstance(icon2, I)):
+            html = DIV(
+                SPAN(icon1, _class="icombine-container-first"),
+                SPAN(icon2, _class="icombine-container-last"),
+                **{"_class": "icombine-container"}
+            )
+        else:
+            html = DIV(
+                "",
+                **{"_class": "icombine-container"}
+            )
+            if window.PhanterPWA.DEBUG:
+                console.erro("The icon1 and icon2 must be I instance")
+        tag = "div"
+        if "_href" in attributes:
+            tag = "a"
+        helpers.XmlConstructor.__init__(self, tag, False, html, **attributes)
 
 __pragma__('nokwargs')
