@@ -655,6 +655,10 @@ class PhanterPWA():
         return current_way
 
     @staticmethod
+    def get_current_gate():
+        return str(window.PhanterPWA.get_current_way()).split("/")[0]
+
+    @staticmethod
     def open_code_way(code=500, request=None, response=None):
         if str(code).isdigit():
             code = int(code)

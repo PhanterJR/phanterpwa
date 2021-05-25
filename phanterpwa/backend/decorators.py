@@ -631,8 +631,40 @@ def check_user_token(ignore_activation=False):
                     else:
                         return False
                 elif isinstance(role, str):
-                    return has_role(set([role]))
+                    return has_role(obj, set([role]))
             self.has_role = lambda role: has_role(self, role)
+
+            def add_role(obj, role):
+                db = obj.DALDatabase()
+                if not obj.has_role(role) and obj.phanterpwa_current_user:
+                    s_role = db(db.auth_group.role == role).select().first()
+                    if s_role:
+                        id_role = s_role.id
+                    else:
+                        id_role = db.auth_group.insert(
+                            role=role,
+                            grade=1
+                        )
+                    db.auth_membership.insert(
+                        auth_user=obj.phanterpwa_current_user.id,
+                        auth_group=id_role
+                    )
+                    db.commit()
+                q_user_groups = db(
+                    (db.auth_membership.auth_user == obj.phanterpwa_current_user.id) &
+                    (db.auth_membership.auth_group == db.auth_group.id)
+                ).select(
+                    db.auth_group.id,
+                    db.auth_group.role,
+                    orderby=~db.auth_group.grade
+                )
+                if q_user_groups:
+                    obj.phanterpwa_current_user_groups = q_user_groups
+                else:
+                    obj.phanterpwa_current_user_groups = None
+                return obj.phanterpwa_current_user_groups
+            self.add_role = lambda role: add_role(self, role)
+
             if not hasattr(self, "phanterpwa_user_token_checked"):
                 self.phanterpwa_user_token_checked = None
                 self.phanterpwa_current_user = None
