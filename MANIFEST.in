@@ -118,10 +118,6 @@ include phanterpwa/interface/Admin/frontapps/admin/statics/fonts/roboto-v20-lati
 include phanterpwa/interface/Admin/frontapps/admin/statics/fonts/roboto-v20-latin-regular.ttf
 include phanterpwa/interface/Admin/frontapps/admin/statics/fonts/roboto-v20-latin-regular.woff
 include phanterpwa/interface/Admin/frontapps/admin/statics/fonts/roboto-v20-latin-regular.woff2
-include phanterpwa/interface/Admin/frontapps/admin/statics/fonts/Segoe UI Bold Italic.woff
-include phanterpwa/interface/Admin/frontapps/admin/statics/fonts/Segoe UI Bold.woff
-include phanterpwa/interface/Admin/frontapps/admin/statics/fonts/Segoe UI Italic.woff
-include phanterpwa/interface/Admin/frontapps/admin/statics/fonts/Segoe UI.woff
 include phanterpwa/interface/Admin/frontapps/admin/statics/images/background.jpg
 include phanterpwa/interface/Admin/frontapps/admin/statics/images/user.png
 include phanterpwa/interface/Admin/frontapps/admin/statics/images/warning.png
@@ -150,45 +146,6 @@ include phanterpwa/interface/Admin/frontapps/admin/statics/webfonts/fa-solid-900
 include phanterpwa/interface/Admin/frontapps/admin/statics/webfonts/fa-solid-900.ttf
 include phanterpwa/interface/Admin/frontapps/admin/statics/webfonts/fa-solid-900.woff
 include phanterpwa/interface/Admin/frontapps/admin/statics/webfonts/fa-solid-900.woff2
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/hammer.min.js.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/jquery.min.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/application.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/auto.config.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/gatehandlers.developer.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/gatehandlers.errors.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/gatehandlers.examples.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/gatehandlers.ext_examples.inputs.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/gatehandlers.ext_examples.menus.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/gatehandlers.ext_examples.selects.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/gatehandlers.fontawesome.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/gatehandlers.home.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/gatehandlers.project.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/gatehandlers.reqs.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/gatehandlers.testsp.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/phanterpwa.frontend.application.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/phanterpwa.frontend.components.auth_user.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/phanterpwa.frontend.components.datetimepicker.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/phanterpwa.frontend.components.events.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/phanterpwa.frontend.components.gallery.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/phanterpwa.frontend.components.left_bar.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/phanterpwa.frontend.components.modal.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/phanterpwa.frontend.components.snippets.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/phanterpwa.frontend.components.top_slide.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/phanterpwa.frontend.components.widgets.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/phanterpwa.frontend.decorators.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/phanterpwa.frontend.fmasks.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/phanterpwa.frontend.forms.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/phanterpwa.frontend.gatehandler.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/phanterpwa.frontend.helpers.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/phanterpwa.frontend.i18n.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/phanterpwa.frontend.preloaders.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/phanterpwa.frontend.progressbar.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/phanterpwa.frontend.server.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/phanterpwa.frontend.validations.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/phanterpwa.frontend.websocket.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/js/transcrypt/plugins.codemirror.map
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/lib/codemirror.css
-include phanterpwa/interface/Admin/frontapps/admin/www/static/0.0.1/lib/codemirror.js
 include phanterpwa/interface/Admin/LICENSE
 include phanterpwa/interface/Admin/logs/api.log
 include phanterpwa/interface/Admin/logs/app.log

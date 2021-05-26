@@ -111,6 +111,8 @@ class Administration(gatehandler.Handler):
 
                 window.PhanterPWA.Components['left_bar'].add_button(BackButton)
                 self.Impersonate = Impersonate(self, arg1, arg2)
+            elif arg2 == "delete" and str(arg1).isdigit():
+                self.User = User(self, arg1, arg2)
             else:
                 BackButton = left_bar.LeftBarButton(
                     "back_admin",
@@ -413,6 +415,10 @@ class UsersList(helpers.XmlConstructor):
                                     "_class": "admin-button-user-edit wave_on_click",
                                     "_href": "#_phanterpwa:/admin/users/{0}/impersonate".format(x.id)
                                 }),
+                                widgets.MenuOption("Delete", **{
+                                    "_class": "admin-button-user-edit wave_on_click",
+                                    "_href": "#_phanterpwa:/admin/users/{0}/delete".format(x.id)
+                                }),
                             )
                         )
                     )
@@ -703,6 +709,11 @@ class User():
             self.get_form_user(user_id, "edit")
         elif action == "view":
             self.view(user_id, index_instance.request.params)
+        elif action == "delete":
+            window.PhanterPWA.DELETE(**{
+                'url_args': ["api", "admin", "usermanager", user_id],
+                'onComplete': lambda: window.PhanterPWA.open_way("admin/users")
+            })
 
     def view(self, user_id, params):
         url_image = "{0}/api/admin/usermanager/{1}/image".format(

@@ -65,7 +65,7 @@ class UserManager(web.RequestHandler):
                 "cache-control"
             ])
         )
-        self.set_header('Access-Control-Allow-Methods', 'GET, OPTIONS, PUT')
+        self.set_header('Access-Control-Allow-Methods', 'GET, OPTIONS, PUT, DELETE')
         if self.request.headers.get("phanterpwa-language"):
             self.phanterpwa_language = self.request.headers.get("phanterpwa-language")
         else:
@@ -634,6 +634,35 @@ class UserManager(web.RequestHandler):
                 'i18n': {
                     'message': self.T('Account was successfully changed'),
                     'auth_user': {'role': self.T(role)}
+                }
+            })
+
+    @requires_authentication(roles_name="root")
+    def delete(self, *args, **kargs):
+        db = self.DALDatabase
+        id_user = args[0]
+        q_user = db(db.auth_user.id == id_user).select().first()
+        if not q_user:
+            message = "The id user not exist."
+            self.set_status(400)
+            return self.write({
+                'status': 'Bad Request',
+                'code': 400,
+                'message': message,
+                'i18n': {
+                    'message': self.T(message)
+                }
+            })
+        else:
+            db(db.auth_user.id == q_user.id).delete()
+            db.commit()
+            self.set_status(200)
+            return self.write({
+                'status': 'OK',
+                'code': 200,
+                'message': 'The account was successfully deleted',
+                'i18n': {
+                    'message': self.T('The account was successfully deleted'),
                 }
             })
 

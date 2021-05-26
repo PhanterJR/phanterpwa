@@ -13,7 +13,7 @@ class I18NServer():
     def __init__(self):
         self.storage = self.load_storage()
         self.userLang = self.get_user_lang()
-        self.get_translations_on_server()
+        self._get_translations_on_server()
 
     @staticmethod
     def load_storage(self):
@@ -44,7 +44,7 @@ class I18NServer():
                 self.storage["default_lang"] = default_lang
             self.save_storage()
 
-    def get_translations_on_server(self, new_word=None):
+    def _get_translations_on_server(self, new_word=None):
         if window.PhanterPWA is not js_undefined:
             if window.PhanterPWA.DEBUG and self.userLang is not None:
                 window.PhanterPWA.ApiServer.GET(**{
@@ -56,11 +56,21 @@ class I18NServer():
                     'onComplete': self.after_get_translations
                 })
 
+    def get_translations(self):
+        if window.PhanterPWA is not js_undefined and self.userLang is not None:
+            window.PhanterPWA.ApiServer.GET(**{
+                'url_args': ["api", "i18n", window.PhanterPWA.get_app_name()],
+                'url_vars': {
+                    "lang": self.userLang
+                },
+                'onComplete': self.after_get_translations
+            })
+
     def translate(self, wordkey):
         if self.userLang in self.storage:
             if wordkey in self.storage[self.userLang]:
                 return self.storage[self.userLang][wordkey]
-        self.get_translations_on_server(wordkey)
+        self._get_translations_on_server(wordkey)
         return wordkey
 
     def DOMTranslate(self, target):

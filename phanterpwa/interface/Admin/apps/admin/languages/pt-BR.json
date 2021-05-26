@@ -6,7 +6,7 @@
   "April": "Abril",
   "Code": "Código",
   "Como você pode observar, com o kind='date', 'icon' definido e sem uma ação para o icon automaticamente foi utilizado o datetimepicker, agora vamos tentar com o date colocando format='dd/MM/yyyy'.": "Como você pode observar, com o kind='date', 'icon' definido e sem uma ação para o icon automaticamente foi utilizado o datetimepicker, agora vamos tentar com o date colocando format='dd/MM/yyyy'.",
-  "Confirmation code": "Confirmation code",
+  "Confirmation code": "Código de confirmação",
   "E-Mail": "E-Mail",
   "E-mail": "E-mail",
   "Empty": "Vazio",

@@ -70,8 +70,7 @@ class AuthTables():
                 'out_of_form': True
             }),
             Field('locale', 'string', default=default_language),
-            Field('two_factor_login', 'boolean', default=False)
-        )
+            Field('two_factor_login', 'boolean', default=False)        )
 
         def delete_upload_folder(s):
             upload_folder = os.path.join(projectConfig["PROJECT"]["path"], "backapps", "api", "uploads")

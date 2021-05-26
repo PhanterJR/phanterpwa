@@ -84,6 +84,7 @@ class PhanterPWA():
         self.ApiServer = server.ApiServer()
         self.ApiServer.getClientToken()
         self.I18N = i18n.I18NServer()
+        self.I18N.get_translations()
         self.WS = websocket.WebSocketPhanterPWA(self.CONFIG["APP"]["websocket_address"])
         if self.DEBUG:
             self.add_component(Developer_Toolbar())
@@ -945,7 +946,7 @@ class PhanterPWA():
         self.ApiServer.GET(*args, **parameters)
 
     def DELETE(self, *args, **parameters):
-        self.ApiServer.DEL(*args, **parameters)
+        self.ApiServer.DELETE(*args, **parameters)
 
     def POST(self, *args, **parameters):
         self.ApiServer.POST(*args, **parameters)
