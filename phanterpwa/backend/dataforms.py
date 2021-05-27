@@ -109,6 +109,8 @@ class WidgetFromFieldDALFromTableDAL():
         if not hasattr(self.table[self._field], "phanterpwa"):
             self.table[self._field].phanterpwa = {"_class": "p-col w1p100"}
         else:
+            if "data_view" in self.table[self._field].phanterpwa:
+                self._data_view = self.table[self._field].phanterpwa["data_view"]
             if "_class" not in self.table[self._field].phanterpwa:
                 self.table[self._field].phanterpwa["_class"] = "p-col w1p100"
             if "position" in self.table[self._field].phanterpwa:
@@ -500,6 +502,8 @@ class CustomField():
         if not hasattr(self._field, "phanterpwa"):
             self._field.phanterpwa = {"_class": "p-col w1p100"}
         else:
+            if "data_view" in self._field.phanterpwa:
+                self._data_view = self._field.phanterpwa["data_view"]
             if "_class" not in self._field.phanterpwa:
                 self._field.phanterpwa["_class"] = "p-col w1p100"
             if "position" in self._field.phanterpwa:
