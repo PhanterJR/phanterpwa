@@ -72,3 +72,18 @@ button
         display: inline-block 
         width: 100% 
         width: 100%
+
+.icon_button
+    &.disabled
+        cursor: unset
+        color: grey
+        &:hover
+            color: grey
+            box-shadow: unset
+
+.icon_button[disabled]
+    cursor: unset
+    color: grey
+    &:hover
+        color: grey
+        box-shadow: unset
