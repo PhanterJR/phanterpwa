@@ -36,6 +36,7 @@ class Compiler():
     """
 
     def __init__(self, projectpath, build_apps_folder=None, reset_compilation=False):
+        self.has_error = None
         self.ProjectConfig = ProjectConfig(projectpath)
         self.projectpath = projectpath
         self.config = self.ProjectConfig.config
@@ -767,13 +768,13 @@ class Compiler():
                 print("    For minification it's necessary to have java installed, if compilation fail,",
                     " the compilation will try transcrypt on unminify format.")
                 try:
-                    subprocess.run("{0} -X utf8 -m transcrypt {1}".format(python_env, main_file), shell=True)
+                    subprocess.run("{0} -X utf8 -m transcrypt {1}".format(python_env, main_file), shell=True, check=True)
                 except Exception as e:
                     print("    Minification Fail!!! It's try unminify mode now, it's fast.",
                         " Check java instalation. Error:", e)
-                    subprocess.run("{0} -X utf8 -m transcrypt {1} -n".format(python_env, main_file), shell=True)
+                    subprocess.run("{0} -X utf8 -m transcrypt {1} -n".format(python_env, main_file), shell=True, check=True)
             else:
-                subprocess.run("{0} -X utf8 -m transcrypt {1} -n -m".format(python_env, main_file), shell=True)
+                subprocess.run("{0} -X utf8 -m transcrypt {1} -n -m".format(python_env, main_file), shell=True, check=True)
             list_all = glob(join(source, "*"))
             print("Coping scripts from __target__ to {0}\n".format(folder_script_apps_list))
             for y in list_all:
