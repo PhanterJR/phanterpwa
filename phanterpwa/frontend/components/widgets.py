@@ -9,7 +9,7 @@ __pragma__('alias', "jQuery", "$")
 __pragma__('skip')
 
 # it is ignored on transcrypt
-window = jQuery = console = document = localStorage = M = RegExp = setTimeout =\
+window = jQuery = console = Array = document = localStorage = M = RegExp = setTimeout =\
     sessionStorage = this = FileReader = JSON = js_undefined = navigator = __new__ = Date = 0
 
 __pragma__('noskip')
@@ -869,6 +869,7 @@ class MultSelect(Widget):
     def __init__(self, identifier, **parameters):
         self._alias_value = ""
         self._value = parameters.get("value", [])
+        self._filter_value()
         self._data_set(parameters.get("data_set", []))
         self._label = parameters.get("label", None)
         self._placeholder = parameters.get("placeholder", None)
@@ -918,7 +919,7 @@ class MultSelect(Widget):
             wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " has_icon")
         if len(self._value) > 0:
             wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " has_value")
-        select = SELECT(_class="phanterpwa-widget-multselect-select", _name=self._name)
+        select = SELECT(_class="phanterpwa-widget-multselect-select", _name="name_select_{0}".format(self._name))
         table = TABLE(_class="phanterpwa-widget-multselect-options-wrapper")
         self._xml_modal = table
         self._xml_select = select
@@ -964,6 +965,15 @@ class MultSelect(Widget):
         )
         Widget.__init__(self, identifier, html, **parameters)
 
+    def _filter_value(self):
+        v = []
+        if Array.isArray(self._value) or isinstance(self._value, list):
+            for x in self._value:
+                v.append(str(x))
+            self._value = v
+        else:
+            self._value = [str(self._value)]
+
     def set_recalc_on_scroll(self, value):
         if isinstance(value, bool):
             self._recalc_on_scroll = value
@@ -990,8 +1000,8 @@ class MultSelect(Widget):
                     valid_data = False
                 else:
                     if vdata[0] in self._value:
-                        self._alias_value[vdata[0]] = vdata[1]
-                self._data_dict[vdata[0]] = vdata[1]
+                        self._alias_value[str(vdata[0])] = vdata[1]
+                self._data_dict[str(vdata[0])] = vdata[1]
             if not valid_data:
                 raise console.error("The data parameter is invalid!")
             else:
@@ -999,9 +1009,9 @@ class MultSelect(Widget):
         elif isinstance(data, dict):
             new_data = []
             for vdata in data.keys():
-                new_data.append([vdata, data[vdata]])
+                new_data.append([str(vdata), data[vdata]])
                 if vdata in self._value:
-                    self._alias_value[vdata] = data[vdata]
+                    self._alias_value[str(vdata)] = data[vdata]
             self._data = new_data
             self._data_dict = data
 
@@ -1009,6 +1019,7 @@ class MultSelect(Widget):
         values_op = CONCATENATE()
         if len(self._data_dict.keys()) > 0:
             for vdata in self._data_dict.keys():
+                vdata = str(vdata)
                 if len(self._value) > 0:
                     if vdata in self._value:
                         values_op.append(DIV(
@@ -1024,9 +1035,10 @@ class MultSelect(Widget):
         self._xml_values = values_op
 
     def _create_xml_select(self):
-        select = SELECT(**{"_class": "phanterpwa-widget-multselect-select", "_name": self._name, "_multiple": True})
+        select = SELECT(**{"_class": "phanterpwa-widget-multselect-select", "_name": "name_select_{0}".format(self._name), "_multiple": True})
         if len(self._data_dict.keys()) > 0:
             for vdata in self._data_dict.keys():
+                vdata = str(vdata)
                 if len(self._value) > 0:
                     if vdata in self._value:
                         select.append(OPTION(self._data_dict[vdata], _value=vdata, _selected="selected"))
@@ -1041,6 +1053,7 @@ class MultSelect(Widget):
         if len(self._data_dict.keys()) > 0:
 
             for vdata in self._data_dict.keys():
+                vdata = str(vdata)
                 if len(self._value) > 0:
                     if vdata in self._value:
                         ul.append(TR(TD(SPAN(self._data_dict[vdata]),
@@ -1264,7 +1277,7 @@ class MultSelect(Widget):
     def _switch_option(self, el):
         op = jQuery(el).find(".phanterpwa-widget-multselect-li-icon")
         t = jQuery(el).data("target")
-        v = jQuery(el).data("value")
+        v = str(jQuery(el).data("value"))
         h = jQuery(el).data("text")
         target = jQuery(self.target_selector)
         stat = jQuery(el).attr("phanterpwa-widget-multiselect-status")
@@ -1277,14 +1290,14 @@ class MultSelect(Widget):
             t_op.removeAttr("selected")
             if v in self._alias_value:
                 del self._alias_value[v]
-                self._value = list(self._alias_value.keys())
+                self._value = [str(x) for x in self._alias_value.keys()]
         else:
             op.html(XML(self._icon_option_selected).jquery())
             jQuery(el).attr("phanterpwa-widget-multiselect-status", "enabled").addClass("selected")
             target.find("select.phanterpwa-widget-multselect-select").find(
                 "option[value='{0}']".format(v)).attr("selected", "selected").prop('selected', True)
             self._alias_value[v] = h
-            self._value = list(self._alias_value.keys())
+            self._value = [str(x) for x in self._alias_value.keys()]
 
         jQuery("#phanterpwa-widget-multselect-input-{0}".format(self.identifier)).val(JSON.stringify(self._value))
         self._create_xml_modal()
@@ -1381,8 +1394,8 @@ class MultSelect(Widget):
         p = jQuery(el).parent()
         v = p.data("value")
         if str(v) in self._alias_value.keys():
-            del self._alias_value[v]
-            self._value = list(self._alias_value.keys())
+            del self._alias_value[str(v)]
+            self._value = [str(x) for x in self._alias_value.keys()]
             jQuery("#phanterpwa-widget-multselect-input-{0}".format(self.identifier)).val(JSON.stringify(self._value))
             self._create_xml_modal()
             self._create_xml_values()
