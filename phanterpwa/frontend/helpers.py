@@ -193,6 +193,7 @@ class XTRD(XmlConstructor):
         self.__dropable = parameters.get("drag_and_drop", True)
         if self.__dropable:
             parameters["_draggable"] = "true"
+        self._drop_if = parameters.get("drop_if", None)
         TD = XmlConstructor.tagger("td")
         if "_class" in parameters:
             parameters["_class"] = "{0}{1}".format(parameters["_class"], " phanterpwa-xtable-xtrd")
@@ -207,7 +208,12 @@ class XTRD(XmlConstructor):
         window.PhanterPWA.drag = jQuery(el)[0].outerHTML
 
     def __ondrop(self, el):
-        jQuery(el).insertAfter(window.PhanterPWA.drag)
+        console.log("drop_if", el)
+        if callable(self._drop_if):
+            if self._drop_if(el):
+                jQuery(el).insertAfter(window.PhanterPWA.drag)
+        else:
+            jQuery(el).insertAfter(window.PhanterPWA.drag)
 
     def append(self, value):
         TD = XmlConstructor.tagger("td")

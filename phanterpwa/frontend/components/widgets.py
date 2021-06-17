@@ -999,7 +999,7 @@ class MultSelect(Widget):
                 if len(vdata) is not 2:
                     valid_data = False
                 else:
-                    if vdata[0] in self._value:
+                    if str(vdata[0]) in self._value:
                         self._alias_value[str(vdata[0])] = vdata[1]
                 self._data_dict[str(vdata[0])] = vdata[1]
             if not valid_data:
@@ -1010,7 +1010,7 @@ class MultSelect(Widget):
             new_data = []
             for vdata in data.keys():
                 new_data.append([str(vdata), data[vdata]])
-                if vdata in self._value:
+                if str(vdata) in self._value:
                     self._alias_value[str(vdata)] = data[vdata]
             self._data = new_data
             self._data_dict = data
@@ -1298,7 +1298,6 @@ class MultSelect(Widget):
                 "option[value='{0}']".format(v)).attr("selected", "selected").prop('selected', True)
             self._alias_value[v] = h
             self._value = [str(x) for x in self._alias_value.keys()]
-
         jQuery("#phanterpwa-widget-multselect-input-{0}".format(self.identifier)).val(JSON.stringify(self._value))
         self._create_xml_modal()
         self._create_xml_values()
@@ -3108,6 +3107,7 @@ class TableData(Widget):
     def __init__(self, identifier, *content, **parameters):
         self.__dropable = parameters.get("drag_and_drop", True)
         self._after_drop = parameters.get("after_drop", None)
+        self._drop_if = parameters.get("drop_if", None)
         if self.__dropable:
             parameters["_draggable"] = "true"
         if "_class" in parameters:
@@ -3121,13 +3121,18 @@ class TableData(Widget):
         self.tag = "tr"
 
     def _ondrop(self, ev, el):
-        posY = ev.screenY
-        if posY > window.PhanterPWA.drag["posY"]:
-            jQuery(window.PhanterPWA.drag["el"]).insertAfter(el)
-        else:
-            jQuery(window.PhanterPWA.drag["el"]).insertBefore(el)
-        if callable(self._after_drop):
-            self._after_drop(ev, el)
+        can_drop = True
+        if callable(self._drop_if):
+            if not self._drop_if(window.PhanterPWA.drag["el"], el):
+                can_drop = False
+        if can_drop:
+            posY = ev.screenY
+            if posY > window.PhanterPWA.drag["posY"]:
+                jQuery(window.PhanterPWA.drag["el"]).insertAfter(el)
+            else:
+                jQuery(window.PhanterPWA.drag["el"]).insertBefore(el)
+            if callable(self._after_drop):
+                self._after_drop(ev, el)
 
     def _ondragstart(self, ev, el):
         window.PhanterPWA.drag = {"el": el, "posY": ev.screenY}
