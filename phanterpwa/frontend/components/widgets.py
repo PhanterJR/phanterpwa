@@ -3006,6 +3006,7 @@ class TableHead(Widget):
             else:
                 sort_order = "asc"
             for x in content:
+
                 if isinstance(x, str):
                     if x in self._sortable:
                         if self._sort_by == x:
@@ -3026,6 +3027,19 @@ class TableHead(Widget):
                     else:
                         self.__child_html.append(TH(x,
                             _class="phanterpwa-widget-table-head-th"))
+
+                elif isinstance(x, helpers.XmlConstructor) and (str(x._tag).upper() == "TD" or str(x._tag).upper() == "TH"):
+                    if str(x._tag).upper() == "TH":
+                        class_base = "phanterpwa-widget-table-head-th"
+                    else:
+                        class_base = "phanterpwa-widget-table-head-td"
+                    if "_class" in x.attributes:
+
+                        if class_base not in x.attributes['_class']:
+                            x.attributes['_class'] = "{0} {1}".format(x.attributes['_class'], class_base)
+                    else:
+                        x.attributes['_class'] = class_base
+                        self.__child_html.append(x)
                 elif isinstance(x, (list, tuple)):
                     if x[0] in self._sortable:
                         if self._sort_by == x[0]:
@@ -3052,8 +3066,21 @@ class TableHead(Widget):
                             _class="phanterpwa-widget-table-head-th"))
         else:
             for x in content:
-                self.__child_html.append(TH(x,
-                    _class="phanterpwa-widget-table-head-th"))
+                if isinstance(x, helpers.XmlConstructor) and (str(x._tag).upper() == "TD" or str(x._tag).upper() == "TH"):
+                    if str(x._tag).upper() == "TH":
+                        class_base = "phanterpwa-widget-table-head-th"
+                    else:
+                        class_base = "phanterpwa-widget-table-head-td"
+                    if "_class" in x.attributes:
+
+                        if class_base not in x.attributes['_class']:
+                            x.attributes['_class'] = "{0} {1}".format(x.attributes['_class'], class_base)
+                    else:
+                        x.attributes['_class'] = class_base
+                        self.__child_html.append(x)
+                else:
+                    self.__child_html.append(TH(x,
+                        _class="phanterpwa-widget-table-head-th"))
 
     def len_head(self):
         return self._count_th
@@ -3116,7 +3143,20 @@ class TableData(Widget):
             parameters["_class"] = "phanterpwa-widget-table-data"
         self.__child_html = CONCATENATE()
         for x in content:
-            self.__child_html.append(TD(x, _class="phanterpwa-widget-table-data-td"))
+            if isinstance(x, helpers.XmlConstructor) and (str(x._tag).upper() == "TD" or str(x._tag).upper() == "TH"):
+                if str(x._tag).upper() == "TH":
+                    class_base = "phanterpwa-widget-table-data-th"
+                else:
+                    class_base = "phanterpwa-widget-table-data-td"
+                if "_class" in x.attributes:
+
+                    if class_base not in x.attributes['_class']:
+                        x.attributes['_class'] = "{0} {1}".format(x.attributes['_class'], class_base)
+                else:
+                    x.attributes['_class'] = class_base
+                self.__child_html.append(x)
+            else:
+                self.__child_html.append(TD(x, _class="phanterpwa-widget-table-data-td"))
         Widget.__init__(self, identifier, self.__child_html, **parameters)
         self.tag = "tr"
 
