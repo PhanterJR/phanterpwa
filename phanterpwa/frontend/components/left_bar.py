@@ -68,7 +68,8 @@ class LeftBar(application.Component):
             if all([self._check_button_requires_login(x),
                     self._check_button_ways(x),
                     self._check_button_roles(x),
-                    x.show_if()]):
+                    x.show_if(),
+                    x.show_if_way_match()]):
                 position = self._get_button_position(x)
                 b = self.element_target.find(
                     "#phanterpwa-component-left_bar-{0}".format(position)
@@ -252,6 +253,7 @@ class LeftBarButton(helpers.XmlConstructor):
         if "position" in parameters:
             self.position = parameters["position"]
         self._show_if = parameters.get("show_if", True)
+        self._show_if_way_match = parameters.get("show_if_way_match", None)
         MY_TAG = helpers.XmlConstructor.tagger(tag)
         content = [
             MY_TAG(
@@ -276,6 +278,17 @@ class LeftBarButton(helpers.XmlConstructor):
         elif self._show_if is True:
             return True
         return False
+
+    def show_if_way_match(self):
+        console.log(self._show_if_way_match)
+        if self._show_if_way_match is not None:
+            nre = __new__(RegExp(self._show_if_way_match))
+            current_way = window.PhanterPWA.get_current_way()
+            result = current_way.match(nre)
+            console.log(nre, current_way, result)
+            if result is None or result is js_undefined:
+                return False
+        return True
 
     def start(self):
         if window.PhanterPWA.DEBUG:
@@ -339,6 +352,7 @@ class LeftBarMenu(helpers.XmlConstructor):
         if "position" in parameters:
             self.position = parameters["position"]
         self._show_if = parameters.get("show_if", True)
+        self._show_if_way_match = parameters.get("show_if_way_match", None)
 
         helpers.XmlConstructor.__init__(self, 'div', False, _class="phanterpwa-component-left_bar-menu_button-wrapper")
         self._update_content()
@@ -400,6 +414,17 @@ class LeftBarMenu(helpers.XmlConstructor):
             return True
         return False
 
+    def show_if_way_match(self):
+        console.log(self._show_if_way_match)
+        if self._show_if_way_match is not None:
+            nre = __new__(RegExp(self._show_if_way_match))
+            current_way = window.PhanterPWA.get_current_way()
+            result = current_way.match(nre)
+            console.log(nre, current_way, result)
+            if result is None or result is js_undefined:
+                return False
+        return True
+
     def start(self):
 
         element = jQuery("#phanterpwa-component-left_bar").find(
@@ -454,7 +479,7 @@ class LeftBarUserMenu(helpers.XmlConstructor):
             self.position = parameters["position"]
 
         self._show_if = parameters.get("show_if", True)
-
+        self._show_if_way_match = parameters.get("show_if_way_match", None)
         self._image = IMG(_id="phanterpwa-component-left_bar-url-imagem-user",
             _src="/static/{0}/images/user.png".format(
                 window.PhanterPWA.VERSIONING),
@@ -529,6 +554,17 @@ class LeftBarUserMenu(helpers.XmlConstructor):
         elif self._show_if is True:
             return True
         return False
+
+    def show_if_way_match(self):
+        console.log(self._show_if_way_match)
+        if self._show_if_way_match is not None:
+            nre = __new__(RegExp(self._show_if_way_match))
+            current_way = window.PhanterPWA.get_current_way()
+            result = current_way.match(nre)
+            console.log(nre, current_way, result)
+            if result is None or result is js_undefined:
+                return False
+        return True
 
     def start(self):
 

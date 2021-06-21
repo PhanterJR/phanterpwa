@@ -2459,6 +2459,8 @@ class MenuBox(Widget):
     def add_option(self, option):
         if isinstance(option, MenuOption):
             self._xml_menu.append(option)
+        elif isinstance(option, helpers.XmlConstructor) and option.tag.upper() == "HR":
+            self._xml_menu.append(option)
         else:
             self._xml_menu.append(DIV(option, _class="phanterpwa-widget-menubox-option wave_on_click"))
 

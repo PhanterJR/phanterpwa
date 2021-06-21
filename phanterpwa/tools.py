@@ -1067,6 +1067,7 @@ class WatchingFiles():
             raise IOError("The path \"{0}\" not exists!".format(value))
 
     def _create_mtime_list(self):
+        print("Checking files modified at source\n")
         self._dirs = dict()
         self._files = dict()
         destiny_dirs = []
@@ -1083,6 +1084,9 @@ class WatchingFiles():
                     self._files[
                         f
                     ] = [os.path.getmtime(f), d]
+                    if os.path.getmtime(f) != os.path.getmtime(d):
+                        print("Was Modify: {0}\nCoping {0} to {1}".format(f, d))
+                        shutil.copy2(f, d)
 
         if os.path.isdir(self.path_destiny):
             for x in os.walk(self.path_destiny):
