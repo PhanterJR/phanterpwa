@@ -37,7 +37,7 @@ class ApiServer():
                 _vars[x] = parameters[x]
             elif x.startswith("_") and len(x) > 1:
                 _vars[x[1:]] = parameters[x]
-        if len(_vars.keys()) > 1:
+        if len(_vars.keys()) > 0:
             return _vars
         else:
             return parameters.get("url_vars", None)
