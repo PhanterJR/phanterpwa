@@ -1035,6 +1035,7 @@ class FormFromTableDAL():
                 self._record = r
             else:
                 r = self.table.insert(**self._verified)
+                self._record = self.table[r]
                 self.record_id = r
             for key in self._verified:
                 if key in self._widgets and key in self.fields:
