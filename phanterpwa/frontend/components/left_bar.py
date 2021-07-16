@@ -280,12 +280,10 @@ class LeftBarButton(helpers.XmlConstructor):
         return False
 
     def show_if_way_match(self):
-        console.log(self._show_if_way_match)
         if self._show_if_way_match is not None:
             nre = __new__(RegExp(self._show_if_way_match))
             current_way = window.PhanterPWA.get_current_way()
             result = current_way.match(nre)
-            console.log(nre, current_way, result)
             if result is None or result is js_undefined:
                 return False
         return True
@@ -415,12 +413,10 @@ class LeftBarMenu(helpers.XmlConstructor):
         return False
 
     def show_if_way_match(self):
-        console.log(self._show_if_way_match)
         if self._show_if_way_match is not None:
             nre = __new__(RegExp(self._show_if_way_match))
             current_way = window.PhanterPWA.get_current_way()
             result = current_way.match(nre)
-            console.log(nre, current_way, result)
             if result is None or result is js_undefined:
                 return False
         return True
@@ -556,12 +552,10 @@ class LeftBarUserMenu(helpers.XmlConstructor):
         return False
 
     def show_if_way_match(self):
-        console.log(self._show_if_way_match)
         if self._show_if_way_match is not None:
             nre = __new__(RegExp(self._show_if_way_match))
             current_way = window.PhanterPWA.get_current_way()
             result = current_way.match(nre)
-            console.log(nre, current_way, result)
             if result is None or result is js_undefined:
                 return False
         return True

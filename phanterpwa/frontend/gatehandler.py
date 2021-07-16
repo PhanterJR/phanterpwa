@@ -15,6 +15,8 @@ window = console = __new__ = Date = URL = sessionStorage = \
 #?__pragma__('noskip')
 
 DIV = helpers.XmlConstructor.tagger("div")
+P = helpers.XmlConstructor.tagger("P")
+H3 = helpers.XmlConstructor.tagger("h3")
 IMG = helpers.XmlConstructor.tagger("img", True)
 I18N = helpers.I18N
 CONCATENATE = helpers.CONCATENATE
@@ -208,8 +210,9 @@ class Handler():
 
 
 class ErrorHandler():
-    def __init__(self, request, response=None):
+    def __init__(self, request, response=None, reasons=None):
         self._request = request
+        self.reasons = reasons
         self.debug = window.PhanterPWA.DEBUG
         self.requires_login = False
         self.autorized_roles = ["all"]
@@ -299,12 +302,13 @@ class Error_401(ErrorHandler):
                             _class="image-warnings-container"
                         ),
                         DIV(
-                            I18N(
+                            H2(I18N(
                                 "You need authentication to access this feature.",
                                 **{
                                     "_pt-br": "Você precisa autenticar-se para tentar acessar este recurso."
                                 }
-                            ),
+                            )),
+                            H3(self.reasons) if self.reasons is not None else "",
                             _id='content-warning',
                             _class='content-warnings'
                         ),
@@ -330,22 +334,29 @@ class Error_401(ErrorHandler):
         )
 
 
-
-
 class Error_403(ErrorHandler):
     def start(self):
         html = html_base.jquery()
         html.find(".image-warnings").attr(
             "src", "/static/{0}/images/warning.png".format(window.PhanterPWA.VERSIONING))
-        html.find("#content-warning").html("ERROR 403 - Forbidden")
+        html_warning = CONCATENATE(
+            H3("ERROR 403 - Forbidden"),
+            P(self.reasons) if self.reasons is not None else ""
+        )
+        html.find("#content-warning").html(html_warning.jquery())
         jQuery("#main-container").html(html)
+
 
 class Error_404(ErrorHandler):
     def start(self):
         html = html_base.jquery()
         html.find(".image-warnings").attr(
             "src", "/static/{0}/images/warning.png".format(window.PhanterPWA.VERSIONING))
-        html.find("#content-warning").html("ERROR 404 - Not Found")
+        html_warning = CONCATENATE(
+            H3("ERROR 404 - Not Found"),
+            P(self.reasons) if self.reasons is not None else ""
+        )
+        html.find("#content-warning").html(html_warning.jquery())
         jQuery("#main-container").html(html)
 
 
@@ -354,7 +365,11 @@ class Error_409(ErrorHandler):
         html = html_base.jquery()
         html.find(".image-warnings").attr(
             "src", "/static/{0}/images/warning.png".format(window.PhanterPWA.VERSIONING))
-        html.find("#content-warning").html("ERROR 404 - Not Found")
+        html_warning = CONCATENATE(
+            H3("ERROR 404 - Not Found"),
+            P(self.reasons) if self.reasons is not None else ""
+        )
+        html.find("#content-warning").html(html_warning.jquery())
         jQuery("#main-container").html(html)
 
 class Error_500(ErrorHandler):
@@ -362,7 +377,11 @@ class Error_500(ErrorHandler):
         html = html_base.jquery()
         html.find(".image-warnings").attr(
             "src", "/static/{0}/images/warning.png".format(window.PhanterPWA.VERSIONING))
-        html.find("#content-warning").html("ERROR 500 - Internal Error")
+        html_warning = CONCATENATE(
+            H3("ERROR 500 - Internal Error"),
+            P(self.reasons) if self.reasons is not None else ""
+        )
+        html.find("#content-warning").html(html_warning.jquery())
         jQuery("#main-container").html(html)
 
 class Error_502(ErrorHandler):
@@ -370,7 +389,11 @@ class Error_502(ErrorHandler):
         html = html_base.jquery()
         html.find(".image-warnings").attr(
             "src", "/static/{0}/images/warning.png".format(window.PhanterPWA.VERSIONING))
-        html.find("#content-warning").html("ERROR 502 - Bad Gateway")
+        html_warning = CONCATENATE(
+            H3("ERROR 502 - Bad Gateway"),
+            P(self.reasons) if self.reasons is not None else ""
+        )
+        html.find("#content-warning").html(html_warning.jquery())
         jQuery("#main-container").html(html)
 
 

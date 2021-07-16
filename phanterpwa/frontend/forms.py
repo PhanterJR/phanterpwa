@@ -711,18 +711,24 @@ class Form(helpers.XmlConstructor):
         return self.element
 
     def process_api_response(self, data):
-        if data.status == 400:
-            if data.responseJSON.message is not js_undefined:
-                window.PhanterPWA.flash(html=data.responseJSON.message)
-            if data.responseJSON.errors is not js_undefined:
-                errors = dict(data.responseJSON.errors)
-                for x in errors.keys():
-                    target = jQuery("#phanterpwa-widget-{0}-{1}".format(self.table_name, x))
-                    target.find(".phanterpwa-widget-message_error").text(data.responseJSON.errors[x])
-                    target.find(".phanterpwa-widget-wrapper").addClass("has_error")
-        elif data.status == 200:
-            if data.responseJSON.message is not js_undefined:
-                window.PhanterPWA.flash(html=data.responseJSON.message)
+        json = data.responseJSON
+        message = None
+        if json is not None and json is not js_undefined:
+            if json.i18n is not None and json.i18n is not js_undefined:
+                if json.i18n.message is not None and json.i18n is not js_undefined:
+                    message = json.i18n.message
+            else:
+                if json.message is not None and json.message is not js_undefined:
+                    message = json.message
+            if data.status == 400:
+                if data.responseJSON.errors is not js_undefined:
+                    errors = dict(data.responseJSON.errors)
+                    for x in errors.keys():
+                        target = jQuery("#phanterpwa-widget-{0}-{1}".format(self.table_name, x))
+                        target.find(".phanterpwa-widget-message_error").text(data.responseJSON.errors[x])
+                        target.find(".phanterpwa-widget-wrapper").addClass("has_error")
+        if message is not None:
+            window.PhanterPWA.flash(html=message)
 
 
 class ValidateForm():

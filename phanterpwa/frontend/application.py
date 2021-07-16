@@ -660,37 +660,37 @@ class PhanterPWA():
         return str(window.PhanterPWA.get_current_way()).split("/")[0]
 
     @staticmethod
-    def open_code_way(code=500, request=None, response=None):
+    def open_code_way(code=500, request=None, response=None, reasons=None):
         if str(code).isdigit():
             code = int(code)
         if code not in window.PhanterPWA.Gates:
             auth_user = window.PhanterPWA.Components.auth_user
             if window.PhanterPWA.DEBUG:
-                console.info(code, request, response)
+                console.info(code, request, response, reasons)
             if code == 401:
                 if auth_user is not None and auth_user is not js_undefined:
                     auth_user.start()
-                gatehandler.Error_401(request, response)
+                gatehandler.Error_401(request, response, reasons)
             elif code == 403:
                 if auth_user is not None and auth_user is not js_undefined:
                     auth_user.start()
-                gatehandler.Error_403(request, response)
+                gatehandler.Error_403(request, response, reasons)
             elif code == 404:
-                gatehandler.Error_404(request, response)
+                gatehandler.Error_404(request, response, reasons)
             else:
-                gatehandler.Error_502(request, response)
+                gatehandler.Error_502(request, response, reasons)
         else:
             if isinstance(request, WayRequest):
                 if window.PhanterPWA.DEBUG:
-                    console.info(code, request, response)
+                    console.info(code, request, response, reasons)
                 if callable(window.PhanterPWA.Gates[code]):
-                    window.PhanterPWA.Gates[code](request, response)
+                    window.PhanterPWA.Gates[code](request, response, reasons)
                 else:
-                    gatehandler.Error_500(request, response)
+                    gatehandler.Error_500(request, response, reasons)
             else:
                 if window.PhanterPWA.DEBUG:
                     console.error("The request must be WayRequest instance.")
-                gatehandler.Error_500(request, response)
+                gatehandler.Error_500(request, response, reasons)
 
     @staticmethod
     def get_client_token():

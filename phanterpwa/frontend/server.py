@@ -376,14 +376,19 @@ class ApiServer():
     def on_ajax_error(self, data, status):
         json = data.responseJSON
         message = I18N("Unexpected error!", **{"_pt-br": "Erro inesperado!"})
+        reasons = None
         if json is not None and json is not js_undefined:
             if json.i18n is not None and json.i18n is not js_undefined:
                 if json.i18n.message is not None and json.i18n is not js_undefined:
                     message = json.i18n.message
-            elif json.message is not None and json.message is not js_undefined:
-                message = json.message
+                if json.i18n.reasons is not None and json.i18n is not js_undefined:
+                    reasons = json.i18n.reasons
+            else:
+                if json.message is not None and json.message is not js_undefined:
+                    message = json.message
+                if json.reasons is not None and json.reasons is not js_undefined:
+                    reasons = json.reasons
         if data.status == 401 or data.status == 403:
-            json = data.responseJSON
             if window.PhanterPWA.logged():
                 if data.status == 401:
                     if json.specification == "client deleted":
@@ -392,11 +397,8 @@ class ApiServer():
                                 window.PhanterPWA.reload_component("left_bar")
                             )
                         )
-
-                window.PhanterPWA.open_code_way(data.status, window.PhanterPWA.Request, window.PhanterPWA.Response)
-        elif data.status==409:
-
-            window.PhanterPWA.flash(**{'html': message})
+                window.PhanterPWA.open_code_way(data.status, window.PhanterPWA.Request, window.PhanterPWA.Response, reasons)
+        window.PhanterPWA.flash(**{'html': message})
 
 
 __pragma__('nokwargs')
