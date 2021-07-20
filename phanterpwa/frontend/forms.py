@@ -666,6 +666,12 @@ class Form(helpers.XmlConstructor):
             for x in wjson[1][1]:
                 content.append(self._process_widget(x))
             return DIV(*content, _id=wjson[1][0], _class="phanterpwa-widget-form-group")
+        elif wjson[0] == "separator":
+            if "_class" in wjson[1][1]:
+                wjson[1][1]["_class"] = "".join([wjson[1][1]["_class"], " phanterpwa-widget-form-separator"])
+            else:
+                wjson[1][1]["_class"] = "phanterpwa-widget-form-separator"
+            return DIV(wjson[1][0], **dict(wjson[1][1]))
 
     def _process(self):
         for x in self.json_widgets:

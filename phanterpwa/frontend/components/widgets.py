@@ -164,6 +164,19 @@ class Input(Widget):
             wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " has_value")
         if self._mask is not "" and self._mask is not None:
             wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " has_mask")
+
+        checker = ""
+        if self._checker:
+            checker = DIV(
+                I(_class="fas fa-check"),
+                _class="phanterpwa-widget-check"
+            )
+            if self._disabled is not None:
+                checker = DIV(
+                    I(_class="fas fa-lock"),
+                    _class="phanterpwa-widget-check"
+                )
+
         html = DIV(
             INPUT(**{
                 "_id": "phanterpwa-widget-input-input-{0}".format(identifier),
@@ -177,10 +190,7 @@ class Input(Widget):
                 "_data-form": self._form,
             }),
             label,
-            DIV(
-                I(_class="fas fa-check"),
-                _class="phanterpwa-widget-check"
-            ) if self._checker else "",
+            checker,
             xml_icon,
             DIV(
                 self.get_message_error(),
@@ -320,6 +330,22 @@ class Input(Widget):
             )
         if callable(self._onload):
             self._onload(target)
+
+    def set_disabled(self):
+        jQuery("#phanterpwa-widget-input-input-{0}".format(self.identifier)).attr("disabled", "disabled").prop("disabled")
+        self._disabled = "disabled"
+        if self._checker:
+            jQuery("#phanterpwa-widget-input-input-{0}".format(self.identifier)).parent().find(
+                ".phanterpwa-widget-check"
+            ).html(I(_class="fas fa-lock").jquery())
+
+    def set_enabled(self):
+        jQuery("#phanterpwa-widget-input-input-{0}".format(self.identifier)).removeAttr("disabled")
+        self._disabled = None
+        if self._checker:
+            jQuery("#phanterpwa-widget-input-input-{0}".format(self.identifier)).parent().find(
+                ".phanterpwa-widget-check"
+            ).html(I(_class="fas fa-check").jquery())
 
     def start(self):
         self._binds()
