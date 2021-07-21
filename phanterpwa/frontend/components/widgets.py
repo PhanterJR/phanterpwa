@@ -778,6 +778,7 @@ class Select(Widget):
                 self.modal.close()
         self._create_xml_modal()
         self._check_value()
+        jQuery("#{0}".format(t)).trigger("change")
 
     def _binds(self):
         target = jQuery(self.target_selector)
