@@ -619,7 +619,7 @@ def check_user_token(ignore_activation=False):
         @wraps(f)
         @check_client_token(ignore_locked=False)
         def check_user_token_decorator(self, *args, **kargs):
-            def has_role(obj, role):
+            def phanterpwa_current_user_has_role(obj, role):
                 if not obj.phanterpwa_current_user_groups:
                     return False
                 if isinstance(role, (list, tuple, set)):
@@ -631,12 +631,12 @@ def check_user_token(ignore_activation=False):
                     else:
                         return False
                 elif isinstance(role, str):
-                    return has_role(obj, set([role]))
-            self.has_role = lambda role: has_role(self, role)
+                    return phanterpwa_current_user_has_role(obj, set([role]))
+            self.phanterpwa_current_user_has_role = lambda role: phanterpwa_current_user_has_role(self, role)
 
             def add_role(obj, role):
                 db = obj.DALDatabase()
-                if not obj.has_role(role) and obj.phanterpwa_current_user:
+                if not obj.phanterpwa_current_user_has_role(role) and obj.phanterpwa_current_user:
                     s_role = db(db.auth_group.role == role).select().first()
                     if s_role:
                         id_role = s_role.id
