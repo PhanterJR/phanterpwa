@@ -1,7 +1,8 @@
 from phanterpwa.frontend import (
     helpers,
     preloaders,
-    validations
+    validations,
+    fmasks
 )
 from phanterpwa.frontend.components import (
     widgets
@@ -863,6 +864,21 @@ class ValidateForm():
                 validate_test_pass.append(True)
             else:
                 validate_test_pass.append(False)
+
+        if validate_name.startswith("MASK:"):
+            is_not_valid = False
+            mask_val = validate_name[5:]
+            cont_mask = 0
+            for x in str(mask_val):
+                if x == "#":
+                    cont_mask += 1
+
+            if len(fmasks.stringFilter(str(value_for_validate))) == cont_mask:
+                validate_test_pass.append(True)
+            else:
+                validate_test_pass.append(False)
+
+
         if validate_name == "IS_EMAIL":
             if "@" in value_for_validate:
                 REGEX_BODY = __pragma__(

@@ -94,7 +94,7 @@ class DataForm():
 
 
 class WidgetFromFieldDALFromTableDAL():
-    def __init__(self, table, field, record_id=None, data_view=False):
+    def __init__(self, table, field, record_id=None, data_view=False, simple_widget=False):
         self.table = table
         self._db = self.table._db
         self._data_view = data_view
@@ -105,6 +105,7 @@ class WidgetFromFieldDALFromTableDAL():
         self.position = None
         self.group = None
         self.out_of_form = False
+        self.simple_widget = simple_widget
 
         if not hasattr(self.table[self._field], "phanterpwa"):
             self.table[self._field].phanterpwa = {"_class": "p-col w1p100"}
@@ -122,6 +123,9 @@ class WidgetFromFieldDALFromTableDAL():
             if "out_of_form" in self.table[self._field].phanterpwa and\
                     self.table[self._field].phanterpwa["out_of_form"] is True:
                 self.out_of_form = True
+            if "simple_widget" in self.table[self._field].phanterpwa and\
+                    self.table[self._field].phanterpwa["simple_widget"] is True:
+                self.simple_widget = True
 
     @property
     def position(self):
@@ -420,12 +424,38 @@ class WidgetFromFieldDALFromTableDAL():
                 else:
                     formato_saida = FieldInst.phanterpwa["validator_format"]
                     json_field["validator_format"] = formato_saida
-
-                json_field['label'] = FieldInst.label
-                json_field['value'] = default
-                json_field['type'] = FieldInst.type
-                json_field['format'] = dformat
-                json_field['mask'] = dformat
+                if self.simple_widget:
+                    json_field['label'] = FieldInst.label
+                    json_field['value'] = default
+                    json_field['type'] = "string"
+                    json_field['format'] = dformat
+                    json_field['mask'] = str(dformat).replace(
+                        "d", "#"
+                    ).replace(
+                        "M", "#"
+                    ).replace(
+                        "y", "#"
+                    ).replace(
+                        "H", "#"
+                    ).replace(
+                        "m", "#"
+                    ).replace(
+                        "s", "#"
+                    )
+                    new_validators = []
+                    if "validators" in json_field and isinstance(json_field["validators"], list):
+                        for x in json_field["validators"]:
+                            if "IS_DATE" in x or "IS_TIME" in x:
+                                new_validators.append("MASK:{0}".format(json_field['mask']))
+                            else:
+                                new_validators.append(x)
+                        json_field["validators"] = new_validators
+                else:
+                    json_field['label'] = FieldInst.label
+                    json_field['value'] = default
+                    json_field['type'] = FieldInst.type
+                    json_field['format'] = dformat
+                    json_field['mask'] = dformat
 
             else:
                 default = FieldInst.default
@@ -855,10 +885,11 @@ class CustomField():
 
 
 class FormFromTableDAL():
-    def __init__(self, table, record_id=None, fields=None, custom_validates={}, data_view=False):
+    def __init__(self, table, record_id=None, fields=None, custom_validates={}, data_view=False, simple_form=False):
         self.table = table
         self._db = self.table._db
         self._data_view = data_view
+        self.simple_form = simple_form
         if fields:
             self.fields = fields
         else:
@@ -1066,7 +1097,7 @@ class FormFromTableDAL():
         section = dict()
         group = dict()
         for x in self.fields:
-            json_widget = WidgetFromFieldDALFromTableDAL(self.table, x, self.record_id, data_view=self._data_view)
+            json_widget = WidgetFromFieldDALFromTableDAL(self.table, x, self.record_id, data_view=self._data_view, simple_widget=self.simple_form)
             self._widgets[x] = json_widget.as_dict()
             if x is not "id" or self.record_id:
                 if json_widget.section:

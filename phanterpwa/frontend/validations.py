@@ -1,4 +1,5 @@
 from org.transcrypt.stubs.browser import __pragma__
+from phanterpwa.frontend.fmasks import stringFilter
 __pragma__('alias', "jQuery", "$")
 __pragma__('skip')
 
@@ -250,6 +251,21 @@ class Valider():
             else:
                 validate_test_pass.append(False)
 
+        if validate_name.startswith("MASK:"):
+            console.log("iiiiiiiii")
+            self.tests[validate_name] = "Fail"
+            is_not_valid = False
+            mask_val = validate_name[5:]
+            cont_mask = 0
+            for x in str(mask_val):
+                if x == "#":
+                    cont_mask += 1
+
+            if len(stringFilter(str(value_for_validate))) == cont_mask:
+                validate_test_pass.append(True)
+                self.tests[validate_name] = "Pass"
+            else:
+                validate_test_pass.append(False)
         if validate_name == "IS_EMAIL":
             self.tests[validate_name] = "Fail"
             is_not_valid = False
