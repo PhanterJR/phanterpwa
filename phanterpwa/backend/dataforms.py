@@ -1062,8 +1062,9 @@ class FormFromTableDAL():
             "data_view": self._data_view,
             "widgets": self.json_widgets
         }
-        section = {}
-        group = {}
+        self._widgets = dict()
+        section = dict()
+        group = dict()
         for x in self.fields:
             json_widget = WidgetFromFieldDALFromTableDAL(self.table, x, self.record_id, data_view=self._data_view)
             self._widgets[x] = json_widget.as_dict()

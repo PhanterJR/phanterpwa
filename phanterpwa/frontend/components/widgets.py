@@ -357,6 +357,7 @@ class Input(Widget):
 
 class Select(Widget):
     def __init__(self, identifier, **parameters):
+        self.identifier = identifier
         self._alias_value = ""
         self._value = parameters.get("value", "")
         self._data_set(parameters.get("data_set", []))
@@ -386,7 +387,6 @@ class Select(Widget):
                 self._wear)
         }
         parameters["_id"] = identifier
-        self.identifier = identifier
         if "_class" in parameters:
             parameters["_class"] = "{0}{1}".format(parameters["_class"], " phanterpwa-widget-select")
         else:
@@ -477,7 +477,9 @@ class Select(Widget):
                     self._data_dict[vdata[0]] = vdata[1]
                     new_data.append([vdata[0], vdata[1]])
             if not valid_data:
-                raise console.error("The data parameter is invalid!")
+                raise console.error("The data parameter of widget \"{0}\" is invalid!".format(
+                    self.identifier
+                ))
             else:
                 self._data = new_data
         elif isinstance(data, dict):
@@ -894,6 +896,7 @@ class Select(Widget):
 
 class MultSelect(Widget):
     def __init__(self, identifier, **parameters):
+        self.identifier = identifier
         self._alias_value = ""
         self._value = parameters.get("value", [])
         self._filter_value()
@@ -926,7 +929,6 @@ class MultSelect(Widget):
             )
         }
         parameters["_id"] = identifier
-        self.identifier = identifier
         if "_class" in parameters:
             parameters["_class"] = "{0}{1}".format(parameters["_class"], " phanterpwa-widget-multselect")
         else:
@@ -1030,7 +1032,9 @@ class MultSelect(Widget):
                         self._alias_value[str(vdata[0])] = vdata[1]
                 self._data_dict[str(vdata[0])] = vdata[1]
             if not valid_data:
-                raise console.error("The data parameter is invalid!")
+                raise console.error("The data parameter of widget \"{0}\" is invalid!".format(
+                    self.identifier
+                ))
             else:
                 self._data = data
         elif isinstance(data, dict):

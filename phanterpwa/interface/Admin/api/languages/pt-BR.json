@@ -55,7 +55,7 @@
   "The user has locked your session!": "O usuário bloqueou sua seção!",
   "The user image not found": "A imagem do usuário não foi encontrada",
   "The user is logged": "O usuário está logado",
-  "The user token is invalid!": "O token do usuárioé inválido!",
+  "The user token is invalid!": "O token do usuário é inválido!",
   "The user was not found": "O usuário não foi encontrado",
   "This is not the time to resign": "This is not the time to resign",
   "Wrong activation code! Attempt {attempt_number} from {max_attempts}": "Código de ativação errado! Tentativa {attempt_number} de {max_attempts}",

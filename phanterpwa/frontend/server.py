@@ -398,7 +398,8 @@ class ApiServer():
                             )
                         )
                 window.PhanterPWA.open_code_way(data.status, window.PhanterPWA.Request, window.PhanterPWA.Response, reasons)
-        window.PhanterPWA.flash(**{'html': message})
+        else:
+            window.PhanterPWA.flash(**{'html': message})
 
 
 __pragma__('nokwargs')

@@ -17,6 +17,7 @@ window = console = __new__ = Date = URL = sessionStorage = \
 DIV = helpers.XmlConstructor.tagger("div")
 P = helpers.XmlConstructor.tagger("P")
 H3 = helpers.XmlConstructor.tagger("h3")
+H2 = helpers.XmlConstructor.tagger("h2")
 IMG = helpers.XmlConstructor.tagger("img", True)
 I18N = helpers.I18N
 CONCATENATE = helpers.CONCATENATE
@@ -302,7 +303,7 @@ class Error_401(ErrorHandler):
                             _class="image-warnings-container"
                         ),
                         DIV(
-                            H2(I18N(
+                            H3(I18N(
                                 "You need authentication to access this feature.",
                                 **{
                                     "_pt-br": "Você precisa autenticar-se para tentar acessar este recurso."

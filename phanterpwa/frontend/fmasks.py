@@ -30,7 +30,9 @@ class Mask():
         return new_value
 
     def onKeyPress(self, event, el):
+        event.preventDefault()
         code = event.keyCode or event.which
+        console.log(code)
         element = jQuery(el)
         pos = element[0].selectionStart
         end = element[0].selectionEnd
@@ -65,7 +67,19 @@ class Mask():
         element[0].selectionStart = self.mask_function(pure_value)[1]
         element[0].selectionEnd = self.mask_function(pure_value)[1]
 
-        event.preventDefault()
+    def onKeyUp(self, event, el):
+        element = jQuery(el)
+        new_value = element.val()
+        pure_value = self.stringFilter(new_value)
+        new_value = self.mask_function(pure_value)[0]
+        if pure_value is not "":
+            element.val(new_value)
+        else:
+            element.val("")
+
+        element[0].selectionStart = self.mask_function(pure_value)[1]
+        element[0].selectionEnd = self.mask_function(pure_value)[1]
+
 
     def onNonPrintingKeysIn(self, event, el):
         noprintkeys = [8, 46]
@@ -172,10 +186,16 @@ class Mask():
                 element[0].selectionEnd = selection_pos
 
         element.off(
-            "keypress.phanterpwaMask, focusout.phanterpwaMask"
+            "keyup.phanterpwaMask, focusout.phanterpwaMask, keypress.phanterpwaMask"
         ).on(
-            "keypress.phanterpwaMask, focusout.phanterpwaMask",
+            "keyup.phanterpwaMask, focusout.phanterpwaMask, keypress.phanterpwaMask",
             lambda event: self.onKeyPress(event, this)
+        )
+        element.off(
+            "keyup.phanterpwaMask,"
+        ).on(
+            "keyup.phanterpwaMask,",
+            lambda event: self.onKeyUp(event, this)
         )
         element.off(
             "keydown.phanterpwaMask, focusout.phanterpwaMask"

@@ -585,6 +585,7 @@ class Form(helpers.XmlConstructor):
         self.element = None
         self.table_name = json_form.table
         self._data_view = json_form.data_view
+        self._label_submit_buttom = parameters.get("label_submit", I18N("Submit"))
         if "fields" in parameters:
             fields = parameters["fields"]
         if "show_id" in parameters:
@@ -635,7 +636,7 @@ class Form(helpers.XmlConstructor):
                 self._buttons_container = DIV(
                     SubmitButton(
                         self.table_name,
-                        I18N("Submit")
+                        self._label_submit_buttom
                     ),
                     _class='buttons-form-container'
                 )

@@ -15,7 +15,7 @@ from org.transcrypt.stubs.browser import __pragma__
 __pragma__('alias', "jQuery", "$")
 __pragma__('skip')
 jQuery = sessionStorage = JSON = M = js_undefined = window = setTimeout = document = console = this = \
-    __new__ = FormData = console = localStorage = 0
+    __new__ = FormData = console = Date = localStorage = 0
 __pragma__('noskip')
 
 DIV = helpers.XmlConstructor.tagger("div")
@@ -117,8 +117,7 @@ class AuthUser(application.Component):
             social_logins=window.PhanterPWA.social_login_list()
         )
         self.Modal.open()
-        forms.SignForm("#form-login", has_captcha=True)
-        forms.ValidateForm("#form-login")
+        forms.SignForm("#form-login", has_captcha=True, after_sign=forms.ValidateForm("#form-login"))
 
     def modal_register(self):
         self.close_menu()
@@ -126,8 +125,7 @@ class AuthUser(application.Component):
             "#modal-container"
         )
         self.Modal.open()
-        forms.SignForm("#form-register", has_captcha=True)
-        forms.ValidateForm("#form-register")
+        forms.SignForm("#form-register", has_captcha=True, after_sign=forms.ValidateForm("#form-register"))
 
     def modal_request_password(self):
         self.close_menu()
@@ -135,8 +133,7 @@ class AuthUser(application.Component):
             "#modal-container"
         )
         self.Modal.open()
-        forms.SignForm("#form-request_password", has_captcha=True)
-        forms.ValidateForm("#form-request_password")
+        forms.SignForm("#form-request_password", has_captcha=True, after_sign=forms.ValidateForm("#form-request_password"))
 
     def modal_change_password(self, temporary_password=None):
         self.close_menu()
@@ -145,8 +142,7 @@ class AuthUser(application.Component):
             temporary_password=temporary_password
         )
         self.Modal.open()
-        forms.SignForm("#form-change_password")
-        forms.ValidateForm("#form-change_password")
+        forms.SignForm("#form-change_password", after_sign=forms.ValidateForm("#form-change_password"))
 
     def logout(self):
         window.PhanterPWA.logout()
@@ -1225,8 +1221,7 @@ class AlertActivationAccount(top_slide.TopSlide):
 
     def binds(self):
         self._process_alert_content()
-        forms.SignForm("#form-activation")
-        forms.ValidateForm("#form-activation")
+        forms.SignForm("#form-activation", after_sign=forms.ValidateForm("#form-activation"))
         self.element_target = jQuery(self.target_selector)
         self.element_target.find("#phanterpwa-widget-form-submit_button-activation").off(
             'click.modal_submit_activation'
@@ -1757,11 +1752,10 @@ class LeftBarAuthUserNoLogin(left_bar.LeftBarMenu):
         self.close_all()
         self.Modal = ModalLogin(
             "#modal-container",
-            social_logins = window.PhanterPWA.social_login_list()
+            social_logins=window.PhanterPWA.social_login_list()
         )
         self.Modal.open()
-        forms.SignForm("#form-login", has_captcha=True)
-        forms.ValidateForm("#form-login")
+        forms.SignForm("#form-login", has_captcha=True, after_sign=forms.ValidateForm("#form-login"))
 
     def modal_register(self):
         self.close_all()
@@ -1769,8 +1763,7 @@ class LeftBarAuthUserNoLogin(left_bar.LeftBarMenu):
             "#modal-container"
         )
         self.Modal.open()
-        forms.SignForm("#form-register", has_captcha=True)
-        forms.ValidateForm("#form-register")
+        forms.SignForm("#form-register", has_captcha=True, after_sign=forms.ValidateForm("#form-register"))
 
     def modal_request_password(self):
         self.close_all()
@@ -1778,8 +1771,7 @@ class LeftBarAuthUserNoLogin(left_bar.LeftBarMenu):
             "#modal-container"
         )
         self.Modal.open()
-        forms.SignForm("#form-request_password", has_captcha=True)
-        forms.ValidateForm("#form-request_password")
+        forms.SignForm("#form-request_password", has_captcha=True, after_sign=forms.ValidateForm("#form-request_password"))
 
     def start(self):
 
@@ -1830,21 +1822,18 @@ class Profile(gatehandler.Handler):
             first_name = self.auth_user.first_name
             last_name = self.auth_user.last_name
             email = self.auth_user.email
-            if self.auth_user.locale is not None and self.auth_user.locale is not js_undefined: 
+            if self.auth_user.locale is not None and self.auth_user.locale is not js_undefined:
                 locale = self.auth_user.locale
 
-            if self.auth_user.two_factor is not None and self.auth_user.two_factor is not js_undefined: 
+            if self.auth_user.two_factor is not None and self.auth_user.two_factor is not js_undefined:
                 two_factor = self.auth_user.two_factor
                 if two_factor:
                     two_factor_represent = I(_class="fas fa-check")
 
-
-            if self.auth_user.multiple_login is not None and self.auth_user.multiple_login is not js_undefined: 
+            if self.auth_user.multiple_login is not None and self.auth_user.multiple_login is not js_undefined:
                 multiple_login = self.auth_user.multiple_login
                 if multiple_login:
                     multiple_login_represent = I(_class="fas fa-check")
-
-
 
         xml_content = CONCATENATE(
             DIV(
@@ -2066,7 +2055,7 @@ class Profile(gatehandler.Handler):
                                             ),
                                             _id="active_sessions_wrapper"
                                         ),
-                                         _class="p-col w1p100"
+                                        _class="p-col w1p100"
                                     ),
                                     _class="p-row"
                                 ),
@@ -2087,26 +2076,25 @@ class Profile(gatehandler.Handler):
         )
         xml_content.html_to("#main-container")
 
-
         self.reload()
         self.get_active_sessions()
 
     def after_submit(self, data, ajax_status):
-            if ajax_status == "success":
-                json = data.responseJSON
-                message = json.i18n.message
-                window.PhanterPWA.flash(**{'html': message})
-                if data.status == 200:
-                    jQuery(".phanterpwa-gallery-upload-input-file").val('')
-                    auth_user = json.auth_user
-                    window.PhanterPWA.store_auth_user(auth_user)
-                    self.reload()
+        if ajax_status == "success":
+            json = data.responseJSON
+            message = json.i18n.message
+            window.PhanterPWA.flash(**{'html': message})
+            if data.status == 200:
+                jQuery(".phanterpwa-gallery-upload-input-file").val('')
+                auth_user = json.auth_user
+                window.PhanterPWA.store_auth_user(auth_user)
+                self.reload()
 
-            else:
-                forms.SignForm("#form-profile")
-                json = data.responseJSON
-                message = json.i18n.message
-                window.PhanterPWA.flash(**{'html': message})
+        else:
+            forms.SignForm("#form-profile")
+            json = data.responseJSON
+            message = json.i18n.message
+            window.PhanterPWA.flash(**{'html': message})
 
     def get_active_sessions(self):
         window.PhanterPWA.ApiServer.GET(**{
@@ -2173,13 +2161,11 @@ class Profile(gatehandler.Handler):
             self._active_sessions_xml(data, ajax_status)
         window.PhanterPWA.flash(**{'html': json.i18n.message})
 
-
     def delete_session(self, identify):
         window.PhanterPWA.ApiServer.DELETE(**{
             'url_args': ["api", "auth", identify],
             'onComplete': self._after_delete_session
-        })        
-
+        })
 
     def submit(self):
         formdata = __new__(FormData(jQuery("#form-profile")[0]))
@@ -2207,7 +2193,7 @@ class Profile(gatehandler.Handler):
         self.GalleryInput = gallery.GalleryInput(
             "#profile-image-user-container", **{
                 "cutter": True,
-                "current_image":user_image,
+                "current_image": user_image,
                 "afterCut": lambda: self.submit()
             }
         )
@@ -2260,14 +2246,14 @@ class Profile(gatehandler.Handler):
             "click.open-model-edit-password",
             lambda: self.open_modal_change_password()
         )
+
     def modal_personal_information(self):
         self.Modal = ModalPersonalInformation(
             "#modal-container",
             hidden_fields=["email", "two_factor", "multiple_login"]
         )
         self.Modal.open()
-        forms.SignForm("#form-change_account")
-        forms.ValidateForm("#form-change_account")
+        forms.SignForm("#form-change_account", after_sign=forms.ValidateForm("#form-change_account"))
 
     def modal_change_email(self):
         self.Modal = ModalPersonalInformation(
@@ -2275,8 +2261,7 @@ class Profile(gatehandler.Handler):
             hidden_fields=["first_name", "last_name", "two_factor", "multiple_login"]
         )
         self.Modal.open()
-        forms.SignForm("#form-change_account")
-        forms.ValidateForm("#form-change_account")
+        forms.SignForm("#form-change_account", after_sign=forms.ValidateForm("#form-change_account"))
 
     def modal_change_two_factor(self):
         self.Modal = ModalPersonalInformation(
@@ -2287,8 +2272,7 @@ class Profile(gatehandler.Handler):
                 "code is added in the appropriate place."),
         )
         self.Modal.open()
-        forms.SignForm("#form-change_account")
-        forms.ValidateForm("#form-change_account")
+        forms.SignForm("#form-change_account", after_sign=forms.ValidateForm("#form-change_account"))
 
     def modal_change_multiple_login(self):
         self.Modal = ModalPersonalInformation(
@@ -2299,8 +2283,7 @@ class Profile(gatehandler.Handler):
                 "log in to a certain device, you are automatically logged out of the others.")
         )
         self.Modal.open()
-        forms.SignForm("#form-change_account")
-        forms.ValidateForm("#form-change_account")
+        forms.SignForm("#form-change_account", after_sign=forms.ValidateForm("#form-change_account"))
 
 
 class Lock(gatehandler.Handler):
