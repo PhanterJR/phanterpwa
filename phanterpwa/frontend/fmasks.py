@@ -32,7 +32,6 @@ class Mask():
     def onKeyPress(self, event, el):
         event.preventDefault()
         code = event.keyCode or event.which
-        console.log(code)
         element = jQuery(el)
         pos = element[0].selectionStart
         end = element[0].selectionEnd
@@ -79,6 +78,8 @@ class Mask():
 
         element[0].selectionStart = self.mask_function(pure_value)[1]
         element[0].selectionEnd = self.mask_function(pure_value)[1]
+        element.focus()
+        element[0].setSelectionRange(self.mask_function(pure_value)[1], self.mask_function(pure_value)[1])
 
 
     def onNonPrintingKeysIn(self, event, el):
@@ -178,7 +179,7 @@ class Mask():
 
         if(self.apply_on_init):
             element.val(new_value)
-            if(reverse):
+            if(self.reverse):
                 element[0].selectionStart = -len(new_value)
                 element[0].selectionEnd = -len(new_value)
             else:
@@ -186,15 +187,15 @@ class Mask():
                 element[0].selectionEnd = selection_pos
 
         element.off(
-            "keyup.phanterpwaMask, focusout.phanterpwaMask, keypress.phanterpwaMask"
+            "focusout.phanterpwaMask, keypress.phanterpwaMask"
         ).on(
-            "keyup.phanterpwaMask, focusout.phanterpwaMask, keypress.phanterpwaMask",
+            "focusout.phanterpwaMask, keypress.phanterpwaMask",
             lambda event: self.onKeyPress(event, this)
         )
         element.off(
-            "keyup.phanterpwaMask,"
+            "keyup.phanterpwaMask2,"
         ).on(
-            "keyup.phanterpwaMask,",
+            "keyup.phanterpwaMask2,",
             lambda event: self.onKeyUp(event, this)
         )
         element.off(

@@ -295,6 +295,7 @@ class Input(Widget):
         self._check_value(el)
 
     def reload(self):
+
         self.start()
 
     def _binds(self):
@@ -313,8 +314,8 @@ class Input(Widget):
             "change.phanterpwa-event-input_materialize",
             lambda: self._check_value(this)
         )
-        target.find("label").off("click.phanterpwa-event-input_materialize").on(
-            "click.phanterpwa-event-input_materialize",
+        target.find("label").off("click.phanterpwa-event-input_materialize, touchstart.phanterpwa-event-input_materialize").on(
+            "click.phanterpwa-event-input_materialize, touchstart.phanterpwa-event-input_materialize",
             lambda: self._on_click_label(this)
         )
         if self._mask is not "" and self._mask is not None:
@@ -348,6 +349,7 @@ class Input(Widget):
             ).html(I(_class="fas fa-check").jquery())
 
     def start(self):
+        console.log("reloaded")
         self._binds()
 
     def value(self):
