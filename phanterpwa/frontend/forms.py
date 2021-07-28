@@ -71,8 +71,11 @@ class SignForm():
         if ajax_status == "success":
             csrf = data.responseJSON.csrf
             self.element_csrf_token.val(csrf).trigger("keyup")
-        if self.after_sign is not None and self.after_sign is not js_undefined:
+        if callable(self.after_sign):
             self.after_sign(data, ajax_status)
+        elif self.after_sign is not None:
+            raise SyntaxError("The after_sign must be callable")
+
 
     def signForm(self):
         self.element_csrf_token.val("").trigger("keyup")

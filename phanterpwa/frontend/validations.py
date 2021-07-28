@@ -252,7 +252,6 @@ class Valider():
                 validate_test_pass.append(False)
 
         if validate_name.startswith("MASK:"):
-            console.log("iiiiiiiii")
             self.tests[validate_name] = "Fail"
             is_not_valid = False
             mask_val = validate_name[5:]

@@ -869,7 +869,7 @@ class User():
         self.binds()
 
     def binds(self):
-        forms.SignForm("#form-auth_user", after_sign=forms.ValidateForm("#form-auth_user"))
+        forms.SignForm("#form-auth_user", after_sign=lambda: forms.ValidateForm("#form-auth_user"))
         jQuery(
             "#phanterpwa-widget-form-submit_button-auth_user"
         ).off(
@@ -1131,7 +1131,7 @@ class Role():
         self.binds()
 
     def binds(self):
-        forms.SignForm("#form-auth_group", after_sign=forms.ValidateForm("#form-auth_group"))
+        forms.SignForm("#form-auth_group", after_sign=lambda: forms.ValidateForm("#form-auth_group"))
         jQuery(
             "#phanterpwa-widget-form-submit_button-auth_group"
         ).off(

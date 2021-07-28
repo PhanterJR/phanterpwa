@@ -349,7 +349,6 @@ class Input(Widget):
             ).html(I(_class="fas fa-check").jquery())
 
     def start(self):
-        console.log("reloaded")
         self._binds()
 
     def value(self):

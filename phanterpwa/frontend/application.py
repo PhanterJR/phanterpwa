@@ -15,7 +15,7 @@ __pragma__('skip')
 
 # it is ignored on transcrypt
 window = jQuery = console = document = localStorage = URL = M = FormData = setTimeout = RegExp =\
-    sessionStorage = this = FileReader = JSON = js_undefined = navigator = __new__ = Date = 0
+    sessionStorage = this = FileReader = JSON = js_undefined = navigator = __new__ = __except0__ = Date = 0
 
 __pragma__('noskip')
 
@@ -59,6 +59,7 @@ class PhanterPWA():
         self._after_open_way = parameters.get("after_open_way", None)
         self._after_login = parameters.get("after_login", None)
         self._after_logout = parameters.get("after_logout", None)
+        self._send_global_error = parameters.get("send_global_error", False)
         self.counter = 0
         self.states = dict()
         self._social_login_icons = {
@@ -89,6 +90,24 @@ class PhanterPWA():
         if self.DEBUG:
             self.add_component(Developer_Toolbar())
         self.Valider = validations.Valid
+
+        window.onerror = self.onGlobalError
+
+    def onGlobalError(self, message, source, lineno, colno, error):
+        if self._send_global_error and self.ApiServer is not js_undefined:
+            formdata = __new__(FormData())
+            formdata.append("message", message)
+            formdata.append("source", source)
+            formdata.append("lineno", lineno)
+            formdata.append("colno", colno)
+            formdata.append("error", error)
+
+            self.POST(
+                "api",
+                "error",
+                form_data=formdata
+            )
+
 
     @staticmethod
     def check_event_namespace(el, event_name, namespace):
@@ -1218,21 +1237,22 @@ class WayRequest():
         last_way = window.PhanterPWA.get_current_way()
         self.last_way = last_way
         if self.gate in window.PhanterPWA.Gates:
-            if window.PhanterPWA.DEBUG:
-                sessionStorage.setItem("current_way", self.way)
+            # if window.PhanterPWA.DEBUG:
+            #     sessionStorage.setItem("current_way", self.way)
 
+            #     window.PhanterPWA.Gates[self.gate](self)
+            # else:
+            try:
                 window.PhanterPWA.Gates[self.gate](self)
-            else:
-                try:
-                    window.PhanterPWA.Gates[self.gate](self)
-                except:
-                    if window.PhanterPWA.DEBUG:
-                        console.error("Error on try open '{0}'".format(way))
-                    else:
-                        console.error("Error on try open '{0}'".format(way))
-                    window.PhanterPWA.open_code_way(500, self)
+            except:
+                window.PhanterPWA.onGlobalError(__except0__.message, __except0__.fileName, __except0__.lineNumber, __except0__.columnNumber, __except0__.name)
+                window.PhanterPWA.open_code_way(500, self)
+                if window.PhanterPWA.DEBUG:
+                    console.error(__except0__)
                 else:
-                    sessionStorage.setItem("current_way", self.way)
+                    console.error("Error on try open '{0}'".format(way))
+            else:
+                sessionStorage.setItem("current_way", self.way)
 
         else:
             self.error = 404

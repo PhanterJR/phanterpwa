@@ -117,7 +117,7 @@ class AuthUser(application.Component):
             social_logins=window.PhanterPWA.social_login_list()
         )
         self.Modal.open()
-        forms.SignForm("#form-login", has_captcha=True, after_sign=forms.ValidateForm("#form-login"))
+        forms.SignForm("#form-login", has_captcha=True, after_sign=lambda: forms.ValidateForm("#form-login"))
 
     def modal_register(self):
         self.close_menu()
@@ -125,7 +125,7 @@ class AuthUser(application.Component):
             "#modal-container"
         )
         self.Modal.open()
-        forms.SignForm("#form-register", has_captcha=True, after_sign=forms.ValidateForm("#form-register"))
+        forms.SignForm("#form-register", has_captcha=True, after_sign=lambda: forms.ValidateForm("#form-register"))
 
     def modal_request_password(self):
         self.close_menu()
@@ -133,7 +133,7 @@ class AuthUser(application.Component):
             "#modal-container"
         )
         self.Modal.open()
-        forms.SignForm("#form-request_password", has_captcha=True, after_sign=forms.ValidateForm("#form-request_password"))
+        forms.SignForm("#form-request_password", has_captcha=True, after_sign=lambda: forms.ValidateForm("#form-request_password"))
 
     def modal_change_password(self, temporary_password=None):
         self.close_menu()
@@ -142,7 +142,7 @@ class AuthUser(application.Component):
             temporary_password=temporary_password
         )
         self.Modal.open()
-        forms.SignForm("#form-change_password", after_sign=forms.ValidateForm("#form-change_password"))
+        forms.SignForm("#form-change_password", after_sign=lambda: forms.ValidateForm("#form-change_password"))
 
     def logout(self):
         window.PhanterPWA.logout()
@@ -1221,7 +1221,7 @@ class AlertActivationAccount(top_slide.TopSlide):
 
     def binds(self):
         self._process_alert_content()
-        forms.SignForm("#form-activation", after_sign=forms.ValidateForm("#form-activation"))
+        forms.SignForm("#form-activation", after_sign=lambda: forms.ValidateForm("#form-activation"))
         self.element_target = jQuery(self.target_selector)
         self.element_target.find("#phanterpwa-widget-form-submit_button-activation").off(
             'click.modal_submit_activation'
@@ -1755,7 +1755,7 @@ class LeftBarAuthUserNoLogin(left_bar.LeftBarMenu):
             social_logins=window.PhanterPWA.social_login_list()
         )
         self.Modal.open()
-        forms.SignForm("#form-login", has_captcha=True, after_sign=forms.ValidateForm("#form-login"))
+        forms.SignForm("#form-login", has_captcha=True, after_sign=lambda: forms.ValidateForm("#form-login"))
 
     def modal_register(self):
         self.close_all()
@@ -1763,7 +1763,7 @@ class LeftBarAuthUserNoLogin(left_bar.LeftBarMenu):
             "#modal-container"
         )
         self.Modal.open()
-        forms.SignForm("#form-register", has_captcha=True, after_sign=forms.ValidateForm("#form-register"))
+        forms.SignForm("#form-register", has_captcha=True, after_sign=lambda: forms.ValidateForm("#form-register"))
 
     def modal_request_password(self):
         self.close_all()
@@ -1771,7 +1771,7 @@ class LeftBarAuthUserNoLogin(left_bar.LeftBarMenu):
             "#modal-container"
         )
         self.Modal.open()
-        forms.SignForm("#form-request_password", has_captcha=True, after_sign=forms.ValidateForm("#form-request_password"))
+        forms.SignForm("#form-request_password", has_captcha=True, after_sign=lambda: forms.ValidateForm("#form-request_password"))
 
     def start(self):
 
@@ -2253,7 +2253,7 @@ class Profile(gatehandler.Handler):
             hidden_fields=["email", "two_factor", "multiple_login"]
         )
         self.Modal.open()
-        forms.SignForm("#form-change_account", after_sign=forms.ValidateForm("#form-change_account"))
+        forms.SignForm("#form-change_account", after_sign=lambda: forms.ValidateForm("#form-change_account"))
 
     def modal_change_email(self):
         self.Modal = ModalPersonalInformation(
@@ -2261,7 +2261,7 @@ class Profile(gatehandler.Handler):
             hidden_fields=["first_name", "last_name", "two_factor", "multiple_login"]
         )
         self.Modal.open()
-        forms.SignForm("#form-change_account", after_sign=forms.ValidateForm("#form-change_account"))
+        forms.SignForm("#form-change_account", after_sign=lambda: forms.ValidateForm("#form-change_account"))
 
     def modal_change_two_factor(self):
         self.Modal = ModalPersonalInformation(
@@ -2272,7 +2272,7 @@ class Profile(gatehandler.Handler):
                 "code is added in the appropriate place."),
         )
         self.Modal.open()
-        forms.SignForm("#form-change_account", after_sign=forms.ValidateForm("#form-change_account"))
+        forms.SignForm("#form-change_account", after_sign=lambda: forms.ValidateForm("#form-change_account"))
 
     def modal_change_multiple_login(self):
         self.Modal = ModalPersonalInformation(
@@ -2283,7 +2283,7 @@ class Profile(gatehandler.Handler):
                 "log in to a certain device, you are automatically logged out of the others.")
         )
         self.Modal.open()
-        forms.SignForm("#form-change_account", after_sign=forms.ValidateForm("#form-change_account"))
+        forms.SignForm("#form-change_account", after_sign=lambda: forms.ValidateForm("#form-change_account"))
 
 
 class Lock(gatehandler.Handler):

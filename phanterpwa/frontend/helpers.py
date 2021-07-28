@@ -208,7 +208,6 @@ class XTRD(XmlConstructor):
         window.PhanterPWA.drag = jQuery(el)[0].outerHTML
 
     def __ondrop(self, el):
-        console.log("drop_if", el)
         if callable(self._drop_if):
             if self._drop_if(el):
                 jQuery(el).insertAfter(window.PhanterPWA.drag)

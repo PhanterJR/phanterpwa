@@ -29,7 +29,6 @@ class EchoWebSocket(websocket.WebSocketHandler):
         return True
 
     def open(self):
-        print("WebSocket opened")
         self.write_message(u"______  _                    _               ______  _    _   ___  ")
         self.write_message(u"| ___ \| |                  | |              | ___ \| |  | | / _ \ ")
         self.write_message(u"| |_/ /| |__    __ _  _ __  | |_   ___  _ __ | |_/ /| |  | |/ /_\ \\")
@@ -69,6 +68,7 @@ class EchoWebSocket(websocket.WebSocketHandler):
                         if q_user:
                             self.phanterpwa_current_user = q_user
                             if msg == "command_online":
+                                print("{0} webSocket opened".format(self.phanterpwa_current_user.email))
                                 q_user.update_record(websocket_opened=True)
                                 self.DALDatabase.commit()
                                 self.write_message(u"__ You're online")
@@ -94,5 +94,7 @@ class EchoWebSocket(websocket.WebSocketHandler):
         if self.phanterpwa_current_user:
             self.phanterpwa_current_user.update_record(websocket_opened=False)
             self.DALDatabase.commit()
+            print("{0} webSocket closed".format(self.phanterpwa_current_user.email))
+        else:
+            print("Unknow webSocket closed")
         self.connections.remove(self)
-        print("WebSocket closed")
