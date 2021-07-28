@@ -1084,9 +1084,10 @@ class WatchingFiles():
                     self._files[
                         f
                     ] = [os.path.getmtime(f), d]
-                    if os.path.getmtime(f) != os.path.getmtime(d):
-                        print("Was Modify: {0}\nCoping {0} to {1}".format(f, d))
-                        shutil.copy2(f, d)
+                    if os.path.isfile(d):
+                        if os.path.getmtime(f) != os.path.getmtime(d):
+                            print("Was Modify: {0}\nCoping {0} to {1}".format(f, d))
+                            shutil.copy2(f, d)
 
         if os.path.isdir(self.path_destiny):
             for x in os.walk(self.path_destiny):
