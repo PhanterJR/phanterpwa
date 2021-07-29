@@ -1,4 +1,5 @@
 import json
+import types
 import re
 import time
 import datetime
@@ -94,7 +95,7 @@ class DataForm():
 
 
 class WidgetFromFieldDALFromTableDAL():
-    def __init__(self, table, field, record_id=None, data_view=False, simple_widget=False):
+    def __init__(self, table, field, record_id=None, data_view=False, simple_widget=False, custom_phanterpwa=None):
         self.table = table
         self._db = self.table._db
         self._data_view = data_view
@@ -106,26 +107,31 @@ class WidgetFromFieldDALFromTableDAL():
         self.group = None
         self.out_of_form = False
         self.simple_widget = simple_widget
+        self.phanterpwa = dict()
+        if custom_phanterpwa:
+            self.phanterpwa = custom_phanterpwa
 
-        if not hasattr(self.table[self._field], "phanterpwa"):
-            self.table[self._field].phanterpwa = {"_class": "p-col w1p100"}
-        else:
-            if "data_view" in self.table[self._field].phanterpwa:
-                self._data_view = self.table[self._field].phanterpwa["data_view"]
-            if "_class" not in self.table[self._field].phanterpwa:
-                self.table[self._field].phanterpwa["_class"] = "p-col w1p100"
-            if "position" in self.table[self._field].phanterpwa:
-                self.position = self.table[self._field].phanterpwa["position"]
-            if "section" in self.table[self._field].phanterpwa:
-                self.section = self.table[self._field].phanterpwa["section"]
-            elif "group" in self.table[self._field].phanterpwa:
-                self.group = self.table[self._field].phanterpwa["group"]
-            if "out_of_form" in self.table[self._field].phanterpwa and\
-                    self.table[self._field].phanterpwa["out_of_form"] is True:
+        if hasattr(self.table[self._field], "phanterpwa"):
+            for x in self.table[self._field].phanterpwa:
+                if x not in self.phanterpwa:
+                    self.phanterpwa[x] = self.table[self._field].phanterpwa[x]
+
+            if "data_view" in self.phanterpwa:
+                self._data_view = self.phanterpwa["data_view"]
+            if "position" in self.phanterpwa:
+                self.position = self.phanterpwa["position"]
+            if "section" in self.phanterpwa:
+                self.section = self.phanterpwa["section"]
+            elif "group" in self.phanterpwa:
+                self.group = self.phanterpwa["group"]
+            if "out_of_form" in self.phanterpwa and\
+                    self.phanterpwa["out_of_form"] is True:
                 self.out_of_form = True
-            if "simple_widget" in self.table[self._field].phanterpwa and\
-                    self.table[self._field].phanterpwa["simple_widget"] is True:
+            if "simple_widget" in self.phanterpwa and\
+                    self.phanterpwa["simple_widget"] is True:
                 self.simple_widget = True
+        if "_class" not in self.phanterpwa:
+            self.phanterpwa["_class"] = "p-col w1p100"
 
     @property
     def position(self):
@@ -180,30 +186,30 @@ class WidgetFromFieldDALFromTableDAL():
     def __ppwa_check_validators(self, validator):
 
         if isinstance(validator, IS_NOT_EMPTY):
-            if "can_empty" not in self.table[self._field].phanterpwa:
-                self.table[self._field].phanterpwa["can_empty"] = False
+            if "can_empty" not in self.phanterpwa:
+                self.phanterpwa["can_empty"] = False
             return ["IS_NOT_EMPTY"]
         elif isinstance(validator, IS_DATETIME):
-            if "format" not in self.table[self._field].phanterpwa:
-                self.table[self._field].phanterpwa["validator_format"] = validator.format
-                self.table[self._field].phanterpwa["format"] = datetime_formater(validator.format)
+            if "format" not in self.phanterpwa:
+                self.phanterpwa["validator_format"] = validator.format
+                self.phanterpwa["format"] = datetime_formater(validator.format)
             return ["IS_DATETIME:{0}".format(datetime_formater(validator.format))]
         elif isinstance(validator, IS_DATE):
-            if "format" not in self.table[self._field].phanterpwa:
-                self.table[self._field].phanterpwa["validator_format"] = validator.format
-                self.table[self._field].phanterpwa["format"] = datetime_formater(validator.format)
+            if "format" not in self.phanterpwa:
+                self.phanterpwa["validator_format"] = validator.format
+                self.phanterpwa["format"] = datetime_formater(validator.format)
             return ["IS_DATE:{0}".format(datetime_formater(validator.format))]
         elif isinstance(validator, IS_TIME):
-            if "format" not in self.table[self._field].phanterpwa:
-                self.table[self._field].phanterpwa["validator_format"] = validator.format
-                self.table[self._field].phanterpwa["format"] = datetime_formater(validator.format)
+            if "format" not in self.phanterpwa:
+                self.phanterpwa["validator_format"] = validator.format
+                self.phanterpwa["format"] = datetime_formater(validator.format)
             return ["IS_TIME:{0}".format(datetime_formater(validator.format))]
         elif isinstance(validator, IS_ACTIVATION_CODE):
             return ["IS_ACTIVATION_CODE"]
         elif isinstance(validator, IS_EMAIL):
             return ["IS_EMAIL"]
         elif isinstance(validator, IS_IN_DB):
-            if "data_set" not in self.table[self._field].phanterpwa:
+            if "data_set" not in self.phanterpwa:
                 validator.build_set()
                 table_name = validator.ktable
                 if callable(self._db[table_name]._format):
@@ -212,26 +218,26 @@ class WidgetFromFieldDALFromTableDAL():
                     theset = [self._db[table_name]._format % x.as_dict() for x in self._db(self._db[table_name].id > 0).select()]
                 else:
                     theset = [x.id for x in self._db(self._db[table_name].id > 0).select()]
-
                 return ["IS_IN_SET:{0}".format(json.dumps("{0}".format(theset)))]
             else:
-                theset = self.table[self._field].phanterpwa['data_set']
-                if callable(self.table[self._field].phanterpwa['data_set']):
-                    theset = self.table[self._field].phanterpwa['data_set'](self.record)
-
+                if callable(self.phanterpwa['data_set']):
+                    theset = self.phanterpwa['data_set'](self.record)
+                else:
+                    theset = self.phanterpwa['data_set']
+                self.phanterpwa['data_set'] = theset
                 return ["IS_IN_SET:{0}".format(json.dumps("{0}".format(theset)))]
         elif isinstance(validator, IS_IN_SET):
-            if "data_set" not in self.table[self._field].phanterpwa and "type" not in self.table[self._field].phanterpwa:
-                self.table[self._field].phanterpwa["type"] = "select"
-                self.table[self._field].phanterpwa["data_set"] = list(validator.theset)
+            if "data_set" not in self.phanterpwa and "type" not in self.phanterpwa:
+                self.phanterpwa["type"] = "select"
+                self.phanterpwa["data_set"] = list(validator.theset)
             return ["IS_IN_SET:{0}".format(json.dumps("{0}".format(validator.theset)))]
         elif isinstance(validator, IS_EMPTY_OR):
-            if "can_empty" not in self.table[self._field].phanterpwa and \
-                    "validators" not in self.table[self._field].phanterpwa:
-                self.table[self._field].phanterpwa["can_empty"] = True
-            elif "validators" in self.table[self._field].phanterpwa and \
-                    "IS_NOT_EMPTY" in self.table[self._field].phanterpwa["validators"]:
-                self.table[self._field].phanterpwa["can_empty"] = False
+            if "can_empty" not in self.phanterpwa and \
+                    "validators" not in self.phanterpwa:
+                self.phanterpwa["can_empty"] = True
+            elif "validators" in self.phanterpwa and \
+                    "IS_NOT_EMPTY" in self.phanterpwa["validators"]:
+                self.phanterpwa["can_empty"] = False
             other = self.__ppwa_check_validators(validator.other)
             if other:
                 if isinstance(other, (list, tuple)):
@@ -262,13 +268,13 @@ class WidgetFromFieldDALFromTableDAL():
                 return result
             auto_validators = u_list(self.__ppwa_check_validators(FieldInst.requires))
 
-            if "validators" not in FieldInst.phanterpwa:
+            if "validators" not in self.phanterpwa:
                 json_field["validators"] = auto_validators
             else:
-                json_field["validators"] = FieldInst.phanterpwa["validators"]
+                json_field["validators"] = self.phanterpwa["validators"]
             default = FieldInst.default
-            if "can_empty" in FieldInst.phanterpwa:
-                json_field["can_empty"] = FieldInst.phanterpwa["can_empty"]
+            if "can_empty" in self.phanterpwa:
+                json_field["can_empty"] = self.phanterpwa["can_empty"]
 
             if t.startswith("reference"):
 
@@ -277,21 +283,21 @@ class WidgetFromFieldDALFromTableDAL():
                         default = self._record[FieldInst].id
                     else:
                         default = None
-                json_field['editable'] = FieldInst.phanterpwa.get("editable", False)
+                json_field['editable'] = self.phanterpwa.get("editable", False)
                 ref_table = t.split(" ")[1]
-                if "data_set" in FieldInst.phanterpwa:
-                    if callable(FieldInst.phanterpwa['data_set']):
-                        data_ref_table_formated = FieldInst.phanterpwa['data_set'](self.record)
+                if "data_set" in self.phanterpwa:
+                    if callable(self.phanterpwa['data_set']):
+                        data_ref_table_formated = self.phanterpwa['data_set'](self.record)
                     else:
-                        data_ref_table_formated = FieldInst.phanterpwa["data_set"]
+                        data_ref_table_formated = self.phanterpwa["data_set"]
                     if json_field['editable']:
-                        if 'reference_field' not in FieldInst.phanterpwa:
+                        if 'reference_field' not in self.phanterpwa:
                             raise SyntaxError("".join(["You placed in '", self._field,
                                 "' the reference field as editable, it is necessary to",
                                     " define the field of the referenced table. e.g. ",
                                         "phanterpwa = {'editable': True, 'refence_field': 'field_of_referenced_table'}"]))
                         else:
-                            json_field['reference_field'] = FieldInst.phanterpwa["reference_field"]
+                            json_field['reference_field'] = self.phanterpwa["reference_field"]
                     else:
                         json_field['reference_field'] = 'id'
                     json_field['reference_table'] = ref_table
@@ -335,13 +341,13 @@ class WidgetFromFieldDALFromTableDAL():
                     json_field['fields'] = self.db[ref_table].fields
                     
                     if json_field['editable']:
-                        if 'reference_field' not in FieldInst.phanterpwa:
+                        if 'reference_field' not in self.phanterpwa:
                             raise SyntaxError("".join(["You placed in '", self._field,
                                 "' the reference field as editable, it is necessary to",
                                     " define the field of the referenced table. e.g. ",
                                         "phanterpwa = {'editable': True, 'refence_field': 'field_of_referenced_table'}"]))
                         else:
-                            json_field['reference_field'] = FieldInst.phanterpwa["reference_field"]
+                            json_field['reference_field'] = self.phanterpwa["reference_field"]
                     else:
                         json_field['reference_field'] = 'id'
                     json_field['reference_table'] = ref_table
@@ -359,16 +365,16 @@ class WidgetFromFieldDALFromTableDAL():
                 # print(type(default))
                 # if default:
                 #     default = default.isoformat()
-                if "format" in FieldInst.phanterpwa:
-                    dformat = FieldInst.phanterpwa["format"]
+                if "format" in self.phanterpwa:
+                    dformat = self.phanterpwa["format"]
                 elif t == "datetime":
                     dformat = "yyyy-MM-dd HH:mm:ss"
                 elif t == "date":
                     dformat = "yyyy-MM-dd"
                 elif t == "time":
                     dformat = "HH:mm:ss"
-                if "validator_format" in FieldInst.phanterpwa and default:
-                    formato_saida = FieldInst.phanterpwa["validator_format"]
+                if "validator_format" in self.phanterpwa and default:
+                    formato_saida = self.phanterpwa["validator_format"]
                     json_field["validator_format"] = formato_saida
                     if t == "datetime":
                         if isinstance(default, datetime.datetime) or isinstance(default, datetime.date):
@@ -422,7 +428,7 @@ class WidgetFromFieldDALFromTableDAL():
                             resultado = str(time.strftime(formato_saida, tempo))
                     json_field['formatted'] = resultado
                 else:
-                    formato_saida = FieldInst.phanterpwa["validator_format"]
+                    formato_saida = self.phanterpwa["validator_format"]
                     json_field["validator_format"] = formato_saida
                 if self.simple_widget:
                     json_field['label'] = FieldInst.label
@@ -471,42 +477,45 @@ class WidgetFromFieldDALFromTableDAL():
                     json_field['value'] = default
                     json_field['type'] = FieldInst.type
 
-                    if "format" in FieldInst.phanterpwa:
-                        json_field["format"] = FieldInst.phanterpwa["format"]
-                    if "data_set" in FieldInst.phanterpwa:
+                    if "format" in self.phanterpwa:
+                        json_field["format"] = self.phanterpwa["format"]
+                    if "data_set" in self.phanterpwa:
                         if FieldInst.type == "string":
                             json_field["type"] = "select"
-                        if callable(FieldInst.phanterpwa['data_set']):
-                            json_field["data_set"] = FieldInst.phanterpwa['data_set'](self.record)
+                        if callable(self.phanterpwa['data_set']):
+                            json_field["data_set"] = self.phanterpwa['data_set'](self.record)
+                        elif isinstance(self.phanterpwa['data_set'], types.GeneratorType):
+                            json_field["data_set"] = list(self.phanterpwa['data_set'])
+                            self.phanterpwa['data_set'] = json_field["data_set"]
                         else:
-                            json_field["data_set"] = FieldInst.phanterpwa["data_set"]
-                    if "mask" in FieldInst.phanterpwa:
-                        json_field["mask"] = FieldInst.phanterpwa["mask"]
-                    if "type" in FieldInst.phanterpwa:
-                        json_field["type"] = FieldInst.phanterpwa["type"]
-                    if "cutter" in FieldInst.phanterpwa:
-                        json_field["cutter"] = FieldInst.phanterpwa["cutter"]
-                    if "width" in FieldInst.phanterpwa:
-                        json_field["width"] = FieldInst.phanterpwa["width"]
-                    if "height" in FieldInst.phanterpwa:
-                        json_field["height"] = FieldInst.phanterpwa["height"]
-                    if "view_width" in FieldInst.phanterpwa:
-                        json_field["view_width"] = FieldInst.phanterpwa["view_width"]
-                    if "view_height" in FieldInst.phanterpwa:
-                        json_field["view_height"] = FieldInst.phanterpwa["view_height"]
-            if "extra" in FieldInst.phanterpwa and self.record and callable(FieldInst.phanterpwa['extra']):
-                json_field["extra"] = FieldInst.phanterpwa['extra'](self.record)
-            if "url" in FieldInst.phanterpwa and self.record and callable(FieldInst.phanterpwa['url']):
-                json_field["url"] = FieldInst.phanterpwa['url'](self.record)
-            if "no-cache" in FieldInst.phanterpwa:
-                json_field["no-cache"] = FieldInst.phanterpwa['no-cache']
-            if "disabled" in FieldInst.phanterpwa:
-                json_field["disabled"] = FieldInst.phanterpwa['disabled']
-            if "editable" in FieldInst.phanterpwa:
-                json_field["editable"] = FieldInst.phanterpwa['editable']
-            for x in FieldInst.phanterpwa:
+                            json_field["data_set"] = self.phanterpwa["data_set"]
+                    if "mask" in self.phanterpwa:
+                        json_field["mask"] = self.phanterpwa["mask"]
+                    if "type" in self.phanterpwa:
+                        json_field["type"] = self.phanterpwa["type"]
+                    if "cutter" in self.phanterpwa:
+                        json_field["cutter"] = self.phanterpwa["cutter"]
+                    if "width" in self.phanterpwa:
+                        json_field["width"] = self.phanterpwa["width"]
+                    if "height" in self.phanterpwa:
+                        json_field["height"] = self.phanterpwa["height"]
+                    if "view_width" in self.phanterpwa:
+                        json_field["view_width"] = self.phanterpwa["view_width"]
+                    if "view_height" in self.phanterpwa:
+                        json_field["view_height"] = self.phanterpwa["view_height"]
+            if "extra" in self.phanterpwa and self.record and callable(self.phanterpwa['extra']):
+                json_field["extra"] = self.phanterpwa['extra'](self.record)
+            if "url" in self.phanterpwa and self.record and callable(self.phanterpwa['url']):
+                json_field["url"] = self.phanterpwa['url'](self.record)
+            if "no-cache" in self.phanterpwa:
+                json_field["no-cache"] = self.phanterpwa['no-cache']
+            if "disabled" in self.phanterpwa:
+                json_field["disabled"] = self.phanterpwa['disabled']
+            if "editable" in self.phanterpwa:
+                json_field["editable"] = self.phanterpwa['editable']
+            for x in self.phanterpwa:
                 if x.startswith("_"):
-                    json_field[x] = FieldInst.phanterpwa[x]
+                    json_field[x] = self.phanterpwa[x]
             if self._data_view:
                 json_field["data_view"] = True
             else:
@@ -631,9 +640,9 @@ class CustomField():
                 theset = [x.id for x in self._db(self._db[table_name].id > 0).select()]
             return ["IS_IN_SET:{0}".format(json.dumps("{0}".format(theset)))]
         elif isinstance(validator, IS_IN_SET):
-            if "data_set" not in self.table[self._field].phanterpwa and "type" not in self.table[self._field].phanterpwa:
-                self.table[self._field].phanterpwa["type"] = "select"
-                self.table[self._field].phanterpwa["data_set"] = list(validator.theset)
+            if "data_set" not in self.phanterpwa and "type" not in self.phanterpwa:
+                self.phanterpwa["type"] = "select"
+                self.phanterpwa["data_set"] = list(validator.theset)
             return ["IS_IN_SET:{0}".format(json.dumps("{0}".format(validator.theset)))]
         elif isinstance(validator, IS_EMPTY_OR):
             if "can_empty" not in self._field.phanterpwa and \
@@ -672,13 +681,13 @@ class CustomField():
                 return result
             auto_validators = u_list(self.__ppwa_check_validators(FieldInst.requires))
 
-            if "validators" not in FieldInst.phanterpwa:
+            if "validators" not in self.phanterpwa:
                 json_field["validators"] = auto_validators
             else:
-                json_field["validators"] = FieldInst.phanterpwa["validators"]
+                json_field["validators"] = self.phanterpwa["validators"]
             default = FieldInst.default
-            if "can_empty" in FieldInst.phanterpwa:
-                json_field["can_empty"] = FieldInst.phanterpwa["can_empty"]
+            if "can_empty" in self.phanterpwa:
+                json_field["can_empty"] = self.phanterpwa["can_empty"]
 
             if t.startswith("reference"):
 
@@ -729,15 +738,15 @@ class CustomField():
                 json_field['type'] = 'reference'
                 json_field['fields'] = self.db[ref_table].fields
                 json_field['data_set'] = data_ref_table_formated
-                json_field['editable'] = FieldInst.phanterpwa.get("editable", False)
+                json_field['editable'] = self.phanterpwa.get("editable", False)
                 if json_field['editable']:
-                    if 'reference_field' not in FieldInst.phanterpwa:
+                    if 'reference_field' not in self.phanterpwa:
                         raise SyntaxError("".join(["You placed in '", self._field,
                             "' the reference field as editable, it is necessary to",
                                 " define the field of the referenced table. e.g. ",
                                     "phanterpwa = {'editable': True, 'refence_field': 'field_of_referenced_table'}"]))
                     else:
-                        json_field['reference_field'] = FieldInst.phanterpwa["reference_field"]
+                        json_field['reference_field'] = self.phanterpwa["reference_field"]
                 else:
                     json_field['reference_field'] = 'id'
                 json_field['reference_table'] = ref_table
@@ -751,16 +760,16 @@ class CustomField():
                 # print(type(default))
                 # if default:
                 #     default = default.isoformat()
-                if "format" in FieldInst.phanterpwa:
-                    dformat = FieldInst.phanterpwa["format"]
+                if "format" in self.phanterpwa:
+                    dformat = self.phanterpwa["format"]
                 elif t == "datetime":
                     dformat = "yyyy-MM-dd HH:mm:ss"
                 elif t == "date":
                     dformat = "yyyy-MM-dd"
                 elif t == "time":
                     dformat = "HH:mm:ss"
-                if "validator_format" in FieldInst.phanterpwa and default:
-                    formato_saida = FieldInst.phanterpwa["validator_format"]
+                if "validator_format" in self.phanterpwa and default:
+                    formato_saida = self.phanterpwa["validator_format"]
                     json_field["validator_format"] = formato_saida
                     if t == "datetime":
                         if isinstance(default, datetime.datetime) or isinstance(default, datetime.date):
@@ -814,7 +823,7 @@ class CustomField():
                             resultado = str(time.strftime(formato_saida, tempo))
                     json_field['formatted'] = resultado
                 else:
-                    formato_saida = FieldInst.phanterpwa["validator_format"]
+                    formato_saida = self.phanterpwa["validator_format"]
                     json_field["validator_format"] = formato_saida
 
                 json_field['label'] = FieldInst.label
@@ -825,8 +834,8 @@ class CustomField():
 
             else:
                 default = FieldInst.default
-                if "value" in FieldInst.phanterpwa:
-                    default = FieldInst.phanterpwa["value"]
+                if "value" in self.phanterpwa:
+                    default = self.phanterpwa["value"]
                 if FieldInst.type == "id":
                     json_field['label'] = FieldInst.label
                     json_field['value'] = default
@@ -837,43 +846,43 @@ class CustomField():
                     json_field['value'] = default
                     json_field['type'] = FieldInst.type
 
-                    if "format" in FieldInst.phanterpwa:
-                        json_field["format"] = FieldInst.phanterpwa["format"]
-                    if "data_set" in FieldInst.phanterpwa:
+                    if "format" in self.phanterpwa:
+                        json_field["format"] = self.phanterpwa["format"]
+                    if "data_set" in self.phanterpwa:
                         if FieldInst.type == "string":
                             json_field["type"] = "select"
-                        if callable(FieldInst.phanterpwa['data_set']):
-                            json_field["data_set"] = FieldInst.phanterpwa['data_set'](self.record)
+                        if callable(self.phanterpwa['data_set']):
+                            json_field["data_set"] = self.phanterpwa['data_set'](self.record)
                         else:
-                            json_field["data_set"] = FieldInst.phanterpwa["data_set"]
-                    if "mask" in FieldInst.phanterpwa:
-                        json_field["mask"] = FieldInst.phanterpwa["mask"]
-                    if "type" in FieldInst.phanterpwa:
-                        json_field["type"] = FieldInst.phanterpwa["type"]
-                    if "cutter" in FieldInst.phanterpwa:
-                        json_field["cutter"] = FieldInst.phanterpwa["cutter"]
-                    if "width" in FieldInst.phanterpwa:
-                        json_field["width"] = FieldInst.phanterpwa["width"]
-                    if "height" in FieldInst.phanterpwa:
-                        json_field["height"] = FieldInst.phanterpwa["height"]
-                    if "view_width" in FieldInst.phanterpwa:
-                        json_field["view_width"] = FieldInst.phanterpwa["view_width"]
-                    if "view_height" in FieldInst.phanterpwa:
-                        json_field["view_height"] = FieldInst.phanterpwa["view_height"]
-            if "extra" in FieldInst.phanterpwa and self.record and callable(FieldInst.phanterpwa['extra']):
-                json_field["extra"] = FieldInst.phanterpwa['extra'](self.record)
-            if "url" in FieldInst.phanterpwa and self.record and callable(FieldInst.phanterpwa['url']):
-                json_field["url"] = FieldInst.phanterpwa['url'](self.record)
+                            json_field["data_set"] = self.phanterpwa["data_set"]
+                    if "mask" in self.phanterpwa:
+                        json_field["mask"] = self.phanterpwa["mask"]
+                    if "type" in self.phanterpwa:
+                        json_field["type"] = self.phanterpwa["type"]
+                    if "cutter" in self.phanterpwa:
+                        json_field["cutter"] = self.phanterpwa["cutter"]
+                    if "width" in self.phanterpwa:
+                        json_field["width"] = self.phanterpwa["width"]
+                    if "height" in self.phanterpwa:
+                        json_field["height"] = self.phanterpwa["height"]
+                    if "view_width" in self.phanterpwa:
+                        json_field["view_width"] = self.phanterpwa["view_width"]
+                    if "view_height" in self.phanterpwa:
+                        json_field["view_height"] = self.phanterpwa["view_height"]
+            if "extra" in self.phanterpwa and self.record and callable(self.phanterpwa['extra']):
+                json_field["extra"] = self.phanterpwa['extra'](self.record)
+            if "url" in self.phanterpwa and self.record and callable(self.phanterpwa['url']):
+                json_field["url"] = self.phanterpwa['url'](self.record)
 
-            if "no-cache" in FieldInst.phanterpwa:
-                json_field["no-cache"] = FieldInst.phanterpwa['no-cache']
-            if "disabled" in FieldInst.phanterpwa:
-                json_field["disabled"] = FieldInst.phanterpwa['disabled']
-            if "editable" in FieldInst.phanterpwa:
-                json_field["editable"] = FieldInst.phanterpwa['editable']
-            for x in FieldInst.phanterpwa:
+            if "no-cache" in self.phanterpwa:
+                json_field["no-cache"] = self.phanterpwa['no-cache']
+            if "disabled" in self.phanterpwa:
+                json_field["disabled"] = self.phanterpwa['disabled']
+            if "editable" in self.phanterpwa:
+                json_field["editable"] = self.phanterpwa['editable']
+            for x in self.phanterpwa:
                 if x.startswith("_"):
-                    json_field[x] = FieldInst.phanterpwa[x]
+                    json_field[x] = self.phanterpwa[x]
             if self._data_view:
                 json_field["data_view"] = True
             else:
@@ -906,6 +915,11 @@ class FormFromTableDAL():
         self._ignored = {}
         self._changed = {}
         self.custom_validates = custom_validates
+        self._custom_phanterpwa = dict()
+
+    @property
+    def custom_phanterpwa(self):
+        return self._custom_phanterpwa
 
     def add_extra_field(self, value):
         if isinstance(value, Field):
@@ -990,10 +1004,8 @@ class FormFromTableDAL():
                         t_name = w['reference_table']
                         f_name = w['reference_field']
                         if "editable" in w and w["editable"]:
-                            print(new_value, "novo valor", key)
                             if isinstance(new_value, str) and ref_values.match(new_value):
                                 v_splited = "".join(new_value.split(":")[1:])
-                                print(v_splited)
                                 id_ = 0
                                 q = self._db(self._db[t_name][f_name] == v_splited).select().first()
                                 if q:
@@ -1028,7 +1040,6 @@ class FormFromTableDAL():
                                 tempo = time.strptime(str(dict_args[key]), validator_format)
                                 resultado = time.strftime('%Y-%m-%d %H:%M:%S', tempo)
                             elif t == "date":
-                                print(w)
                                 validator_format = w.get("validator_format", '%Y-%m-%d')
                                 tempo = time.strptime(str(dict_args[key]), validator_format)
                                 resultado = time.strftime('%Y-%m-%d', tempo)
@@ -1097,7 +1108,10 @@ class FormFromTableDAL():
         section = dict()
         group = dict()
         for x in self.fields:
-            json_widget = WidgetFromFieldDALFromTableDAL(self.table, x, self.record_id, data_view=self._data_view, simple_widget=self.simple_form)
+            if x in self.custom_phanterpwa:
+                json_widget = WidgetFromFieldDALFromTableDAL(self.table, x, self.record_id, data_view=self._data_view, simple_widget=self.simple_form, custom_phanterpwa=self.custom_phanterpwa[x])
+            else:
+                json_widget = WidgetFromFieldDALFromTableDAL(self.table, x, self.record_id, data_view=self._data_view, simple_widget=self.simple_form)
             self._widgets[x] = json_widget.as_dict()
             if x is not "id" or self.record_id:
                 if json_widget.section:
@@ -1152,6 +1166,7 @@ class FormFromTableDAL():
                         self.json_widgets.insert(json_widget.position, ["widget", [e, json_widget.as_dict()]])
                     else:
                         self.json_widgets.append(["widget", [e, json_widget.as_dict()]])
+
     def as_dict(self):
         self._process()
         return self.dict
@@ -1269,6 +1284,7 @@ class FieldsDALValidateDictArgs(object):
 
         if self._errors:
             return self._errors
+
     def insert(self, dbtable, commit=True):
         id_record = dbtable.insert(
             **self.dict_args

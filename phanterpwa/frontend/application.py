@@ -95,7 +95,12 @@ class PhanterPWA():
 
     def onGlobalError(self, message, source, lineno, colno, error):
         if self._send_global_error and self.ApiServer is not js_undefined:
+
             formdata = __new__(FormData())
+            auth_user = window.PhanterPWA.get_auth_user()
+            if auth_user is not js_undefined and auth_user is not None:
+                formdata.append("email_user", auth_user.email)
+            formdata.append("current_way", self.get_current_way())           
             formdata.append("message", message)
             formdata.append("source", source)
             formdata.append("lineno", lineno)

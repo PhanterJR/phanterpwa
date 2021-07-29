@@ -78,14 +78,18 @@ class Errors(web.RequestHandler):
     @check_client_token()
     def post(self, *args, **kargs):
         dict_arguments = {k: self.request.arguments.get(k)[0].decode('utf-8') for k in self.request.arguments}
+        email_user = dict_arguments.get("email_user", None)
+        current_way = dict_arguments.get("current_way", None)
         message = dict_arguments.get("message", None)
         error = dict_arguments.get("error", None)
         source = dict_arguments.get("source", None)
         lineno = dict_arguments.get("lineno", None)
         colno = dict_arguments.get("colno", None)
         if error:
-            self.logger_api.error("CLIENT ERROR: {0}\n\t{1}\n\t{2}\n\t{3}\n\t{4}\n".format(
+            self.logger_api.error("CLIENT ERROR: {0}\n\t{1}\n\t{2}\n\t{3}\n\t{4}\nt{5}\nt{6}\n".format(
                 error,
+                "{0}: {1}".format("Email user", email_user),
+                "{0}: {1}".format("Current way", current_way),
                 "{0}: {1}".format("Message", message),
                 "{0}: {1}".format("File", source),
                 "{0}: {1}".format("Line", lineno),

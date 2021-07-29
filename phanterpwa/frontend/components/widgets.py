@@ -718,8 +718,10 @@ class Select(Widget):
                 self._value = new_key
                 self._alias_value = new_value
                 jQuery("#phanterpwa-widget-select-input-{0}".format(self.identifier)).val(new_value)
+                jQuery("#phanterpwa-widget-select-input-{0}".format(self.identifier)).trigger("change")
                 target = jQuery(self.target_selector)
                 target.find("select.phanterpwa-widget-select-select").find("option").removeAttr("selected")
+
                 target.find("select.phanterpwa-widget-select-select").append(
                     OPTION(new_value, _value=new_key, _selected="selected").jquery()
                 )

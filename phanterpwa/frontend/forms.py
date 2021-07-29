@@ -122,6 +122,11 @@ class SignForm():
                 signature = data.responseJSON.signature
                 html = data.responseJSON.captcha
                 self.add_html_Captcha(html, signature)
+                if callable(self.after_sign):
+                    self.after_sign(data, ajax_status)
+                elif self.after_sign is not None:
+                    raise SyntaxError("The after_sign must be callable")
+
         else:
             if data.status == 0:
                 self.on_captcha_fail()
