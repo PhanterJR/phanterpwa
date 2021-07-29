@@ -369,7 +369,8 @@ class PhanterPWA():
                     localStorage.removeItem("phanterpwa-authorization")
                     localStorage.removeItem("auth_user")
         if self.DEBUG:
-            console.info(data.status, json.i18n.message)
+            if json.i18n is not js_undefined and json.i18n is not None:
+                console.info(data.status, json.i18n.message)
         if callable(callback):
             callback(data, ajax_status)
 

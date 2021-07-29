@@ -538,22 +538,31 @@ class CustomField():
         self.section = None
         self.group = None
         self.out_of_form = False
-        if not hasattr(self._field, "phanterpwa"):
-            self._field.phanterpwa = {"_class": "p-col w1p100"}
-        else:
-            if "data_view" in self._field.phanterpwa:
-                self._data_view = self._field.phanterpwa["data_view"]
-            if "_class" not in self._field.phanterpwa:
-                self._field.phanterpwa["_class"] = "p-col w1p100"
-            if "position" in self._field.phanterpwa:
-                self.position = self._field.phanterpwa["position"]
-            if "section" in self._field.phanterpwa:
-                self.section = self._field.phanterpwa["section"]
-            elif "group" in self._field.phanterpwa:
-                self.group = self._field.phanterpwa["group"]
-            if "out_of_form" in self._field.phanterpwa and\
-                    self._field.phanterpwa["out_of_form"] is True:
+        self.phanterpwa = dict()
+
+        if hasattr(self._field, "phanterpwa"):
+            for x in self._field.phanterpwa:
+                print(x)
+                if x not in self.phanterpwa:
+                    self.phanterpwa[x] = self._field.phanterpwa[x]
+
+            if "data_view" in self.phanterpwa:
+                self._data_view = self.phanterpwa["data_view"]
+            if "position" in self.phanterpwa:
+                self.position = self.phanterpwa["position"]
+            if "section" in self.phanterpwa:
+                self.section = self.phanterpwa["section"]
+            elif "group" in self.phanterpwa:
+                self.group = self.phanterpwa["group"]
+            if "out_of_form" in self.phanterpwa and\
+                    self.phanterpwa["out_of_form"] is True:
                 self.out_of_form = True
+            if "simple_widget" in self.phanterpwa and\
+                    self.phanterpwa["simple_widget"] is True:
+                self.simple_widget = True
+        if "_class" not in self.phanterpwa:
+            self.phanterpwa["_class"] = "p-col w1p100"
+
     @property
     def position(self):
         return self._position
@@ -607,23 +616,23 @@ class CustomField():
     def __ppwa_check_validators(self, validator):
 
         if isinstance(validator, IS_NOT_EMPTY):
-            if "can_empty" not in self._field.phanterpwa:
-                self._field.phanterpwa["can_empty"] = False
+            if "can_empty" not in self.phanterpwa:
+                self.phanterpwa["can_empty"] = False
             return ["IS_NOT_EMPTY"]
         elif isinstance(validator, IS_DATETIME):
-            if "format" not in self._field.phanterpwa:
-                self._field.phanterpwa["validator_format"] = validator.format
-                self._field.phanterpwa["format"] = datetime_formater(validator.format)
+            if "format" not in self.phanterpwa:
+                self.phanterpwa["validator_format"] = validator.format
+                self.phanterpwa["format"] = datetime_formater(validator.format)
             return ["IS_DATETIME:{0}".format(datetime_formater(validator.format))]
         elif isinstance(validator, IS_DATE):
-            if "format" not in self._field.phanterpwa:
-                self._field.phanterpwa["validator_format"] = validator.format
-                self._field.phanterpwa["format"] = datetime_formater(validator.format)
+            if "format" not in self.phanterpwa:
+                self.phanterpwa["validator_format"] = validator.format
+                self.phanterpwa["format"] = datetime_formater(validator.format)
             return ["IS_DATE:{0}".format(datetime_formater(validator.format))]
         elif isinstance(validator, IS_TIME):
-            if "format" not in self._field.phanterpwa:
-                self._field.phanterpwa["validator_format"] = validator.format
-                self._field.phanterpwa["format"] = datetime_formater(validator.format)
+            if "format" not in self.phanterpwa:
+                self.phanterpwa["validator_format"] = validator.format
+                self.phanterpwa["format"] = datetime_formater(validator.format)
             return ["IS_TIME:{0}".format(datetime_formater(validator.format))]
         elif isinstance(validator, IS_ACTIVATION_CODE):
             return ["IS_ACTIVATION_CODE"]
@@ -645,12 +654,12 @@ class CustomField():
                 self.phanterpwa["data_set"] = list(validator.theset)
             return ["IS_IN_SET:{0}".format(json.dumps("{0}".format(validator.theset)))]
         elif isinstance(validator, IS_EMPTY_OR):
-            if "can_empty" not in self._field.phanterpwa and \
-                    "validators" not in self._field.phanterpwa:
-                self._field.phanterpwa["can_empty"] = True
-            elif "validators" in self._field.phanterpwa and \
-                    "IS_NOT_EMPTY" in self._field.phanterpwa["validators"]:
-                self._field.phanterpwa["can_empty"] = False
+            if "can_empty" not in self.phanterpwa and \
+                    "validators" not in self.phanterpwa:
+                self.phanterpwa["can_empty"] = True
+            elif "validators" in self.phanterpwa and \
+                    "IS_NOT_EMPTY" in self.phanterpwa["validators"]:
+                self.phanterpwa["can_empty"] = False
             other = self.__ppwa_check_validators(validator.other)
             if other:
                 if isinstance(other, (list, tuple)):
