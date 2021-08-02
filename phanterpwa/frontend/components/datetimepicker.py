@@ -81,8 +81,8 @@ class Datepickers():
         if jQuery(self.target_selector).length > 0:
             if jQuery(self.target_selector)[0].hasAttribute("phanterpwa-datetimepicker-iso"):
                 phanterpwa_datetimepicker_iso = jQuery(self.target_selector).attr("phanterpwa-datetimepicker-iso")
-                self.selected_date = __new__(Date(phanterpwa_datetimepicker_iso))
-                self.current_date = __new__(Date(self._apply_format("yyyy-MM-01 HH:ss:mm")))
+                self.selected_date = __new__(Date(phanterpwa_datetimepicker_iso.replace(" ", "T")))
+                self.current_date = __new__(Date(self._apply_format("yyyy-MM-01THH:ss:mm")))
         self.format = "yyyy-MM-dd"
         if self.date_type == "datetime":
             self.format = "yyyy-MM-dd HH:ss:mm"
@@ -270,8 +270,8 @@ class Datepickers():
         else:
             if self.date_type == "datetime":
                 raise ValueError("The datetime format must be 'ss' in your pattern")
-        self.selected_date = __new__(Date("{0}-{1}-{2} {3}:{4}:{5}".format(year, month, day, hour, minute, second)))
-        self.current_date = __new__(Date("{0}-{1}-01 {2}:{3}:{4}".format(year, month, hour, minute, second)))
+        self.selected_date = __new__(Date("{0}-{1}-{2}T{3}:{4}:{5}".format(year, month, day, hour, minute, second)))
+        self.current_date = __new__(Date("{0}-{1}-01T{2}:{3}:{4}".format(year, month, hour, minute, second)))
 
     def _apply_format(self, value):
         smonth = self.selected_date.getMonth()
@@ -361,8 +361,8 @@ class Datepickers():
                 r'/^([0-9]{4}-[0-9]{2}-[0-9]{2})/'
             )
             if REGEX_BODY.test(value):
-                self.selected_date = __new__(Date("{0} 00:00:00".format(value[0:10])))
-                self.current_date = __new__(Date("{0}01 00:00:00".format(value[0:8])))
+                self.selected_date = __new__(Date("{0}T00:00:00".format(value[0:10])))
+                self.current_date = __new__(Date("{0}01T00:00:00".format(value[0:8])))
             else:
                 raise ValueError("The current_date must be 'yyyy-mm-dd'. Example: 2019-01-01")
 
@@ -373,8 +373,8 @@ class Datepickers():
                 r'/^([0-9]{4}-[0-9]{2}-[0-9]{2}.{1}[0-9]{2}:[0-9]{2}:[0-9]{2})/'
             )
             if REGEX_BODY.test(value):
-                self.selected_date = __new__(Date("{0} {1}".format(value[0:10], value[11:19])))
-                self.current_date = __new__(Date("{0}01 {1}".format(value[0:8], value[11:19])))
+                self.selected_date = __new__(Date("{0}T{1}".format(value[0:10], value[11:19])))
+                self.current_date = __new__(Date("{0}01T{1}".format(value[0:8], value[11:19])))
             else:
                 raise ValueError("The current_date must be 'yyyy-mm-dd'. Example: 2019-01-01")
         else:
@@ -389,7 +389,7 @@ class Datepickers():
         cmonth = self.current_date.getMonth()
         cday = self.current_date.getDate()
         cyear = self.current_date.getFullYear()
-        new_date = "{0}-{1}-{2} {3}:{4}:{5}".format(
+        new_date = "{0}-{1}-{2}T{3}:{4}:{5}".format(
             cyear - 1,
             self._zfill(cmonth + 1, 2),
             self._zfill(cday, 2),
@@ -407,7 +407,7 @@ class Datepickers():
         cmonth = self.current_date.getMonth()
         cday = self.current_date.getDate()
         cyear = self.current_date.getFullYear()
-        new_date = "{0}-{1}-{2} {3}:{4}:{5}".format(
+        new_date = "{0}-{1}-{2}T{3}:{4}:{5}".format(
             cyear + 1,
             self._zfill(cmonth + 1, 2),
             self._zfill(cday, 2),
@@ -427,7 +427,7 @@ class Datepickers():
         calc_month = cmonth - 1
         if calc_month < 0:
             calc_month = 11
-        new_date = "{0}-{1}-{2} {3}:{4}:{5}".format(
+        new_date = "{0}-{1}-{2}T{3}:{4}:{5}".format(
             cyear,
             self._zfill(calc_month + 1, 2),
             self._zfill(1, 2),
@@ -448,14 +448,14 @@ class Datepickers():
         if calc_month > 11:
             calc_month = 0
         sdate = self.selected_date.toJSON()
-        snew_date = "{0} {1}:{2}:{3}".format(
+        snew_date = "{0}T{1}:{2}:{3}".format(
             sdate[0:10],
             self._zfill(chour, 2),
             self._zfill(cminute, 2),
             self._zfill(csecond, 2),
         )
         self.selected_date = __new__(Date(snew_date))
-        new_date = "{0}-{1}-{2} {3}:{4}:{5}".format(
+        new_date = "{0}-{1}-{2}T{3}:{4}:{5}".format(
             cyear,
             self._zfill(calc_month + 1, 2),
             self._zfill(1, 2),
@@ -476,14 +476,14 @@ class Datepickers():
         if calc_hour < 0:
             calc_hour = 23
         sdate = self.selected_date.toJSON()
-        snew_date = "{0} {1}:{2}:{3}".format(
+        snew_date = "{0}T{1}:{2}:{3}".format(
             sdate[0:10],
             self._zfill(calc_hour, 2),
             self._zfill(cminute, 2),
             self._zfill(csecond, 2),
         )
         self.selected_date = __new__(Date(snew_date))
-        new_date = "{0}-{1}-{2} {3}:{4}:{5}".format(
+        new_date = "{0}-{1}-{2}T{3}:{4}:{5}".format(
             cyear,
             self._zfill(cmonth + 1, 2),
             self._zfill(1, 2),
@@ -504,14 +504,14 @@ class Datepickers():
         if calc_hour > 23:
             calc_hour = 0
         sdate = self.selected_date.toJSON()
-        snew_date = "{0} {1}:{2}:{3}".format(
+        snew_date = "{0}T{1}:{2}:{3}".format(
             sdate[0:10],
             self._zfill(calc_hour, 2),
             self._zfill(cminute, 2),
             self._zfill(csecond, 2),
         )
         self.selected_date = __new__(Date(snew_date))
-        new_date = "{0}-{1}-{2} {3}:{4}:{5}".format(
+        new_date = "{0}-{1}-{2}T{3}:{4}:{5}".format(
             cyear,
             self._zfill(cmonth + 1, 2),
             self._zfill(1, 2),
@@ -532,14 +532,14 @@ class Datepickers():
         if calc_minute < 0:
             calc_minute = 59
         sdate = self.selected_date.toJSON()
-        snew_date = "{0} {1}:{2}:{3}".format(
+        snew_date = "{0}T{1}:{2}:{3}".format(
             sdate[0:10],
             self._zfill(chour, 2),
             self._zfill(calc_minute, 2),
             self._zfill(csecond, 2),
         )
         self.selected_date = __new__(Date(snew_date))
-        new_date = "{0}-{1}-{2} {3}:{4}:{5}".format(
+        new_date = "{0}-{1}-{2}T{3}:{4}:{5}".format(
             cyear,
             self._zfill(cmonth + 1, 2),
             self._zfill(1, 2),
@@ -560,14 +560,14 @@ class Datepickers():
         if calc_minute > 59:
             calc_minute = 0
         sdate = self.selected_date.toJSON()
-        snew_date = "{0} {1}:{2}:{3}".format(
+        snew_date = "{0}T{1}:{2}:{3}".format(
             sdate[0:10],
             self._zfill(chour, 2),
             self._zfill(calc_minute, 2),
             self._zfill(csecond, 2),
         )
         self.selected_date = __new__(Date(snew_date))
-        new_date = "{0}-{1}-{2} {3}:{4}:{5}".format(
+        new_date = "{0}-{1}-{2}T{3}:{4}:{5}".format(
             cyear,
             self._zfill(cmonth + 1, 2),
             self._zfill(1, 2),
@@ -588,14 +588,14 @@ class Datepickers():
         if calc_second < 0:
             calc_second = 59
         sdate = self.selected_date.toJSON()
-        snew_date = "{0} {1}:{2}:{3}".format(
+        snew_date = "{0}T{1}:{2}:{3}".format(
             sdate[0:10],
             self._zfill(chour, 2),
             self._zfill(cminute, 2),
             self._zfill(calc_second, 2),
         )
         self.selected_date = __new__(Date(snew_date))
-        new_date = "{0}-{1}-{2} {3}:{4}:{5}".format(
+        new_date = "{0}-{1}-{2}T{3}:{4}:{5}".format(
             cyear,
             self._zfill(cmonth + 1, 2),
             self._zfill(1, 2),
@@ -616,14 +616,14 @@ class Datepickers():
         if calc_second > 59:
             calc_second = 0
         sdate = self.selected_date.toJSON()
-        snew_date = "{0} {1}:{2}:{3}".format(
+        snew_date = "{0}T{1}:{2}:{3}".format(
             sdate[0:10],
             self._zfill(chour, 2),
             self._zfill(cminute, 2),
             self._zfill(calc_second, 2),
         )
         self.selected_date = __new__(Date(snew_date))
-        new_date = "{0}-{1}-{2} {3}:{4}:{5}".format(
+        new_date = "{0}-{1}-{2}T{3}:{4}:{5}".format(
             cyear,
             self._zfill(cmonth + 1, 2),
             self._zfill(1, 2),
@@ -645,7 +645,7 @@ class Datepickers():
         )
         if REGEX_BODY.test(value):
             cmonth = self.current_date.getMonth()
-            new_date = "{0}-{1}-{2} {3}:{4}:{5}".format(
+            new_date = "{0}-{1}-{2}T{3}:{4}:{5}".format(
                 value,
                 self._zfill(cmonth + 1, 2),
                 self._zfill(1, 2),
@@ -661,7 +661,7 @@ class Datepickers():
         cminute = self.current_date.getMinutes()
         csecond = self.current_date.getSeconds()
         cyear = self.current_date.getFullYear()
-        new_date = "{0}-{1}-{2} {3}:{4}:{5}".format(
+        new_date = "{0}-{1}-{2}T{3}:{4}:{5}".format(
             cyear,
             self._zfill(int(value) + 1, 2),
             self._zfill(1, 2),
@@ -678,14 +678,14 @@ class Datepickers():
         cminute = self.current_date.getMinutes()
         csecond = self.current_date.getSeconds()
         sdate = self.selected_date.toJSON()
-        snew_date = "{0} {1}:{2}:{3}".format(
+        snew_date = "{0}T{1}:{2}:{3}".format(
             sdate[0:10],
             self._zfill(int(value), 2),
             self._zfill(cminute, 2),
             self._zfill(csecond, 2),
         )
         self.selected_date = __new__(Date(snew_date))
-        new_date = "{0}-{1}-{2} {3}:{4}:{5}".format(
+        new_date = "{0}-{1}-{2}T{3}:{4}:{5}".format(
             cyear,
             self._zfill(cmonth + 1, 2),
             self._zfill(1, 2),
@@ -702,14 +702,14 @@ class Datepickers():
         chour = self.current_date.getHours()
         csecond = self.current_date.getSeconds()
         sdate = self.selected_date.toJSON()
-        snew_date = "{0} {1}:{2}:{3}".format(
+        snew_date = "{0}T{1}:{2}:{3}".format(
             sdate[0:10],
             self._zfill(chour, 2),
             self._zfill(value, 2),
             self._zfill(csecond, 2),
         )
         self.selected_date = __new__(Date(snew_date))
-        new_date = "{0}-{1}-{2} {3}:{4}:{5}".format(
+        new_date = "{0}-{1}-{2}T{3}:{4}:{5}".format(
             cyear,
             self._zfill(cmonth + 1, 2),
             self._zfill(1, 2),
@@ -726,14 +726,14 @@ class Datepickers():
         chour = self.current_date.getHours()
         cminute = self.current_date.getMinutes()
         sdate = self.selected_date.toJSON()
-        snew_date = "{0} {1}:{2}:{3}".format(
+        snew_date = "{0}T{1}:{2}:{3}".format(
             sdate[0:10],
             self._zfill(chour, 2),
             self._zfill(cminute, 2),
             self._zfill(value, 2),
         )
         self.selected_date = __new__(Date(snew_date))
-        new_date = "{0}-{1}-{2} {3}:{4}:{5}".format(
+        new_date = "{0}-{1}-{2}T{3}:{4}:{5}".format(
             cyear,
             self._zfill(cmonth + 1, 2),
             self._zfill(1, 2),
@@ -745,7 +745,7 @@ class Datepickers():
         self.start()
 
     def set_selected(self, jsonDate):
-        new_date = __new__(Date(jsonDate))
+        new_date = __new__(Date(jsonDate.replace(" ", "T")))
         self.selected_date = new_date
         self._onChoice()
         self.close()
@@ -1187,7 +1187,7 @@ class Datepickers():
         for x in range(40):
             if inicial_day < 32:
                 cont += 1
-                new_date = "{0}-{1}-{2} {3}:{4}:{5}".format(
+                new_date = "{0}-{1}-{2}T{3}:{4}:{5}".format(
                     cyear,
                     self._zfill(cmonth + 1, 2),
                     self._zfill(inicial_day, 2),

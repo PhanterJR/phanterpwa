@@ -170,6 +170,17 @@ class Mask():
             if pure_value == "":
                 element.val("")
 
+    def onFocusOut(self, event, el):
+        element = jQuery(el)
+        new_value = element.val()
+        pure_value = self.stringFilter(new_value)
+        new_value = self.mask_function(pure_value)[0]
+        if pure_value is not "":
+            element.val(new_value)
+        else:
+            element.val("")
+
+
     def start(self):
         element = jQuery(self.target_selector)
         value = element.val()
@@ -187,10 +198,16 @@ class Mask():
                 element[0].selectionEnd = selection_pos
 
         element.off(
-            "focusout.phanterpwaMask, keypress.phanterpwaMask"
+            "keypress.phanterpwaMask"
         ).on(
-            "focusout.phanterpwaMask, keypress.phanterpwaMask",
+            "keypress.phanterpwaMask",
             lambda event: self.onKeyPress(event, this)
+        )
+        element.off(
+            "focusout.phanterpwaMask"
+        ).on(
+            "focusout.phanterpwaMask",
+            lambda event: self.onFocusOut(event, this)
         )
         element.off(
             "keyup.phanterpwaMask2,"

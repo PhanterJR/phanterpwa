@@ -49,7 +49,7 @@ def check_activation_code(code, size=6):
 def format_iso_date_datetime(dvalue, dformat_out, dtype='datetime'):
     dformat_in = "yyyy-MM-dd"
     if dtype == "datetime":
-        dformat_in = "yyyy-MM-dd HH:mm:ss"
+        dformat_in = "yyyy-MM-ddTHH:mm:ss"
     if dvalue is "":
         return None
     elif len(str(dvalue)) != len(dformat_in):
@@ -75,7 +75,7 @@ def format_iso_date_datetime(dvalue, dformat_out, dtype='datetime'):
         minute = dvalue[ini:ini + 2]
         ini = dformat_in.indexOf("ss")
         second = dvalue[ini:ini + 2]
-    cdate = __new__(Date("{0}-{1}-{2} {3}:{4}:{5}".format(year, month, day, hour, minute, second)))
+    cdate = __new__(Date("{0}-{1}-{2}T{3}:{4}:{5}".format(year, month, day, hour, minute, second)))
 
     result = False
     if cdate.toJSON() is not None:
@@ -88,13 +88,14 @@ def format_iso_date_datetime(dvalue, dformat_out, dtype='datetime'):
             dformat_out = dformat_out.replace("HH", zfill(hour, 2))
             dformat_out = dformat_out.replace("mm", zfill(minute, 2))
             dformat_out = dformat_out.replace("ss", zfill(second, 2))
+            dformat_out = dformat_out.replace("T", " ")
         return dformat_out
     else:
         console.error("The date/datetime value is invalid")
         return None
 
 
-def check_datetime(dvalue, dformat="yyyy-MM-dd HH:mm:ss", dtype="datetime"):
+def check_datetime(dvalue, dformat="yyyy-MM-ddTHH:mm:ss", dtype="datetime"):
     if any(["yyyy" not in dformat,
             "MM" not in dformat,
             "dd" not in dformat]):
@@ -127,7 +128,7 @@ def check_datetime(dvalue, dformat="yyyy-MM-dd HH:mm:ss", dtype="datetime"):
         minute = dvalue[ini:ini + 2]
         ini = dformat.indexOf("ss")
         second = dvalue[ini:ini + 2]
-    cdate = __new__(Date("{0}-{1}-{2} {3}:{4}:{5}".format(year, month, day, hour, minute, second)))
+    cdate = __new__(Date("{0}-{1}-{2}T{3}:{4}:{5}".format(year, month, day, hour, minute, second)))
 
     result = False
     if cdate.toJSON() is not None:
