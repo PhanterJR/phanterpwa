@@ -43,7 +43,7 @@ class Widget(helpers.XmlConstructor):
         self.actived = False
         self.identifier = identifier
         if self.identifier is js_undefined or self.identifier is None:
-            raise console.error("The identifier is invalid!")
+            raise ValueError("The identifier is invalid!")
         self._identifier = window.PhanterPWA.get_id(identifier)
         attributes["_id"] = "phanterpwa-widget-{0}".format(self.identifier)
         attributes["_phanterpwa-widget"] = self.identifier
@@ -478,7 +478,7 @@ class Select(Widget):
                     self._data_dict[vdata[0]] = vdata[1]
                     new_data.append([vdata[0], vdata[1]])
             if not valid_data:
-                raise console.error("The data parameter of widget \"{0}\" is invalid!".format(
+                raise ValueError("The data parameter of widget \"{0}\" is invalid!".format(
                     self.identifier
                 ))
             else:
@@ -1035,7 +1035,7 @@ class MultSelect(Widget):
                         self._alias_value[str(vdata[0])] = vdata[1]
                 self._data_dict[str(vdata[0])] = vdata[1]
             if not valid_data:
-                raise console.error("The data parameter of widget \"{0}\" is invalid!".format(
+                raise ValueError("The data parameter of widget \"{0}\" is invalid!".format(
                     self.identifier
                 ))
             else:
