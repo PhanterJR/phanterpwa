@@ -391,6 +391,8 @@ class FormWidget(helpers.XmlConstructor):
                     label=self.json_widget['label'],
                     name=self.input_name,
                     value=dvalue,
+                    wear="shadows",
+                    _class="data_view",
                     form=self.table_name,
                 )
             elif self._widget_type == "reference" or self._widget_type == "select":
@@ -404,6 +406,8 @@ class FormWidget(helpers.XmlConstructor):
                     label=self.json_widget['label'],
                     name=self.input_name,
                     value=va,
+                    wear="shadows",
+                    _class="data_view",
                     form=self.table_name,
                 )
             elif self._widget_type == "list_string":
@@ -421,6 +425,8 @@ class FormWidget(helpers.XmlConstructor):
                     label=self.json_widget['label'],
                     name=self.input_name,
                     value=va,
+                    wear="shadows",
+                    _class="data_view",
                     form=self.table_name,
                 )
             elif self._widget_type == "image":
@@ -443,6 +449,8 @@ class FormWidget(helpers.XmlConstructor):
                     label=self.json_widget['label'],
                     name=self.input_name,
                     value=self._value,
+                    wear="shadows",
+                    _class="data_view",
                     form=self.table_name,
                 )
         else:
