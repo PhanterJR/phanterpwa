@@ -2233,6 +2233,7 @@ class CheckBox(Widget):
         self._can_empty = parameters.get("can_empty", False)
         self._wear = parameters.get("wear", "material")
         self._form = parameters.get("form", None)
+        self._disabled = parameters.get("disabled", False)
 
         wrapper_attr = {
             "_class": "phanterpwa-widget-wrapper phanterpwa-widget-checkbox-wrapper phanterpwa-widget-wear-{0}".format(
@@ -2247,6 +2248,8 @@ class CheckBox(Widget):
         if self._label is not None:
             wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " has_label")
             label = LABEL(self._label, _for="phanterpwa-widget-checkbox-input-{0}".format(identifier))
+        if self._disabled is True:
+            wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " disabled")
         _checked = None
         if self._value is True or self._Value is "true":
             _checked = "checked"
@@ -2277,26 +2280,36 @@ class CheckBox(Widget):
         Widget.__init__(self, identifier, html, **parameters)
 
     def set_value(self, value):
-        if value:
-            self._value = True
-            jQuery(self.target_selector).find(".phanterpwa-widget-checkbox-wrapper").addClass("has_true")
-        else:
-            self._value = True
-            jQuery(self.target_selector).find(".phanterpwa-widget-checkbox-wrapper").removeClass("has_true")            
-        jQuery(self.target_selector).find("input").prop("checked", self._value).val(self._value)
+        if not self._disabled:
+            if value:
+                self._value = True
+                jQuery(self.target_selector).find(".phanterpwa-widget-checkbox-wrapper").addClass("has_true")
+            else:
+                self._value = True
+                jQuery(self.target_selector).find(".phanterpwa-widget-checkbox-wrapper").removeClass("has_true")            
+            jQuery(self.target_selector).find("input").prop("checked", self._value).val(self._value)
 
+    def set_disabled(self):
+        self._disabled = True
+        target = jQuery(self.target_selector).find(".phanterpwa-widget-wrapper").addClass("disabled")
+
+
+    def set_enabled(self):
+        self._disabled = False
+        target = jQuery(self.target_selector).find(".phanterpwa-widget-wrapper").removeClass("disabled")
 
 
     def _switch_value(self, el):
-        el = jQuery(el)
-        p = el.parent()
-        if p.hasClass("has_true"):
-            p.removeClass("has_true")
-            self._value = False
-        else:
-            p.addClass("has_true")
-            self._value = True
-        p.find("input").prop("checked", self._value).val(self._value)
+        if not self._disabled:
+            el = jQuery(el)
+            p = el.parent()
+            if p.hasClass("has_true"):
+                p.removeClass("has_true")
+                self._value = False
+            else:
+                p.addClass("has_true")
+                self._value = True
+            p.find("input").prop("checked", self._value).val(self._value)
 
     def _switch_focus(self, el):
         el = jQuery(el)

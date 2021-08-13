@@ -429,6 +429,16 @@ class FormWidget(helpers.XmlConstructor):
                     _class="data_view",
                     form=self.table_name,
                 )
+            elif self._widget_type == "boolean":
+                w = widgets.CheckBox(
+                    "{0}-{1}".format(self.table_name, self.input_name),
+                    label=self.json_widget['label'],
+                    name=self.input_name,
+                    value=self._value is True,
+                    disabled=True,
+                    form=self.table_name
+                )
+
             elif self._widget_type == "image":
 
                 w = widgets.Image(

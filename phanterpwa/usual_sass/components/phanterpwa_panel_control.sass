@@ -1,35 +1,45 @@
 .phanterpwa-card-panel-control
-	margin: 20px
-	border-radius: 10px
-	box-shadow: 0px 1px 4px gray
-	background-color: white
-	overflow: hidden
+    margin: 20px
+    border-radius: 10px
+    box-shadow: 0px 1px 4px gray
+    background-color: white
+    overflow: hidden
+    @media #{$width1}
+        margin: 0px !important
+    @media #{$width2}
+        margin: 5px !important
+    @media #{$width3}
+        margin: 10px !important
+    @media #{$width4}
+        margin: 15px !important
 
-	&>label
-		padding: 20px
-		display: block
-		font-weight: bold
-	.phanterpwa-card-panel-control-wrapper
+    &>label
+        padding: 20px
+        display: block
+        font-weight: bold
+    .phanterpwa-card-panel-control-container
+        overflow: hidden
+        .phanterpwa-card-panel-control-wrapper
 
-		.phanterpwa-card-panel-control-content
-			padding: 10px
-			background-color: $material_level03
-			box-shadow: 0px 0px 3px gray inset
-			margin: 0px 5px 20px 5px
-			overflow: auto
-			border: 1px solid gray
-		&.has_buttons
-			.phanterpwa-card-panel-control-content
-				margin: 0px 0px 20px 5px
-				padding: 10px
-				background-color: $material_level03
-				box-shadow: 0px 0px 3px gray inset
-				float: left
-				width: calc(100% - 60px)
+            .phanterpwa-card-panel-control-content
+                padding: 10px
+                background-color: $material_level03
+                box-shadow: 0px 0px 3px gray inset
+                margin: 0px 5px 20px 5px
+                overflow: auto
+                border: 1px solid gray
+            &.has_buttons
+                .phanterpwa-card-panel-control-content
+                    margin: 0px 0px 20px 5px
+                    padding: 10px
+                    background-color: $material_level03
+                    box-shadow: 0px 0px 3px gray inset
+                    float: left
+                    width: calc(100% - 60px)
 
-			.phanterpwa-card-panel-control-buttons
-				float: right
-				width: 55px
-				overflow: hidden
-				padding: 5px
+                .phanterpwa-card-panel-control-buttons
+                    float: right
+                    width: 55px
+                    overflow: hidden
+                    padding: 5px
 
