@@ -82,6 +82,12 @@ $base-url: "/static/#{$app-version}/fonts/"
     src: url("#{$base-url}d6lIkaiiRdih4SpP_SQvzA.woff2") format("woff2")
     unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD
 
+/* DejaVu Sans */
+@font-face
+    font-family: "DejaVu Sans"
+    src: url("#{$base-url}DejaVuSans.eot")
+    src: url("#{$base-url}DejaVuSans.eot?#iefix") format("embedded-opentype"), url("#{$base-url}DejaVuSans.woff2") format("woff2"), url("#{$base-url}DejaVuSans.woff") format("woff"), url("#{$base-url}DejaVuSans.ttf") format("truetype"), url("#{$base-url}DejaVuSans.svg#Segoe UI Mono W01 Regular") format("svg")
+
 
 
 $black: #000000
@@ -433,8 +439,9 @@ body
         background-color: $grey_darken_3
 
 h1, h2, h3, h4, h5, h6
-    font-family: "Roboto Thin","Segoe UI Italic",-apple-system,BlinkMacSystemFont,Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif
-
+    font-family: "Roboto Thin","Segoe UI","DejaVu Sans",-apple-system,BlinkMacSystemFont,Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif
+    .strong
+        font-family: "DejaVu Sans","Roboto Thin","Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif
 i
     &.phanterpwa-icon_numb
         font-style: normal
