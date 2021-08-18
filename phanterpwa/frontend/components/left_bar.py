@@ -121,7 +121,7 @@ class LeftBar(application.Component):
         return False
 
     def _check_button_ways(self, button):
-        current_way = window.PhanterPWA.get_current_way()
+        current_way = window.PhanterPWA._get_way_from_url_hash()
         ways = button.ways
         if ways is not None and ways is not js_undefined:
             if isinstance(ways, list):
@@ -282,7 +282,7 @@ class LeftBarButton(helpers.XmlConstructor):
     def show_if_way_match(self):
         if self._show_if_way_match is not None:
             nre = __new__(RegExp(self._show_if_way_match))
-            current_way = window.PhanterPWA.get_current_way()
+            current_way = window.PhanterPWA._get_way_from_url_hash()
             result = current_way.match(nre)
             if result is None or result is js_undefined:
                 return False
@@ -415,7 +415,7 @@ class LeftBarMenu(helpers.XmlConstructor):
     def show_if_way_match(self):
         if self._show_if_way_match is not None:
             nre = __new__(RegExp(self._show_if_way_match))
-            current_way = window.PhanterPWA.get_current_way()
+            current_way = window.PhanterPWA._get_way_from_url_hash()
             result = current_way.match(nre)
             if result is None or result is js_undefined:
                 return False
@@ -554,7 +554,7 @@ class LeftBarUserMenu(helpers.XmlConstructor):
     def show_if_way_match(self):
         if self._show_if_way_match is not None:
             nre = __new__(RegExp(self._show_if_way_match))
-            current_way = window.PhanterPWA.get_current_way()
+            current_way = window.PhanterPWA._get_way_from_url_hash()
             result = current_way.match(nre)
             if result is None or result is js_undefined:
                 return False
