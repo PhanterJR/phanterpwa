@@ -1024,6 +1024,7 @@ class MultSelect(Widget):
     def _data_set(self, data):
         valid_data = True
         self._data = []
+        self._order_in = []
         self._data_dict = {}
         self._alias_value = {}
         if isinstance(data, list):
@@ -1034,6 +1035,8 @@ class MultSelect(Widget):
                     if str(vdata[0]) in self._value:
                         self._alias_value[str(vdata[0])] = vdata[1]
                 self._data_dict[str(vdata[0])] = vdata[1]
+                if str(vdata[0]) not in self._order_in:
+                    self._order_in.append(str(vdata[0]))
             if not valid_data:
                 raise ValueError("The data parameter of widget \"{0}\" is invalid!".format(
                     self.identifier
@@ -1041,8 +1044,11 @@ class MultSelect(Widget):
             else:
                 self._data = data
         elif isinstance(data, dict):
+            self._order_in = []
             new_data = []
             for vdata in data.keys():
+                if str(vdata) not in self._order_in:
+                    self._order_in.append(str(vdata))
                 new_data.append([str(vdata), data[vdata]])
                 if str(vdata) in self._value:
                     self._alias_value[str(vdata)] = data[vdata]
@@ -1052,7 +1058,7 @@ class MultSelect(Widget):
     def _create_xml_values(self):
         values_op = CONCATENATE()
         if len(self._data_dict.keys()) > 0:
-            for vdata in self._data_dict.keys():
+            for vdata in self._order_in:
                 vdata = str(vdata)
                 if len(self._value) > 0:
                     if vdata in self._value:
@@ -1071,7 +1077,7 @@ class MultSelect(Widget):
     def _create_xml_select(self):
         select = SELECT(**{"_class": "phanterpwa-widget-multselect-select", "_name": "name_select_{0}".format(self._name), "_multiple": True})
         if len(self._data_dict.keys()) > 0:
-            for vdata in self._data_dict.keys():
+            for vdata in self._order_in:
                 vdata = str(vdata)
                 if len(self._value) > 0:
                     if vdata in self._value:
@@ -1084,9 +1090,9 @@ class MultSelect(Widget):
 
     def _create_xml_modal(self):
         ul = TABLE(_class="phanterpwa-widget-multselect-options-wrapper")
-        if len(self._data_dict.keys()) > 0:
+        if len(self._order_in) > 0:
 
-            for vdata in self._data_dict.keys():
+            for vdata in self._order_in:
                 vdata = str(vdata)
                 if len(self._value) > 0:
                     if vdata in self._value:
@@ -1255,6 +1261,7 @@ class MultSelect(Widget):
                     break
             if not has_value:
                 new_key = "${0}:{1}".format(__new__(Date().getTime()), new_value)
+                self._order_in.append(new_key)
                 self._data.append([new_key, new_value])
                 self._data_dict[new_key] = new_value
                 self._value.append(new_key)
