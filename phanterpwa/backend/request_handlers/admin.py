@@ -104,7 +104,7 @@ class UserManager(web.RequestHandler):
                         ),
                         'cutter': True,
                         'no-cache': True,
-                    'group': 'group1',
+                        'group': 'group1',
                         '_class': 'p-col w1p100 w4p30'
                     })
                 )
@@ -113,18 +113,18 @@ class UserManager(web.RequestHandler):
                 ).select(db.auth_group.ALL)
                 json_form.add_extra_field(
                     Field('auth_group', label="Roles", phanterpwa={
-                            "value": [
-                                [x.id, "{0} - {1}".format(
-                                    x.grade, x.role)] for x in auth_group
-                            ],
-                            "data_set": [
-                                [x.id, "{0} - {1}".format(
-                                    x.grade, x.role)] for x in db(db.auth_group).select(db.auth_group.ALL)
-                            ],
-                            "form": "auth_user",
-                            "type": 'list_string',
-                            "section": "List of user roles ",
-                            "_class": "p-col w1p100"
+                        "value": [
+                            [x.id, "{0} - {1}".format(
+                                x.grade, x.role)] for x in auth_group
+                        ],
+                        "data_set": [
+                            [x.id, "{0} - {1}".format(
+                                x.grade, x.role)] for x in db(db.auth_group).select(db.auth_group.ALL)
+                        ],
+                        "form": "auth_user",
+                        "type": 'list_string',
+                        "section": "List of user roles ",
+                        "_class": "p-col w1p100"
                     })
                 )
                 json_form = json_form.as_dict()
@@ -172,7 +172,7 @@ class UserManager(web.RequestHandler):
                             ),
                             'cutter': True,
                             'no-cache': True,
-                        'group': 'group1',
+                            'group': 'group1',
                             '_class': 'p-col w1p100 w4p30'
                         })
                     )
@@ -182,18 +182,18 @@ class UserManager(web.RequestHandler):
                     ).select(db.auth_group.ALL)
                     json_form.add_extra_field(
                         Field('auth_group', label="Roles", phanterpwa={
-                                "value": [
-                                    [x.id, "{0} - {1}".format(
-                                        x.grade, x.role)] for x in auth_group
-                                ],
-                                "data_set": [
-                                    [x.id, "{0} - {1}".format(
-                                        x.grade, x.role)] for x in db(db.auth_group).select(db.auth_group.ALL)
-                                ],
-                                "form": "auth_user",
-                                "type": 'list_string',
-                                "section": "List of user roles ",
-                                "_class": "p-col w1p100"
+                            "value": [
+                                [x.id, "{0} - {1}".format(
+                                    x.grade, x.role)] for x in auth_group
+                            ],
+                            "data_set": [
+                                [x.id, "{0} - {1}".format(
+                                    x.grade, x.role)] for x in db(db.auth_group).select(db.auth_group.ALL)
+                            ],
+                            "form": "auth_user",
+                            "type": 'list_string',
+                            "section": "List of user roles ",
+                            "_class": "p-col w1p100"
                         })
                     )
                     json_form = json_form.as_dict()
@@ -391,7 +391,7 @@ class UserManager(web.RequestHandler):
             if dict_arguments["auth_group"]:
                 try:
                     auth_group = ast.literal_eval(json.loads(dict_arguments["auth_group"]))
-                except Exception as e:
+                except Exception:
                     auth_group = ast.literal_eval(dict_arguments["auth_group"])
                 if isinstance(auth_group, list):
                     ids_groups = []

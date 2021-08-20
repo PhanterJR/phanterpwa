@@ -172,6 +172,7 @@ def arbritary_new_user(app_name, projectConfig, db, email, first_name, last_name
     r = result.validate_and_insert(db.auth_user)
     if r and r.id:
         q_user = db(db.auth_user.id == r.id).select().first()
+        id_user = r.id
         if r.id == 1:
             role = "root"
             id_role = db(db.auth_group.role == 'root').select().first()
@@ -320,9 +321,11 @@ class Auth(web.RequestHandler):
                     token_content_client = t_client.loads(self.phanterpwa_client_token)
                 except BadSignature:
                     msg = 'The client have a invalid client-token, a new one has been generated.'
+                    self.logger_api.warning("{0} - {1}".format(self.phanterpwa_current_user.email, msg))
                     token_content_client = None
                 except SignatureExpired:
                     msg = 'The client have a expired client-token, a new one has been generated.'
+                    self.logger_api.warning("{0} - {1}".format(self.phanterpwa_current_user.email, msg))
                     token_content_client = None
                 if token_content_client:
                     sessions = []
@@ -334,7 +337,7 @@ class Auth(web.RequestHandler):
                         tc = None
                         try:
                             tc = t_client.loads(x.token)
-                        except:
+                        except Exception:
                             tc = None
                         user_agent = None
                         remote_addr = None
@@ -345,7 +348,7 @@ class Auth(web.RequestHandler):
                         sessions.append(
                             dict(
                                 user_agent=user_agent,
-                                agent = user_agent_parse(user_agent),
+                                agent=user_agent_parse(user_agent),
                                 remote_addr=remote_addr,
                                 date_created=str(date_created),
                                 this_session=this_session,
@@ -373,7 +376,7 @@ class Auth(web.RequestHandler):
                     id_client = q.id
                     content = {
                         'id_user': str(self.phanterpwa_current_user.id),
-                        'id_client': str(q.id),
+                        'id_client': str(id_client),
                         'user_agent': self.phanterpwa_user_agent,
                         'remote_addr': self.phanterpwa_remote_ip
                     }
@@ -410,7 +413,6 @@ class Auth(web.RequestHandler):
                             'auth_user': {'role': self.T(role)}
                         }
                     })
-
 
     @check_public_csrf_token(form_identify=[
         "phanterpwa-form-login", "user_locked", "phanterpwa-form-request_password"])
@@ -574,7 +576,8 @@ class Auth(web.RequestHandler):
                         message = msg.format(time_next_attempt=humanize_seconds(tna))
                         message_i18n = self.T(msg).format(time_next_attempt=humanize_seconds(tna, self.i18nTranslator))
                         self.DALDatabase.commit()
-                        self.set_status(400)
+                        self.logger_api.warning("{0}:{1} - {2}".format(email, password, message))
+                        self.set_status(400, reason="reason {0}:{1} - {2}".format(email, password, message))
                         return self.write({
                             'status': 'Bad Request',
                             'code': 400,
@@ -660,7 +663,7 @@ class Auth(web.RequestHandler):
                     self.DALDatabase.commit()
                     user_image = PhanterpwaGalleryUserImage(q_user.id, self.DALDatabase, self.projectConfig)
 
-                    if (q_user.two_factor_login or two_factor) and not used_temporary and not self.phanterpwa_form_identify=="user_locked":
+                    if (q_user.two_factor_login or two_factor) and not used_temporary and not self.phanterpwa_form_identify == "user_locked":
                         two_factor_serialize = URLSafeSerializer(
                             self.projectConfig['BACKEND'][self.app_name]["secret_key"],
                             salt="two_factor_url"
@@ -810,11 +813,13 @@ class Auth(web.RequestHandler):
                             }
                         })
                 else:
+                    default_time_temporary_password_expire = self.projectConfig[
+                        'BACKEND'][self.app_name]['default_time_temporary_password_expire']
+                    timeout_to_next_login_attempt = self.projectConfig[
+                        'BACKEND'][self.app_name]['timeout_to_next_login_attempt']
                     q_user.update_record(
-                        temporary_password_expire=datetime.now() +
-                            timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['default_time_temporary_password_expire']),
-                        datetime_next_attempt_to_login=datetime.now() +
-                            timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['timeout_to_next_login_attempt'])
+                        temporary_password_expire=datetime.now() + timedelta(seconds=default_time_temporary_password_expire),
+                        datetime_next_attempt_to_login=datetime.now() + timedelta(seconds=timeout_to_next_login_attempt)
                     )
                     msg = 'Wrong password! Attempt {attempt_number} from {max_attempts}'
                     message = msg.format(
@@ -826,6 +831,7 @@ class Auth(web.RequestHandler):
                         max_attempts=self.projectConfig['BACKEND'][self.app_name]['max_login_attempts']
                     )
                     self.DALDatabase.commit()
+                    self.logger_api.warning("{0}:{1} - {2}".format(email, password, message))
                     self.set_status(400)
                     return self.write({
                         'status': 'Bad Request',
@@ -837,6 +843,8 @@ class Auth(web.RequestHandler):
                         }
                     })
             else:
+                self.logger_api.warning("{0} - {1}".format(
+                    email, "Added email does not exist!"))
                 self.set_status(401)
                 return self.write({
                     'status': 'Unauthorized',
@@ -874,14 +882,12 @@ class Auth(web.RequestHandler):
                 try:
                     token_content_client = t_client.loads(self.phanterpwa_client_token)
                 except BadSignature:
-                    msg = 'The client have a invalid client-token, a new one has been generated.'
                     token_content_client = None
                 except SignatureExpired:
-                    msg = 'The client have a expired client-token, a new one has been generated.'
                     token_content_client = None
                 if token_content_client:
                     sessions = []
-                    q_sessions = db(db.client.auth_user==self.phanterpwa_current_user.id).select(orderby=db.client.date_created)
+                    q_sessions = db(db.client.auth_user == self.phanterpwa_current_user.id).select(orderby=db.client.date_created)
                     for x in q_sessions:
                         this_session = False
                         if x.token == self.phanterpwa_client_token:
@@ -892,7 +898,7 @@ class Auth(web.RequestHandler):
                             tc = None
                             try:
                                 tc = t_client.loads(x.token)
-                            except:
+                            except Exception:
                                 tc = None
                             user_agent = None
                             remote_addr = None
@@ -903,7 +909,7 @@ class Auth(web.RequestHandler):
                             sessions.append(
                                 dict(
                                     user_agent=user_agent,
-                                    agent = user_agent_parse(user_agent),
+                                    agent=user_agent_parse(user_agent),
                                     remote_addr=remote_addr,
                                     date_created=str(date_created),
                                     this_session=this_session,
@@ -970,7 +976,6 @@ class TwoFactor(web.RequestHandler):
 
     @check_client_token()
     def put(self, *args):
-        dict_arguments = {k: self.request.arguments.get(k)[0].decode('utf-8') for k in self.request.arguments}
         authorization_url = args[0]
         if authorization_url:
             token_content = None
@@ -2371,6 +2376,7 @@ class ChangePassword(web.RequestHandler):
                 message_i18n = self.T(msg).format(time_next_attempt=humanize_seconds(tna, self.i18nTranslator))
                 self.DALDatabase.commit()
                 self.set_status(400)
+                self.logger_api.warning("{0}:{1} - {2}".format(self.phanterpwa_current_user.email, password, message))
                 return self.write({
                     'status': 'Bad Request',
                     'code': 400,
