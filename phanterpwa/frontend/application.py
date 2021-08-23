@@ -674,8 +674,15 @@ class PhanterPWA():
         window.PhanterPWA.I18N.DOMTranslate(target)
 
     @staticmethod
-    def get_current_way():
+    def get_consolided_way():
         current_way = sessionStorage.getItem("current_way")
+        if current_way is None or current_way is js_undefined or current_way is "lock":
+            current_way = "home"
+        return current_way
+
+    def get_current_way(self):
+        current_way = self._get_way_from_url_hash()
+        # current_way = sessionStorage.getItem("current_way")
         if current_way is None or current_way is js_undefined or current_way is "lock":
             current_way = "home"
         return current_way
@@ -884,7 +891,7 @@ class PhanterPWA():
             return None
 
     def open_way(self, way):
-        if way==self.get_current_way():
+        if way == self.get_current_way():
             self.open_current_way()
         else:
             window.location = "#_phanterpwa:/{0}".format(way)

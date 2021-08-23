@@ -83,6 +83,14 @@ class LeftBar(application.Component):
                 x.start()
             else:
                 self.element_target.find("#{0}".format(id_button)).parent().remove()
+        el = self.element_target.find("#phanterpwa-component-left_bar")
+        if el.length > 0:
+            scrollbar = el[0].scrollHeight
+            if scrollbar > el.height():
+                el.addClass("has_scrollbar")
+            else:
+                el.removeClass("has_scrollbar")
+
         window.PhanterPWA.reload_events(**{"selector": "#phanterpwa-component-left_bar"})
 
     def _get_button_position(self, button):

@@ -294,10 +294,11 @@ body
     width: 50px
     flex: 1 0 auto
     height: 100%
+    height: calc(100% - 64px)
     background-color: $grey12
     position: fixed
     left: 0
-    max-width: 200px
+    max-width: 300px
     z-index: 20
     top: 64px
     text-overflow: ellipsis
@@ -306,8 +307,11 @@ body
     line-height: 1.2rem
     overflow-y: auto
     overflow-x: hidden
+    &.has_scrollbar
+        width: 62px
     .phanterpwa-component-left_bar-menu, .phanterpwa-component-left_bar-button
         display: table
+        width: 100%
         i
             font-size: 1.5em
             margin-top: 0.25rem
@@ -319,8 +323,9 @@ body
         float: left
         margin-top: 11px
         margin-left: 10px
-        width: 127px
-        max-width: 127px
+        width: 227px
+        max-width: 227px
+        max-width: calc(100% - 60px)
         text-align: left
         opacity: 0
         transition: opacity 1s ease
@@ -351,8 +356,9 @@ body
         transition: box-shadow 1s, -webkit-box-shadow 1s, width 1s ease
         .phanterpwa-component-left_bar-label
             opacity: 1
-            width: 127px
-            max-width: 127px
+            width: 227px
+            max-width: 227px
+            max-width: calc(100% - 60px)
         .phanterpwa-component-left_bar-image-user
             margin-left: 0px
         .phanterpwa-component-left_bar-icon-container
@@ -369,6 +375,8 @@ body
         .phanterpwa-component-left_bar-menu_button-wrapper-auth_user
             display: block
         left: -50px
+        &.has_scrollbar
+            left: -62px
         &.enabled
             left: 0px
         &.enabled_submenu
@@ -387,6 +395,8 @@ body
         .phanterpwa-component-left_bar-menu_button-wrapper-auth_user
             display: block
         left: -50px
+        &.has_scrollbar
+            left: -62px
         &.enabled
             left: 0px
         &.enabled_submenu
