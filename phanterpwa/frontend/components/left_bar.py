@@ -38,6 +38,7 @@ class LeftBar(application.Component):
         self.html = DIV(*tcontent, **parameters)
         application.Component.__init__(self, "left_bar", self.html)
         self.html_to(target_selector)
+        jQuery(window).resize(lambda: self.check_has_scrollbar())
 
     def add_button(self, button, **parameters):
         if isinstance(button, (LeftBarMenu, LeftBarButton, LeftBarUserMenu)):
@@ -83,6 +84,10 @@ class LeftBar(application.Component):
                 x.start()
             else:
                 self.element_target.find("#{0}".format(id_button)).parent().remove()
+        self.check_has_scrollbar()
+        window.PhanterPWA.reload_events(**{"selector": "#phanterpwa-component-left_bar"})
+
+    def check_has_scrollbar(self):
         el = self.element_target.find("#phanterpwa-component-left_bar")
         if el.length > 0:
             scrollbar = el[0].scrollHeight
@@ -91,7 +96,6 @@ class LeftBar(application.Component):
             else:
                 el.removeClass("has_scrollbar")
 
-        window.PhanterPWA.reload_events(**{"selector": "#phanterpwa-component-left_bar"})
 
     def _get_button_position(self, button):
         pos = button.position
