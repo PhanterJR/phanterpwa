@@ -658,7 +658,7 @@ def humanize_seconds(seconds: int, translator_instance: ("phanterpwa.i18n.Transl
     return s
 
 
-def text_normalize(text: str, upper: bool = True):
+def text_normalize(text: str, upper: bool = True) -> str:
     """"Remove the graphic accents of Latin languages"
 
     :param text: string that will be normalized
