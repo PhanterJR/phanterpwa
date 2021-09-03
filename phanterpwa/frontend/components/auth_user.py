@@ -885,7 +885,7 @@ class ModalPersonalInformation(modal.Modal):
 
 
 class ModalRegister(modal.Modal):
-    def __init__(self, target_element):
+    def __init__(self, target_element, use_mobile_number=False, default_login=None):
         self.element_target = jQuery(target_element)
         AuthUserCmp = window.PhanterPWA.Components['auth_user']
         self.AuthUser = None
@@ -893,6 +893,28 @@ class ModalRegister(modal.Modal):
             console.error("Need AuthUser instance on window.PhanterPWA.Components")
         else:
             self.AuthUser = AuthUserCmp
+        if use_mobile_number is None:
+            input_name = forms.FormWidget(
+                "register",
+                "fone",
+                **{
+                    "type": "string",
+                    "label": I18N("Mobile Number"),
+                    "validators": ["IS_EMAIL"],
+                    "_class": "p-col w1p100"
+                }
+            )
+        else:
+            input_name = forms.FormWidget(
+                "register",
+                "email",
+                **{
+                    "type": "string",
+                    "label": I18N("E-Mail"),
+                    "validators": ["IS_EMAIL"],
+                    "_class": "p-col w1p100"
+                }
+            )
         tcontent = DIV(
             forms.FormWidget(
                 "register",
@@ -914,16 +936,7 @@ class ModalRegister(modal.Modal):
                     "_class": "p-col w1p100 w3p50"
                 },
             ),
-            forms.FormWidget(
-                "register",
-                "email",
-                **{
-                    "type": "string",
-                    "label": I18N("E-Mail"),
-                    "validators": ["IS_EMAIL"],
-                    "_class": "p-col w1p100"
-                }
-            ),
+            input_name,
             forms.FormWidget(
                 "register",
                 "password",

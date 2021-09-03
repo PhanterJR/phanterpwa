@@ -849,9 +849,9 @@ class Auth(web.RequestHandler):
                 return self.write({
                     'status': 'Unauthorized',
                     'code': 401,
-                    'message': 'Invalid password or email',
+                    'message': 'Email does not exist!',
                     'i18n': {
-                        'message': self.T('Invalid password or email')
+                        'message': self.T('Email does not exist!')
                     }
                 })
         self.set_status(400)
