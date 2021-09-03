@@ -64,7 +64,7 @@ class Prompt(web.RequestHandler):
         self.phanterpwa_remote_ip = self.request.headers.get("X-Real-IP") or \
             self.request.headers.get("X-Forwarded-For") or \
             self.request.remote_ip
-        self.phanterpwa_origin = self.request.headers.get('Origin')
+        self.phanterpwa_origin = self.request.headers.get('Referer') or self.projectConfig['BACKEND'][self.app_name]['http_address']
 
     def check_origin(self, origin):
         return True
@@ -95,7 +95,7 @@ class Prompt(web.RequestHandler):
                 social_name=social_name,
                 request_state=state,
                 client_token=self.phanterpwa_client_token,
-                origin=self.phanterpwa_origin
+                origin=self.phanterpwa_origin or url_base
             )
             self.DALDatabase.commit()
             self.set_status(200)
@@ -140,6 +140,21 @@ class Prompt(web.RequestHandler):
             }
         })
 
+    def post(self, *args, **kargs):
+        dict_arguments = {k: self.request.arguments.get(k)[0].decode('utf-8') for k in self.request.arguments}
+        social_name = args[0]
+        state = dict_arguments.get("state")
+        db = self.DALDatabase
+        q_state = db(
+            (db.social_auth.social_name == social_name)
+            & (db.social_auth.request_state == state)
+        ).select().first()
+        if q_state:
+            self.set_status(200)
+            return self.write(json.loads(q_state.user_credentials))
+        else:
+            self.set_status(400)
+            return self.write({"status": "Bad Request"})
 
 class Redirect(web.RequestHandler):
     """
@@ -188,11 +203,12 @@ class Redirect(web.RequestHandler):
 
         url_base = self.projectConfig['BACKEND'][self.app_name]['http_address']
         if social_name == "google":
+           
             state = dict_arguments.get("state")
             q_state = self.DALDatabase(
-                (self.DALDatabase.social_auth.social_name == "google") and (self.DALDatabase.social_auth.request_state == state)).select().first()
+                (self.DALDatabase.social_auth.social_name == "google") & (self.DALDatabase.social_auth.request_state == state)).select().first()
             origin = None
-            if not q_state:
+            if not q_state or q_state.used is True:
                 message = "The authentication request has already been used."
                 return self.write({
                     'status': 'Bad Request',
@@ -204,8 +220,8 @@ class Redirect(web.RequestHandler):
                 })
             else:
                 self.phanterpwa_client_token = q_state.client_token
+                q_state.update_record(used=True)
                 origin = q_state.origin
-                q_state.delete_record()
             self.DALDatabase.commit()
             uri = "{0}{1}".format(url_base, self.request.uri)
             client_id = self.projectConfig['OAUTH_{0}'.format(social_name.upper())]['client_id']
@@ -234,9 +250,10 @@ class Redirect(web.RequestHandler):
                 })
             else:
 
-                url_consult = self.projectConfig['OAUTH_{0}'.format(social_name.upper())]['http_address']
+                url_consult = self.projectConfig['OAUTH_{0}'.format(social_name.upper())]['remote_address']
                 googleapi = "{0}?access_token={1}".format(
                     url_consult, quote(token['access_token']))
+                
                 try:
                     with urllib.request.urlopen(googleapi) as req:
                         googleapi_user = req.read()
@@ -255,6 +272,7 @@ class Redirect(web.RequestHandler):
                         }
                     })
                 else:
+                    self.logger_api.warning(googleapi_user)
                     email_verified = googleapi_user.get("email_verified", False)
                     if not email_verified:
                         message = "The google email has not been verified."
@@ -271,8 +289,10 @@ class Redirect(web.RequestHandler):
                     email = googleapi_user.get('email', None)
 
                     if email:
+                        print("oxe...", email)
                         q_user = self.DALDatabase(self.DALDatabase.auth_user.email == email).select().first()
                         if q_user:
+                            q_user.update_record(activated=True)
                             timeout_token_user = self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire_remember_me']
                             t_user = Serialize(
                                 self.projectConfig['BACKEND'][self.app_name]['secret_key'],
@@ -332,17 +352,18 @@ class Redirect(web.RequestHandler):
                                         (self.DALDatabase.client.auth_user == q_user.id) &
                                         (self.DALDatabase.client.token != token_client)
                                     ).delete()
-                            self.DALDatabase.commit()
                             user_image = PhanterpwaGalleryUserImage(q_user.id, self.DALDatabase, self.projectConfig)
                             social_image = googleapi_user.get("picture", None)
 
-                            redirect = "#_phanterpwa:/{0}?{1}".format(
-                                origin if origin else "",
-                                urlencode({
+                            redirect = "{0}#_phanterpwa:/oauth/{1}/{2}".format(
+                                origin if origin else self.projectConfig['BACKEND'][self.app_name]['http_address'],
+                                social_name, state
+                            )
+                            q_state.update_record(user_credentials=json.dumps({
                                     'authorization': token_user,
                                     'client_token': token_client,
                                     'url_token': token_url,
-                                    'auth_user': json.dumps({
+                                    'auth_user': {
                                         'id': str(q_user.id),
                                         'first_name': E(q_user.first_name),
                                         'last_name': E(q_user.last_name),
@@ -350,128 +371,134 @@ class Redirect(web.RequestHandler):
                                         'remember_me': q_client.remember_me,
                                         'roles': roles,
                                         'role': role,
-                                        'activated': q_user.activated,
+                                        'activated': True,
                                         'image': user_image.id_image,
                                         'social_image': social_image,
+                                        'two_factor': False,
+                                        'multiple_login': q_user.permit_mult_login,
                                         'social_login': social_name
-                                    })
-                                })
-
-                            )
+                                    }
+                                }))
+                            self.DALDatabase.commit()
                             self.set_status(200)
                             return self.write(
                                 str(HTML(HEAD(), BODY(SCRIPT("window.location = '{0}'".format(redirect))))))
-                    else:
-                        new_password = os.urandom(3).hex()
-                        password_hash = pbkdf2_sha512.hash("password{0}{1}".format(
-                            new_password, self.projectConfig['BACKEND'][self.app_name]['secret_key']))
-                        table = self.DALDatabase.auth_user
-                        social_image = googleapi_user.get("picture", None)
-                        first_name = googleapi_user.get("given_name", "")
-                        last_name = googleapi_user.get("family_name", "")
-                        dict_arguments = {
-                            "first_name": first_name,
-                            "last_name": last_name,
-                            "email": email,
-                            "password_hash": password_hash,
-                            "activated": True
-                        }
-                        result = FieldsDALValidateDictArgs(
-                            dict_arguments,
-                            *[table[x] for x in table.fields if x in [
-                                "first_name", "last_name", "email", "password_hash"]]
-                        )
-                        r = result.validate_and_insert(self.DALDatabase.auth_user)
-                        if r and r.id:
-                            q_user = self.DALDatabase(self.DALDatabase.auth_user.id == r.id).select().first()
-                            if r.id == 1:
-                                role = "root"
-                                id_role = self.DALDatabase(self.DALDatabase.auth_group.role == 'root').select().first()
-                                if id_role:
-                                    self.DALDatabase.auth_membership.insert(auth_user=1,
-                                    auth_group=id_role.id)
-                            else:
-                                role = "user"
-                                self.DALDatabase.auth_membership.insert(auth_user=r.id, auth_group=3)
-                            t_user = Serialize(
-                                self.projectConfig['BACKEND'][self.app_name]['secret_key'],
-                                self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire']
-                            )
-                            content_user = {
-                                'id': str(r.id),
-                                'email': dict_arguments['email']
+                        else:
+                            new_password = os.urandom(3).hex()
+                            password_hash = pbkdf2_sha512.hash("password{0}{1}".format(
+                                new_password, self.projectConfig['BACKEND'][self.app_name]['secret_key']))
+                            table = self.DALDatabase.auth_user
+                            social_image = googleapi_user.get("picture", None)
+                            first_name = googleapi_user.get("given_name", "")
+                            last_name = googleapi_user.get("family_name", "")
+                            dict_arguments = {
+                                "first_name": first_name,
+                                "last_name": last_name,
+                                "email": email,
+                                "password_hash": password_hash,
+                                "activated": True
                             }
-                            token_user = t_user.dumps(content_user)
-                            token_user = token_user.decode('utf-8')
-                            token_client = self.phanterpwa_client_token
-                            id_client = self.DALDatabase.client.update_or_insert(auth_user=r.id)
-                            t_client = Serialize(
-                                self.projectConfig['BACKEND'][self.app_name]['secret_key'],
-                                self.projectConfig['BACKEND'][self.app_name]['default_time_client_token_expire']
+                            result = FieldsDALValidateDictArgs(
+                                dict_arguments,
+                                *[table[x] for x in table.fields if x in [
+                                    "first_name", "last_name", "email", "password_hash"]]
                             )
-                            t_url = URLSafeSerializer(
-                                self.projectConfig['BACKEND'][self.app_name]["secret_key"],
-                                salt="url_secret_key"
-                            )
-                            content_client = {
-                                'id_user': str(r.id),
-                                'id_client': str(id_client),
-                                'user_agent': self.phanterpwa_user_agent,
-                                'remote_addr': self.phanterpwa_remote_ip
-                            }
-                            token_url = t_url.dumps(content_client)
-                            token_client = t_client.dumps(content_client)
-                            token_client = token_client.decode('utf-8')
-                            q_client = self.DALDatabase(self.DALDatabase.client.id == id_client).select().first()
-                            q_client.update_record(
-                                token=token_client,
-                                date_created=datetime.now()
-                            )
-                            r_client = self.DALDatabase(self.DALDatabase.client.token == self.phanterpwa_client_token).select().first()
-                            if r_client:
-                                r_client.delete_record()
-                            if not q_user.permit_mult_login:
-                                r_client = self.DALDatabase(
-                                    (self.DALDatabase.client.auth_user == id_user) &
-                                    (self.DALDatabase.client.token != self.phanterpwa_client_token)
-                                ).select()
+                            r = result.validate_and_insert(self.DALDatabase.auth_user)
+                            if r and r.id:
+                                q_user = self.DALDatabase(self.DALDatabase.auth_user.id == r.id).select().first()
+                                id_user = q_user.id
+                                q_user.update_record(activated=True)
+                                if r.id == 1:
+                                    role = "root"
+                                    id_role = self.DALDatabase(self.DALDatabase.auth_group.role == 'root').select().first()
+                                    if id_role:
+                                        self.DALDatabase.auth_membership.insert(auth_user=1,
+                                        auth_group=id_role.id)
+                                else:
+                                    role = "user"
+                                    self.DALDatabase.auth_membership.insert(auth_user=r.id, auth_group=3)
+                                t_user = Serialize(
+                                    self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                                    self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire']
+                                )
+                                content_user = {
+                                    'id': str(r.id),
+                                    'email': dict_arguments['email']
+                                }
+                                token_user = t_user.dumps(content_user)
+                                token_user = token_user.decode('utf-8')
+                                token_client = self.phanterpwa_client_token
+                                id_client = self.DALDatabase.client.update_or_insert(auth_user=r.id)
+                                t_client = Serialize(
+                                    self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                                    self.projectConfig['BACKEND'][self.app_name]['default_time_client_token_expire']
+                                )
+                                t_url = URLSafeSerializer(
+                                    self.projectConfig['BACKEND'][self.app_name]["secret_key"],
+                                    salt="url_secret_key"
+                                )
+                                content_client = {
+                                    'id_user': str(r.id),
+                                    'id_client': str(id_client),
+                                    'user_agent': self.phanterpwa_user_agent,
+                                    'remote_addr': self.phanterpwa_remote_ip
+                                }
+                                token_url = t_url.dumps(content_client)
+                                token_client = t_client.dumps(content_client)
+                                token_client = token_client.decode('utf-8')
+                                q_client = self.DALDatabase(self.DALDatabase.client.id == id_client).select().first()
+                                q_client.update_record(
+                                    token=token_client,
+                                    date_created=datetime.now()
+                                )
+                                r_client = self.DALDatabase(self.DALDatabase.client.token == self.phanterpwa_client_token).select().first()
                                 if r_client:
+                                    r_client.delete_record()
+                                if not q_user.permit_mult_login:
                                     r_client = self.DALDatabase(
                                         (self.DALDatabase.client.auth_user == id_user) &
                                         (self.DALDatabase.client.token != self.phanterpwa_client_token)
-                                    ).remove()
-                            self.DALDatabase.commit()
-                            user_image = PhanterpwaGalleryUserImage(r.id, self.DALDatabase, self.projectConfig)
-                            self.set_status(201)
-                            roles = ["user"]
-                            role = "user"
-                            redirect = "#_phanterpwa:/{0}?{1}".format(
-                                origin if origin else "",
-                                urlencode({
-                                    'authorization': token_user,
-                                    'client_token': token_client,
-                                    'url_token': token_url,
-                                    'auth_user': json.dumps({
-                                        'id': str(q_user.id),
-                                        'first_name': E(q_user.first_name),
-                                        'last_name': E(q_user.last_name),
-                                        'email': email,
-                                        'remember_me': q_client.remember_me,
-                                        'roles': roles,
-                                        'role': role,
-                                        'activated': q_user.activated,
-                                        'image': user_image.id_image,
-                                        'social_image': social_image,
-                                        'social_login': social_name
-                                    })
-                                })
-                            )
-                            self.write(
-                                str(HTML(HEAD(),BODY(SCRIPT("window.location = '{0}'".format(redirect))))))
+                                    ).select()
+                                    if r_client:
+                                        r_client = self.DALDatabase(
+                                            (self.DALDatabase.client.auth_user == id_user) &
+                                            (self.DALDatabase.client.token != self.phanterpwa_client_token)
+                                        ).remove()
+                                user_image = PhanterpwaGalleryUserImage(r.id, self.DALDatabase, self.projectConfig)
+                                self.set_status(201)
+                                roles = ["user"]
+                                role = "user"
+                                redirect = "{0}#_phanterpwa:/oauth/{1}/{2}".format(
+                                    origin if origin else self.projectConfig['BACKEND'][self.app_name]['http_address'],
+                                    social_name, state
+                                )
+                                q_state.update_record(user_credentials=json.dumps({
+                                        'authorization': token_user,
+                                        'client_token': token_client,
+                                        'url_token': token_url,
+                                        'auth_user': {
+                                            'id': str(q_user.id),
+                                            'first_name': E(q_user.first_name),
+                                            'last_name': E(q_user.last_name),
+                                            'email': email,
+                                            'remember_me': q_client.remember_me,
+                                            'roles': roles,
+                                            'role': role,
+                                            'activated': True,
+                                            'image': user_image.id_image,
+                                            'social_image': social_image,
+                                            'two_factor': False,
+                                            'multiple_login': q_user.permit_mult_login,
+                                            'social_login': social_name
+                                        }
+                                    }))
+                                self.DALDatabase.commit()
+                                return self.write(
+                                    str(HTML(HEAD(), BODY(SCRIPT("window.location = '{0}'".format(redirect))))))
         elif social_name == "facebook":
             state = dict_arguments.get("state")
             q_state = self.DALDatabase(
-                (self.DALDatabase.social_auth.social_name == "facebook") and (self.DALDatabase.social_auth.request_state == state)).select().first()
+                (self.DALDatabase.social_auth.social_name == "facebook") & (self.DALDatabase.social_auth.request_state == state)).select().first()
             origin = None
             if not q_state:
                 message = "The authentication request has already been used."
@@ -538,6 +565,7 @@ class Redirect(web.RequestHandler):
                     if email:
                         q_user = self.DALDatabase(self.DALDatabase.auth_user.email == email).select().first()
                         if q_user:
+                            q_user.update_record(activated=True)
                             timeout_token_user = self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire_remember_me']
                             t_user = Serialize(
                                 self.projectConfig['BACKEND'][self.app_name]['secret_key'],
@@ -597,16 +625,16 @@ class Redirect(web.RequestHandler):
                                         (self.DALDatabase.client.auth_user == q_user.id) &
                                         (self.DALDatabase.client.token != token_client)
                                     ).delete()
-                            self.DALDatabase.commit()
                             user_image = PhanterpwaGalleryUserImage(q_user.id, self.DALDatabase, self.projectConfig)
-
-                            redirect = "#_phanterpwa:/{0}?{1}".format(
-                                origin if origin else "",
-                                urlencode({
+                            redirect = "{0}#_phanterpwa:/oauth/{1}/{2}".format(
+                                origin if origin else self.projectConfig['BACKEND'][self.app_name]['http_address'],
+                                social_name, state
+                            )
+                            q_state.update_record(user_credentials=json.dumps({
                                     'authorization': token_user,
                                     'client_token': token_client,
                                     'url_token': token_url,
-                                    'auth_user': json.dumps({
+                                    'auth_user': {
                                         'id': str(q_user.id),
                                         'first_name': E(q_user.first_name),
                                         'last_name': E(q_user.last_name),
@@ -614,124 +642,130 @@ class Redirect(web.RequestHandler):
                                         'remember_me': q_client.remember_me,
                                         'roles': roles,
                                         'role': role,
-                                        'activated': q_user.activated,
+                                        'activated': True,
                                         'image': user_image.id_image,
                                         'social_image': social_image,
+                                        'two_factor': False,
+                                        'multiple_login': q_user.permit_mult_login,
                                         'social_login': social_name
-                                    })
-                                })
-
-                            )
+                                    }
+                                }))
+                            self.DALDatabase.commit()
                             self.set_status(200)
                             return self.write(
                                 str(HTML(HEAD(), BODY(SCRIPT("window.location = '{0}'".format(redirect))))))
-                    else:
-                        new_password = os.urandom(3).hex()
-                        password_hash = pbkdf2_sha512.hash("password{0}{1}".format(
-                            new_password, self.projectConfig['BACKEND'][self.app_name]['secret_key']))
-                        table = self.DALDatabase.auth_user
-                        social_image = googleapi_user.get("picture", None)
-                        first_name = googleapi_user.get("given_name", "")
-                        last_name = googleapi_user.get("family_name", "")
-                        dict_arguments = {
-                            "first_name": first_name,
-                            "last_name": last_name,
-                            "email": email,
-                            "password_hash": password_hash,
-                            "activated": True
-                        }
-                        result = FieldsDALValidateDictArgs(
-                            dict_arguments,
-                            *[table[x] for x in table.fields if x in [
-                                "first_name", "last_name", "email", "password_hash"]]
-                        )
-                        r = result.validate_and_insert(self.DALDatabase.auth_user)
-                        if r and r.id:
-                            q_user = self.DALDatabase(self.DALDatabase.auth_user.id == r.id).select().first()
-                            if r.id == 1:
-                                role = "root"
-                                id_role = self.DALDatabase(self.DALDatabase.auth_group.role == 'root').select().first()
-                                if id_role:
-                                    self.DALDatabase.auth_membership.insert(auth_user=1,
-                                    auth_group=id_role.id)
-                            else:
-                                role = "user"
-                                self.DALDatabase.auth_membership.insert(auth_user=r.id, auth_group=3)
-                            t_user = Serialize(
-                                self.projectConfig['BACKEND'][self.app_name]['secret_key'],
-                                self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire']
-                            )
-                            content_user = {
-                                'id': str(r.id),
-                                'email': dict_arguments['email']
+                        else:
+                            new_password = os.urandom(3).hex()
+                            password_hash = pbkdf2_sha512.hash("password{0}{1}".format(
+                                new_password, self.projectConfig['BACKEND'][self.app_name]['secret_key']))
+                            table = self.DALDatabase.auth_user
+                            social_image = googleapi_user.get("picture", None)
+                            first_name = googleapi_user.get("given_name", "")
+                            last_name = googleapi_user.get("family_name", "")
+                            dict_arguments = {
+                                "first_name": first_name,
+                                "last_name": last_name,
+                                "email": email,
+                                "password_hash": password_hash,
+                                "activated": True
                             }
-                            token_user = t_user.dumps(content_user)
-                            token_user = token_user.decode('utf-8')
-                            token_client = self.phanterpwa_client_token
-                            id_client = self.DALDatabase.client.update_or_insert(auth_user=r.id)
-                            t_client = Serialize(
-                                self.projectConfig['BACKEND'][self.app_name]['secret_key'],
-                                self.projectConfig['BACKEND'][self.app_name]['default_time_client_token_expire']
+                            result = FieldsDALValidateDictArgs(
+                                dict_arguments,
+                                *[table[x] for x in table.fields if x in [
+                                    "first_name", "last_name", "email", "password_hash"]]
                             )
-                            t_url = URLSafeSerializer(
-                                self.projectConfig['BACKEND'][self.app_name]["secret_key"],
-                                salt="url_secret_key"
-                            )
-                            content_client = {
-                                'id_user': str(r.id),
-                                'id_client': str(id_client),
-                                'user_agent': self.phanterpwa_user_agent,
-                                'remote_addr': self.phanterpwa_remote_ip
-                            }
-                            token_url = t_url.dumps(content_client)
-                            token_client = t_client.dumps(content_client)
-                            token_client = token_client.decode('utf-8')
-                            q_client = self.DALDatabase(self.DALDatabase.client.id == id_client).select().first()
-                            q_client.update_record(
-                                token=token_client,
-                                date_created=datetime.now()
-                            )
-                            r_client = self.DALDatabase(self.DALDatabase.client.token == self.phanterpwa_client_token).select().first()
-                            if r_client:
-                                r_client.delete_record()
-                            if not q_user.permit_mult_login:
-                                r_client = self.DALDatabase(
-                                    (self.DALDatabase.client.auth_user == id_user) &
-                                    (self.DALDatabase.client.token != self.phanterpwa_client_token)
-                                ).select()
+                            r = result.validate_and_insert(self.DALDatabase.auth_user)
+                            if r and r.id:
+                                q_user = self.DALDatabase(self.DALDatabase.auth_user.id == r.id).select().first()
+                                id_user = q_user.id
+                                q_user.update_record(activated=True)
+                                if r.id == 1:
+                                    role = "root"
+                                    id_role = self.DALDatabase(self.DALDatabase.auth_group.role == 'root').select().first()
+                                    if id_role:
+                                        self.DALDatabase.auth_membership.insert(auth_user=1,
+                                        auth_group=id_role.id)
+                                else:
+                                    role = "user"
+                                    self.DALDatabase.auth_membership.insert(auth_user=r.id, auth_group=3)
+                                t_user = Serialize(
+                                    self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                                    self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire']
+                                )
+                                content_user = {
+                                    'id': str(r.id),
+                                    'email': dict_arguments['email']
+                                }
+                                token_user = t_user.dumps(content_user)
+                                token_user = token_user.decode('utf-8')
+                                token_client = self.phanterpwa_client_token
+                                id_client = self.DALDatabase.client.update_or_insert(auth_user=r.id)
+                                t_client = Serialize(
+                                    self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                                    self.projectConfig['BACKEND'][self.app_name]['default_time_client_token_expire']
+                                )
+                                t_url = URLSafeSerializer(
+                                    self.projectConfig['BACKEND'][self.app_name]["secret_key"],
+                                    salt="url_secret_key"
+                                )
+                                content_client = {
+                                    'id_user': str(r.id),
+                                    'id_client': str(id_client),
+                                    'user_agent': self.phanterpwa_user_agent,
+                                    'remote_addr': self.phanterpwa_remote_ip
+                                }
+                                token_url = t_url.dumps(content_client)
+                                token_client = t_client.dumps(content_client)
+                                token_client = token_client.decode('utf-8')
+                                q_client = self.DALDatabase(self.DALDatabase.client.id == id_client).select().first()
+                                q_client.update_record(
+                                    token=token_client,
+                                    date_created=datetime.now()
+                                )
+                                r_client = self.DALDatabase(self.DALDatabase.client.token == self.phanterpwa_client_token).select().first()
                                 if r_client:
+                                    r_client.delete_record()
+                                if not q_user.permit_mult_login:
                                     r_client = self.DALDatabase(
                                         (self.DALDatabase.client.auth_user == id_user) &
                                         (self.DALDatabase.client.token != self.phanterpwa_client_token)
-                                    ).remove()
-                            self.DALDatabase.commit()
-                            user_image = PhanterpwaGalleryUserImage(r.id, self.DALDatabase, self.projectConfig)
-                            self.set_status(201)
-                            roles = ["user"]
-                            role = "user"
-                            redirect = "#_phanterpwa:/{0}?{1}".format(
-                                origin if origin else "",
-                                urlencode({
-                                    'authorization': token_user,
-                                    'client_token': token_client,
-                                    'url_token': token_url,
-                                    'auth_user': json.dumps({
-                                        'id': str(q_user.id),
-                                        'first_name': E(q_user.first_name),
-                                        'last_name': E(q_user.last_name),
-                                        'email': email,
-                                        'remember_me': q_client.remember_me,
-                                        'roles': roles,
-                                        'role': role,
-                                        'activated': q_user.activated,
-                                        'image': user_image.id_image,
-                                        'social_image': social_image,
-                                        'social_login': social_name
-                                    })
-                                })
-                            )
-                            self.write(
-                                str(HTML(HEAD(), BODY(SCRIPT("window.location = '{0}'".format(redirect))))))
+                                    ).select()
+                                    if r_client:
+                                        r_client = self.DALDatabase(
+                                            (self.DALDatabase.client.auth_user == id_user) &
+                                            (self.DALDatabase.client.token != self.phanterpwa_client_token)
+                                        ).remove()
+                                user_image = PhanterpwaGalleryUserImage(r.id, self.DALDatabase, self.projectConfig)
+                                self.set_status(201)
+                                roles = ["user"]
+                                role = "user"
+                                redirect = "{0}#_phanterpwa:/oauth/{1}/{2}".format(
+                                    origin if origin else self.projectConfig['BACKEND'][self.app_name]['http_address'],
+                                    social_name, state
+                                )
+                                q_state.update_record(user_credentials=json.dumps({
+                                        'authorization': token_user,
+                                        'client_token': token_client,
+                                        'url_token': token_url,
+                                        'auth_user': {
+                                            'id': str(q_user.id),
+                                            'first_name': E(q_user.first_name),
+                                            'last_name': E(q_user.last_name),
+                                            'email': email,
+                                            'remember_me': q_client.remember_me,
+                                            'roles': roles,
+                                            'role': role,
+                                            'activated': True,
+                                            'image': user_image.id_image,
+                                            'social_image': social_image,
+                                            'two_factor': False,
+                                            'multiple_login': q_user.permit_mult_login,
+                                            'social_login': social_name
+                                        }
+                                    }))
+                                self.DALDatabase.commit()
+                                return self.write(
+                                    str(HTML(HEAD(), BODY(SCRIPT("window.location = '{0}'".format(redirect))))))
 
             
         message = "An error occurred while trying to authenticate."

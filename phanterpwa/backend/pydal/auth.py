@@ -17,7 +17,8 @@ class AuthTables():
         self.DALDatabase = DALDatabase
         default_language = projectConfig["PROJECT"].get("default_language", "en-US")
         self.logger_api = logger_api
-        self.DALDatabase.define_table('auth_user',
+        self.DALDatabase.define_table(
+            'auth_user',
             Field('first_name', 'string', notnull=True, requires=IS_NOT_EMPTY(), phanterpwa={
                 'group': 'group1',
                 '_class': 'p-col w1p100 w4p70 e-float_right'
@@ -29,6 +30,9 @@ class AuthTables():
             Field('email', 'string', notnull=True, unique=True, phanterpwa={
                 'group': 'group1',
                 '_class': 'p-col w1p100 w4p70 e-float_right'
+            }),
+            Field('fone_number', 'string', phanterpwa={
+                'out_of_form': True
             }),
             Field('password_hash', 'string', notnull=True, requires=IS_NOT_EMPTY(), phanterpwa={
                 'out_of_form': True
@@ -70,7 +74,8 @@ class AuthTables():
                 'out_of_form': True
             }),
             Field('locale', 'string', default=default_language),
-            Field('two_factor_login', 'boolean', default=False)        )
+            Field('two_factor_login', 'boolean', default=False)        
+        )
 
         def delete_upload_folder(s):
             upload_folder = os.path.join(projectConfig["PROJECT"]["path"], "backapps", "api", "uploads")
@@ -120,7 +125,9 @@ class AuthTables():
             Field('request_state', 'text'),
             Field('client_token', 'text'),
             Field('datetime_created', 'datetime', default=datetime.now()),
-            Field('origin', 'text')
+            Field('origin', 'text'),
+            Field('used', 'boolean', default=False),
+            Field('user_credentials', 'text')
         )
 
         self.DALDatabase.define_table('two_factor_login',

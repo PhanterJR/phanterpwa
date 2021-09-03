@@ -831,6 +831,16 @@ class Compiler():
 
             }
         }
+        social_logins = {}
+        if "OAUTH_GOOGLE" in self.config:
+            social_logins = {"google":{
+                "remote_address": self.config['OAUTH_GOOGLE'].get("remote_address", ""),
+                "client_id": self.config['OAUTH_GOOGLE'].get("client_id", "")
+            }}
+
+        if social_logins:
+            CONFIG["SOCIAL_LOGINS"] = social_logins
+
         for x in self.config['FRONTEND'][app]:
             if x not in ignore_keys:
                 CONFIG['APP'][x] = self.config['FRONTEND'][app][x]

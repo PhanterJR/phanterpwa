@@ -2286,6 +2286,40 @@ class Profile(gatehandler.Handler):
         forms.SignForm("#form-change_account", after_sign=lambda: forms.ValidateForm("#form-change_account"))
 
 
+class Oauth(gatehandler.Handler):
+
+    def initialize(self):
+        arg0 = self.request.get_arg(0)
+        arg1 = self.request.get_arg(1)
+        xml_content = CONCATENATE(
+            DIV(
+                DIV(
+                    DIV(
+                        DIV("Oauth", _class="phanterpwa-breadcrumb"),
+                        _class="phanterpwa-breadcrumb-wrapper"
+                    ),
+                    _class="container"),
+                _class='title_page_container card'
+            ),
+            DIV(
+                DIV(
+                    DIV(
+                        DIV(preloaders.android, _style="width: 300px; height: 300px; overflow: hidden; margin: auto;"),
+                        _style="text-align:center; padding: 50px 0;"
+                    ),
+                    _id="content-alunos",
+                    _class='p-row card e-padding_20'
+                ),
+
+                _class="phanterpwa-container p-container"
+            )
+        )
+        xml_content.html_to("#main-container")
+        if arg0 is not None and arg1 is not None:
+            window.PhanterPWA.oauth(arg0, arg1)
+        else:
+            window.PhanterPWA.open_way("home")
+
 class Lock(gatehandler.Handler):
     def initialize(self):
         request = self.request

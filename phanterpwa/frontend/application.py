@@ -164,7 +164,7 @@ class PhanterPWA():
                 sessionStorage.setItem("auth_user", JSON.stringify(auth_user))
                 localStorage.removeItem("phanterpwa-authorization")
                 localStorage.removeItem("auth_user")
-            localStorage.setItem("last_auth_user", JSON.stringify(auth_user))
+            window.PhanterPWA.set_last_auth_user(auth_user)
         if redirect is not None and redirect is not js_undefined:
             window.location = redirect
         if way is not None and way is not js_undefined:
@@ -205,7 +205,6 @@ class PhanterPWA():
         all_vars = self.ApiServer._serialize_vars(url_vars)
         current_uri = "/#_phanterpwa:/{0}{1}".format(all_args, all_vars)
         return current_uri
-
 
     @staticmethod
     def get_app_name(self):
@@ -327,7 +326,8 @@ class PhanterPWA():
         else:
             console.error("The event must be Event instance")
 
-    def remove_last_auth_user(self):
+    @staticmethod
+    def remove_last_auth_user():
         localStorage.removeItem("last_auth_user")
 
     def reload_auth_user():
@@ -356,10 +356,49 @@ class PhanterPWA():
                         localStorage.removeItem("phanterpwa-authorization")
                         localStorage.removeItem("auth_user")
                     self.WS.send("command_online")
-                    localStorage.setItem("last_auth_user", JSON.stringify(auth_user))
+                    window.PhanterPWA.set_last_auth_user(auth_user)
                     if callable(self._after_login):
                         self._after_login(self, json)
                 window.PhanterPWA.open_current_way()
+            elif data.status == 206:
+                client_token = json.client_token
+                if client_token is not js_undefined:
+                    localStorage.setItem('phanterpwa-client-token', client_token)
+                    sessionStorage.removeItem("phanterpwa-authorization")
+                    sessionStorage.removeItem("auth_user")
+                    localStorage.removeItem("phanterpwa-authorization")
+                    localStorage.removeItem("auth_user")
+        if self.DEBUG:
+            if json.i18n is not js_undefined and json.i18n is not None:
+                console.info(data.status, json.i18n.message)
+        if callable(callback):
+            callback(data, ajax_status)
+
+    def _after_oauth(self, data, ajax_status, callback=None):
+        json = data.responseJSON
+        if ajax_status == "success":
+            if data.status == 200:
+                authorization = json.authorization
+                auth_user = json.auth_user
+                client_token = json.client_token
+                url_token = json.url_token
+                if (authorization is not js_undefined) and\
+                        (auth_user is not js_undefined) and (client_token is not js_undefined):
+                    localStorage.setItem('phanterpwa-client-token', client_token)
+                    localStorage.setItem('phanterpwa-url-token', url_token)
+                    if auth_user["remember_me"] is True:
+                        localStorage.setItem("phanterpwa-authorization", authorization)
+                        localStorage.setItem("auth_user", JSON.stringify(auth_user))
+                        sessionStorage.removeItem("phanterpwa-authorization")
+                        sessionStorage.removeItem("auth_user")
+                    else:
+                        sessionStorage.setItem("phanterpwa-authorization", authorization)
+                        sessionStorage.setItem("auth_user", JSON.stringify(auth_user))
+                        localStorage.removeItem("phanterpwa-authorization")
+                        localStorage.removeItem("auth_user")
+                    self.WS.send("command_online")
+                    window.PhanterPWA.set_last_auth_user(auth_user)
+                window.PhanterPWA.open_way("home")
             elif data.status == 206:
                 client_token = json.client_token
                 if client_token is not js_undefined:
@@ -399,6 +438,22 @@ class PhanterPWA():
                 data, ajax_status, callback)
         })
 
+    def oauth(self, social_name, state):
+        formdata = __new__(FormData())
+        formdata.append(
+            "state",
+            state
+        )
+
+        window.PhanterPWA.POST(
+            'api',
+            'oauth',
+            'prompt',
+            social_name,
+            form_data=formdata,
+            onComplete=self._after_oauth
+        )
+
     def _after_submit_two_factor(self, data, ajax_status, callback=None):
         json = data.responseJSON
         if ajax_status == "success":
@@ -422,7 +477,7 @@ class PhanterPWA():
                         localStorage.removeItem("phanterpwa-authorization")
                         localStorage.removeItem("auth_user")
                     self.WS.send("command_online")
-                    localStorage.setItem("last_auth_user", JSON.stringify(auth_user))
+                    window.PhanterPWA.set_last_auth_user(auth_user)
                 window.PhanterPWA.open_current_way()
         if self.DEBUG:
             console.info(data.status, json.i18n.message)
@@ -480,7 +535,7 @@ class PhanterPWA():
                     localStorage.removeItem("phanterpwa-authorization")
                     localStorage.removeItem("auth_user")
                 self.WS.send("command_online")
-                localStorage.setItem("last_auth_user", JSON.stringify(auth_user))
+                window.PhanterPWA.set_last_auth_user(auth_user)
         else:
             console.info(data.status)
         if self.DEBUG:
@@ -560,7 +615,7 @@ class PhanterPWA():
         if ajax_status == "success":
             auth_user = json.auth_user
             sessionStorage.setItem("auth_user", JSON.stringify(auth_user))
-            localStorage.setItem("last_auth_user", JSON.stringify(auth_user))
+            window.PhanterPWA.set_last_auth_user(auth_user)
             self.update_current_way()
         if self.DEBUG:
             console.info(data.status, json.i18n.message)
@@ -762,7 +817,12 @@ class PhanterPWA():
         else:
             localStorage.removeItem("auth_user")
         if auth_user is not None and auth_user is not js_undefined:
-            return JSON.parse(auth_user)
+            parsed_user = JSON.parse(auth_user)
+            if str(parsed_user.id).isdigit():
+                return parsed_user
+            else:
+
+                return None
         else:
             window.PhanterPWA.WS.send("command_offline")
             localStorage.removeItem("phanterpwa-authorization")
@@ -810,7 +870,7 @@ class PhanterPWA():
             else:
                 sessionStorage.setItem("auth_user", JSON.stringify(auth_user))
                 localStorage.removeItem("auth_user")
-            localStorage.setItem("last_auth_user", JSON.stringify(auth_user))
+            window.PhanterPWA.set_last_auth_user(auth_user)
         AuthUser = self.Components['auth_user']
         if AuthUser is not None and AuthUser is not js_undefined:
             AuthUser.start()
@@ -845,12 +905,16 @@ class PhanterPWA():
                         sessionStorage.setItem("phanterpwa-authorization", authorization)
                         localStorage.removeItem("phanterpwa-authorization")
                     self.WS.send("command_online")
-                    localStorage.setItem("last_auth_user", JSON.stringify(auth_user))
+                    window.PhanterPWA.set_last_auth_user(auth_user)
         if self.DEBUG:
             console.info(data.status, json.i18n.message)
         if callable(callback):
             callback(data, ajax_status)
 
+    @staticmethod
+    def set_last_auth_user(auth_user):
+        if str(auth_user.id).isdigit():
+            localStorage.setItem("last_auth_user", JSON.stringify(auth_user))
 
     @staticmethod
     def get_auth_user_image():
@@ -886,7 +950,11 @@ class PhanterPWA():
     def get_last_auth_user():
         last_auth_user = localStorage.getItem("last_auth_user")
         if last_auth_user is not None and last_auth_user is not js_undefined:
-            return JSON.parse(last_auth_user)
+            parsed_last_auth_user = JSON.parse(last_auth_user)
+            if str(parsed_last_auth_user.id).isdigit():
+                return parsed_last_auth_user
+            else:
+                return None
         else:
             return None
 
