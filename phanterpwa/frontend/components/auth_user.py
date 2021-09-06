@@ -60,6 +60,7 @@ class AuthUser(application.Component):
         )
 
         application.Component.__init__(self, "auth_user", html)
+        window.PhanterPWA.AuthUserCmp = self
         self.html_to(target_selector)
 
     def switch_menu(self):
@@ -110,27 +111,32 @@ class AuthUser(application.Component):
                     jQuery(".phanterpwa-component-left_bar-menu_button-wrapper-auth_user")).length == 0:
                 self.close_menu()
 
-    def modal_login(self):
+    def modal_login(self, **parameters):
         self.close_menu()
         self.Modal = ModalLogin(
             "#modal-container",
-            social_logins=window.PhanterPWA.social_login_list()
+            social_logins=window.PhanterPWA.social_login_list(),
+            **parameters
         )
         self.Modal.open()
         forms.SignForm("#form-login", has_captcha=True, after_sign=lambda: forms.ValidateForm("#form-login"))
+        if parameters.get("other_account", False):
+            self.Modal.other_account()
 
-    def modal_register(self):
+    def modal_register(self, **parameters):
         self.close_menu()
         self.Modal = ModalRegister(
-            "#modal-container"
+            "#modal-container",
+            **parameters
         )
         self.Modal.open()
         forms.SignForm("#form-register", has_captcha=True, after_sign=lambda: forms.ValidateForm("#form-register"))
 
-    def modal_request_password(self):
+    def modal_request_password(self, **parameters):
         self.close_menu()
         self.Modal = ModalRequestPassword(
-            "#modal-container"
+            "#modal-container",
+            **parameters
         )
         self.Modal.open()
         forms.SignForm("#form-request_password", has_captcha=True, after_sign=lambda: forms.ValidateForm("#form-request_password"))
@@ -341,8 +347,42 @@ class ModalLogin(modal.Modal):
     def __init__(self, target_element, **parameters):
         self.element_target = jQuery(target_element)
         self._social_logins = parameters.get("social_logins", [])
+        self.user_mobile_number = parameters.get("user_mobile_number", None)
+        self.mask_mobile_number = parameters.get("mask_mobile_number", "+## (##) # ####-####")
+        self.prefix_mobile_number = parameters.get("prefix_mobile_number", 55)
+        self.prefix_mobile_list = parameters.get("prefix_mobile_list", [self.prefix_mobile_number])
+        self.ignore_last_user = parameters.get("ignore_last_user", False)
         if not isinstance(self._social_logins, list):
             self._social_logins = []
+        self.last_auth_user = window.PhanterPWA.get_last_auth_user()
+        first_name = ""
+        last_name = ""
+        email = ""
+        fone_number = self.prefix_mobile_number
+        role = I18N("User")
+        user_image = window.PhanterPWA.get_last_auth_user_image()
+        remember_me = False
+
+        if self.last_auth_user is not None and self.last_auth_user is not js_undefined:
+            first_name = self.last_auth_user.first_name
+            last_name = self.last_auth_user.last_name
+            email = self.last_auth_user.email
+            fone_number = self.last_auth_user.fone_number if self.last_auth_user.fone_number is not js_undefined else ""
+            remember_me = self.last_auth_user.remember_me
+            role = I18N(self.last_auth_user.role)
+
+        if self.user_mobile_number is None and str(email).endswith(".mobile@phanterpwa.com"):
+            self.user_mobile_number = True
+        if all([
+                self.mask_mobile_number is not js_undefined,
+                self.mask_mobile_number is not None,
+                str(self.prefix_mobile_number).isdigit(),
+                "SMS" in window.PhanterPWA.CONFIG
+            ]):
+            if self.user_mobile_number:
+                self._social_logins.append(['email', I(_class="fas fa-envelope")])
+            else:
+                self._social_logins.append(['mobile', I(_class="fas fa-mobile-alt")])
         self._has_social_logins = True if len(self._social_logins) > 0 else False
         AuthUserCmp = window.PhanterPWA.Components["auth_user"]
         self.AuthUser = None
@@ -350,22 +390,32 @@ class ModalLogin(modal.Modal):
             console.error("Need AuthUser instance on window.PhanterPWA.Components")
         else:
             self.AuthUser = AuthUserCmp
-        self.last_auth_user = window.PhanterPWA.get_last_auth_user()
-        first_name = ""
-        last_name = ""
-        email = ""
-        role = I18N("User")
-        user_image = window.PhanterPWA.get_last_auth_user_image()
-        remember_me = False
-        if self.last_auth_user is not None and self.last_auth_user is not js_undefined:
-            first_name = self.last_auth_user.first_name
-            last_name = self.last_auth_user.last_name
-            email = self.last_auth_user.email
-            remember_me = self.last_auth_user.remember_me
-            role = I18N(self.last_auth_user.role)
 
         self.xml_social_logins = DIV(_class='phanterpwa-modal-login-social-buttons-container')
         self._icons_social_login = {}
+        if self.user_mobile_number is True:
+            email_mobile_input = forms.FormWidget(
+                "login",
+                "mobile",
+                **{
+                    "type": "string",
+                    "label": I18N("Mobile number"),
+                    "value": fone_number,
+                    "validators": ["IS_NOT_EMPTY", ""],
+                    "mask": self.mask_mobile_number
+                }
+            )
+        else:
+            email_mobile_input = forms.FormWidget(
+                "login",
+                "email",
+                **{
+                    "type": "string",
+                    "label": I18N("E-mail"),
+                    "value": email,
+                    "validators": ["IS_NOT_EMPTY", "IS_EMAIL"]
+                }
+            )
         if self._has_social_logins:
             for x in self._social_logins:
                 icon = ""
@@ -374,20 +424,21 @@ class ModalLogin(modal.Modal):
                     icon = x[1]
                     social_name = x[0]
                     self._icons_social_login[social_name] = icon
-                self.xml_social_logins.append(DIV(
+                self.xml_social_logins.append(
                     DIV(
-                        icon,
-                        I18N(
-                            "Login with {0}".format(str(social_name).capitalize()),
-                            **{"_pt-br": "Login com o {0}".format(str(social_name).capitalize())}
+                        DIV(
+                            icon,
+                            I18N(
+                                "Login with {0}".format(str(social_name).capitalize())
+                            ),
+                            **{
+                                "_class": "btn btn-social_login link",
+                                "_data-social_login": social_name
+                            }
                         ),
-                        **{
-                            "_class": "btn btn-social_login link",
-                            "_data-social_login": social_name
-                        }
-                    ),
-                    _class="btn-social_login-wrapper",
-                 ))
+                        _class="btn-social_login-wrapper",
+                    )
+                )
 
         tcontent = DIV(
             self.xml_social_logins,
@@ -428,16 +479,7 @@ class ModalLogin(modal.Modal):
                 _id="form-login-button-other-user-container",
                 _class="p-col w1p100"
             ),
-            forms.FormWidget(
-                "login",
-                "email",
-                **{
-                    "type": "string",
-                    "label": I18N("E-mail"),
-                    "value": email,
-                    "validators": ["IS_NOT_EMPTY", "IS_EMAIL"],
-                }
-            ),
+            email_mobile_input,
             DIV(
                 forms.FormWidget(
                     "login",
@@ -548,11 +590,25 @@ class ModalLogin(modal.Modal):
 
     def open_modal_register(self):
         self.close()
-        window.PhanterPWA.Components['auth_user'].modal_register()
+        if self.user_mobile_number is True:
+            window.PhanterPWA.Components['auth_user'].modal_register(
+                user_mobile_number=True
+            )
+        else:
+            window.PhanterPWA.Components['auth_user'].modal_register(
+                user_mobile_number=False
+            )
 
     def open_modal_request_password(self):
         self.close()
-        window.PhanterPWA.Components['auth_user'].modal_request_password()
+        if self.user_mobile_number is True:
+            window.PhanterPWA.Components['auth_user'].modal_request_password(
+                user_mobile_number=True
+            )
+        else:
+            window.PhanterPWA.Components['auth_user'].modal_request_password(
+                user_mobile_number=False
+            )
 
     def binds(self):
         self.element_target.find("#phanterpwa-widget-form-submit_button-login").off('click.modal_submit_login').on(
@@ -585,10 +641,55 @@ class ModalLogin(modal.Modal):
             "click.social_button",
             lambda: self._on_click_social_button(this)
         )
+        self.element_target.find("#phanterpwa-widget-input-input-login-mobile").trigger("keyup")
+        email = jQuery("#phanterpwa-widget-input-input-login-email").val()
+        if str(email).endswith(".mobile@phanterpwa.com"):
+            jQuery("#phanterpwa-widget-input-input-login-email").val("")
+
+        self.element_target.find("#phanterpwa-widget-input-input-login-mobile").off(
+            "change.fix_prefix, keyup.fix_prefix"
+        ).on(
+            "change.fix_prefix, keyup.fix_prefix",
+            lambda: self.fix_prefix(this)
+        )
+
+    def fix_prefix(self, el):
+        console.log(el)
+        value = jQuery(el).val()
+        numbers = [str(x) for x in range(10)]
+        cont = 0
+        for x in str(value):
+            if x in numbers:
+                cont += 1
+
+        size = len(str(self.prefix_mobile_number))
+        if cont < size:
+            jQuery(el).val(self.prefix_mobile_number).trigger("keyup")
+
 
     def _on_click_social_button(self, el):
         social = jQuery(el).data("social_login")
-        window.PhanterPWA.social_login(social)
+        if social == "mobile":
+            self.Modal = ModalLogin(
+                "#modal-container",
+                social_logins=window.PhanterPWA.social_login_list(),
+                user_mobile_number=True,
+            )
+            self.Modal.open()
+            self.other_account()
+            forms.SignForm("#form-login", has_captcha=True, after_sign=lambda: forms.ValidateForm("#form-login"))
+        elif social == "email":
+            self.Modal = ModalLogin(
+                "#modal-container",
+                social_logins=window.PhanterPWA.social_login_list(),
+                user_mobile_number=False
+            )
+            self.Modal.open()
+            self.other_account()
+            forms.SignForm("#form-login", has_captcha=True, after_sign=lambda: forms.ValidateForm("#form-login"))
+
+        else:
+            window.PhanterPWA.social_login(social)
 
     def clear_errors(self):
         jQuery("#form-{0}".format(self._form)).find(".phanterpwa-widget-error").removeClass("enabled").html("")
@@ -634,16 +735,45 @@ class ModalLogin(modal.Modal):
                 json = data.responseJSON
                 window.PhanterPWA.flash(**{'html': json.i18n.message})
                 forms.SignForm("#form-login", has_captcha=True)
+                if json.reasons == "Mobile number does not exist":
+                    self.Modal = ModalRegister(
+                        "#modal-container",
+                        user_mobile_number=True,
+                        mobile=json.fone_number,
+                        password=json.password
+                    )
+                    self.Modal.open()
+                    forms.SignForm("#form-register", has_captcha=True, after_sign=lambda: forms.ValidateForm("#form-register"))
+
+                elif json.reasons == "Email does not exist":
+                    self.Modal = ModalRegister(
+                        "#modal-container",
+                        email=json.email,
+                        password=json.password
+                    )
+                    self.Modal.open()
+                    forms.SignForm("#form-register", has_captcha=True, after_sign=lambda: forms.ValidateForm("#form-register"))
+
 
     def submit(self):
         self.clear_errors()
-        window.PhanterPWA.login(
-            jQuery("#phanterpwa-widget-input-input-login-csrf_token").val(),
-            jQuery("#phanterpwa-widget-input-input-login-email").val(),
-            jQuery("#phanterpwa-widget-input-input-login-password").val(),
-            jQuery("#phanterpwa-widget-checkbox-input-login-remember_me").prop("checked"),
-            callback=self.after_submit
-        )
+        if self.user_mobile_number is True:
+            window.PhanterPWA.login(
+                jQuery("#phanterpwa-widget-input-input-login-csrf_token").val(),
+                jQuery("#phanterpwa-widget-input-input-login-mobile").val(),
+                jQuery("#phanterpwa-widget-input-input-login-password").val(),
+                jQuery("#phanterpwa-widget-checkbox-input-login-remember_me").prop("checked"),
+                callback=self.after_submit,
+                user_mobile_number=True
+            )
+        else:
+            window.PhanterPWA.login(
+                jQuery("#phanterpwa-widget-input-input-login-csrf_token").val(),
+                jQuery("#phanterpwa-widget-input-input-login-email").val(),
+                jQuery("#phanterpwa-widget-input-input-login-password").val(),
+                jQuery("#phanterpwa-widget-checkbox-input-login-remember_me").prop("checked"),
+                callback=self.after_submit
+            )
 
 
 class ModalPersonalInformation(modal.Modal):
@@ -796,26 +926,26 @@ class ModalPersonalInformation(modal.Modal):
         )
 
     def after_submit(self, data, ajax_status):
-            if ajax_status == "success":
-                json = data.responseJSON
-                message = json.i18n.message
-                window.PhanterPWA.flash(**{'html': message})
-                if data.status == 200:
-                    jQuery(".phanterpwa-gallery-upload-input-file").val('')
-                    auth_user = json.auth_user
-                    window.PhanterPWA.store_auth_user(auth_user)
-                    self.reload()
-                    self.close()
-                    if self.AuthUser is not None:
-                        self.AuthUser.AlertActivationAccount.check_activation()
-                else:
-                    forms.SignForm("#form-change_account")
-
+        if ajax_status == "success":
+            json = data.responseJSON
+            message = json.i18n.message
+            window.PhanterPWA.flash(**{'html': message})
+            if data.status == 200:
+                jQuery(".phanterpwa-gallery-upload-input-file").val('')
+                auth_user = json.auth_user
+                window.PhanterPWA.store_auth_user(auth_user)
+                self.reload()
+                self.close()
+                if self.AuthUser is not None:
+                    self.AuthUser.AlertActivationAccount.check_activation()
             else:
                 forms.SignForm("#form-change_account")
-                json = data.responseJSON
-                message = json.i18n.message
-                window.PhanterPWA.flash(**{'html': message})
+
+        else:
+            forms.SignForm("#form-change_account")
+            json = data.responseJSON
+            message = json.i18n.message
+            window.PhanterPWA.flash(**{'html': message})
 
     def submit(self):
         formdata = __new__(FormData(jQuery("#form-change_account")[0]))
@@ -885,7 +1015,7 @@ class ModalPersonalInformation(modal.Modal):
 
 
 class ModalRegister(modal.Modal):
-    def __init__(self, target_element, use_mobile_number=False, default_login=None):
+    def __init__(self, target_element, **parameters):
         self.element_target = jQuery(target_element)
         AuthUserCmp = window.PhanterPWA.Components['auth_user']
         self.AuthUser = None
@@ -893,29 +1023,73 @@ class ModalRegister(modal.Modal):
             console.error("Need AuthUser instance on window.PhanterPWA.Components")
         else:
             self.AuthUser = AuthUserCmp
-        if use_mobile_number is None:
+        self.user_mobile_number = parameters.get("user_mobile_number", None)
+        self.mask_mobile_number = parameters.get("mask_mobile_number", "+## (##) # ####-####")
+        self.prefix_mobile_number = parameters.get("prefix_mobile_number", 55)
+        self.prefix_mobile_list = parameters.get("prefix_mobile_list", [self.prefix_mobile_number])
+        if self.user_mobile_number is True:
+            mobile = parameters.get("mobile", self.prefix_mobile_number)
             input_name = forms.FormWidget(
                 "register",
-                "fone",
+                "mobile",
                 **{
                     "type": "string",
                     "label": I18N("Mobile Number"),
-                    "validators": ["IS_EMAIL"],
+                    "validators": ["IS_NOT_EMPTY"],
+                    "value": mobile,
+                    "mask": self.mask_mobile_number,
                     "_class": "p-col w1p100"
                 }
             )
         else:
+            email = parameters.get("email", "")
             input_name = forms.FormWidget(
                 "register",
                 "email",
                 **{
                     "type": "string",
+                    "value": email,
                     "label": I18N("E-Mail"),
                     "validators": ["IS_EMAIL"],
                     "_class": "p-col w1p100"
                 }
             )
+        password = parameters.get("password", "")
+        self._xml_button = ""
+        if "SMS" in window.PhanterPWA.CONFIG:
+            if self.user_mobile_number is True:
+                self._xml_button = DIV(DIV(
+                    DIV(
+                        I(_class="fas fa-envelope"),
+                        I18N(
+                            "Register with {0}".format(str("email").capitalize()),
+                            **{"_pt-br": "Registrar com o {0}".format(str("email").capitalize())}
+                        ),
+                        **{
+                            "_class": "btn btn-social_login link",
+                            "_data-social_login": "email"
+                        }
+                    ),
+                    _class="btn-social_login-wrapper",
+                ), _style="display: table;margin: auto;")
+            else:
+                self._xml_button = DIV(DIV(
+                    DIV(
+                        I(_class="fas fa-mobile-alt"),
+                        I18N(
+                            "Register with {0}".format(str("mobile").capitalize()),
+                            **{"_pt-br": "Registrar com o {0}".format(str("mobile").capitalize())}
+                        ),
+                        **{
+                            "_class": "btn btn-social_login link",
+                            "_data-social_login": "mobile"
+                        }
+                    ),
+                    _class="btn-social_login-wrapper",
+                ), _style="display: table;margin: auto;")
+
         tcontent = DIV(
+            self._xml_button,
             forms.FormWidget(
                 "register",
                 "first_name",
@@ -943,6 +1117,7 @@ class ModalRegister(modal.Modal):
                 **{
                     "type": "password",
                     "label": I18N("Password"),
+                    "value": password,
                     "validators": ["IS_NOT_EMPTY", "IS_EQUALS:#phanterpwa-widget-input-input-register-password_repeat"],
                     "_class": "p-col w1p100 w3p50"
                 }
@@ -1004,11 +1179,25 @@ class ModalRegister(modal.Modal):
 
     def open_modal_login(self):
         self.close()
-        window.PhanterPWA.Components['auth_user'].modal_login()
+        if self.user_mobile_number:
+            window.PhanterPWA.Components['auth_user'].modal_login(
+                user_mobile_number=True,
+                other_account=True
+            )
+        else:
+            window.PhanterPWA.Components['auth_user'].modal_login(
+                user_mobile_number=False,
+                other_account=True
+            )
 
     def open_modal_request_password(self):
         self.close()
-        window.PhanterPWA.Components['auth_user'].modal_request_password()
+        if self.user_mobile_number:
+            window.PhanterPWA.Components['auth_user'].modal_request_password(
+                user_mobile_number=True
+            )
+        else:
+            window.PhanterPWA.Components['auth_user'].modal_request_password()
 
     def binds(self):
         self.element_target = jQuery(self.target_selector)
@@ -1036,6 +1225,48 @@ class ModalRegister(modal.Modal):
             'click.modal_submit_register',
             lambda: self.submit()
         )
+        self.element_target.find(
+            ".btn-social_login"
+        ).off(
+            "click.social_button"
+        ).on(
+            "click.social_button",
+            lambda: self._on_click_social_button(this)
+        )
+        self.element_target.find("#phanterpwa-widget-input-input-register-mobile").trigger("keyup")
+        email = jQuery("#phanterpwa-widget-input-input-register-email").val()
+        if str(email).endswith(".mobile@phanterpwa.com"):
+            jQuery("#phanterpwa-widget-input-input-register-email").val("")
+
+        self.element_target.find("#phanterpwa-widget-input-input-register-mobile").off(
+            "change.fix_prefix, keyup.fix_prefix"
+        ).on(
+            "change.fix_prefix, keyup.fix_prefix",
+            lambda: self.fix_prefix(this)
+        )
+
+    def fix_prefix(self, el):
+        console.log(el)
+        value = jQuery(el).val()
+        numbers = [str(x) for x in range(10)]
+        cont = 0
+        for x in str(value):
+            if x in numbers:
+                cont += 1
+
+        size = len(str(self.prefix_mobile_number))
+        if cont < size:
+            jQuery(el).val(self.prefix_mobile_number).trigger("keyup")
+
+    def _on_click_social_button(self, el):
+        social = jQuery(el).data("social_login")
+        if social == "mobile":
+            window.PhanterPWA.Components['auth_user'].modal_register(
+                user_mobile_number=True
+            )
+        elif social == "email":
+            window.PhanterPWA.Components['auth_user'].modal_register(
+            )
 
     def clear_errors(self):
         jQuery("#form-{0}".format(self._form)).find(".phanterpwa-widget-error").removeClass("enabled").html("")
@@ -1068,19 +1299,31 @@ class ModalRegister(modal.Modal):
 
     def submit(self):
         self.clear_errors()
-        window.PhanterPWA.register(
-            jQuery("#phanterpwa-widget-input-input-register-csrf_token").val(),
-            jQuery("#phanterpwa-widget-input-input-register-first_name").val(),
-            jQuery("#phanterpwa-widget-input-input-register-last_name").val(),
-            jQuery("#phanterpwa-widget-input-input-register-email").val(),
-            jQuery("#phanterpwa-widget-input-input-register-password").val(),
-            jQuery("#phanterpwa-widget-input-input-register-password_repeat").val(),
-            callback=self.after_submit
-        )
+        if self.user_mobile_number:
+            window.PhanterPWA.register(
+                jQuery("#phanterpwa-widget-input-input-register-csrf_token").val(),
+                jQuery("#phanterpwa-widget-input-input-register-first_name").val(),
+                jQuery("#phanterpwa-widget-input-input-register-last_name").val(),
+                jQuery("#phanterpwa-widget-input-input-register-mobile").val(),
+                jQuery("#phanterpwa-widget-input-input-register-password").val(),
+                jQuery("#phanterpwa-widget-input-input-register-password_repeat").val(),
+                callback=self.after_submit,
+                user_mobile_number=True
+            )
+        else:
+            window.PhanterPWA.register(
+                jQuery("#phanterpwa-widget-input-input-register-csrf_token").val(),
+                jQuery("#phanterpwa-widget-input-input-register-first_name").val(),
+                jQuery("#phanterpwa-widget-input-input-register-last_name").val(),
+                jQuery("#phanterpwa-widget-input-input-register-email").val(),
+                jQuery("#phanterpwa-widget-input-input-register-password").val(),
+                jQuery("#phanterpwa-widget-input-input-register-password_repeat").val(),
+                callback=self.after_submit
+            )
 
 
 class ModalRequestPassword(modal.Modal):
-    def __init__(self, target_element):
+    def __init__(self, target_element, **parameters):
         self.element_target = jQuery(target_element)
         AuthUserCmp = window.PhanterPWA.Components['auth_user']
         self.AuthUser = None
@@ -1088,18 +1331,32 @@ class ModalRequestPassword(modal.Modal):
             console.error("Need AuthUser instance on window.PhanterPWA.Components")
         else:
             self.AuthUser = AuthUserCmp
-        widget_email = forms.FormWidget(
-            "request_password",
-            "email",
-            **{
-                "type": "string",
-                "label": I18N("E-Mail"),
-                "validators": ["IS_EMAIL"],
-                "_class": "p-col w1p100"
-            }
-        )
-        last_auth_user = window.PhanterPWA.get_last_auth_user()
-        if last_auth_user is not None:
+        self.user_mobile_number = parameters.get("user_mobile_number", None)
+        self.mask_mobile_number = parameters.get("mask_mobile_number", "+## (##) # ####-####")
+        self.prefix_mobile_number = parameters.get("prefix_mobile_number", 55)
+        self.prefix_mobile_list = parameters.get("prefix_mobile_list", [self.prefix_mobile_number])
+
+        self.last_auth_user = window.PhanterPWA.get_last_auth_user()
+        email = ""
+        fone_number = self.prefix_mobile_number
+        if self.last_auth_user is not None and self.last_auth_user is not js_undefined:
+            email = self.last_auth_user.email
+            fone_number = self.last_auth_user.fone_number if self.last_auth_user.fone_number is not js_undefined else ""
+
+        if self.user_mobile_number:
+            widget_email = forms.FormWidget(
+                "request_password",
+                "mobile",
+                **{
+                    "type": "string",
+                    "label": I18N("Mobile number"),
+                    "validators": ["IS_NOT_EMPTY"],
+                    "value": fone_number,
+                    "mask": self.mask_mobile_number,
+                    "_class": "p-col w1p100"
+                }
+            )
+        else:
             widget_email = forms.FormWidget(
                 "request_password",
                 "email",
@@ -1107,11 +1364,43 @@ class ModalRequestPassword(modal.Modal):
                     "type": "string",
                     "label": I18N("E-Mail"),
                     "validators": ["IS_EMAIL"],
-                    "value": last_auth_user.email,
+                    "value": email,
                     "_class": "p-col w1p100"
                 }
             )
+
+        self._xml_button = ""
+        if "SMS" in window.PhanterPWA.CONFIG:
+            if self.user_mobile_number is True:
+                self._xml_button = DIV(DIV(
+                    DIV(
+                        I(_class="fas fa-envelope"),
+                        I18N(
+                            "Recover with {0}".format(str("email").capitalize())
+                        ),
+                        **{
+                            "_class": "btn btn-social_login link",
+                            "_data-social_login": "email"
+                        }
+                    ),
+                    _class="btn-social_login-wrapper",
+                ), _style="display: table;margin: auto;")
+            else:
+                self._xml_button = DIV(DIV(
+                    DIV(
+                        I(_class="fas fa-mobile-alt"),
+                        I18N(
+                            "Recover with {0}".format(str("mobile").capitalize())
+                        ),
+                        **{
+                            "_class": "btn btn-social_login link",
+                            "_data-social_login": "mobile"
+                        }
+                    ),
+                    _class="btn-social_login-wrapper",
+                ), _style="display: table;margin: auto;")
         tcontent = DIV(
+            self._xml_button,
             widget_email,
             _class="phanterpwa-request_password-form-inputs p-row"
         ).jquery()
@@ -1160,11 +1449,24 @@ class ModalRequestPassword(modal.Modal):
 
     def open_modal_login(self):
         self.close()
-        window.PhanterPWA.Components['auth_user'].modal_login()
+        if self.user_mobile_number:
+            window.PhanterPWA.Components['auth_user'].modal_login(
+                user_mobile_number=True,
+                other_account=True
+            )
+        else:
+            window.PhanterPWA.Components['auth_user'].modal_login(
+                other_account=True
+            )
 
     def open_modal_register(self):
         self.close()
-        window.PhanterPWA.Components['auth_user'].modal_register()
+        if self.user_mobile_number:
+            window.PhanterPWA.Components['auth_user'].modal_register(
+                user_mobile_number=True,
+            )
+        else:
+            window.PhanterPWA.Components['auth_user'].modal_register()
 
     def binds(self):
         self.element_target.find(
@@ -1183,6 +1485,59 @@ class ModalRequestPassword(modal.Modal):
             "click.form_button_login",
             self.open_modal_login
         )
+        self.element_target.find(
+            ".btn-social_login"
+        ).off(
+            "click.social_button"
+        ).on(
+            "click.social_button",
+            lambda: self._on_click_social_button(this)
+        )
+        self.element_target.find("#phanterpwa-widget-input-input-request_password-mobile").trigger("keyup")
+
+        email = jQuery("#phanterpwa-widget-input-input-request_password-email").val()
+        if str(email).endswith(".mobile@phanterpwa.com"):
+            jQuery("#phanterpwa-widget-input-input-request_password-email").val("")
+
+        self.element_target.find("#phanterpwa-widget-input-input-request_password-mobile").off(
+            "change.fix_prefix, keyup.fix_prefix"
+        ).on(
+            "change.fix_prefix, keyup.fix_prefix",
+            lambda: self.fix_prefix(this)
+        )
+
+    def fix_prefix(self, el):
+        console.log(el)
+        value = jQuery(el).val()
+        numbers = [str(x) for x in range(10)]
+        cont = 0
+        for x in str(value):
+            if x in numbers:
+                cont += 1
+
+        size = len(str(self.prefix_mobile_number))
+        if cont < size:
+            jQuery(el).val(self.prefix_mobile_number).trigger("keyup")
+
+    def _on_click_social_button(self, el):
+        social = jQuery(el).data("social_login")
+        if social == "mobile":
+            window.PhanterPWA.Components['auth_user'].modal_register(
+                user_mobile_number=True
+            )
+        elif social == "email":
+            window.PhanterPWA.Components['auth_user'].modal_register(
+            )
+
+    def _on_click_social_button(self, el):
+        social = jQuery(el).data("social_login")
+        if social == "mobile":
+            window.PhanterPWA.Components['auth_user'].modal_request_password(
+                user_mobile_number=True
+            )
+        elif social == "email":
+            window.PhanterPWA.Components['auth_user'].modal_request_password(
+            )
 
     def clear_errors(self):
         jQuery("#form-{0}".format(self._form)).find(".phanterpwa-widget-error").removeClass("enabled").html("")
@@ -1216,11 +1571,19 @@ class ModalRequestPassword(modal.Modal):
 
     def submit(self):
         self.clear_errors()
-        window.PhanterPWA.request_password(
-            jQuery("#phanterpwa-widget-input-input-request_password-csrf_token").val(),
-            jQuery("#phanterpwa-widget-input-input-request_password-email").val(),
-            callback=self.after_submit
-        )
+        if self.user_mobile_number:
+            window.PhanterPWA.request_password(
+                jQuery("#phanterpwa-widget-input-input-request_password-csrf_token").val(),
+                jQuery("#phanterpwa-widget-input-input-request_password-email").val(),
+                callback=self.after_submit,
+                user_mobile_number=True
+            )
+        else:
+            window.PhanterPWA.request_password(
+                jQuery("#phanterpwa-widget-input-input-request_password-csrf_token").val(),
+                jQuery("#phanterpwa-widget-input-input-request_password-email").val(),
+                callback=self.after_submit
+            )
 
 
 class AlertActivationAccount(top_slide.TopSlide):
@@ -1250,57 +1613,104 @@ class AlertActivationAccount(top_slide.TopSlide):
         )
 
     def _process_alert_content(self):
-        html = CONCATENATE(
-            DIV(
-                I18N(
-                    "{0}{1}{2}".format("Your account has not yet been activated,",
-                    " when you created it, the activation code was sent to",
-                    " the registered email address. Check your email and add",
-                    " the code in the field below."),
-                    **{"_pt-br": "{0}{1}{2}".format(
-                        "Sua conta ainda não foi ativada, ao criá-la foi enviado",
-                        " ao email cadastrado o código de ativação. Check seu ",
-                        "email e adicione o código no campo abaixo."
-                    )}
-                ),
-                _class="phanterpwa-auth_user-activation-text"
-            ),
-            FORM(
+        email = PhanterPWA.get_auth_user().email
+        if str(email).endswith(".mobile@phanterpwa.com"):
+            html = CONCATENATE(
                 DIV(
-                    DIV(
-                        forms.FormWidget(
-                            "activation",
-                            "activation_code",
-                            **{
-                                "type": "string",
-                                "label": I18N("Activation Code", **{"_pt-br": "Código de Ativação"}),
-                                "validators": ["IS_NOT_EMPTY", "IS_ACTIVATION_CODE"],
-                            }
-                        ),
-                        _class="phanterpwa-auth_user-activation-action-input"
+                    I18N(
+                        "{0}{1}{2}".format("Your account has not yet been activated,",
+                        " when you created it, the activation code was sent by sms to",
+                        " the your mobile number. Add the code received in the field below.")
                     ),
-                    DIV(
-                        forms.SubmitButton(
-                            "activation",
-                            I18N("Activate", **{"_pt-br": "Ativar"}),
-                            _class="btn-autoresize wave_on_click waves-phanterpwa"
-                        ),
-                        forms.FormButton(
-                            "activation_new_code",
-                            I18N("Request Activation Code", **{"_pt-br": "Requisitar novo código"}),
-                            _class="btn-autoresize wave_on_click waves-phanterpwa"
-                        ),
-                        _class='phanterpwa-form-buttons-container'
-                    ),
-                    _class="phanterpwa-auth_user-activation-actions-activate"
+                    _class="phanterpwa-auth_user-activation-text"
                 ),
-                **{
-                    "_class": "phanterpwa-auth_user-activation-actions-container",
-                    "_phanterpwa-form": "activation",
-                    "_id": "form-activation"
-                }
+                FORM(
+                    DIV(
+                        DIV(
+                            forms.FormWidget(
+                                "activation",
+                                "activation_code",
+                                **{
+                                    "type": "string",
+                                    "label": I18N("Activation Code", **{"_pt-br": "Código de Ativação"}),
+                                    "validators": ["IS_NOT_EMPTY", "IS_ACTIVATION_CODE"],
+                                }
+                            ),
+                            _class="phanterpwa-auth_user-activation-action-input"
+                        ),
+                        DIV(
+                            forms.SubmitButton(
+                                "activation",
+                                I18N("Activate", **{"_pt-br": "Ativar"}),
+                                _class="btn-autoresize wave_on_click waves-phanterpwa"
+                            ),
+                            forms.FormButton(
+                                "activation_new_code",
+                                I18N("Request Activation Code", **{"_pt-br": "Requisitar novo código"}),
+                                _class="btn-autoresize wave_on_click waves-phanterpwa"
+                            ),
+                            _class='phanterpwa-form-buttons-container'
+                        ),
+                        _class="phanterpwa-auth_user-activation-actions-activate"
+                    ),
+                    **{
+                        "_class": "phanterpwa-auth_user-activation-actions-container",
+                        "_phanterpwa-form": "activation",
+                        "_id": "form-activation"
+                    }
+                )
             )
-        )
+        else:
+            html = CONCATENATE(
+                DIV(
+                    I18N(
+                        "{0}{1}{2}".format("Your account has not yet been activated,",
+                        " when you created it, the activation code was sent to",
+                        " the registered email address. Check your email and add the code in the field below."),
+                        **{"_pt-br": "{0}{1}{2}".format(
+                            "Sua conta ainda não foi ativada, ao criá-la foi enviado",
+                            " ao email cadastrado o código de ativação. Check seu ",
+                            "email e adicione o código no campo abaixo."
+                        )}
+                    ),
+                    _class="phanterpwa-auth_user-activation-text"
+                ),
+                FORM(
+                    DIV(
+                        DIV(
+                            forms.FormWidget(
+                                "activation",
+                                "activation_code",
+                                **{
+                                    "type": "string",
+                                    "label": I18N("Activation Code", **{"_pt-br": "Código de Ativação"}),
+                                    "validators": ["IS_NOT_EMPTY", "IS_ACTIVATION_CODE"],
+                                }
+                            ),
+                            _class="phanterpwa-auth_user-activation-action-input"
+                        ),
+                        DIV(
+                            forms.SubmitButton(
+                                "activation",
+                                I18N("Activate", **{"_pt-br": "Ativar"}),
+                                _class="btn-autoresize wave_on_click waves-phanterpwa"
+                            ),
+                            forms.FormButton(
+                                "activation_new_code",
+                                I18N("Request Activation Code", **{"_pt-br": "Requisitar novo código"}),
+                                _class="btn-autoresize wave_on_click waves-phanterpwa"
+                            ),
+                            _class='phanterpwa-form-buttons-container'
+                        ),
+                        _class="phanterpwa-auth_user-activation-actions-activate"
+                    ),
+                    **{
+                        "_class": "phanterpwa-auth_user-activation-actions-container",
+                        "_phanterpwa-form": "activation",
+                        "_id": "form-activation"
+                    }
+                )
+            )
         html.html_to("#phanterpwa-top-slide-auth_user-activation-container")
 
     def after_activation_code_send(self, data, ajax_status):
@@ -2332,6 +2742,7 @@ class Oauth(gatehandler.Handler):
             window.PhanterPWA.oauth(arg0, arg1)
         else:
             window.PhanterPWA.open_way("home")
+
 
 class Lock(gatehandler.Handler):
     def initialize(self):

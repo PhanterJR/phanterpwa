@@ -431,6 +431,12 @@ class PhanterPWA():
             "remember_me",
             remember_me
         )
+        user_mobile_number = parameters.get("user_mobile_number", False)
+        if user_mobile_number:
+            formdata.append(
+                "mobile",
+                True
+            )
         window.PhanterPWA.ApiServer.POST(**{
             'url_args': ["api", "auth"],
             'form_data': formdata,
@@ -560,10 +566,16 @@ class PhanterPWA():
             "last_name",
             last_name
         )
-        formdata.append(
-            "email",
-            email
-        )
+        if parameters.get("user_mobile_number", False):
+            formdata.append(
+                "mobile",
+                email
+            )
+        else:
+            formdata.append(
+                "email",
+                email
+            )
         passwords = "{0}:{1}".format(
             window.btoa(password),
             window.btoa(password_repeat)
@@ -599,10 +611,16 @@ class PhanterPWA():
             "csrf_token",
             csrf_token
         )
-        formdata.append(
-            "email",
-            email
-        )
+        if parameters.get("user_mobile_number", False):
+            formdata.append(
+                "mobile",
+                email
+            )
+        else:
+            formdata.append(
+                "email",
+                email
+            )
         window.PhanterPWA.ApiServer.POST(**{
             'url_args': ["api", "auth", "request-password"],
             'form_data': formdata,

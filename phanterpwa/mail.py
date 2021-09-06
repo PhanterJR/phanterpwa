@@ -22,8 +22,8 @@ class MailSender(object):
     :param password_sender: Email password used when sending
     :param email_receiver: Recipient email
     :param subject: Email title
-    :param text_mensage: Plain text message
-    :param html_mensage: Html format message
+    :param text_message: Plain text message
+    :param html_message: Html format message
     :param alternative_sender: Reply email
     :param server: Server address
     :param port: Used port
@@ -37,8 +37,8 @@ class MailSender(object):
             password_sender: str,
             email_receiver: str,
             subject: str="Test",
-            text_mensage: str="Test",
-            html_mensage: str="<html><b>Test</b></html>",
+            text_message: str="Test",
+            html_message: str="<html><b>Test</b></html>",
             alternative_sender: (str, None)=None,
             server: str='127.0.0.1',
             port: int=25,
@@ -49,8 +49,8 @@ class MailSender(object):
         self.password_sender = password_sender
         self.email_receiver = email_receiver
         self.subject = subject
-        self.text_mensage = text_mensage
-        self.html_mensage = html_mensage
+        self.text_message = text_message
+        self.html_message = html_message
         self.alternative_sender = alternative_sender
         self.server = server
         self.port = port
@@ -75,7 +75,7 @@ class MailSender(object):
             ...     "receiver@email.com",
             ...     "subject",
             ...     "text_message",
-            ...     "<div>html_mesage<div>",
+            ...     "<div>html_message<div>",
             ... )
             >>> print(my_instance.email_sender)
             sender@email.com
@@ -113,7 +113,7 @@ class MailSender(object):
             ...     "receiver@email.com",
             ...     "subject",
             ...     "text_message",
-            ...     "<div>html_mesage<div>",
+            ...     "<div>html_message<div>",
             ... )
             >>> print(my_instance.email_receiver)
             receiver@email.com
@@ -163,8 +163,8 @@ class MailSender(object):
         message["Subject"] = self.subject
         message["From"] = self.alternative_sender or self.email_sender
         message["To"] = self.email_receiver
-        text = MIMEText(self.text_mensage, "plain")
-        html = MIMEText(self.html_mensage, "html")
+        text = MIMEText(self.text_message, "plain")
+        html = MIMEText(self.html_message, "html")
         message.attach(text)
         message.attach(html)
         if self.use_ssl:

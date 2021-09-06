@@ -31,9 +31,11 @@ class AuthTables():
                 'group': 'group1',
                 '_class': 'p-col w1p100 w4p70 e-float_right'
             }),
+            Field('email_activated', 'boolean', default=False),
             Field('fone_number', 'string', phanterpwa={
                 'out_of_form': True
             }),
+            Field('fone_number_activated', 'boolean', default=False),
             Field('password_hash', 'string', notnull=True, requires=IS_NOT_EMPTY(), phanterpwa={
                 'out_of_form': True
             }),
@@ -58,6 +60,7 @@ class AuthTables():
             Field('timeout_to_resend_temporary_password_mail', 'datetime', requires=IS_EMPTY_OR(IS_DATETIME()), phanterpwa={
                 'validators': ['IS_EMPTY_OR', 'IS_DATETIME:yyyy-MM-dd HH:mm:ss']
             }),
+            Field('activation_code_by_mobile', 'string', default=0),
             Field('activation_code', 'string', default=0),
             Field('activation_attempts', 'integer', default=0),
             Field('timeout_to_resend_activation_email', 'datetime', requires=IS_EMPTY_OR(IS_DATETIME()), phanterpwa={
@@ -74,7 +77,7 @@ class AuthTables():
                 'out_of_form': True
             }),
             Field('locale', 'string', default=default_language),
-            Field('two_factor_login', 'boolean', default=False)        
+            Field('two_factor_login', 'boolean', default=False)
         )
 
         def delete_upload_folder(s):
@@ -96,7 +99,9 @@ class AuthTables():
             IS_EMAIL(),
             IS_NOT_IN_DB(self.DALDatabase, self.DALDatabase.auth_user.email, error_message="Email already in database.")
         ]
-
+        self.DALDatabase.auth_user.fone_number.requires = [
+            IS_EMPTY_OR(IS_NOT_IN_DB(self.DALDatabase, self.DALDatabase.auth_user.fone_number, error_message="Mobile number already in database."))
+        ]
         self.DALDatabase.define_table('auth_group',
             Field('role', 'string'),
             Field('grade', 'integer', default=0),

@@ -122,11 +122,11 @@ class ProjectConfig():
                 "python_version": VERSION_PYTHON,
                 "phanterpwa_version": VERSION_PHANTERPWA
             }
-            self._ini_secret = configparser.ConfigParser()
+            self._ini_secret = configparser.ConfigParser(converters={'list': lambda x: [i.strip() for i in x.split(',')]})
             self._ini_secret.read(join(cfg["PROJECT"]["path"], 'secret.ini'), encoding='utf-8')
             sections_secret = self._ini_secret.sections()
 
-            self._ini_project = configparser.ConfigParser()
+            self._ini_project = configparser.ConfigParser(converters={'list': lambda x: [i.strip() for i in x.split(',')]})
             self._ini_project.read(join(cfg["PROJECT"]["path"], 'project.ini'), encoding='utf-8')
             sections_project = self._ini_project.sections()
             required_on_ini = [
@@ -184,7 +184,7 @@ class ProjectConfig():
                     app_name = basename(a)
                     apps_backend_list.append(app_name)
                     if isfile(join(a, "app.ini")):
-                        ini_app = configparser.ConfigParser()
+                        ini_app = configparser.ConfigParser(converters={'list': lambda x: [i.strip() for i in x.split(',')]})
                         ini_app.read(join(a, "app.ini"), encoding='utf-8')
                         app_sections = ini_app.sections()
                         required_on_ini = [
@@ -232,7 +232,7 @@ class ProjectConfig():
                         self._ini_apps_backend[app_name] = ini_app
 
                     if isfile(join(a, "secret.ini")):
-                        ini_secret_app = configparser.ConfigParser()
+                        ini_secret_app = configparser.ConfigParser(converters={'list': lambda x: [i.strip() for i in x.split(',')]})
                         ini_secret_app.read(join(a, "secret.ini"), encoding='utf-8')
                         app_sections = ini_secret_app.sections()
                         if "APP" in app_sections:
@@ -246,7 +246,7 @@ class ProjectConfig():
 
                         self._ini_secret_apps_backend[app_name] = ini_secret_app
                     else:
-                        ini_secret_app = configparser.ConfigParser()
+                        ini_secret_app = configparser.ConfigParser(converters={'list': lambda x: [i.strip() for i in x.split(',')]})
                         ini_secret_app["APP"] = {
                             'secret_key': os.urandom(12).hex()
                         }
@@ -267,7 +267,7 @@ class ProjectConfig():
                     app_name = basename(a)
                     apps_frontend_list.append(app_name)
                     if isfile(join(a, "app.ini")):
-                        ini_app = configparser.ConfigParser()
+                        ini_app = configparser.ConfigParser(converters={'list': lambda x: [i.strip() for i in x.split(',')]})
                         ini_app.read(join(a, "app.ini"), encoding='utf-8')
                         app_sections = ini_app.sections()
                         required_on_ini = [
@@ -322,7 +322,7 @@ class ProjectConfig():
                         self._ini_apps_frontend[app_name] = ini_app
 
                     if isfile(join(a, "secret.ini")):
-                        ini_secret_app = configparser.ConfigParser()
+                        ini_secret_app = configparser.ConfigParser(converters={'list': lambda x: [i.strip() for i in x.split(',')]})
                         ini_secret_app.read(join(a, "secret.ini"), encoding='utf-8')
                         app_sections = ini_secret_app.sections()
                         if "APP" in app_sections:

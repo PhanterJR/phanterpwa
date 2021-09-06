@@ -1,6 +1,7 @@
 import os
 import base64
 import json
+import re
 from urllib.request import urlopen
 from passlib.hash import pbkdf2_sha512
 from phanterpwa.backend.decorators import (
@@ -15,7 +16,10 @@ from phanterpwa.mail import MailSender
 from phanterpwa.samples import (
     email_activation_code,
     email_password,
-    email_two_factor_code
+    email_two_factor_code,
+    sms_password,
+    sms_two_factor_code,
+    sms_activation_code
 )
 from phanterpwa.backend.dataforms import FieldsDALValidateDictArgs
 from phanterpwa.tools import (
@@ -53,6 +57,9 @@ from datetime import (
     datetime,
     timedelta
 )
+
+
+compiled_mobilemail = re.compile(r"^[0-9]+\.mobile@phanterpwa\.com$")
 
 
 def arbritary_login(app_name, projectConfig, db, email, user_agent, remote_ip, client_token):
@@ -131,6 +138,7 @@ def arbritary_login(app_name, projectConfig, db, email, user_agent, remote_ip, c
                 'first_name': E(q_user.first_name),
                 'last_name': E(q_user.last_name),
                 'email': email,
+                'fone_number': q_user.fone_number,
                 'remember_me': q_client.remember_me,
                 'roles': roles,
                 'role': role,
@@ -242,6 +250,7 @@ def arbritary_new_user(app_name, projectConfig, db, email, first_name, last_name
                 'first_name': E(q_user.first_name),
                 'last_name': E(q_user.last_name),
                 'email': email,
+                'fone_number': q_user.fone_number,
                 'remember_me': q_client.remember_me,
                 'roles': roles,
                 'role': role,
@@ -262,12 +271,13 @@ class Auth(web.RequestHandler):
         url: '/api/auth/'
     """
 
-    def initialize(self, app_name, projectConfig, DALDatabase, Translator_email, i18nTranslator=None, logger_api=None):
+    def initialize(self, app_name, projectConfig, DALDatabase, Translator_email, SMSSender=None, i18nTranslator=None, logger_api=None):
         self.app_name = app_name
         self.projectConfig = projectConfig
         self.DALDatabase = DALDatabase
         self.Translator_email = Translator_email
         self.i18nTranslator = i18nTranslator
+        self.SMSSender = SMSSender
         if logger_api:
             self.logger_api = logger_api
         if i18nTranslator:
@@ -396,6 +406,8 @@ class Auth(web.RequestHandler):
                             'first_name': E(self.phanterpwa_current_user.first_name),
                             'last_name': E(self.phanterpwa_current_user.last_name),
                             'email': self.phanterpwa_current_user.email,
+                            'email': self.phanterpwa_current_user.email,
+                            'fone_number': self.phanterpwa_current_user.fone_number,
                             'remember_me': q.remember_me,
                             'roles': roles,
                             'role': role,
@@ -419,6 +431,10 @@ class Auth(web.RequestHandler):
     def post(self, *args):
         self.phanterpwa_authorization = self.request.headers.get('phanterpwa-authorization')
         dict_arguments = {k: self.request.arguments.get(k)[0].decode('utf-8') for k in self.request.arguments}
+
+        login_by_phone = False
+        if dict_arguments.get("mobile", False):
+            login_by_phone = True
 
         if self.phanterpwa_authorization:
             t = Serialize(
@@ -482,6 +498,7 @@ class Auth(web.RequestHandler):
                             'first_name': E(q_user.first_name),
                             'last_name': E(q_user.last_name),
                             'email': q_user.email,
+                            'fone_number': q_user.fone_number,
                             'remember_me': q_client.remember_me,
                             'roles': roles,
                             'role': role,
@@ -535,13 +552,40 @@ class Auth(web.RequestHandler):
         if dict_arguments.get('edata'):
             used_temporary = None
             edata = dict_arguments['edata']
-            email, password = edata.split(":")
-            if email:
-                email = base64.b64decode(email).decode('utf-8')
-                email = email.strip().lower()
-            password = base64.b64decode(password).decode('utf-8')
-            q_user = self.DALDatabase(self.DALDatabase.auth_user.email == email).select().first()
+            if login_by_phone:
+                fone_number, password = edata.split(":")
+                if fone_number:
+                    fone_number = base64.b64decode(fone_number).decode('utf-8')
+                    fone_number = fone_number.strip().lower()
+                password = base64.b64decode(password).decode('utf-8')
+
+                numbers = [str(x) for x in range(10)]
+                new_mobile = ""
+                for n in fone_number:
+                    if n in numbers:
+                        new_mobile += n
+                fone_number = new_mobile
+                if len(fone_number) < 4 or len(fone_number) > 15:
+                    self.set_status(400)
+                    return self.write({
+                        'status': 'Bad Request',
+                        'code': 400,
+                        'message': 'Invalid mobile number',
+                        'i18n': {
+                            'message': self.T('Invalid password or email')
+                        }
+                    })
+                q_user = self.DALDatabase(self.DALDatabase.auth_user.fone_number == fone_number).select().first()
+            else:
+                email, password = edata.split(":")
+                if email:
+                    email = base64.b64decode(email).decode('utf-8')
+                    email = email.strip().lower()
+                password = base64.b64decode(password).decode('utf-8')
+                q_user = self.DALDatabase(self.DALDatabase.auth_user.email == email).select().first()
             if q_user:
+                if login_by_phone:
+                    email = q_user.email
                 if not q_user.login_attempts:
                     q_user.update_record(login_attempts=1)
                 else:
@@ -576,8 +620,11 @@ class Auth(web.RequestHandler):
                         message = msg.format(time_next_attempt=humanize_seconds(tna))
                         message_i18n = self.T(msg).format(time_next_attempt=humanize_seconds(tna, self.i18nTranslator))
                         self.DALDatabase.commit()
-                        self.logger_api.warning("{0}:{1} - {2}".format(email, password, message))
-                        self.set_status(400, reason="reason {0}:{1} - {2}".format(email, password, message))
+                        if login_by_phone:
+                            self.logger_api.warning("{0}:{1} - {2}".format(fone_number, password, message))
+                        else:
+                            self.logger_api.warning("{0}:{1} - {2}".format(email, password, message))
+                        self.set_status(400)
                         return self.write({
                             'status': 'Bad Request',
                             'code': 400,
@@ -600,10 +647,18 @@ class Auth(web.RequestHandler):
                         self.projectConfig['BACKEND'][self.app_name]['secret_key'],
                         timeout_token_user
                     )
-                    content = {
-                        'id': str(q_user.id),
-                        'email': email
-                    }
+                    if login_by_phone:
+                        content = {
+                            'id': str(q_user.id),
+                            'email': email,
+                            'fone_number': str(fone_number)
+                        }
+                    else:
+                        content = {
+                            'id': str(q_user.id),
+                            'email': email
+                        }
+
                     token_user = t_user.dumps(content)
                     token_user = token_user.decode('utf-8')
                     q_role = self.DALDatabase(
@@ -677,108 +732,182 @@ class Auth(web.RequestHandler):
                         two_factor_url = two_factor_serialize.dumps(content)
                         two_factor_code = generate_activation_code()
                         self.Translator_email.direct_translation = self.phanterpwa_language
-                        keys_formatter = dict(
-                            app_name=self.projectConfig['PROJECT']['name'],
-                            user_name="{0} {1}".format(
-                                q_user.first_name,
-                                q_user.last_name
-                            ),
-                            code=two_factor_code,
-                            time_expires=humanize_seconds(
-                                self.projectConfig['BACKEND'][self.app_name]['default_time_two_factor_code_expire'],
-                                self.Translator_email
-                            ),
-                            user_agent=self.phanterpwa_user_agent,
-                            user_ip=self.phanterpwa_remote_ip,
-                            copyright=interpolate(
-                                self.projectConfig['CONTENT_EMAILS']['copyright'], {'now': datetime.now().year}),
-                            link_to_your_page=self.projectConfig['CONTENT_EMAILS']['link_to_your_site']
-                        )
-                        email_password.text.formatter(keys_formatter)
-                        text_email = email_two_factor_code.text.html(
-                            minify=True,
-                            translate=True,
-                            formatter=keys_formatter,
-                            i18nInstance=self.Translator_email,
-                            dictionary=self.phanterpwa_language,
-                            do_not_translate=["\n", " ", "\n\n", "&nbsp;"],
-                            escape_string=False
-                        )
-                        html_email = email_two_factor_code.html.html(
-                            minify=True,
-                            translate=True,
-                            formatter=keys_formatter,
-                            i18nInstance=self.Translator_email,
-                            dictionary=self.phanterpwa_language,
-                            do_not_translate=["\n", " ", "\n\n", "&nbsp;"],
-                            escape_string=False
-                        )
 
-                        e_mail = MailSender(
-                            self.projectConfig['EMAIL']['default_sender'],
-                            self.projectConfig['EMAIL']['password'],
-                            q_user.email,
-                            subject="Two factor authentication code",
-                            text_mensage=text_email,
-                            html_mensage=html_email,
-                            server=self.projectConfig['EMAIL']['server'],
-                            port=self.projectConfig['EMAIL']['port'],
-                            use_tls=self.projectConfig['EMAIL']['use_tls'],
-                            use_ssl=self.projectConfig['EMAIL']['use_ssl']
-                        )
-                        result = ""
-                        try:
-                            if self.projectConfig["PROJECT"]["debug"]:
-                                self.logger_api.warning("TWO FACTOR CODE: {0}".format(two_factor_code))
+                        if login_by_phone:
+                            keys_formatter = dict(
+                                app_name=self.projectConfig['PROJECT']['name'],
+                                code=two_factor_code,
+                            )
+                            text_sms = sms_two_factor_code.text.html(
+                                minify=True,
+                                translate=True,
+                                formatter=keys_formatter,
+                                i18nInstance=self.Translator_sms,
+                                dictionary=self.phanterpwa_language,
+                                do_not_translate=["\n", " ", "\n\n", "&nbsp;"],
+                                escape_string=False
+                            )
+                            if self.SMSSender:
+                                e_sms = self.SMSSender(
+                                    q_user.fone_number,
+                                    identify="two-factor-authentication-code",
+                                    text_message=text_sms,
+                                    app_name=self.app_name,
+                                    projectConfig=self.projectConfig
+                                )
                             else:
-                                self.logger_api.warning("Email from '{0}' to '{1}' -> Activation Code: {2}".format(
-                                    self.projectConfig['EMAIL']['default_sender'],
-                                    q_user.email,
+                                raise SyntaxError("The SMSSender is indefined")
+                            result = ""
+                            try:
+                                if self.projectConfig["PROJECT"]["debug"]:
+                                    self.logger_api.warning("TWO FACTOR CODE: {0}".format(two_factor_code))
+                                else:
+                                    self.logger_api.warning("SMS to '{0}' -> Activation Code: {1}".format(
+                                        q_user.fone_number,
+                                        two_factor_code
+                                    ))
+                                    e_sms.send()
+                            except Exception as e:
+                                result = "SMS to '{0}' don't send! -> Error: {1} -> password: {2}".format(
+                                    fone_number,
+                                    e,
                                     two_factor_code
-                                ))
-                                e_mail.send()
-                        except Exception as e:
-                            result = "Email from '{0}' to '{1}' don't send! -> Error: {2} -> password: {3}".format(
-                                self.projectConfig['EMAIL']['default_sender'],
-                                dict_arguments['email'],
-                                e,
-                                two_factor_code
-                            )
-                            self.logger_api.error(result, exc_info=True)
-                            message = "There was an error trying to send the email."
-                            message_i18n = self.T("There was an error trying to send the email.")
-                            self.DALDatabase.rollback()
-                            self.set_status(400)
-                            return self.write({
-                                'status': 'Bad Request',
-                                'code': 400,
-                                'message': message,
-                                'i18n': {'message': message_i18n}
-                            })
+                                )
+                                self.logger_api.error(result, exc_info=True)
+                                message = "There was an error trying to send the sms."
+                                message_i18n = self.T("There was an error trying to send the sms.")
+                                self.DALDatabase.rollback()
+                                self.set_status(400)
+                                return self.write({
+                                    'status': 'Bad Request',
+                                    'code': 400,
+                                    'message': message,
+                                    'i18n': {'message': message_i18n}
+                                })
+                            else:
+                                self.DALDatabase.two_factor_login.insert(
+                                    auth_user=q_user.id,
+                                    two_factor_url=two_factor_url,
+                                    two_factor_code=two_factor_code
+                                )
+                                message = 'A code has been sent to your sms.'
+                                message_i18n = self.T('A code has been sent to your sms.')
+                                self.DALDatabase.commit()
+                                self.set_status(206)
+                                return self.write({
+                                    'status': 'OK',
+                                    'message': message,
+                                    'client_token': token_client,
+                                    'as': self.phanterpwa_form_identify,
+                                    'auth_user': {
+                                        'remember_me': q_client.remember_me
+                                    },
+                                    'i18n': {
+                                        'message': message_i18n
+                                    },
+                                    'authorization_url': two_factor_url
+                                })
                         else:
-
-                            self.DALDatabase.two_factor_login.insert(
-                                auth_user=q_user.id,
-                                two_factor_url=two_factor_url,
-                                two_factor_code=two_factor_code
+                            keys_formatter = dict(
+                                app_name=self.projectConfig['PROJECT']['name'],
+                                user_name="{0} {1}".format(
+                                    q_user.first_name,
+                                    q_user.last_name
+                                ),
+                                code=two_factor_code,
+                                time_expires=humanize_seconds(
+                                    self.projectConfig['BACKEND'][self.app_name]['default_time_two_factor_code_expire'],
+                                    self.Translator_email
+                                ),
+                                user_agent=self.phanterpwa_user_agent,
+                                user_ip=self.phanterpwa_remote_ip,
+                                copyright=interpolate(
+                                    self.projectConfig['CONTENT_EMAILS']['copyright'], {'now': datetime.now().year}),
+                                link_to_your_page=self.projectConfig['CONTENT_EMAILS']['link_to_your_site']
                             )
-                            message = 'A code has been sent to your email.'
-                            message_i18n = self.T('A code has been sent to your email.')
-                            self.DALDatabase.commit()
-                            self.set_status(206)
-                            return self.write({
-                                'status': 'OK',
-                                'message': message,
-                                'client_token': token_client,
-                                'as': self.phanterpwa_form_identify,
-                                'auth_user': {
-                                    'remember_me': q_client.remember_me
-                                },
-                                'i18n': {
-                                    'message': message_i18n
-                                },
-                                'authorization_url': two_factor_url
-                            })
+                            text_email = email_two_factor_code.text.html(
+                                minify=True,
+                                translate=True,
+                                formatter=keys_formatter,
+                                i18nInstance=self.Translator_email,
+                                dictionary=self.phanterpwa_language,
+                                do_not_translate=["\n", " ", "\n\n", "&nbsp;"],
+                                escape_string=False
+                            )
+                            html_email = email_two_factor_code.html.html(
+                                minify=True,
+                                translate=True,
+                                formatter=keys_formatter,
+                                i18nInstance=self.Translator_email,
+                                dictionary=self.phanterpwa_language,
+                                do_not_translate=["\n", " ", "\n\n", "&nbsp;"],
+                                escape_string=False
+                            )
+                            e_mail = MailSender(
+                                self.projectConfig['EMAIL']['default_sender'],
+                                self.projectConfig['EMAIL']['password'],
+                                q_user.email,
+                                subject="Two factor authentication code",
+                                text_message=text_email,
+                                html_message=html_email,
+                                server=self.projectConfig['EMAIL']['server'],
+                                port=self.projectConfig['EMAIL']['port'],
+                                use_tls=self.projectConfig['EMAIL']['use_tls'],
+                                use_ssl=self.projectConfig['EMAIL']['use_ssl']
+                            )
+                            result = ""
+                            try:
+                                if self.projectConfig["PROJECT"]["debug"]:
+                                    self.logger_api.warning("TWO FACTOR CODE: {0}".format(two_factor_code))
+                                else:
+                                    self.logger_api.warning("Email from '{0}' to '{1}' -> Activation Code: {2}".format(
+                                        self.projectConfig['EMAIL']['default_sender'],
+                                        q_user.email,
+                                        two_factor_code
+                                    ))
+                                    e_mail.send()
+                            except Exception as e:
+                                result = "Email from '{0}' to '{1}' don't send! -> Error: {2} -> password: {3}".format(
+                                    self.projectConfig['EMAIL']['default_sender'],
+                                    dict_arguments['email'],
+                                    e,
+                                    two_factor_code
+                                )
+                                self.logger_api.error(result, exc_info=True)
+                                message = "There was an error trying to send the email."
+                                message_i18n = self.T("There was an error trying to send the email.")
+                                self.DALDatabase.rollback()
+                                self.set_status(400)
+                                return self.write({
+                                    'status': 'Bad Request',
+                                    'code': 400,
+                                    'message': message,
+                                    'i18n': {'message': message_i18n}
+                                })
+                            else:
+
+                                self.DALDatabase.two_factor_login.insert(
+                                    auth_user=q_user.id,
+                                    two_factor_url=two_factor_url,
+                                    two_factor_code=two_factor_code
+                                )
+                                message = 'A code has been sent to your email.'
+                                message_i18n = self.T('A code has been sent to your email.')
+                                self.DALDatabase.commit()
+                                self.set_status(206)
+                                return self.write({
+                                    'status': 'OK',
+                                    'message': message,
+                                    'client_token': token_client,
+                                    'as': self.phanterpwa_form_identify,
+                                    'auth_user': {
+                                        'remember_me': q_client.remember_me
+                                    },
+                                    'i18n': {
+                                        'message': message_i18n
+                                    },
+                                    'authorization_url': two_factor_url
+                                })
 
                     else:
                         self.set_status(200)
@@ -795,6 +924,7 @@ class Auth(web.RequestHandler):
                                 'first_name': E(q_user.first_name),
                                 'last_name': E(q_user.last_name),
                                 'email': email,
+                                'fone_number': q_user.fone_number,
                                 'remember_me': q_client.remember_me,
                                 'roles': roles,
                                 'role': role,
@@ -843,17 +973,36 @@ class Auth(web.RequestHandler):
                         }
                     })
             else:
-                self.logger_api.warning("{0} - {1}".format(
-                    email, "Added email does not exist!"))
-                self.set_status(401)
-                return self.write({
-                    'status': 'Unauthorized',
-                    'code': 401,
-                    'message': 'Email does not exist!',
-                    'i18n': {
-                        'message': self.T('Email does not exist!')
-                    }
-                })
+                if login_by_phone:
+                    self.logger_api.warning("{0} - {1}".format(
+                        fone_number, "Added mobile number does not exist!"))
+                    self.set_status(401)
+                    return self.write({
+                        'status': 'Unauthorized',
+                        'code': 401,
+                        'reasons': "Mobile number does not exist",
+                        'fone_number': fone_number,
+                        'password': password,
+                        'message': 'Mobile number does not exist!',
+                        'i18n': {
+                            'message': self.T('Mobile number does not exist!')
+                        }
+                    })
+                else:
+                    self.logger_api.warning("{0} - {1}".format(
+                        email, "Added email does not exist!"))
+                    self.set_status(401)
+                    return self.write({
+                        'status': 'Unauthorized',
+                        'code': 401,
+                        'reasons': "Email does not exist",
+                        'email': email,
+                        'password': password,
+                        'message': 'Email does not exist!',
+                        'i18n': {
+                            'message': self.T('Email does not exist!')
+                        }
+                    })
         self.set_status(400)
         return self.write({
             'status': 'Bad Request',
@@ -1080,6 +1229,7 @@ class TwoFactor(web.RequestHandler):
                             'first_name': E(q_user.first_name),
                             'last_name': E(q_user.last_name),
                             'email': q_user.email,
+                            'fone_number': q_user.fone_number,
                             'remember_me': q_client.remember_me,
                             'roles': roles,
                             'role': role,
@@ -1260,10 +1410,11 @@ class ChangeAccount(web.RequestHandler):
         url: 'api/auth/change/'
     """
 
-    def initialize(self, app_name, projectConfig, DALDatabase, Translator_email, i18nTranslator=None, logger_api=None):
+    def initialize(self, app_name, projectConfig, DALDatabase, Translator_email, SMSSender=None, i18nTranslator=None, logger_api=None):
         self.app_name = app_name
         self.projectConfig = projectConfig
         self.DALDatabase = DALDatabase
+        self.SMSSender = SMSSender
         self.i18nTranslator = i18nTranslator
         self.Translator_email = Translator_email
         if logger_api:
@@ -1304,7 +1455,9 @@ class ChangeAccount(web.RequestHandler):
         first_name = dict_arguments['first_name']
         last_name = dict_arguments['last_name']
         email_now = self.phanterpwa_current_user.email
+        fone_number_now = self.phanterpwa_current_user.fone_number
         new_email = dict_arguments['email'].strip().lower()
+        new_fone_number = dict_arguments.get('fone_number', None)
         two_factor = checkbox_bool(dict_arguments.get('two_factor', False))
         multiple_login = checkbox_bool(dict_arguments.get('multiple_login', False))
 
@@ -1339,6 +1492,7 @@ class ChangeAccount(web.RequestHandler):
             image_change = False
             two_factor_change = False
             multiple_login_change = False
+            fone_number_change = False
 
             if(first_name != self.phanterpwa_current_user.first_name):
                 self.phanterpwa_current_user.update_record(first_name=first_name)
@@ -1433,8 +1587,8 @@ class ChangeAccount(web.RequestHandler):
                     self.projectConfig['EMAIL']['password'],
                     new_email,
                     subject="Activation code",
-                    text_mensage=text_email,
-                    html_mensage=html_email,
+                    text_message=text_email,
+                    html_message=html_email,
                     server=self.projectConfig['EMAIL']['server'],
                     port=self.projectConfig['EMAIL']['port'],
                     use_tls=self.projectConfig['EMAIL']['use_tls'],
@@ -1488,7 +1642,95 @@ class ChangeAccount(web.RequestHandler):
                         )
                     email_change = True
 
+            if new_fone_number != fone_number_now:
+                activation_code = generate_activation_code()
+                self.Translator_email.direct_translation = self.phanterpwa_language
+                keys_formatter = dict(
+                    app_name=self.projectConfig['PROJECT']['name'],
+                    code=activation_code,
+                )
+                text_sms = sms_activation_code.text.html(
+                    minify=True,
+                    translate=True,
+                    formatter=keys_formatter,
+                    i18nInstance=self.Translator_email,
+                    dictionary=self.phanterpwa_language,
+                    do_not_translate=["\n", " ", "\n\n", "&nbsp;"],
+                    escape_string=False
+                )
+                sms_token_serialize = URLSafeSerializer(
+                    self.projectConfig['BACKEND'][self.app_name]["secret_key"],
+                    salt="sms_token"
+                )
+                content = {
+                    'id_user': str(self.phanterpwa_current_user.id),
+                    'user_agent': self.phanterpwa_user_agent,
+                }
+                if self.SMSSender:
+                    e_sms = self.SMSSender(
+                        new_fone_number,
+                        identify="two-factor-authentication-code",
+                        text_message=text_sms,
+                        app_name=self.app_name,
+                        projectConfig=self.projectConfig
+                    )
+                else:
+                    raise SyntaxError("The SMSSender is indefined")
+
+                result = ""
+                try:
+                    if self.projectConfig["PROJECT"]["debug"]:
+                        self.logger_api.warning("TWO FACTOR CODE: {0}".format(activation_code))
+                    else:
+                        self.logger_api.warning("SMS to '{0}' -> Activation Code: {1}".format(
+                            new_fone_number,
+                            activation_code
+                        ))
+                        e_sms.send()
+                except Exception as e:
+                    result = "SMS to '{0}' don't send! -> Error: {1} -> password: {2}".format(
+                        new_fone_number,
+                        e,
+                        activation_code
+                    )
+                    self.logger_api.error(result, exc_info=True)
+                    message = "There was an error trying to send the sms."
+                    message_i18n = self.T("There was an error trying to send the sms.")
+                    self.DALDatabase.rollback()
+                    self.set_status(400)
+                    return self.write({
+                        'status': 'Bad Request',
+                        'code': 400,
+                        'message': message,
+                        'i18n': {'message': message_i18n}
+                    })
+                else:
+                    self.phanterpwa_current_user.update_record(
+                        activation_code=activation_code.split("-")[0],
+                        timeout_to_resend_activation_email=datetime.now() +
+                            timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['default_time_activation_code_expire'])
+                    )
+                    activate = False
+                    self.phanterpwa_current_user.update_record(
+                        email=new_email, activated=activate
+                    )
+                    q_list = self.DALDatabase(
+                        (self.DALDatabase.email_user_list.auth_user == self.phanterpwa_current_user.id) &
+                        (self.DALDatabase.email_user_list.email == email_now)
+                    ).select().first()
+                    if q_list:
+                        q_list.update_record(
+                            datetime_changed=datetime.now()
+                        )
+                    else:
+                        self.DALDatabase.email_user_list.insert(
+                            auth_user=self.phanterpwa_current_user.id,
+                            email=email_now
+                        )
+                    fone_number_change = True
+
             if any([email_change,
+                    fone_number_change,
                     first_name_change,
                     last_name_change,
                     image_change,
@@ -1522,6 +1764,7 @@ class ChangeAccount(web.RequestHandler):
                         'first_name': E(first_name),
                         'last_name': E(last_name),
                         'email': new_email,
+                        'fone_number': new_fone_number,
                         'remember_me': q_client.remember_me,
                         'roles': roles,
                         'role': role,
@@ -1611,10 +1854,34 @@ class CreateAccount(web.RequestHandler):
         pass_hash = pbkdf2_sha512.hash("password{0}{1}".format(
             dict_arguments['password'], self.projectConfig['BACKEND'][self.app_name]['secret_key']))
         dict_arguments['password_hash'] = pass_hash
-        dict_arguments['email'] = dict_arguments['email'].strip().lower()
+        login_by_phone = False
+        if dict_arguments.get("mobile", False):
+            login_by_phone = True
+            fone_number = dict_arguments.get("mobile")
+            numbers = [str(x) for x in range(10)]
+            new_mobile = ""
+            for n in fone_number:
+                if n in numbers:
+                    new_mobile += n
+            email = "{0}.mobile@phanterpwa.com".format(new_mobile)
+            dict_arguments['email'] = email
+            dict_arguments['fone_number'] = new_mobile
+            if len(new_mobile) < 4 or len(new_mobile) > 15:
+                self.set_status(400)
+                return self.write({
+                    'status': 'Bad Request',
+                    'code': 400,
+                    'message': 'Invalid mobile number',
+                    'i18n': {
+                        'message': self.T('Invalid password or email')
+                    }
+                })
+        else:
+            email = dict_arguments['email'].strip().lower()
+            dict_arguments['email'] = email
         result = FieldsDALValidateDictArgs(
             dict_arguments,
-            *[table[x] for x in table.fields if x in ["first_name", "last_name", "email", "password_hash"]] + [
+            *[table[x] for x in table.fields if x in ["first_name", "last_name", "email", "fone_number", "password_hash"]] + [
                 Field(
                     'password',
                     'string',
@@ -1712,6 +1979,7 @@ class CreateAccount(web.RequestHandler):
                     'last_name': E(dict_arguments['last_name']),
                     'email': dict_arguments['email'],
                     'remember_me': q_client.remember_me,
+                    'fone_number': q_user.fone_number,
                     'roles': roles,
                     'role': role,
                     'dict_roles': dict_roles,
@@ -1731,7 +1999,6 @@ class CreateAccount(web.RequestHandler):
                 }
             })
         else:
-
             message = self.T('The form has errors')
 
             i18n_errors = {}
@@ -1898,8 +2165,8 @@ class RequestAccount(web.RequestHandler):
                     self.projectConfig['EMAIL']['password'],
                     dict_arguments['email'],
                     subject="Temporary Password Recovery",
-                    text_mensage=text_email,
-                    html_mensage=html_email,
+                    text_message=text_email,
+                    html_message=html_email,
                     server=self.projectConfig['EMAIL']['server'],
                     port=self.projectConfig['EMAIL']['port'],
                     use_tls=self.projectConfig['EMAIL']['use_tls'],
@@ -1961,9 +2228,10 @@ class ActiveAccount(web.RequestHandler):
         url: '/api/auth/active-account/'
     """
 
-    def initialize(self, app_name, projectConfig, DALDatabase, Translator_email, i18nTranslator=None, logger_api=None):
+    def initialize(self, app_name, projectConfig, DALDatabase, Translator_email, SMSSender=None, i18nTranslator=None, logger_api=None):
         self.app_name = app_name
         self.projectConfig = projectConfig
+        self.SMSSender = SMSSender
         self.DALDatabase = DALDatabase
         self.i18nTranslator = i18nTranslator
         self.Translator_email = Translator_email
@@ -1983,7 +2251,7 @@ class ActiveAccount(web.RequestHandler):
                 "cache-control"
             ])
         )
-        self.set_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+        self.set_header('Access-Control-Allow-Methods', 'GET, OPTIONS, POST')
         if self.request.headers.get("phanterpwa-language"):
             self.phanterpwa_language = self.request.headers.get("phanterpwa-language")
         else:
@@ -2038,101 +2306,176 @@ class ActiveAccount(web.RequestHandler):
                 'i18n': {'message': message_i18n}
             })
         else:
-            activation_code = generate_activation_code()
-            self.Translator_email.direct_translation = self.phanterpwa_language
-            keys_formatter = dict(
-                app_name=self.projectConfig['PROJECT']['name'],
-                user_name="{0} {1}".format(
-                    self.phanterpwa_current_user.first_name,
-                    self.phanterpwa_current_user.last_name
-                ),
-                code=activation_code,
-                time_expires=humanize_seconds(
-                    self.projectConfig['BACKEND'][self.app_name]['default_time_activation_code_expire'],
-                    self.Translator_email
-                ),
-                copyright=interpolate(self.projectConfig['CONTENT_EMAILS']['copyright'], {'now': datetime.now().year}),
-                link_to_your_page=self.projectConfig['CONTENT_EMAILS']['link_to_your_site']
-            )
-            email_password.text.formatter(keys_formatter)
-            text_email = email_activation_code.text.html(
-                minify=True,
-                translate=True,
-                formatter=keys_formatter,
-                i18nInstance=self.Translator_email,
-                dictionary=self.phanterpwa_language,
-                do_not_translate=["\n", " ", "\n\n", "&nbsp;"],
-                escape_string=False
-            )
-            html_email = email_activation_code.html.html(
-                minify=True,
-                translate=True,
-                formatter=keys_formatter,
-                i18nInstance=self.Translator_email,
-                dictionary=self.phanterpwa_language,
-                do_not_translate=["\n", " ", "\n\n", "&nbsp;"],
-                escape_string=False
-            )
-
-            e_mail = MailSender(
-                self.projectConfig['EMAIL']['default_sender'],
-                self.projectConfig['EMAIL']['password'],
-                self.phanterpwa_current_user.email,
-                subject="Activation code",
-                text_mensage=text_email,
-                html_mensage=html_email,
-                server=self.projectConfig['EMAIL']['server'],
-                port=self.projectConfig['EMAIL']['port'],
-                use_tls=self.projectConfig['EMAIL']['use_tls'],
-                use_ssl=self.projectConfig['EMAIL']['use_ssl']
-            )
-            result = ""
-            try:
-                if self.projectConfig["PROJECT"]["debug"]:
-                    self.logger_api.warning("ACTIVATION CODE: {0}".format(activation_code))
-                else:
-                    self.logger_api.warning("Email from '{0}' to '{1}' -> Activation Code: {2}".format(
-                        self.projectConfig['EMAIL']['default_sender'],
-                        self.phanterpwa_current_user.email,
-                        activation_code
-                    ))
-                    e_mail.send()
-            except Exception as e:
-                result = "Email from '%s' to '%s' don't send! -> Error: %s -> Activation Code: %s" %\
-                    (self.projectConfig['EMAIL']['default_sender'], self.phanterpwa_current_user.email, e, activation_code)
-                self.logger_api.error(result, exc_info=True)
-                message = "There was an error trying to send the email."
-                message_i18n = self.T("There was an error trying to send the email.")
-                self.set_status(400)
-                return self.write({
-                    'status': 'Bad Request',
-                    'code': 400,
-                    'message': message,
-                    'i18n': {'message': message_i18n}
-                })
-            else:
-                self.phanterpwa_current_user.update_record(
-                    activation_code=activation_code.split("-")[0],
-                    timeout_to_resend_activation_email=datetime.now() +
-                        timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['default_time_activation_code_expire'])
+            if compiled_mobilemail.match(self.phanterpwa_current_user.email):
+                activation_code = generate_activation_code()
+                self.Translator_email.direct_translation = self.phanterpwa_language
+                keys_formatter = dict(
+                    app_name=self.projectConfig['PROJECT']['name'],
+                    code=activation_code,
                 )
-                self.DALDatabase.commit()
-                message = 'An email was sent instructing you how to proceed to activate your account.'
-                self.set_status(200)
-                return self.write({
-                    'status': 'OK',
-                    'code': 200,
-                    'message': message,
-                    'email': self.phanterpwa_current_user.email,
-                    'i18n': {
-                        'message': self.T(message)
-                    }
-                })
+                text_sms = sms_activation_code.text.html(
+                    minify=True,
+                    translate=True,
+                    formatter=keys_formatter,
+                    i18nInstance=self.Translator_email,
+                    dictionary=self.phanterpwa_language,
+                    do_not_translate=["\n", " ", "\n\n", "&nbsp;"],
+                    escape_string=False
+                )
+                if self.SMSSender:
+                    e_sms = self.SMSSender(
+                        self.phanterpwa_current_user.fone_number,
+                        identify="two-factor-authentication-code",
+                        text_message=text_sms,
+                        app_name=self.app_name,
+                        projectConfig=self.projectConfig
+                    )
+                else:
+                    raise SyntaxError("The SMSSender is indefined")
+                result = ""
+                try:
+                    if self.projectConfig["PROJECT"]["debug"]:
+                        self.logger_api.warning("ACTIVATION CODE: {0}".format(activation_code))
+                        e_sms.send()
+                    else:
+                        self.logger_api.warning("SMS to '{0}' -> Activation Code: {1}".format(
+                            self.phanterpwa_current_user.fone_number,
+                            activation_code
+                        ))
+                        e_sms.send()
+                except Exception as e:
+                    result = "SMS to '{0}' don't send! -> Error: {1} -> password: {2}".format(
+                        self.phanterpwa_current_user.fone_number,
+                        e,
+                        activation_code
+                    )
+                    self.logger_api.error(result, exc_info=True)
+                    message = "There was an error trying to send the sms."
+                    message_i18n = self.T("There was an error trying to send the sms.")
+                    self.DALDatabase.rollback()
+                    self.set_status(400)
+                    return self.write({
+                        'status': 'Bad Request',
+                        'code': 400,
+                        'message': message,
+                        'i18n': {'message': message_i18n}
+                    })
+                else:
+                    self.phanterpwa_current_user.update_record(
+                        activation_code_by_mobile=activation_code.split("-")[0],
+                        timeout_to_resend_activation_email=datetime.now() +
+                            timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['default_time_activation_code_expire'])
+                    )
+                    self.DALDatabase.commit()
+                    message = 'An sms was sent instructing you how to proceed to activate your account.'
+                    self.set_status(200)
+                    return self.write({
+                        'status': 'OK',
+                        'code': 200,
+                        'message': message,
+                        'email': self.phanterpwa_current_user.email,
+                        'i18n': {
+                            'message': self.T(message)
+                        }
+                    })
+
+            else:
+                activation_code = generate_activation_code()
+                self.Translator_email.direct_translation = self.phanterpwa_language
+                keys_formatter = dict(
+                    app_name=self.projectConfig['PROJECT']['name'],
+                    user_name="{0} {1}".format(
+                        self.phanterpwa_current_user.first_name,
+                        self.phanterpwa_current_user.last_name
+                    ),
+                    code=activation_code,
+                    time_expires=humanize_seconds(
+                        self.projectConfig['BACKEND'][self.app_name]['default_time_activation_code_expire'],
+                        self.Translator_email
+                    ),
+                    copyright=interpolate(self.projectConfig['CONTENT_EMAILS']['copyright'], {'now': datetime.now().year}),
+                    link_to_your_page=self.projectConfig['CONTENT_EMAILS']['link_to_your_site']
+                )
+                email_password.text.formatter(keys_formatter)
+                text_email = email_activation_code.text.html(
+                    minify=True,
+                    translate=True,
+                    formatter=keys_formatter,
+                    i18nInstance=self.Translator_email,
+                    dictionary=self.phanterpwa_language,
+                    do_not_translate=["\n", " ", "\n\n", "&nbsp;"],
+                    escape_string=False
+                )
+                html_email = email_activation_code.html.html(
+                    minify=True,
+                    translate=True,
+                    formatter=keys_formatter,
+                    i18nInstance=self.Translator_email,
+                    dictionary=self.phanterpwa_language,
+                    do_not_translate=["\n", " ", "\n\n", "&nbsp;"],
+                    escape_string=False
+                )
+
+                e_mail = MailSender(
+                    self.projectConfig['EMAIL']['default_sender'],
+                    self.projectConfig['EMAIL']['password'],
+                    self.phanterpwa_current_user.email,
+                    subject="Activation code",
+                    text_message=text_email,
+                    html_message=html_email,
+                    server=self.projectConfig['EMAIL']['server'],
+                    port=self.projectConfig['EMAIL']['port'],
+                    use_tls=self.projectConfig['EMAIL']['use_tls'],
+                    use_ssl=self.projectConfig['EMAIL']['use_ssl']
+                )
+                result = ""
+                try:
+                    if self.projectConfig["PROJECT"]["debug"]:
+                        self.logger_api.warning("ACTIVATION CODE: {0}".format(activation_code))
+                    else:
+                        self.logger_api.warning("Email from '{0}' to '{1}' -> Activation Code: {2}".format(
+                            self.projectConfig['EMAIL']['default_sender'],
+                            self.phanterpwa_current_user.email,
+                            activation_code
+                        ))
+                        e_mail.send()
+                except Exception as e:
+                    result = "Email from '%s' to '%s' don't send! -> Error: %s -> Activation Code: %s" %\
+                        (self.projectConfig['EMAIL']['default_sender'], self.phanterpwa_current_user.email, e, activation_code)
+                    self.logger_api.error(result, exc_info=True)
+                    message = "There was an error trying to send the email."
+                    message_i18n = self.T("There was an error trying to send the email.")
+                    self.set_status(400)
+                    return self.write({
+                        'status': 'Bad Request',
+                        'code': 400,
+                        'message': message,
+                        'i18n': {'message': message_i18n}
+                    })
+                else:
+                    self.phanterpwa_current_user.update_record(
+                        activation_code=activation_code.split("-")[0],
+                        timeout_to_resend_activation_email=datetime.now() +
+                            timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['default_time_activation_code_expire'])
+                    )
+                    self.DALDatabase.commit()
+                    message = 'An email was sent instructing you how to proceed to activate your account.'
+                    self.set_status(200)
+                    return self.write({
+                        'status': 'OK',
+                        'code': 200,
+                        'message': message,
+                        'email': self.phanterpwa_current_user.email,
+                        'i18n': {
+                            'message': self.T(message)
+                        }
+                    })
 
     @check_private_csrf_token(form_identify="phanterpwa-form-activation", ignore_activation=True)
     def post(self, *args, **kargs):
         dict_arguments = {k: self.request.arguments.get(k)[0].decode('utf-8') for k in self.request.arguments}
         activation_code = dict_arguments.get("activation_code", None)
+        active_by_mobile = False
         if activation_code and self.phanterpwa_current_user:
             q_user = self.phanterpwa_current_user
             if q_user.activated:
@@ -2163,6 +2506,7 @@ class ActiveAccount(web.RequestHandler):
                         'last_name': E(q_user.last_name),
                         'email': q_user.email,
                         'remember_me': q_client.remember_me,
+                        'fone_number': q_user.fone_number,
                         'roles': roles,
                         'role': role,
                         'dict_roles': dict_roles,
@@ -2198,7 +2542,10 @@ class ActiveAccount(web.RequestHandler):
                     code = checked_code.split("-")[0]
                 if code and q_user.activation_code == code:
                     result = True
-
+                    active_by_mobile = False
+                elif code and q_user.activation_code_by_mobile == code:
+                    result = True
+                    active_by_mobile = True
                 if q_user.activation_attempts > self.projectConfig['BACKEND'][self.app_name]['max_activation_attempts']:
                     if q_user.datetime_next_attempt_to_activate and\
                             datetime.now() <= q_user.datetime_next_attempt_to_activate:
@@ -2207,7 +2554,6 @@ class ActiveAccount(web.RequestHandler):
                         tna = int(t_delta.total_seconds())
                         message = msg.format(time_next_attempt=humanize_seconds(tna))
                         message_i18n = self.T(msg).format(time_next_attempt=humanize_seconds(tna, self.i18nTranslator))
-                        
                         self.DALDatabase.commit()
                         self.set_status(400)
                         return self.write({
@@ -2222,12 +2568,23 @@ class ActiveAccount(web.RequestHandler):
                     else:
                         q_user.update_record(activation_attempts=1)
                 if result:
-                    q_user.update_record(
-                        activation_attempts=0,
-                        activated=True,
-                        activation_code=None,
-                        timeout_to_resend_activation_email=None
-                    )
+                    if compiled_mobilemail.match(q_user.email) or active_by_mobile:
+                        q_user.update_record(
+                            activation_attempts=0,
+                            activated=True,
+                            fone_number_activated=True,
+                            activation_code=None,
+                            activation_code_by_mobile=None,
+                            timeout_to_resend_activation_email=None
+                        )
+                    else:
+                        q_user.update_record(
+                            email_activated=True,
+                            activation_attempts=0,
+                            activated=True,
+                            activation_code=None,
+                            timeout_to_resend_activation_email=None
+                        )
 
                     q_role = self.DALDatabase(
                         (self.DALDatabase.auth_membership.auth_user == q_user.id) &
@@ -2257,6 +2614,7 @@ class ActiveAccount(web.RequestHandler):
                             'last_name': E(q_user.last_name),
                             'email': q_user.email,
                             'remember_me': q_client.remember_me,
+                            'fone_number': q_user.fone_number,
                             'roles': roles,
                             'role': role,
                             'dict_roles': dict_roles,
@@ -2462,3 +2820,117 @@ class ChangePassword(web.RequestHandler):
     def options(self, *args):
         self.set_status(200)
         self.write({"status": "OK"})
+
+
+class SMSGateway(web.RequestHandler):
+    """
+        url: '/api/auth/sms-gateway'
+    """
+
+    def initialize(self, app_name, projectConfig, DALDatabase, Translator_email, SMSSender=None, i18nTranslator=None, logger_api=None):
+        self.app_name = app_name
+        self.projectConfig = projectConfig
+        self.DALDatabase = DALDatabase
+        self.Translator_email = Translator_email
+        self.i18nTranslator = i18nTranslator
+        self.SMSSender = SMSSender
+        if logger_api:
+            self.logger_api = logger_api
+        if i18nTranslator:
+            self.T = i18nTranslator.T
+        self.set_header("Access-Control-Allow-Origin", "*")
+        self.set_header(
+            "Access-Control-Allow-Headers",
+            "".join([
+                "phanterpwa-language,",
+                "phanterpwa-sms-token,",
+                "phanterpwa-application,",
+                "phanterpwa-application-version,",
+                "phanterpwa-client-token,",
+                "cache-control"
+            ])
+        )
+        self.set_header('Access-Control-Allow-Methods', 'GET, OPTIONS, POST')
+        if self.request.headers.get("phanterpwa-language"):
+            self.phanterpwa_language = self.request.headers.get("phanterpwa-language")
+        else:
+            self.phanterpwa_language = browser_language(self.request.headers.get("Accept-Language"))
+        if self.i18nTranslator:
+            self.i18nTranslator.direct_translation = self.phanterpwa_language
+        self.phanterpwa_user_agent = str(self.request.headers.get('User-Agent'))
+        self.phanterpwa_remote_ip = self.request.headers.get("X-Real-IP") or \
+            self.request.headers.get("X-Forwarded-For") or \
+            self.request.remote_ip
+        self.phanterpwa_form_identify = None
+
+    def check_origin(self, origin):
+        return True
+
+    def options(self, *args):
+        self.set_status(200)
+        self.write({"status": "OK"})
+
+    def get(self, *args, **kargs):
+        if args[0] == "config":
+            sms_config = {
+                'prefix': 55,
+                'prefix_list': [55],
+                'mask': "(##) # ####-####"
+            }
+
+            self.set_status(200)
+            return self.write({
+                "status": "OK",
+                "config": sms_config
+            })
+
+    def post(self, *args, **kargs):
+        dict_arguments = {k: self.request.arguments.get(k)[0].decode('utf-8') for k in self.request.arguments}
+        authorization_token = self.request.headers.get('phanterpwa-sms-token')
+        args0 = args[0]
+        if authorization_token:
+            token_content = None
+            sms_sender_serialize = Serialize(
+                self.projectConfig['BACKEND'][self.app_name]["secret_key"],
+                salt="sms_token"
+            )
+            try:
+                token_content = sms_sender_serialize.loads(authorization_token)
+            except BadSignature:
+                token_content = None
+            except SignatureExpired:
+                token_content = None
+            if token_content and 'id_user' in token_content:
+                id_user = token_content['id_user']
+                q_user = self.DALDatabase(self.DALDatabase.auth_user.id == id_user).select().first()
+                if q_user:
+                    """
+                        put your sms gateway here and send the message 
+                    """
+                    mobile = dict_arguments.get("mobile", None)
+                    text = dict_arguments.get("text", None)
+                    self.logger_api.warning("{0} - {1}\n{2}\n{3}\n\n{4}".format(
+                        mobile,
+                        "Sending sms message not implemented yet!",
+                        args0,
+                        str(mobile),
+                        str(text)
+                    ))
+                    self.set_status(200)
+                    return self.write({
+                        'status': 'OK',
+                        'code': 200,
+                        'message': 'Message sent',
+                        'i18n': {
+                            'message': self.T('Message sent')
+                        }
+                    })
+        self.set_status(400)
+        return self.write({
+            'status': 'Bad Request',
+            'code': 400,
+            'message': 'Invalid SMS authorization',
+            'i18n': {
+                'message': self.T('Invalid SMS authorization')
+            }
+        })
