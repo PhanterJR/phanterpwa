@@ -28,6 +28,10 @@
         .phanterpwa-widget-check
             right: 21px
             cursor: pointer
+    &.phanterpwa-widget-autocomplete
+        .phanterpwa-widget-check
+            right: 21px
+            cursor: pointer
     &.phanterpwa-widget-multselect
         .phanterpwa-widget-multselect-caret
             cursor: pointer
@@ -41,6 +45,9 @@
             .phanterpwa-widget-check
                 right: 61px
         &.phanterpwa-widget-select
+            .phanterpwa-widget-check
+                right: 61px
+        &.phanterpwa-widget-autocomplete
             .phanterpwa-widget-check
                 right: 61px
         .phanterpwa-widget-icon_button
@@ -714,6 +721,317 @@
                     color: $components
                     transition: color 0.3s ease
 
+
+    .phanterpwa-widget-autocomplete-wrapper
+        .phanterpwa-widget-autocomplete-li-title
+            color: $white
+
+        &.phanterpwa-widget-wear-material
+            position: relative
+            padding-top: 10px
+            .phanterpwa-widget-autocomplete-touchpad
+                position: absolute
+                width: 100%
+                top: 0
+                left: 0
+                height: 100
+                min-height: 50px
+                cursor: pointer
+                &:focus
+                    outline: none
+            input
+                cursor: pointer
+                width: 100%
+                width: calc(100% - 38px)
+                padding: 5px
+                background-color: transparent
+                border: none
+                &::placeholder
+                    color: $material_level05
+                    opacity: 1
+                    transition: opacity 0.3s ease, color 0.3s ease
+                &[enabled]
+                    color: $default_font_color
+            label
+                cursor: pointer
+                left: 5px
+                bottom: 20px
+                position: absolute
+                color: $grey07
+                font-size: 1rem
+                transition: bottom 0.3s ease, color 0.3s ease, font-size 0.3s ease, left 0.3s ease
+            select
+                display: none
+            .material-widgets-animation-onfocus
+                width: 0
+                transition: width 0.3s ease
+                margin: auto
+                bottom: -1px
+                height: 2px
+            hr.material-widgets-animation-offfocus
+                border-bottom: 1px solid $grey07
+                width: 100% !important
+                margin: 0 !important
+                transition: border-bottom 0.3s ease
+            .phanterpwa-widget-autocomplete-caret
+                position: absolute
+                top: 12px
+                right: 13px
+                font-size: 1rem
+            .phanterpwa-widget-check
+                position: absolute
+                top: 12px
+                right: 30px
+                font-size: 0.7rem
+            &.has_icon
+                .phanterpwa-widget-autocomplete-caret
+                    right: 53px
+                .phanterpwa-widget-check
+                    right: 70px
+                .phanterpwa-widget-autocomplete-touchpad    
+                    width: calc(100% - 40px)
+
+            &.has_value
+                label
+                    left: 5px
+                    bottom: 39px
+                    position: absolute
+                    color: $components
+                    font-size: 0.8rem
+                    transition: bottom 0.3s ease, color 0.3s ease, font-size 0.3s ease, left 0.3s ease
+            &.has_label
+                input
+                    &::placeholder
+                        color: rgba(128, 128, 128, 0)
+                        opacity: 0
+                        transition: opacity 0.3s ease, color 0.3s ease
+            &.focus
+                input
+                    &::placeholder
+                        color: $material_level05
+                        opacity: 1
+                        transition: opacity 0.3s ease, color 0.3s ease
+
+                label
+                    left: 5px
+                    bottom: 39px
+                    position: absolute
+                    color: $components
+                    font-size: 0.8rem
+                    transition: bottom 0.3s ease, color 0.3s ease, font-size 0.3s ease, left 0.3s ease
+                .material-widgets-animation-onfocus
+                    width: 100%
+                    height: 2px
+                    background-color: $components
+                    transition: width 0.3s ease
+                hr.material-widgets-animation-offfocus
+                    border-bottom: 1px solid $components
+                    transition: border-bottom 0.3s ease
+            &.pre_focus
+                label
+                    color: $components
+                .material-widgets-animation-onfocus
+                    width: 100%
+                    height: 2px
+                    background-color: $components
+                    transition: width 0.3s ease
+                hr.material-widgets-animation-offfocus
+                    border-bottom: 1px solid $components
+                    transition: border-bottom 0.3s ease
+        &.phanterpwa-widget-wear-shadows
+            position: relative
+            padding-top: 5px
+            .phanterpwa-widget-autocomplete-touchpad
+                position: absolute
+                width: 100%
+                top: 7px
+                left: 0
+                height: 100
+                min-height: 36px
+                cursor: pointer
+                &:focus
+                    outline: none
+            .phanterpwa-widget-autocomplete-caret
+                position: absolute
+                top: 12px
+                right: 13px
+                font-size: 1rem
+            .phanterpwa-widget-check
+                position: absolute
+                top: 16px
+                right: 30px
+                font-size: 0.7rem
+            .phanterpwa-widget-icon-wrapper
+                top: 4px
+            &.has_label
+                padding: 22px 0px 10px 5px
+                .phanterpwa-widget-autocomplete-caret
+                    position: absolute
+                    top: 30px
+                    right: 13px
+                    font-size: 1rem
+                .phanterpwa-widget-check
+                    position: absolute
+                    top: 32px
+                    right: 30px
+                    font-size: 0.7rem
+                .phanterpwa-widget-icon-wrapper
+                    top: 20px
+                .phanterpwa-widget-autocomplete-touchpad
+                    top: 9px
+                    min-height: 50px
+            &.has_icon
+                padding-right: 45px
+                .phanterpwa-widget-autocomplete-touchpad    
+                    width: calc(100% - 40px)
+                .phanterpwa-widget-icon-wrapper
+                    width: 40px
+                    height: 40px
+                    position: absolute
+                    right: 0
+                    background-color: $components
+                    text-align: center
+                    line-height: 40px
+                    border-radius: 29px
+                .phanterpwa-widget-autocomplete-caret
+                    right: 53px
+                .phanterpwa-widget-check
+                    right: 70px
+            input
+                border-radius: 5px
+                line-height: 1.5rem
+                width: 100%
+                padding: 5px
+                background-color: $white
+                border: 1px solid $grey07
+                transition: box-shadow 0.3s ease, border, 0.3s ease
+            label
+                left: 5px
+                top: 0px
+                position: absolute
+                color: $grey07
+                font-size: 1rem
+                transition: color 0.3s ease
+            select
+                display: none
+            &.has_value
+                label
+                    color: $components
+                    transition: color 0.3s ease
+            &.focus
+                input
+                    box-shadow: 0px 0px 5px $components
+                    border: 1px solid $components
+                    transition: box-shadow 0.3s ease, border, 0.3s ease
+
+                label
+                    color: $components
+                    transition: color 0.3s ease
+            &.pre_focus
+                input
+                    box-shadow: 0px 0px 5px $components
+                    border: 1px solid $components
+                    transition: box-shadow 0.3s ease, border, 0.3s ease
+                label
+                    color: $components
+                    transition: color 0.3s ease
+        &.phanterpwa-widget-wear-elegant
+            position: relative
+            padding-top: 5px
+            .phanterpwa-widget-autocomplete-touchpad
+                position: absolute
+                width: 100%
+                top: 6px
+                left: 0
+                height: 100
+                min-height: 52px
+                cursor: pointer
+                &:focus
+                    outline: none
+            .phanterpwa-widget-icon-wrapper
+                top: 15px
+            .phanterpwa-widget-autocomplete-caret
+                top: 24px
+                right: 7px
+            .phanterpwa-widget-check
+                top: 7px
+                right: 7px
+            &.has_label
+                padding: 22px 0px 10px 5px
+                .phanterpwa-widget-autocomplete-touchpad
+                    top: 7px
+                    min-height: 67px
+                .phanterpwa-widget-autocomplete-caret
+                    top: 42px
+                .phanterpwa-widget-check
+                    top: 25px
+                .phanterpwa-widget-icon-wrapper
+                    top: 29px
+
+            input
+                border-radius: 5px
+                line-height: 2rem
+                width: 100%
+                padding: 10px
+                background-color: $white
+                border: 1px solid $grey07
+                transition: border 0.3s ease
+                &::placeholder
+                    text-transform: uppercase
+            label
+                left: 5px
+                top: 0px
+                position: absolute
+                color: $grey07
+                font-size: 1rem
+                transition: color 0.3s ease
+            select
+                display: none
+            .phanterpwa-widget-autocomplete-caret
+                position: absolute
+                font-size: 1rem
+            .phanterpwa-widget-check
+                position: absolute
+                font-size: 0.7rem
+            &.has_icon
+                padding-right: 45px
+                .phanterpwa-widget-autocomplete-touchpad    
+                    width: calc(100% - 40px)
+                .phanterpwa-widget-icon-wrapper
+                    width: 40px
+                    height: 40px
+                    position: absolute
+                    right: 0
+                    
+                    background-color: $components
+                    text-align: center
+                    line-height: 40px
+                    border-radius: 29px
+                .phanterpwa-widget-autocomplete-caret
+                    right: 53px
+                .phanterpwa-widget-check
+                    right: 53px
+            &.has_value
+                label
+                    color: $components
+                    transition: color 0.3s ease
+            &.focus
+                input
+                    border: 1px solid $components
+                    transition: box-shadow 0.3s ease, border, 0.3s ease
+
+                label
+                    color: $components
+                    transition: color 0.3s ease
+            &.pre_focus
+                input
+                    border: 1px solid $components
+                    transition: box-shadow 0.3s ease, border, 0.3s ease
+                label
+                    color: $components
+                    transition: color 0.3s ease
+
+
     .phanterpwa-widget-multselect-wrapper
         .phanterpwa-widget-multselect-li-title
             color: $white
@@ -1309,6 +1627,115 @@ table
                             transform: rotate(45deg)
                             transition: all 0.5s ease
                         .phanterpwa-widget-select-li-icon_confirm
+                            color: $ok
+                            position: absolute
+                            top: 0
+                            right: 5px
+                            width: 35px
+                            transition: color 0.5s ease
+
+    &.phanterpwa-widget-autocomplete-options-wrapper
+        width: 100%
+        padding: 0
+        margin: 0
+        border: none
+        border-collapse: collapse
+        border-spacing: 0
+        td
+            &.phanterpwa-widget-autocomplete-li-title
+                text-align: center
+                background-color: $components
+                color: $white
+                height: 2rem
+                .phanterpwa-widget-autocomplete-placeholder
+                    opacity: 1
+                    transition: opacity 0.5s ease
+                &.has_editable
+                    height: 3rem
+                &.editable_enabled
+                    .phanterpwa-widget-autocomplete-placeholder
+                        opacity: 0
+                        transition: opacity 0.5s ease
+
+            &.phanterpwa-widget-autocomplete-li-option
+                cursor: pointer
+                border-top: 1px solid $material_level05
+                &.selected
+                    color: $components
+                &:hover
+                    color: $attention !important
+                &.empty
+                    span
+                        color: $material_level04
+            position: relative
+            padding-right: 50px
+            height: 3rem
+            padding-left: 20px
+            &::marker
+                content: ""
+            .phanterpwa-widget-autocomplete-li-icon
+                position: absolute
+                right: 16px
+                top: 0
+                line-height: 3rem
+                &.phanterpwa-widget-autocomplete-li-icon_plus
+                    line-height: unset
+            .phanterpwa-widget-autocomplete-li-icon_plus-wrapper
+                position: absolute
+                width: 100%
+                overflow: hidden
+                transition: width 0.5s ease
+                top: 0
+                right: 0
+                .phanterpwa-widget-autocomplete-li-input-editable-wrapper
+                    position: relative
+                    padding-left: 35px
+                    transition: width 0.5s ease
+                    width: 0px
+                    margin-right: 0
+                    margin-left: auto
+                    i
+                        line-height: 3rem
+                    .phanterpwa-widget-autocomplete-li-icon_plus
+                        
+                        left: -5px
+                        position: absolute
+                        line-height: 3rem
+                        right: auto
+                        width: 35px
+                        transform: rotate(0deg)
+                        transition: all 0.5s ease
+                    .phanterpwa-widget-autocomplete-li-input-editable
+                        width: 100%
+                        margin-right: 0
+                        margin-left: auto
+                        position: relative
+                        transition: width 0.5s ease
+                        overflow: hidden
+                        input
+                            border: none
+                            border-bottom: 1px solid $components
+                            width: 100%
+                            line-height: 3rem
+                            height: 3rem
+                        .phanterpwa-widget-autocomplete-li-icon_confirm
+                            color: $white
+                            line-height: 3rem
+                            position: absolute
+                            top: 0
+                            right: 5px
+                            width: 35px
+                            transition: color 0.5s ease
+                &.enabled
+
+                    .phanterpwa-widget-autocomplete-li-input-editable-wrapper
+                        width: 100%
+                        .phanterpwa-widget-autocomplete-li-icon_plus
+                            left: 0
+                            color: $alert
+                            transform: rotate(45deg)
+                            transition: all 0.5s ease
+                        .phanterpwa-widget-autocomplete-li-icon_confirm
                             color: $ok
                             position: absolute
                             top: 0
