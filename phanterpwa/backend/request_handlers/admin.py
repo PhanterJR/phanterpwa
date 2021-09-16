@@ -7,7 +7,7 @@ from phanterpwa.backend.decorators import (
     requires_authentication,
     check_private_csrf_token
 )
-
+from phanterpwa.mail import MailSender
 from pydal.objects import (
     Field
 )
@@ -537,8 +537,8 @@ class UserManager(web.RequestHandler):
                     self.projectConfig['EMAIL']['password'],
                     new_email,
                     subject="Activation code",
-                    text_mensage=text_email,
-                    html_mensage=html_email,
+                    text_message=text_email,
+                    html_message=html_email,
                     server=self.projectConfig['EMAIL']['server'],
                     port=self.projectConfig['EMAIL']['port'],
                     use_tls=self.projectConfig['EMAIL']['use_tls'],
