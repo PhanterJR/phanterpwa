@@ -229,18 +229,25 @@ def arbritary_new_user(app_name, projectConfig, db, email, first_name, last_name
             r_client.delete_record()
         if not q_user.permit_mult_login:
             r_client = db(
-                (db.client.auth_user == id_user) &
-                (db.client.token != _client_token)
+                (db.client.auth_user == id_user)
+                & (db.client.token != _client_token)
             ).select()
             if r_client:
                 r_client = db(
-                    (db.client.auth_user == id_user) &
-                    (db.client.token != _client_token)
+                    (db.client.auth_user == id_user)
+                    & (db.client.token != _client_token)
                 ).remove()
         db.commit()
+        q_role = db(
+            (db.auth_membership.auth_user == q_user.id)
+            & (db.auth_group.id == db.auth_membership.auth_group)
+        ).select(
+            db.auth_group.id, db.auth_group.role, orderby=db.auth_group.grade
+        )
+        roles = [x.role for x in q_role]
+        dict_roles = {x.id: x.role for x in q_role}
+        roles_id = [x.id for x in q_role]
         user_image = PhanterpwaGalleryUserImage(r.id, db, projectConfig)
-        roles = ["user"]
-        role = "user"
         return {
             'authorization': token_user,
             'client_token': token_client,
@@ -1368,13 +1375,20 @@ class ImageUser(web.RequestHandler):
         buf_size = 4096
         self.set_header('Content-Type', 'application/octet-stream')
         q_image = self.DALDatabase(
-            (self.DALDatabase.auth_user_phanterpwagallery.id == image_id) &
-            (self.DALDatabase.auth_user_phanterpwagallery.subfolder == 'profile')).select(
-                self.DALDatabase.auth_user_phanterpwagallery.phanterpwagallery).last()
+            (self.DALDatabase.auth_user_phanterpwagallery.id == image_id)
+            & (self.DALDatabase.auth_user_phanterpwagallery.subfolder == 'profile')
+        ).select(
+            self.DALDatabase.auth_user_phanterpwagallery.phanterpwagallery
+        ).last()
         if q_image:
-            file = os.path.join(self.projectConfig['PROJECT']['path'], "backapps", self.app_name, 'uploads',
+            file = os.path.join(
+                self.projectConfig['PROJECT']['path'],
+                "backapps",
+                self.app_name,
+                'uploads',
                 q_image.phanterpwagallery.folder,
-                    q_image.phanterpwagallery.alias_name)
+                q_image.phanterpwagallery.alias_name
+            )
             self.set_header(
                 'Content-Disposition', 'attachment; filename="{0}"'.format(
                     q_image.phanterpwagallery.filename)
@@ -1390,8 +1404,14 @@ class ImageUser(web.RequestHandler):
                 self.finish()
                 return
         self.set_status(202)
-        file = os.path.join(self.projectConfig['PROJECT']['path'],
-                "backapps", self.app_name, 'static', 'images', 'user.png')
+        file = os.path.join(
+            self.projectConfig['PROJECT']['path'],
+            "backapps",
+            self.app_name,
+            'static',
+            'images',
+            'user.png'
+        )
         with open(file, 'rb') as f:
             while True:
                 data = f.read(buf_size)
@@ -1849,10 +1869,35 @@ class CreateAccount(web.RequestHandler):
         table = self.DALDatabase.auth_user
         dict_arguments = {k: self.request.arguments.get(k)[0].decode('utf-8') for k in self.request.arguments}
         password, password_repeat = dict_arguments["edata"].split(":")
-        dict_arguments['password'] = base64.b64decode(password).decode('utf-8')
-        dict_arguments['password_repeat'] = base64.b64decode(password_repeat).decode('utf-8')
+        try:
+            dict_arguments['password'] = base64.b64decode(password).decode('utf-8')
+            dict_arguments['password_repeat'] = base64.b64decode(password_repeat).decode('utf-8')
+        except UnicodeDecodeError:
+            self.logger_api.warning(
+                "UnicodeError (CreateAccount)\nArguments: {0}".format(str(dict_arguments))
+            )
+            message = self.T('The form has errors')
+            i18n = {
+                'message': self.T(message),
+                'errors': {
+                    'password': self.T('Password contains invalid characters.'),
+                    'password_repeat': self.T('Password contains invalid characters.')
+                }
+            }
+            self.set_status(400)
+            return self.write({
+                'status': 'Bad Request',
+                'code': 400,
+                'message': message,
+                'errors': {
+                    'password': 'Password contains invalid characters.',
+                    'password_repeat': 'Password contains invalid characters.'
+                },
+                'i18n': i18n,
+            })
         pass_hash = pbkdf2_sha512.hash("password{0}{1}".format(
-            dict_arguments['password'], self.projectConfig['BACKEND'][self.app_name]['secret_key']))
+            dict_arguments['password'], self.projectConfig['BACKEND'][self.app_name]['secret_key']
+        ))
         dict_arguments['password_hash'] = pass_hash
         login_by_phone = False
         if dict_arguments.get("mobile", False):
@@ -1896,28 +1941,31 @@ class CreateAccount(web.RequestHandler):
         )
         r = result.validate_and_insert(self.DALDatabase.auth_user)
         if r and r.id:
-            q_user = self.DALDatabase(self.DALDatabase.auth_user.id == r.id).select().first()
-            if r.id == 1:
+            id_user = r.id
+            q_user = self.DALDatabase(self.DALDatabase.auth_user.id == id_user).select().first()
+            if id_user == 1:
                 role = "root"
                 id_role = self.DALDatabase(self.DALDatabase.auth_group.role == 'root').select().first()
                 if id_role:
-                    self.DALDatabase.auth_membership.insert(auth_user=1,
-                    auth_group=id_role.id)
+                    self.DALDatabase.auth_membership.insert(
+                        auth_user=1,
+                        auth_group=id_role.id
+                    )
             else:
                 role = "user"
-                self.DALDatabase.auth_membership.insert(auth_user=r.id, auth_group=3)
+                self.DALDatabase.auth_membership.insert(auth_user=id_user, auth_group=3)
             t_user = Serialize(
                 self.projectConfig['BACKEND'][self.app_name]['secret_key'],
                 self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire']
             )
             content_user = {
-                'id': str(r.id),
+                'id': str(id_user),
                 'email': dict_arguments['email']
             }
             token_user = t_user.dumps(content_user)
             token_user = token_user.decode('utf-8')
             token_client = self.phanterpwa_client_token
-            id_client = self.DALDatabase.client.update_or_insert(auth_user=r.id)
+            id_client = self.DALDatabase.client.update_or_insert(auth_user=id_user)
             t_client = Serialize(
                 self.projectConfig['BACKEND'][self.app_name]['secret_key'],
                 self.projectConfig['BACKEND'][self.app_name]['default_time_client_token_expire']
@@ -1927,7 +1975,7 @@ class CreateAccount(web.RequestHandler):
                 salt="url_secret_key"
             )
             content_client = {
-                'id_user': str(r.id),
+                'id_user': str(id_user),
                 'id_client': str(id_client),
                 'user_agent': self.phanterpwa_user_agent,
                 'remote_addr': self.phanterpwa_remote_ip
@@ -1945,22 +1993,22 @@ class CreateAccount(web.RequestHandler):
                 r_client.delete_record()
             if not q_user.permit_mult_login:
                 r_client = self.DALDatabase(
-                    (self.DALDatabase.client.auth_user == id_user) &
-                    (self.DALDatabase.client.token != self.phanterpwa_client_token)
+                    (self.DALDatabase.client.auth_user == id_user)
+                    & (self.DALDatabase.client.token != self.phanterpwa_client_token)
                 ).select()
                 if r_client:
                     r_client = self.DALDatabase(
-                        (self.DALDatabase.client.auth_user == id_user) &
-                        (self.DALDatabase.client.token != self.phanterpwa_client_token)
+                        (self.DALDatabase.client.auth_user == id_user)
+                        & (self.DALDatabase.client.token != self.phanterpwa_client_token)
                     ).remove()
             self.DALDatabase.commit()
-            user_image = PhanterpwaGalleryUserImage(r.id, self.DALDatabase, self.projectConfig)
+            user_image = PhanterpwaGalleryUserImage(id_user, self.DALDatabase, self.projectConfig)
             self.set_status(201)
             roles = ["user"]
             role = "user"
             q_role = self.DALDatabase(
-                (self.DALDatabase.auth_membership.auth_user == r.id) &
-                (self.DALDatabase.auth_group.id == self.DALDatabase.auth_membership.auth_group)
+                (self.DALDatabase.auth_membership.auth_user == id_user)
+                & (self.DALDatabase.auth_group.id == self.DALDatabase.auth_membership.auth_group)
             ).select(
                 self.DALDatabase.auth_group.id, self.DALDatabase.auth_group.role, orderby=self.DALDatabase.auth_group.grade
             )
@@ -1974,7 +2022,7 @@ class CreateAccount(web.RequestHandler):
                 'client_token': token_client,
                 'url_token': token_url,
                 'auth_user': {
-                    'id': r.id,
+                    'id': id_user,
                     'first_name': E(dict_arguments['first_name']),
                     'last_name': E(dict_arguments['last_name']),
                     'email': dict_arguments['email'],

@@ -156,6 +156,7 @@ class Prompt(web.RequestHandler):
             self.set_status(400)
             return self.write({"status": "Bad Request"})
 
+
 class Redirect(web.RequestHandler):
     """
         url: 'api/oauth/redirect/<social_name>'
@@ -168,7 +169,7 @@ class Redirect(web.RequestHandler):
         self.i18nTranslator = i18nTranslator
         if logger_api:
             self.logger_api = logger_api
-        if i18nTranslator:    
+        if i18nTranslator:
             self.T = i18nTranslator.T
         self.set_header("Access-Control-Allow-Origin", "*")
         self.set_header(
@@ -203,7 +204,6 @@ class Redirect(web.RequestHandler):
 
         url_base = self.projectConfig['BACKEND'][self.app_name]['http_address']
         if social_name == "google":
-           
             state = dict_arguments.get("state")
             q_state = self.DALDatabase(
                 (self.DALDatabase.social_auth.social_name == "google") & (self.DALDatabase.social_auth.request_state == state)).select().first()
@@ -253,7 +253,7 @@ class Redirect(web.RequestHandler):
                 url_consult = self.projectConfig['OAUTH_{0}'.format(social_name.upper())]['remote_address']
                 googleapi = "{0}?access_token={1}".format(
                     url_consult, quote(token['access_token']))
-                
+
                 try:
                     with urllib.request.urlopen(googleapi) as req:
                         googleapi_user = req.read()
@@ -272,9 +272,17 @@ class Redirect(web.RequestHandler):
                         }
                     })
                 else:
-                    self.logger_api.warning(googleapi_user)
                     email_verified = googleapi_user.get("email_verified", False)
                     if not email_verified:
+                        self.logger_api.warning(
+                            'LOGIN BY OAUTH METHOD (EMAIL NOT VERIFIED)\n\tsocial_login: {0}\n\tname: {1}\n\temail: {2}\n\temail_verified: {3}\n\tlocale: {4}'.format(
+                                social_name,
+                                googleapi_user.get("name", False),
+                                googleapi_user.get("email", False),
+                                googleapi_user.get("email_verified", False),
+                                googleapi_user.get("locale", False),
+                            )
+                        )
                         message = "The google email has not been verified."
                         self.set_status(400)
                         return self.write({
@@ -289,9 +297,15 @@ class Redirect(web.RequestHandler):
                     email = googleapi_user.get('email', None)
 
                     if email:
-                        print("oxe...", email)
                         q_user = self.DALDatabase(self.DALDatabase.auth_user.email == email).select().first()
                         if q_user:
+                            self.logger_api.info(
+                                'LOGIN BY OAUTH METHOD\n\tsocial_login: {0}\n\tname: {1}\n\temail: {2}'.format(
+                                    social_name,
+                                    googleapi_user.get("name", False),
+                                    googleapi_user.get("email", False)
+                                )
+                            )
                             q_user.update_record(activated=True)
                             timeout_token_user = self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire_remember_me']
                             t_user = Serialize(
@@ -305,8 +319,8 @@ class Redirect(web.RequestHandler):
                             token_user = t_user.dumps(content)
                             token_user = token_user.decode('utf-8')
                             q_role = self.DALDatabase(
-                                (self.DALDatabase.auth_membership.auth_user == q_user.id) &
-                                (self.DALDatabase.auth_group.id == self.DALDatabase.auth_membership.auth_group)
+                                (self.DALDatabase.auth_membership.auth_user == q_user.id)
+                                & (self.DALDatabase.auth_group.id == self.DALDatabase.auth_membership.auth_group)
                             ).select(self.DALDatabase.auth_group.role, orderby=self.DALDatabase.auth_group.grade)
                             roles = [x.role for x in q_role]
                             role = None
@@ -344,13 +358,13 @@ class Redirect(web.RequestHandler):
 
                             if not q_user.permit_mult_login:
                                 r_client = self.DALDatabase(
-                                    (self.DALDatabase.client.auth_user == q_user.id) &
-                                    (self.DALDatabase.client.token != token_client)
+                                    (self.DALDatabase.client.auth_user == q_user.id)
+                                    & (self.DALDatabase.client.token != token_client)
                                 ).select()
                                 if r_client:
                                     r_client = self.DALDatabase(
-                                        (self.DALDatabase.client.auth_user == q_user.id) &
-                                        (self.DALDatabase.client.token != token_client)
+                                        (self.DALDatabase.client.auth_user == q_user.id)
+                                        & (self.DALDatabase.client.token != token_client)
                                     ).delete()
                             user_image = PhanterpwaGalleryUserImage(q_user.id, self.DALDatabase, self.projectConfig)
                             social_image = googleapi_user.get("picture", None)
@@ -360,30 +374,39 @@ class Redirect(web.RequestHandler):
                                 social_name, state
                             )
                             q_state.update_record(user_credentials=json.dumps({
-                                    'authorization': token_user,
-                                    'client_token': token_client,
-                                    'url_token': token_url,
-                                    'auth_user': {
-                                        'id': str(q_user.id),
-                                        'first_name': E(q_user.first_name),
-                                        'last_name': E(q_user.last_name),
-                                        'email': email,
-                                        'remember_me': q_client.remember_me,
-                                        'roles': roles,
-                                        'role': role,
-                                        'activated': True,
-                                        'image': user_image.id_image,
-                                        'social_image': social_image,
-                                        'two_factor': False,
-                                        'multiple_login': q_user.permit_mult_login,
-                                        'social_login': social_name
-                                    }
-                                }))
+                                'authorization': token_user,
+                                'client_token': token_client,
+                                'url_token': token_url,
+                                'auth_user': {
+                                    'id': str(q_user.id),
+                                    'first_name': E(q_user.first_name),
+                                    'last_name': E(q_user.last_name),
+                                    'email': email,
+                                    'remember_me': q_client.remember_me,
+                                    'roles': roles,
+                                    'role': role,
+                                    'activated': True,
+                                    'image': user_image.id_image,
+                                    'social_image': social_image,
+                                    'two_factor': False,
+                                    'multiple_login': q_user.permit_mult_login,
+                                    'social_login': social_name
+                                }
+                            }))
                             self.DALDatabase.commit()
                             self.set_status(200)
                             return self.write(
                                 str(HTML(HEAD(), BODY(SCRIPT("window.location = '{0}'".format(redirect))))))
                         else:
+                            self.logger_api.warning(
+                                'CREATING ACCOUNT AND LOGIN BY OAUTH METHOD\n\tsocial_login: {0}\n\tname: {1}\n\temail: {2}\n\temail_verified: {3}\n\tlocale: {4}'.format(
+                                    social_name,
+                                    googleapi_user.get("name", False),
+                                    googleapi_user.get("email", False),
+                                    googleapi_user.get("email_verified", False),
+                                    googleapi_user.get("locale", False),
+                                )
+                            )
                             new_password = os.urandom(3).hex()
                             password_hash = pbkdf2_sha512.hash("password{0}{1}".format(
                                 new_password, self.projectConfig['BACKEND'][self.app_name]['secret_key']))
@@ -412,8 +435,10 @@ class Redirect(web.RequestHandler):
                                     role = "root"
                                     id_role = self.DALDatabase(self.DALDatabase.auth_group.role == 'root').select().first()
                                     if id_role:
-                                        self.DALDatabase.auth_membership.insert(auth_user=1,
-                                        auth_group=id_role.id)
+                                        self.DALDatabase.auth_membership.insert(
+                                            auth_user=1,
+                                            auth_group=id_role.id
+                                        )
                                 else:
                                     role = "user"
                                     self.DALDatabase.auth_membership.insert(auth_user=r.id, auth_group=3)
@@ -456,13 +481,13 @@ class Redirect(web.RequestHandler):
                                     r_client.delete_record()
                                 if not q_user.permit_mult_login:
                                     r_client = self.DALDatabase(
-                                        (self.DALDatabase.client.auth_user == id_user) &
-                                        (self.DALDatabase.client.token != self.phanterpwa_client_token)
+                                        (self.DALDatabase.client.auth_user == id_user)
+                                        & (self.DALDatabase.client.token != self.phanterpwa_client_token)
                                     ).select()
                                     if r_client:
                                         r_client = self.DALDatabase(
-                                            (self.DALDatabase.client.auth_user == id_user) &
-                                            (self.DALDatabase.client.token != self.phanterpwa_client_token)
+                                            (self.DALDatabase.client.auth_user == id_user)
+                                            & (self.DALDatabase.client.token != self.phanterpwa_client_token)
                                         ).remove()
                                 user_image = PhanterpwaGalleryUserImage(r.id, self.DALDatabase, self.projectConfig)
                                 self.set_status(201)
@@ -473,25 +498,25 @@ class Redirect(web.RequestHandler):
                                     social_name, state
                                 )
                                 q_state.update_record(user_credentials=json.dumps({
-                                        'authorization': token_user,
-                                        'client_token': token_client,
-                                        'url_token': token_url,
-                                        'auth_user': {
-                                            'id': str(q_user.id),
-                                            'first_name': E(q_user.first_name),
-                                            'last_name': E(q_user.last_name),
-                                            'email': email,
-                                            'remember_me': q_client.remember_me,
-                                            'roles': roles,
-                                            'role': role,
-                                            'activated': True,
-                                            'image': user_image.id_image,
-                                            'social_image': social_image,
-                                            'two_factor': False,
-                                            'multiple_login': q_user.permit_mult_login,
-                                            'social_login': social_name
-                                        }
-                                    }))
+                                    'authorization': token_user,
+                                    'client_token': token_client,
+                                    'url_token': token_url,
+                                    'auth_user': {
+                                        'id': str(q_user.id),
+                                        'first_name': E(q_user.first_name),
+                                        'last_name': E(q_user.last_name),
+                                        'email': email,
+                                        'remember_me': q_client.remember_me,
+                                        'roles': roles,
+                                        'role': role,
+                                        'activated': True,
+                                        'image': user_image.id_image,
+                                        'social_image': social_image,
+                                        'two_factor': False,
+                                        'multiple_login': q_user.permit_mult_login,
+                                        'social_login': social_name
+                                    }
+                                }))
                                 self.DALDatabase.commit()
                                 return self.write(
                                     str(HTML(HEAD(), BODY(SCRIPT("window.location = '{0}'".format(redirect))))))

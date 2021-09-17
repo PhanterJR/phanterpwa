@@ -105,7 +105,7 @@ class PhanterPWA():
             formdata.append("source", source)
             formdata.append("lineno", lineno)
             formdata.append("colno", colno)
-            formdata.append("error", error)
+            formdata.append("error", JSON.stringify(error))
 
             self.POST(
                 "api",
