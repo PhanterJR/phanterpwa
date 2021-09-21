@@ -157,6 +157,7 @@ class LeftBar(application.Component):
     @staticmethod
     def _open():
         jQuery("#phanterpwa-component-left_bar").addClass("enabled")
+        jQuery("#phanterpwa-component-left_bar-main_button").addClass("enabled")
 
     def open(self):
         self._open()
@@ -166,6 +167,7 @@ class LeftBar(application.Component):
         jQuery("#phanterpwa-component-left_bar").removeClass("enabled").removeClass("enabled_submenu").find(
             ".phanterpwa-component-left_bar-menu_button-wrapper"
         ).removeClass("enabled")
+        jQuery("#phanterpwa-component-left_bar-main_button").removeClass("enabled").removeClass("enabled_submenu")
 
     def close(self):
         self._close()
@@ -203,14 +205,14 @@ class LeftBarMainButton(application.Component):
             self.open_leftbar()
 
     def close_leftbar(self):
-        self.element_target = jQuery(self.target_selector)
-        self.element_target.find(
-            "#phanterpwa-component-left_bar-main_button").removeClass("enabled").removeClass("enabled_submenu")
+        # self.element_target = jQuery(self.target_selector)
+        # self.element_target.find(
+        #     "#phanterpwa-component-left_bar-main_button").removeClass("enabled").removeClass("enabled_submenu")
         LeftBar._close()
 
     def open_leftbar(self):
-        self.element_target = jQuery(self.target_selector)
-        self.element_target.find("#phanterpwa-component-left_bar-main_button").addClass("enabled")
+        # self.element_target = jQuery(self.target_selector)
+        # self.element_target.find("#phanterpwa-component-left_bar-main_button").addClass("enabled")
         LeftBar._open()
 
     def _binds(self):
@@ -219,6 +221,22 @@ class LeftBarMainButton(application.Component):
             "click.mainbutton_leftbar",
             lambda: self.switch_leftbar()
         )
+        jQuery(
+            "#main-container"
+        ).off(
+            "click.main_container_click"
+        ).on(
+            "click.main_container_click",
+            lambda: self.close_leftbar()
+        )
+        # jQuery(
+        #     ".phanterpwa-component-left_bar-button"
+        # ).off(
+        #     "click.left_bar_button_click"
+        # ).on(
+        #     "click.left_bar_button_click",
+        #     lambda: self.close_leftbar()
+        # )
 
     def reload(self):
         self._binds()
@@ -300,7 +318,21 @@ class LeftBarButton(helpers.XmlConstructor):
                 return False
         return True
 
+    def close_leftbar(self):
+        LeftBar._close()
+
+    def binds(self):
+        jQuery(
+            ".phanterpwa-component-left_bar-button"
+        ).off(
+            "click.left_bar_button_click"
+        ).on(
+            "click.left_bar_button_click",
+            lambda: self.close_leftbar()
+        )
+
     def start(self):
+        self.binds()
         if window.PhanterPWA.DEBUG:
             console.info("start button {0}".format(self.identifier))
         if callable(self._on_start):
