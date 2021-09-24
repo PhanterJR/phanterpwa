@@ -14,7 +14,7 @@ __pragma__('alias', "jQuery", "$")
 __pragma__('skip')
 
 # it is ignored on transcrypt
-window = jQuery = console = document = localStorage = URL = M = FormData = setTimeout = RegExp =\
+window = jQuery = console = document = localStorage = URL = M = FormData = setTimeout = RegExp = caches =\
     sessionStorage = this = FileReader = JSON = js_undefined = navigator = __new__ = __except0__ = Date = 0
 
 __pragma__('noskip')
@@ -72,6 +72,19 @@ class PhanterPWA():
         #     lambda event, xhr, options: self._after_ajax_complete(event, xhr, options)
         # )
         window.PhanterPWA = self
+        test_bool = __pragma__("js", "{}", "'serviceWorker' in navigator")
+        if test_bool:
+            caches.js_keys().then(lambda names: self._clear_cache(names))
+
+
+            navigator.serviceWorker.register(
+                '/sw.js', {'scope': '/'}
+            ).then(
+                lambda reg: self._swregister(reg, "register")
+            ).catch(
+                lambda error: console.log('Registration failed with {0}'.format(error))
+            )
+
         window.onpopstate = self._onPopState
         self._onPopState()
 
@@ -92,6 +105,23 @@ class PhanterPWA():
         self.Valider = validations.Valid
 
         window.onerror = self.onGlobalError
+
+    def _clear_cache(self, names):
+        for x in names:
+            if x != self.versioning:
+                console.log("chace deletado", x)
+                caches.delete(x)
+            else:
+                console.log("cache_atual", x)
+
+
+    def _swregister(self, reg):
+        if reg.installing:
+            console.log('Service worker installing')
+        elif reg.waiting:
+            console.log('Service worker installed')
+        elif(reg.active):
+            console.log('Service worker active')
 
     def onGlobalError(self, message, source, lineno, colno, error):
         if self._send_global_error and self.ApiServer is not js_undefined:

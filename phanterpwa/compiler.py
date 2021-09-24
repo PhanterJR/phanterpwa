@@ -13,6 +13,7 @@ import traceback
 from pathlib import PurePath
 from glob import glob, iglob
 from phanterpwa.configer import ProjectConfig
+from phanterpwa.tools import interpolate
 from os.path import (
     normpath,
     join,
@@ -26,6 +27,47 @@ from os.path import (
 
 ENV_PYTHON = normpath(sys.executable)
 PATH_PHANTERPWA = dirname(phanterpwa.__file__)
+
+
+ServiceWorker = """
+self.addEventListener('install', function(event) {
+  event.waitUntil(
+    caches.open('{{versioning}}').then(function(cache) {
+      return cache.addAll([
+        {{files}}
+      ]);
+    })
+  );
+});
+
+self.addEventListener('fetch', function(event) {
+  if (event.request.method == "GET"){
+      event.respondWith(caches.match(event.request).then(function(response) {
+        // caches.match() always resolves
+        // but in case of success response will have value
+        if (response !== undefined) {
+          return response;
+        } else {
+          return fetch(event.request).then(function (response) {
+            // response may be used only once
+            // we need to save clone to put one copy in cache
+            // and serve second one
+            let responseClone = response.clone();
+            
+            caches.open('{{versioning}}').then(function (cache) {
+              cache.put(event.request, responseClone);
+            });
+            return response;
+          }).catch(function () {
+            return caches.match('/static/{{versioning}}/images/warning.png');
+          });
+        }
+      }));
+  } else {
+    console.log(event.request.method)
+  };
+});
+""" 
 
 class Compiler():
     """
@@ -54,6 +96,7 @@ class Compiler():
             self.current_compilation
         )
         self.debug = self.config['PROJECT']["debug"]
+        self.version = self.config['PROJECT']['version']
         self.versioning = self.config['PROJECT']['versioning']
         self.tempfolder = join(self.projectpath, "temp")
         if self.debug:
@@ -796,6 +839,32 @@ class Compiler():
 
         print("Finish!!!\n\n\n")
 
+    def compile_sw(self, app):
+        appConfig = self.config
+        build_folder = appConfig.get('FRONTEND')[app]['build_folder']
+        files = self.get_files_dir(
+            build_folder, ignore_files=["__init__.py"])
+        str_files = ""
+        cont = 0
+        for x in files:
+            if x.startswith(join(build_folder, "static")):
+                p = PurePath(x)
+                p = p.relative_to(build_folder)
+                l = [*p.parts]
+                y = "/".join(l)
+                if not cont:
+                    str_files = "'/{0}'".format(y)
+                else:
+                    str_files = ",".join([str_files, "\n        '/{0}'".format(y)])
+                cont = 1
+
+        sw = interpolate(ServiceWorker, {
+            "files": str(str_files),
+            "versioning": self.versioning
+        })
+        with open(join(build_folder, 'sw.js'), "w") as o:
+            o.write(sw)
+
     def transcrypts_config(self, app=None):
         if app:
             self._has_config_changed[app] = self._process_transcrypt_config(app)
@@ -1061,4 +1130,5 @@ class Compiler():
             self.copy_statics(app)
             self.compile_styles(app)
             self.compile_transcrypts(app)
+            self.compile_sw(app)
         self._save_mtimes()
