@@ -1,4 +1,3 @@
-
 import phanterpwa.frontend.components.modal as modal
 import phanterpwa.frontend.components.top_slide as top_slide
 import phanterpwa.frontend.components.left_bar as left_bar

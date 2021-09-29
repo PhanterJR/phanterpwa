@@ -5,6 +5,7 @@ import phanterpwa.frontend.components.left_bar as left_bar
 import phanterpwa.frontend.preloaders as preloaders
 import phanterpwa.frontend.components.widgets as widgets
 import phanterpwa.frontend.forms as forms
+import phanterpwa.frontend.components.modal as modal
 from org.transcrypt.stubs.browser import __pragma__
 
 __pragma__('alias', "jQuery", "$")
@@ -66,7 +67,7 @@ class Administration(gatehandler.Handler):
                     ),
 
                     _class="phanterpwa-container p-container"
-                )
+                ),
             )
             html.html_to("#main-container")
             if arg1 == "new":
@@ -326,6 +327,7 @@ class UsersList(helpers.XmlConstructor):
                 _id='lista-users-container',
                 _class="phanterpwa_tables_container"
             ),
+            DIV(_id="modal_user"),
             _class='users-container phanterpwa-card-container'
         )
         helpers.XmlConstructor.__init__(self, "div", False, html, _class="lista_de_users")
@@ -416,9 +418,13 @@ class UsersList(helpers.XmlConstructor):
                                     "_href": "#_phanterpwa:/admin/users/{0}/impersonate".format(x.id)
                                 }),
                                 widgets.MenuOption("Delete", **{
-                                    "_class": "admin-button-user-edit wave_on_click",
-                                    "_href": "#_phanterpwa:/admin/users/{0}/delete".format(x.id)
+                                    "_data-email": x.email,
+                                    "_data-id": x.id,
+                                    "_class": "admin-button-user-delete wave_on_click",
                                 }),
+                                **{
+                                    "onOpen": lambda: self._binds_delete()
+                                }
                             )
                         )
                     )
@@ -441,6 +447,16 @@ class UsersList(helpers.XmlConstructor):
 
             jQuery("[phanterpwa_dowpdown_target]").each(lambda: change_attr_drop(this))
 
+    def _binds_delete(self):
+        jQuery(
+            ".admin-button-user-delete"
+        ).off(
+            "click.delete_menu"
+        ).on(
+            "click.delete_menu",
+            lambda: self._modal_delete(this)
+        )
+
     def _get_data_search(self, search="", field="email", orderby="email", sort="asc", page=1):
         window.PhanterPWA.ApiServer.GET(**{
             'url_args': ["api", "admin", "usermanager"],
@@ -460,6 +476,62 @@ class UsersList(helpers.XmlConstructor):
         search = widgets["search_users"].value()
         field = widgets["users_field"].value()
         self._get_data_search(search=search, field=field, orderby=field, sort="asc", page=1)
+
+    def _modal_delete(self, el):
+        console.log(el)
+        email = jQuery(el).data("email")
+        id_email = jQuery(el).data("id")
+        content = DIV(
+            "Are you sure you want to delete the user account {0}".format(email),
+            _class="p-row"
+        )
+        footer = DIV(
+            forms.FormButton(
+                "yes_delete",
+                "Yes",
+                _class="btn-autoresize wave_on_click waves-phanterpwa"
+            ),
+            forms.FormButton(
+                "no_delete",
+                "No",
+                _class="btn-autoresize wave_on_click waves-phanterpwa"
+            ),
+            _class='phanterpwa-form-buttons-container'
+        )
+        self.modal_delete = modal.Modal(
+            "#modal_user",
+            **{
+                "title": "Remove the account {0}".format(email),
+                "content": content,
+                "footer": footer,
+            }
+        )
+        self.modal_delete.open()
+        jQuery("#phanterpwa-widget-form-form_button-yes_delete").off(
+            "click.yes_delete"
+        ).on(
+            "click.yes_delete",
+            lambda: self._delete_user_account(id_email)
+        )
+        jQuery("#phanterpwa-widget-form-form_button-no_delete").off(
+            "click.no_delete"
+        ).on(
+            "click.no_delete",
+            lambda: self.modal_delete.close()
+        )
+
+    def _delete_user_account(self, user_id):
+        window.PhanterPWA.DELETE(**{
+            'url_args': ["api", "admin", "usermanager", user_id],
+            'onComplete': lambda data, ajax_status: self._after_delete(data, ajax_status)
+        })
+
+    def _after_delete(self, data, ajax_status):
+        if ajax_status == "success":
+            window.PhanterPWA.flash(html="Successfully deleted")
+            window.PhanterPWA.open_way("admin/users")
+        else:
+            window.PhanterPWA.flash(html="Problem deleting")
 
 
 class RolesList(helpers.XmlConstructor):
@@ -878,7 +950,7 @@ class User():
             "click.submit_users_button",
             lambda: self.submit(this)
         )
- 
+
     def get_form_user(self, user_id, action=None):
         if action == "edit":
             window.PhanterPWA.ApiServer.GET(**{
@@ -939,6 +1011,7 @@ class Impersonate():
             window.PhanterPWA._after_submit_login(data, ajax_status)
         else:
             window.PhanterPWA.flash(**{'html': "Impersonate Problem!"})
+
 
 class Role():
     def __init__(self, index_instance, role_id=None, action=None):

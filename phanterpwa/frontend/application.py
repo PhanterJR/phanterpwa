@@ -75,8 +75,6 @@ class PhanterPWA():
         test_bool = __pragma__("js", "{}", "'serviceWorker' in navigator")
         if test_bool:
             caches.js_keys().then(lambda names: self._clear_cache(names))
-
-
             navigator.serviceWorker.register(
                 '/sw.js', {'scope': '/'}
             ).then(
@@ -114,7 +112,6 @@ class PhanterPWA():
             else:
                 console.log("cache_atual", x)
 
-
     def _swregister(self, reg):
         if reg.installing:
             console.log('Service worker installing')
@@ -142,7 +139,6 @@ class PhanterPWA():
                 "error",
                 form_data=formdata
             )
-
 
     @staticmethod
     def check_event_namespace(el, event_name, namespace):
