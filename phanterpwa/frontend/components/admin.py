@@ -391,6 +391,8 @@ class UsersList(helpers.XmlConstructor):
                 )
             )
             if users.data is not js_undefined:
+                red_icon = I(_class="fas fa-times-circle", _style="color: red;")
+                green_icon = I(_class="fas fa-check-circle", _style="color:green;")
                 for x in users.data:
                     table.append(
                         XTRD(
@@ -399,9 +401,9 @@ class UsersList(helpers.XmlConstructor):
                             x.first_name,
                             x.last_name,
                             x.email,
-                            I(_class="fas fa-check-circle", _style="color:green;") if x.permit_mult_login else I(_class="fas fa-times-circle", _style="color: red;"),
-                            I(_class="fas fa-check-circle", _style="color:green;") if x.activated else I(_class="fas fa-times-circle", _style="color: red;"),
-                            I(_class="fas fa-check-circle", _style="color:green;") if x.websocket_opened else I(_class="fas fa-times-circle", _style="color: red;"),
+                            green_icon if x.permit_mult_login else red_icon,
+                            green_icon if x.activated else red_icon,
+                            green_icon if x.websocket_opened else red_icon,
                             widgets.MenuBox(
                                 "drop_{0}".format(x.id),
                                 I(_class="fas fa-ellipsis-v"),
@@ -417,13 +419,28 @@ class UsersList(helpers.XmlConstructor):
                                     "_class": "admin-button-user-edit wave_on_click",
                                     "_href": "#_phanterpwa:/admin/users/{0}/impersonate".format(x.id)
                                 }),
+                                widgets.MenuOption("Temporary password", **{
+                                    "_data-email": x.email,
+                                    "_data-id": x.id,
+                                    "_class": "admin-button-user-temporary_password wave_on_click",
+                                }),
+                                widgets.MenuOption("Change password", **{
+                                    "_data-email": x.email,
+                                    "_data-id": x.id,
+                                    "_class": "admin-button-user-change_password wave_on_click",
+                                }),
+                                widgets.MenuOption("Active account", **{
+                                    "_data-email": x.email,
+                                    "_data-id": x.id,
+                                    "_class": "admin-button-user-active_account wave_on_click",
+                                }),
                                 widgets.MenuOption("Delete", **{
                                     "_data-email": x.email,
                                     "_data-id": x.id,
                                     "_class": "admin-button-user-delete wave_on_click",
                                 }),
                                 **{
-                                    "onOpen": lambda: self._binds_delete()
+                                    "onOpen": lambda: self._binds_user_menu()
                                 }
                             )
                         )
@@ -447,7 +464,7 @@ class UsersList(helpers.XmlConstructor):
 
             jQuery("[phanterpwa_dowpdown_target]").each(lambda: change_attr_drop(this))
 
-    def _binds_delete(self):
+    def _binds_user_menu(self):
         jQuery(
             ".admin-button-user-delete"
         ).off(
@@ -456,6 +473,208 @@ class UsersList(helpers.XmlConstructor):
             "click.delete_menu",
             lambda: self._modal_delete(this)
         )
+        jQuery(
+            ".admin-button-user-temporary_password"
+        ).off(
+            "click.temporary_password_menu"
+        ).on(
+            "click.temporary_password_menu",
+            lambda: self._modal_temporary_password(this)
+        )
+        jQuery(
+            ".admin-button-user-change_password"
+        ).off(
+            "click.change_password_menu"
+        ).on(
+            "click.change_password_menu",
+            lambda: self._modal_change_password(this)
+        )
+        jQuery(
+            ".admin-button-user-active_account"
+        ).off(
+            "click.active_account_menu"
+        ).on(
+            "click.active_account_menu",
+            lambda: self._active_account(this)
+        )
+
+    def _modal_temporary_password(self, el):
+        email = jQuery(el).data("email")
+        content = DIV(
+            "Are you sure you want to request a temporary access password? ",
+            "An email sent to the user (", email, ") with a temporary password. ",
+            "By using it, it can change the current password to a new one.",
+            DIV(
+                forms.FormWidget(
+                    "auth_user",
+                    "email",
+                    **{
+                        "value": email,
+                        "label": "Email",
+                        "type": "string",
+                        "form": "auth_user",
+                        "_placeholder": "Email",
+                        "_class": "p-col w1p100"
+                    }
+                ),
+            ),
+            _class="p-row"
+        )
+        footer = DIV(
+            forms.SubmitButton(
+                "yes_delete",
+                "Yes",
+                _class="btn-autoresize wave_on_click waves-phanterpwa"
+            ),
+            forms.FormButton(
+                "no_delete",
+                "No",
+                _class="btn-autoresize wave_on_click waves-phanterpwa"
+            ),
+            _class='phanterpwa-form-buttons-container'
+        )
+        self.modal_temporary_password = modal.Modal(
+            "#modal_user",
+            **{
+                "title": "Temporary password ({0})".format(email),
+                "content": content,
+                "footer": footer,
+                "form": "auth_user"
+            }
+        )
+        self.modal_temporary_password.open()
+        jQuery("#phanterpwa-widget-form-submit_button-yes_delete").off(
+            "click.yes_delete"
+        ).on(
+            "click.yes_delete",
+            lambda: self._request_temporary_password()
+        )
+        jQuery("#phanterpwa-widget-form-form_button-no_delete").off(
+            "click.no_delete"
+        ).on(
+            "click.no_delete",
+            lambda: self.modal_temporary_password.close()
+        )
+        forms.SignForm("#form-auth_user", after_sign=lambda: forms.ValidateForm("#form-auth_user"))
+
+    def _request_temporary_password(self):
+        form_temporary_password = jQuery("#form-auth_user")[0]
+        form_temporary_password = __new__(FormData(form_temporary_password))
+        window.PhanterPWA.POST(
+            "api",
+            "admin",
+            "request-password",
+            form_data=form_temporary_password,
+            onComplete=lambda data, ajax_status: self._after_request_temporary_password(data, ajax_status)
+        )
+
+    def _after_request_temporary_password(self, data, ajax_status):
+        if ajax_status == "success":
+            self.modal_temporary_password.close()
+            json = data.responseJSON
+
+            content = DIV(
+                "The temporary password is: ", json.temporary_password,
+                _class="p-row"
+            )
+            footer = DIV(
+                forms.FormButton(
+                    "close",
+                    "Close",
+                    _class="btn-autoresize wave_on_click waves-phanterpwa"
+                ),
+                _class='phanterpwa-form-buttons-container'
+            )
+            self.modal_show_temporary_password = modal.Modal(
+                "#modal_user",
+                **{
+                    "title": "Temporary password".format(json.email),
+                    "content": content,
+                    "footer": footer,
+                    "form": "auth_user"
+                }
+            )
+            self.modal_show_temporary_password.open()
+            jQuery("#phanterpwa-widget-form-form_button-close").off(
+                "click.close"
+            ).on(
+                "click.close",
+                lambda: self.modal_show_temporary_password.close()
+            )
+
+    def _modal_change_password(self, el):
+        email = jQuery(el).data("email")
+        content = DIV(
+            "With this action you will be abruptly changing the user's password",
+            " to a new password. Enter the new password in the field below",
+            " and click on ", STRONG("change password"), ".",
+            DIV(
+                forms.FormWidget(
+                    "auth_user",
+                    "password",
+                    **{
+                        "value": "",
+                        "label": "Password",
+                        "type": "string",
+                        "form": "auth_user",
+                        "_placeholder": "Password",
+                        "_class": "p-col w1p100"
+                    }
+                ),
+            ),
+            _class="p-row"
+        )
+        footer = DIV(
+            forms.SubmitButton(
+                "yes_change",
+                "Change Password",
+                _class="btn-autoresize wave_on_click waves-phanterpwa"
+            ),
+            forms.FormButton(
+                "no_change",
+                "Cancel",
+                _class="btn-autoresize wave_on_click waves-phanterpwa"
+            ),
+            _class='phanterpwa-form-buttons-container'
+        )
+        self.modal_change_password = modal.Modal(
+            "#modal_user",
+            **{
+                "title": "Temporary password ({0})".format(email),
+                "content": content,
+                "footer": footer,
+                "form": "auth_user"
+            }
+        )
+        self.modal_change_password.open()
+        jQuery("#phanterpwa-widget-form-submit_button-yes_change").off(
+            "click.yes_change"
+        ).on(
+            "click.yes_change",
+            lambda: self._request_change_password()
+        )
+        jQuery("#phanterpwa-widget-form-form_button-no_change").off(
+            "click.no_change"
+        ).on(
+            "click.no_change",
+            lambda: self.modal_change_password.close()
+        )
+        forms.SignForm("#form-auth_user", after_sign=lambda: forms.ValidateForm("#form-auth_user"))
+
+    def _request_change_password(self):
+        form_change_password = jQuery("#form-auth_user")[0]
+        form_change_password = __new__(FormData(form_change_password))
+        window.PhanterPWA.POST(
+            "api",
+            "admin",
+            "change-password",
+            form_data=form_change_password,
+            onComplete=lambda data, ajax_status: self._after_request_change_password(data, ajax_status)
+        )
+
+    def _after_request_change_password(self, data, ajax_status):
+        if ajax_status == "success":
+            window.PhanterPWA.flash("Password Changed!")
 
     def _get_data_search(self, search="", field="email", orderby="email", sort="asc", page=1):
         window.PhanterPWA.ApiServer.GET(**{
@@ -478,7 +697,6 @@ class UsersList(helpers.XmlConstructor):
         self._get_data_search(search=search, field=field, orderby=field, sort="asc", page=1)
 
     def _modal_delete(self, el):
-        console.log(el)
         email = jQuery(el).data("email")
         id_email = jQuery(el).data("id")
         content = DIV(

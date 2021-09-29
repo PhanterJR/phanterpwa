@@ -408,12 +408,12 @@ class UserManager(web.RequestHandler):
                             ids_groups.append(int(x))
                     if ids_groups:
                         db(
-                            (db.auth_membership.auth_user == id_user) &
-                            (~db.auth_membership.auth_group.belongs(ids_groups))
+                            (db.auth_membership.auth_user == id_user)
+                            & (~db.auth_membership.auth_group.belongs(ids_groups))
                         ).delete()
                         q_auth_membership = db(
-                            (db.auth_membership.auth_user == id_user) &
-                            (db.auth_membership.auth_group.belongs(ids_groups))
+                            (db.auth_membership.auth_user == id_user)
+                            & (db.auth_membership.auth_group.belongs(ids_groups))
                         ).select()
                         novos_dependentes = set(ids_groups).difference(set([x.auth_group for x in q_auth_membership]))
                         for x in novos_dependentes:
@@ -1169,7 +1169,7 @@ class Impersonate(web.RequestHandler):
 
 class RequestAccount(web.RequestHandler):
     """
-        url: '/api/auth/request-password/'
+        url: '/api/admin/request-password/'
     """
 
     def initialize(self, app_name, projectConfig, DALDatabase, Translator_email, i18nTranslator=None, logger_api=None):
@@ -1212,13 +1212,14 @@ class RequestAccount(web.RequestHandler):
     @check_private_csrf_token(form_identify=["phanterpwa-form-auth_user"])
     def post(self, *args, **kargs):
         dict_arguments = {k: self.request.arguments.get(k)[0].decode('utf-8') for k in self.request.arguments}
+        email = dict_arguments['email']
         result = FieldsDALValidateDictArgs(
             dict_arguments,
             Field(
                 'email',
                 'string',
                 requires=IS_EMAIL(
-                    dict_arguments['email'], error_message="The email isn't valid.")),
+                    email, error_message="The email isn't valid.")),
         )
         r = result.validate()
         if r:
@@ -1241,7 +1242,7 @@ class RequestAccount(web.RequestHandler):
             })
         else:
             q_user = self.DALDatabase(
-                self.DALDatabase.auth_user.email == dict_arguments['email']
+                self.DALDatabase.auth_user.email == email
             ).select().first()
             if not q_user:
                 self.set_status(400)
@@ -1289,7 +1290,7 @@ class RequestAccount(web.RequestHandler):
                 e_mail = MailSender(
                     self.projectConfig['EMAIL']['default_sender'],
                     self.projectConfig['EMAIL']['password'],
-                    dict_arguments['email'],
+                    email,
                     subject="Temporary Password Recovery",
                     text_message=text_email,
                     html_message=html_email,
@@ -1305,13 +1306,13 @@ class RequestAccount(web.RequestHandler):
                     else:
                         self.logger_api.warning("Email from '{0}' to '{1}' -> Temporary Password Recovery: {2}".format(
                             self.projectConfig['EMAIL']['default_sender'],
-                            dict_arguments['email'],
+                            email,
                             new_password
                         ))
                         e_mail.send()
                 except Exception as e:
                     result = "Email from '{0}' to '{1}' don't send! -> Error: {2} -> password: {3}".format(
-                        self.projectConfig['EMAIL']['default_sender'], dict_arguments['email'], e, new_password)
+                        self.projectConfig['EMAIL']['default_sender'], email, e, new_password)
                     self.logger_api.error(result, exc_info=True)
                     message = "There was an error trying to send the email."
                     message_i18n = self.T("There was an error trying to send the email.")
@@ -1333,16 +1334,93 @@ class RequestAccount(web.RequestHandler):
                             timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['timeout_to_resend_temporary_password_mail'])
                     )
                     self.DALDatabase.commit()
-                    message = 'An email was sent instructing you how to proceed to recover your account.'
+                    message = 'An email has been sent instructing how to proceed to recover the account.'
                     self.set_status(200)
                     return self.write({
                         'status': 'OK',
                         'code': 200,
+                        'temporary_password': new_password,
+                        'email': email,
                         'message': message,
                         'i18n': {
                             'message': self.T(message)
                         }
                     })
+
+    def options(self, *args):
+        self.set_status(200)
+        self.write({"status": "OK"})
+
+
+class ChangePassword(web.RequestHandler):
+    """
+        url: '/api/auth/change-password'
+    """
+
+    def initialize(self, app_name, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
+        self.app_name = app_name
+        self.projectConfig = projectConfig
+        self.DALDatabase = DALDatabase
+        self.i18nTranslator = i18nTranslator
+        if logger_api:
+            self.logger_api = logger_api
+        if i18nTranslator:
+            self.T = i18nTranslator.T
+        self.set_header("Access-Control-Allow-Origin", "*")
+        self.set_header(
+            "Access-Control-Allow-Headers",
+            "".join([
+                "phanterpwa-language,",
+                "phanterpwa-application,",
+                "phanterpwa-application-version,",
+                "phanterpwa-client-token,",
+                "phanterpwa-authorization,",
+                "cache-control"
+            ])
+        )
+        self.set_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+        if self.request.headers.get("phanterpwa-language"):
+            self.phanterpwa_language = self.request.headers.get("phanterpwa-language")
+        else:
+            self.phanterpwa_language = browser_language(self.request.headers.get("Accept-Language"))
+        if self.i18nTranslator:
+            self.i18nTranslator.direct_translation = self.phanterpwa_language
+        self.phanterpwa_user_agent = str(self.request.headers.get('User-Agent'))
+        self.phanterpwa_remote_ip = self.request.headers.get("X-Real-IP") or \
+            self.request.headers.get("X-Forwarded-For") or \
+            self.request.remote_ip
+
+    def check_origin(self, origin):
+        return True
+
+    @requires_authentication(roles_name="root")
+    @check_private_csrf_token(form_identify=["phanterpwa-form-auth_user"])
+    def post(self):
+        dict_arguments = {k: self.request.arguments.get(k)[0].decode('utf-8') for k in self.request.arguments}
+        password = dict_arguments.get('password', None)
+        if password:
+            pass_hash = pbkdf2_sha512.hash("password{0}{1}".format(
+                password, self.projectConfig['BACKEND'][self.app_name]['secret_key']))
+            self.phanterpwa_current_user.update_record(
+                login_attempts=0,
+                password_hash=pass_hash
+            )
+            self.DALDatabase.commit()
+            self.set_status(200)
+            return self.write({
+                'status': 'OK',
+                'code': 200,
+                'message': 'Password changed!',
+                'i18n': {
+                    'message': self.T('Password changed!'),
+                }
+            })
+        else:
+            self.set_status(400)
+            return self.write({
+                'status': 'Bad Request',
+                'code': 400,
+            })
 
     def options(self, *args):
         self.set_status(200)
