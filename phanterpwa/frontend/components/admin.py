@@ -511,6 +511,7 @@ class UsersList(helpers.XmlConstructor):
                     **{
                         "value": email,
                         "label": "Email",
+                        "data_view": True,
                         "type": "string",
                         "form": "auth_user",
                         "_placeholder": "Email",
@@ -611,6 +612,19 @@ class UsersList(helpers.XmlConstructor):
             DIV(
                 forms.FormWidget(
                     "auth_user",
+                    "email",
+                    **{
+                        "value": email,
+                        "label": "Email",
+                        "data_view": True,
+                        "type": "string",
+                        "form": "auth_user",
+                        "_placeholder": "Email",
+                        "_class": "p-col w1p100"
+                    }
+                ),
+                forms.FormWidget(
+                    "auth_user",
                     "password",
                     **{
                         "value": "",
@@ -651,7 +665,7 @@ class UsersList(helpers.XmlConstructor):
             "click.yes_change"
         ).on(
             "click.yes_change",
-            lambda: self._request_change_password()
+            lambda: self._request_change_password(email)
         )
         jQuery("#phanterpwa-widget-form-form_button-no_change").off(
             "click.no_change"
@@ -661,9 +675,13 @@ class UsersList(helpers.XmlConstructor):
         )
         forms.SignForm("#form-auth_user", after_sign=lambda: forms.ValidateForm("#form-auth_user"))
 
-    def _request_change_password(self):
+    def _request_change_password(self, email):
         form_change_password = jQuery("#form-auth_user")[0]
         form_change_password = __new__(FormData(form_change_password))
+        form_change_password.append(
+            "email",
+            email
+        )
         window.PhanterPWA.POST(
             "api",
             "admin",
@@ -674,9 +692,18 @@ class UsersList(helpers.XmlConstructor):
 
     def _after_request_change_password(self, data, ajax_status):
         if ajax_status == "success":
+            self.modal_change_password.close()
             window.PhanterPWA.flash("Password Changed!")
 
     def _get_data_search(self, search="", field="email", orderby="email", sort="asc", page=1):
+        jQuery(
+            "#phanterpwa-widget-input-input-search_users"
+        ).off(
+            "keyup.search_users"
+        ).on(
+            "keyup.search_users",
+            self._onkeyup
+        )
         window.PhanterPWA.ApiServer.GET(**{
             'url_args': ["api", "admin", "usermanager"],
             'url_vars': {
@@ -690,6 +717,15 @@ class UsersList(helpers.XmlConstructor):
             'get_cache': self.process_data
         })
 
+    def _onkeyup(self, event):
+        key = event.which or event.keyCode
+        element = jQuery(
+            "#phanterpwa-widget-input-input-search_users"
+        )
+        if key == 13:
+            value = element.val()
+            if value != "":
+                self.search()
     def search(self):
         widgets = window.PhanterPWA.Request.widgets
         search = widgets["search_users"].value()
@@ -942,6 +978,14 @@ class RolesList(helpers.XmlConstructor):
             jQuery("[phanterpwa_dowpdown_target]").each(lambda: change_attr_drop(this))
 
     def _get_data_search(self, search="", field="nome_completo", orderby="nome_completo", sort="asc", page=1):
+        jQuery(
+            "#phanterpwa-widget-input-input-search_roles"
+        ).off(
+            "keyup.search_roles"
+        ).on(
+            "keyup.search_roles",
+            self._onkeyup
+        )
         window.PhanterPWA.ApiServer.GET(**{
             'url_args': ["api", "admin", "rolemanager"],
             'url_vars': {
@@ -954,6 +998,16 @@ class RolesList(helpers.XmlConstructor):
             'onComplete': self.after_get,
             'get_cache': self.process_data
         })
+
+    def _onkeyup(self, event):
+        key = event.which or event.keyCode
+        element = jQuery(
+            "#phanterpwa-widget-input-input-search_roles"
+        )
+        if key == 13:
+            value = element.val()
+            if value != "":
+                self.search()
 
     def search(self):
         widgets = window.PhanterPWA.Request.widgets

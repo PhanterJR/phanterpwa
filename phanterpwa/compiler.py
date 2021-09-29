@@ -54,7 +54,9 @@ self.addEventListener('fetch', function(event) {
         }
       }));
   } else {
-    console.log(event.request.method)
+    if (window.PhanterPWA.DEBUG){
+        console.info(event.request.method)
+    };
   };
 });
 """ 

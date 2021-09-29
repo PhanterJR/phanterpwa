@@ -1190,10 +1190,11 @@ class RequestAccount(web.RequestHandler):
                 "phanterpwa-application,",
                 "phanterpwa-application-version,",
                 "phanterpwa-client-token,",
+                "phanterpwa-authorization,",
                 "cache-control"
             ])
         )
-        self.set_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+        self.set_header('Access-Control-Allow-Methods', 'GET, OPTIONS, POST')
         if self.request.headers.get("phanterpwa-language"):
             self.phanterpwa_language = self.request.headers.get("phanterpwa-language")
         else:
@@ -1207,6 +1208,10 @@ class RequestAccount(web.RequestHandler):
 
     def check_origin(self, origin):
         return True
+
+    def get(self, *args, **kargs):
+        self.set_status(200)
+        self.write({"status": "OK"})
 
     @requires_authentication(roles_name="root")
     @check_private_csrf_token(form_identify=["phanterpwa-form-auth_user"])
@@ -1397,30 +1402,72 @@ class ChangePassword(web.RequestHandler):
     @check_private_csrf_token(form_identify=["phanterpwa-form-auth_user"])
     def post(self):
         dict_arguments = {k: self.request.arguments.get(k)[0].decode('utf-8') for k in self.request.arguments}
-        password = dict_arguments.get('password', None)
-        if password:
-            pass_hash = pbkdf2_sha512.hash("password{0}{1}".format(
-                password, self.projectConfig['BACKEND'][self.app_name]['secret_key']))
-            self.phanterpwa_current_user.update_record(
-                login_attempts=0,
-                password_hash=pass_hash
-            )
-            self.DALDatabase.commit()
-            self.set_status(200)
-            return self.write({
-                'status': 'OK',
-                'code': 200,
-                'message': 'Password changed!',
-                'i18n': {
-                    'message': self.T('Password changed!'),
-                }
-            })
-        else:
+
+        email = dict_arguments['email']
+        result = FieldsDALValidateDictArgs(
+            dict_arguments,
+            Field(
+                'email',
+                'string',
+                requires=IS_EMAIL(
+                    email, error_message="The email isn't valid.")),
+        )
+        r = result.validate()
+        if r:
+            message = 'The form has errors'
+
+            i18n_errors = {}
+            for x in result.errors:
+                tran = self.T(result.errors[x])
+                i18n_errors[x] = tran
             self.set_status(400)
             return self.write({
                 'status': 'Bad Request',
                 'code': 400,
+                'message': message,
+                'errors': result.errors,
+                'i18n': {
+                    'message': self.T(message),
+                    'errors': i18n_errors
+                }
             })
+        else:
+            q_user = self.DALDatabase(
+                self.DALDatabase.auth_user.email == email
+            ).select().first()
+            if not q_user:
+                self.set_status(400)
+                return self.write({
+                    'status': 'Bad Request',
+                    'code': 400,
+                    'message': 'The user was not found',
+                    'i18n': {'message': self.T('The user was not found')}
+                })
+            else:
+                password = dict_arguments.get('password', None)
+                if password:
+                    pass_hash = pbkdf2_sha512.hash("password{0}{1}".format(
+                        password, self.projectConfig['BACKEND'][self.app_name]['secret_key']))
+                    q_user.update_record(
+                        login_attempts=0,
+                        password_hash=pass_hash
+                    )
+                    self.DALDatabase.commit()
+                    self.set_status(200)
+                    return self.write({
+                        'status': 'OK',
+                        'code': 200,
+                        'message': 'Password changed!',
+                        'i18n': {
+                            'message': self.T('Password changed!'),
+                        }
+                    })
+                else:
+                    self.set_status(400)
+                    return self.write({
+                        'status': 'Bad Request',
+                        'code': 400,
+                    })
 
     def options(self, *args):
         self.set_status(200)

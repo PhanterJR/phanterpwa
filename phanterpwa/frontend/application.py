@@ -80,7 +80,7 @@ class PhanterPWA():
             ).then(
                 lambda reg: self._swregister(reg, "register")
             ).catch(
-                lambda error: console.log('Registration failed with {0}'.format(error))
+                lambda error: console.error('Registration failed with {0}'.format(error))
             )
 
         window.onpopstate = self._onPopState
@@ -107,18 +107,21 @@ class PhanterPWA():
     def _clear_cache(self, names):
         for x in names:
             if x != self.versioning:
-                console.log("chace deletado", x)
+                if window.PhanterPWA.DEBUG:
+                    console.info("cache {0} deleted".format(x))
                 caches.delete(x)
             else:
-                console.log("cache_atual", x)
+                if window.PhanterPWA.DEBUG:
+                    console.info("current cache:", x)
 
     def _swregister(self, reg):
-        if reg.installing:
-            console.log('Service worker installing')
-        elif reg.waiting:
-            console.log('Service worker installed')
-        elif(reg.active):
-            console.log('Service worker active')
+        if window.PhanterPWA.DEBUG:
+            if reg.installing:
+                console.info('Service worker installing')
+            elif reg.waiting:
+                console.info('Service worker installed')
+            elif reg.active:
+                console.info('Service worker active')
 
     def onGlobalError(self, message, source, lineno, colno, error):
         if self._send_global_error and self.ApiServer is not js_undefined:
