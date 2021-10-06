@@ -2122,7 +2122,7 @@ class RequestAccount(web.RequestHandler):
                 'email',
                 'string',
                 requires=IS_EMAIL(
-                    dict_arguments['email'], error_message="The email isn't valid.")),
+                    dict_arguments.get('email', None), error_message="The email isn't valid.")),
         )
         r = result.validate()
         if r:
