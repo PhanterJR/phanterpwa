@@ -1073,6 +1073,7 @@ class Autocomplete(Widget):
                         "_data-value": "",
                         "_data-target": "phanterpwa-widget-autocomplete-input-{0}".format(self.identifier),
                         "_data-text": "",
+                        "_tabindex": "0",
                         "_class": "phanterpwa-widget-autocomplete-li-option empty"
                 })))
             for vdata in self._data:
@@ -1083,6 +1084,7 @@ class Autocomplete(Widget):
                                 "_data-value": vdata[0],
                                 "_data-text": vdata[1],
                                 "_data-target": "phanterpwa-widget-autocomplete-input-{0}".format(self.identifier),
+                                "_tabindex": "0",
                                 "_class": "phanterpwa-widget-autocomplete-li-option selected"
                         })))
 
@@ -1092,6 +1094,7 @@ class Autocomplete(Widget):
                                 "_data-value": vdata[0],
                                 "_data-text": vdata[1],
                                 "_data-target": "phanterpwa-widget-autocomplete-input-{0}".format(self.identifier),
+                                "_tabindex": "0",
                                 "_class": "phanterpwa-widget-autocomplete-li-option"
                         })))
                 else:
@@ -1100,6 +1103,7 @@ class Autocomplete(Widget):
                             "_data-value": vdata[0],
                             "_data-text": vdata[1],
                             "_data-target": "phanterpwa-widget-autocomplete-input-{0}".format(self.identifier),
+                            "_tabindex": "0",
                             "_class": "phanterpwa-widget-autocomplete-li-option"
                     })))
             icon_placeholder = DIV(
@@ -1122,6 +1126,7 @@ class Autocomplete(Widget):
                             "_data-value": "",
                             "_data-target": "phanterpwa-widget-autocomplete-input-{0}".format(self.identifier),
                             "_data-text": "",
+                            "_tabindex": "0",
                             "_class": "phanterpwa-widget-autocomplete-li-title has_editable"
                     })))
                 else:
@@ -1130,6 +1135,7 @@ class Autocomplete(Widget):
                             "_data-value": "",
                             "_data-target": "phanterpwa-widget-autocomplete-input-{0}".format(self.identifier),
                             "_data-text": "",
+                            "_tabindex": "0",
                             "_class": "phanterpwa-widget-autocomplete-li-title"
                     })))
             else:
@@ -1139,6 +1145,7 @@ class Autocomplete(Widget):
                             "_data-value": "",
                             "_data-target": "phanterpwa-widget-autocomplete-input-{0}".format(self.identifier),
                             "_data-text": "",
+                            "_tabindex": "0",
                             "_class": "phanterpwa-widget-autocomplete-li-title has_editable"
                     })))
         self._xml_modal = table
@@ -1353,9 +1360,13 @@ class Autocomplete(Widget):
             "keydown.open_by_key",
             lambda event: self._open_by_key(event, this)
         )
+    def _on_modal_keypress(self, event):
+        code = event.keyCode or event.which
+        console.log(code)
 
     def _open_by_key(self, event, el):
         code = event.keyCode or event.which
+        console.log(code)
         p = jQuery(el).parent()
         stat_modal = jQuery(
             "#phanterpwa-widget-autocomplete-input-{0}".format(self.identifier)).attr("phanterpwa-widget-pseudomodal")
@@ -1427,6 +1438,13 @@ class Autocomplete(Widget):
                 "click.option_select_modal_content",
                 lambda: self._add_new_option(this)
             )
+        jQuery(
+            jQuery(
+                ".phanterpwa-component-pseudomodal-content"
+            ).find(
+                ".phanterpwa-widget-autocomplete-li-option"
+            )[0]
+        ).focus()
 
     def start(self):
         self._binds()
