@@ -23,6 +23,14 @@
             left: 0
             top: 0
 
+            .continuos
+                width: 100%
+                visibility: visible
+                *
+                    visibility: visible
+            .dont_cut_inside
+                break-inside: avoid
+
         .phanterpwa-media-print
             padding: 0
             margin: 0
@@ -34,3 +42,5 @@
                 height: 297mm
                 *
                     visibility: visible
+            .dont_cut_inside
+                break-inside: avoid
