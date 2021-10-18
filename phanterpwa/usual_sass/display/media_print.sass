@@ -19,6 +19,23 @@
         *
             visibility: hidden
         .phanterpwa-media-print-container
+            table
+                page-break-inside: auto
+                visibility: visible
+            tr
+                page-break-inside: avoid
+                visibility: visible
+            tbody
+                page-break-inside: avoid
+                page-break-after: auto
+                visibility: visible
+            thead
+                display: table-header-group
+                visibility: visible
+            tfoot
+                display: table-footer-group
+                visibility: visible
+
             position: absolute
             left: 0
             top: 0
@@ -32,6 +49,18 @@
                 break-inside: avoid
 
         .phanterpwa-media-print
+            table
+                page-break-inside: auto
+            tr
+                page-break-inside: avoid
+            tbody
+                page-break-inside: avoid
+                page-break-after: auto
+            thead
+                display: table-header-group
+            tfoot
+                display: table-footer-group
+
             padding: 0
             margin: 0
             .a4
