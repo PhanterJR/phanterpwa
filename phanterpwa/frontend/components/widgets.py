@@ -3692,7 +3692,7 @@ class TableHead(Widget):
                             x.attributes['_class'] = "{0} {1}".format(x.attributes['_class'], class_base)
                     else:
                         x.attributes['_class'] = class_base
-                        self.__child_html.append(x)
+                    self.__child_html.append(x)
                 else:
                     self.__child_html.append(TH(x,
                         _class="phanterpwa-widget-table-head-th"))
