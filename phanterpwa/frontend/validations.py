@@ -267,6 +267,7 @@ class Valider():
             else:
                 validate_test_pass.append(False)
         if validate_name == "IS_EMAIL":
+            value_for_validate = str(value_for_validate).strip()
             self.tests[validate_name] = "Fail"
             is_not_valid = False
             if "@" in value_for_validate:
