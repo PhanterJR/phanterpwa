@@ -52,10 +52,8 @@ def search_google_chrome():
             if ret.strip():
                 if x not in new_winvars:
                     new_winvars.append(x)
-        print(new_winvars)
         for x in new_winvars:
             p = Popen('where /r "{0}" "chrome.exe"'.format(x), stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=True)
-            print(p.args)
             ret, error = p.communicate()
             if ret.strip():
                 return ret.strip()
