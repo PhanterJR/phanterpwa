@@ -2350,7 +2350,6 @@ class ListString(Widget):
         )
         self._check_value()
 
-
     def _add_div_animation(self, el):
         wrapper = el.find(".phanterpwa-widget-wrapper")
         if wrapper.hasClass("phanterpwa-widget-wear-material"):
@@ -2712,7 +2711,6 @@ class Textarea(Widget):
             jQuery(el).css("height", jQuery(el).prop("scrollHeight"))
         # this.style.height = (this.scrollHeight) + 'px';
 
-
     def _binds(self):
         target = jQuery(self.target_selector)
         self._add_div_animation(target)
@@ -2852,18 +2850,16 @@ class CheckBox(Widget):
                 jQuery(self.target_selector).find(".phanterpwa-widget-checkbox-wrapper").addClass("has_true")
             else:
                 self._value = True
-                jQuery(self.target_selector).find(".phanterpwa-widget-checkbox-wrapper").removeClass("has_true")            
+                jQuery(self.target_selector).find(".phanterpwa-widget-checkbox-wrapper").removeClass("has_true")
             jQuery(self.target_selector).find("input").prop("checked", self._value).val(self._value)
 
     def set_disabled(self):
         self._disabled = True
-        target = jQuery(self.target_selector).find(".phanterpwa-widget-wrapper").addClass("disabled")
-
+        jQuery(self.target_selector).find(".phanterpwa-widget-wrapper").addClass("disabled")
 
     def set_enabled(self):
         self._disabled = False
-        target = jQuery(self.target_selector).find(".phanterpwa-widget-wrapper").removeClass("disabled")
-
+        jQuery(self.target_selector).find(".phanterpwa-widget-wrapper").removeClass("disabled")
 
     def _switch_value(self, el):
         if not self._disabled:
@@ -3042,7 +3038,7 @@ class MenuBox(Widget):
             self._button = I(_class="fas fa-ellipsis-v")
             class_button = " icon_button"
         else:
-            if isinstance(button, helpers.XmlConstructor) and button.tag=="i":
+            if isinstance(button, helpers.XmlConstructor) and button.tag.upper() == "I":
                 class_button = " icon_button"
             self._button = button
         self._custom_menu = parameters.get("custom_menu", None)
@@ -3420,6 +3416,79 @@ class PseudoModal():
         target.attr("phanterpwa-widget-pseudomodal", "enabled")
         if callable(self.on_open):
             self.on_open(jQuery("#{0}".format(self._identifier)))
+
+
+class FloatButton(helpers.XmlConstructor):
+    def __init__(self, *content, **attributes):
+        if "_class" in attributes:
+            attributes['_class'] = "wave_on_click phanterpwa-widget-floatbutton {0}".format(attributes['_class'])
+        else:
+            attributes['_class'] = "wave_on_click phanterpwa-widget-floatbutton"
+        if len(content) == 1 and isinstance(content[0], helpers.XmlConstructor) and content[0].tag.upper() == "I":
+            attributes['_class'] = "icon_button {0}".format(attributes['_class'])
+        tag = "div"
+        if "_href" in attributes:
+            tag = "a"
+        helpers.XmlConstructor.__init__(self, tag, False, *content, **attributes)
+
+
+class FloatMenu(Widget):
+    def __init__(self, identifier, button, *options, **parameters):
+        class_button = ""
+        if button is js_undefined or button is None:
+            self._button = I(_class="fas fa-ellipsis-v")
+            class_button = " icon_button"
+        else:
+            if isinstance(button, helpers.XmlConstructor) and button.tag.upper() == "I":
+                class_button = " icon_button"
+            self._button = button
+        self._xml_menu = []
+        self._onopen = parameters.get('onOpen', None)
+        self._options = options
+        for x in self._options:
+            self.add_option(x)
+
+        html = DIV(
+            self._button,
+            DIV(_class="phanterpwa-widget-floatmenu-options-content"),
+            _class="phanterpwa-widget-floatmenu-button{0}".format(class_button),
+            _phanterpwa_dowpdown_target="drop_{0}".format(identifier)
+        )
+        if "_class" in parameters:
+            parameters["_class"] = "{0}{1}".format(parameters["_class"], " phanterpwa-widget-floatmenu")
+        else:
+            parameters['_class'] = "phanterpwa-widget-floatmenu"
+        Widget.__init__(self, identifier, html, **parameters)
+
+    def add_option(self, option):
+        if isinstance(option, FloatButton):
+            self._xml_menu.append(option)
+        elif isinstance(option, helpers.XmlConstructor) and option.tag.upper() == "I":
+            self._xml_menu.append(DIV(option, _class="phanterpwa-widget-floatbutton icon_button wave_on_click"))
+        else:
+            self._xml_menu.append(DIV(option, _class="phanterpwa-widget-floatbutton wave_on_click"))
+
+    def _on_click(self, el):
+        element = jQuery(el).find(".phanterpwa-widget-floatmenu-options-content")
+        if element.hasClass("enabled"):
+            element.removeClass("enabled")
+        else:
+            element.addClass("enabled")
+
+    def reload(self):
+        self.start()
+
+    def start(self):
+        target = jQuery(self.target_selector)
+        target.find(".phanterpwa-widget-floatmenu-options-content").html(
+            self._xml_menu.jquery()
+        )
+        target.off("click.open_floatmenu_phanterpwa").on(
+            "click.open_floatmenu_phanterpwa",
+            lambda: self._on_click(this)
+        )
+        if callable(self._onreload):
+            self._onreload(target)
 
 
 class Preloaders(Widget):
