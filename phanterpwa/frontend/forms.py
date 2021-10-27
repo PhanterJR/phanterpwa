@@ -907,6 +907,7 @@ class ValidateForm():
 
         if validate_name == "IS_EMAIL":
             if "@" in value_for_validate:
+                value_for_validate = str(value_for_validate).strip()
                 REGEX_BODY = __pragma__(
                     'js',
                     '{}',
