@@ -125,7 +125,7 @@ class Datepickers():
             iso_format = self._apply_format("yyyy-MM-dd HH:ss:mm")
             jQuery(self.target_selector).attr("phanterpwa-datetimepicker-iso", iso_format)
             if jQuery(self.id_input_target).length > 0:
-                jQuery(self.id_input_target).val(self._apply_format(self.format)).focus()
+                jQuery(self.id_input_target).val(self._apply_format(self.format)).focus().trigger("change")
             if self.debug:
                 console.info(self._apply_format(self.format))
 
