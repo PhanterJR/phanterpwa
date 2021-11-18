@@ -542,7 +542,6 @@ class CustomField():
 
         if hasattr(self._field, "phanterpwa"):
             for x in self._field.phanterpwa:
-                print(x)
                 if x not in self.phanterpwa:
                     self.phanterpwa[x] = self._field.phanterpwa[x]
 
