@@ -17,40 +17,29 @@ class ProgressBar():
     """docstring for ProgressBar"""
     def __init__(self, id_container):
         self.element = jQuery(id_container)
+        self.events_set = set()
         self.start()
 
     def addEventProgressBar(self, event_name):
-        events = self.element.attr("events")
-        if events is js_undefined:
-            self.element.attr("events", JSON.stringify([event_name]))
-        else:
-            events = set(JSON.parse(events))
-            events.add(event_name)
-            events = list(events)
-            self.element.attr("events", JSON.stringify(events))
+        self.events_set.add(event_name)
 
     def removeEventProgressBar(self, event_name):
-        events = self.element.attr("events")
-        if events is not js_undefined:
-            events = set(JSON.parse(events))
-            events.remove(event_name)
-            events = JSON.stringify(list(events))
-            if events != "[]":
-                self.element.attr("events", events)
-            else:
-                self.element.removeAttr("events")
-                self.element.find(".phanterpwa-main_progressbar-wrapper").removeClass("enabled")
+        try:
+            self.events_set.remove(event_name)
+        except:
+            if window.PhanterPWA.DEBUG:
+                console.info("Error on remove event of progressbar")
 
     def forceStop(self):
-        self.element.removeAttr("events")
+        self.events_set = set()
         self.element.find(".phanterpwa-main_progressbar-wrapper").removeClass("enabled")
 
     def check_progressbar(self):
-        events = self.element.attr('events')
-        if events is not js_undefined:
-            self.element.find(".phanterpwa-main_progressbar-wrapper").addClass("enabled")
-        else:
+        if len(self.events_set) == 0:
             self.element.find(".phanterpwa-main_progressbar-wrapper").removeClass("enabled")
+        else:
+            self.element.find(".phanterpwa-main_progressbar-wrapper").addClass("enabled")
+
 
     def start(self):
         self.element.html(self.xml())
