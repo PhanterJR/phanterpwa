@@ -36,14 +36,21 @@
                 height: 50px
                 text-align: center
                 font-size: 1.5rem
-                padding-top: 5px
+                line-height: 50px
                 &:hover
                     color: $attention
             .phanterpwa-component-modal-title
                 font-size: 1.5rem
                 text-transform: uppercase
                 text-align: center
-
+                @media #{$width1}
+                    font-size: 0.9rem
+                @media #{$width2}
+                    font-size: 0.95rem
+                @media #{$width3}
+                    font-size: 1rem
+                @media #{$width4}
+                    font-size: 1.2rem
         .phanterpwa-component-modal-content-container
             width: 100%
             padding: 10px 10px
@@ -59,10 +66,7 @@
             padding: 10px 10px
             height: 80px
             box-shadow: 1px 0px 4px $grey07
-            @media #{$width1}
-                padding: 0
-            @media #{$width2}
-                padding: 0
+
     &.phanterpwa-fixed-fulldisplay
         z-index: 1006
         opacity: 0

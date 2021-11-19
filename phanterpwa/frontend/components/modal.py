@@ -1,4 +1,5 @@
 import phanterpwa.frontend.helpers as helpers
+import phanterpwa.frontend.components.snippets as snippets
 from org.transcrypt.stubs.browser import __pragma__
 
 
@@ -35,6 +36,8 @@ class Modal():
             self.content = parameters["content"]
         if "footer" in parameters:
             self.footer = parameters["footer"]
+        else:
+             self.footer_height = 20
         if "header_height" in parameters:
             self.header_height = parameters["header_height"]
         if "footer_height" in parameters:
@@ -52,14 +55,22 @@ class Modal():
         self._on_close = parameters.get("on_close", None)
         self._after_close = parameters.get("after_close", None)
         self._z_index = parameters.get("z_index", 1006)
+        style_close_button = None
+        if self.header_height < 50:
+            style_close_button = "line-height: {0}px; height: {0}px; font-size: 1rem;".format(self.header_height)
         wrapper_content = CONCATENATE(
             DIV(
                 DIV(
                     I(_class="fas fa-times"),
-                    _class="phanterpwa-component-modal-close link"
+                    _class="phanterpwa-component-modal-close link",
+                    _style=style_close_button
                 ),
                 DIV(
-                    self.title,
+                    snippets.Centralizer(
+                        "phanterpwa-component-modal-title-snippets-centralizer",
+                        DIV(self.title, _class="phanterpwa-component-modal-title-content"),
+                        default_height=self.header_height - 20
+                    ),
                     _class="phanterpwa-component-modal-title"
                 ),
                 _class="phanterpwa-component-modal-header-container"

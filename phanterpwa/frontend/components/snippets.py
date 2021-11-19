@@ -23,6 +23,10 @@ class Centralizer(helpers.XmlConstructor):
             attributes["_class"] = "{0}{1}".format(attributes["_class"], " phanterpwa-snippet-centralizer")
         else:
             attributes["_class"] = "phanterpwa-snippet-centralizer"
+        self._default_height = attributes.get("default_height", 20)
+        if "_style" not in attributes:
+            attributes["_style"] = "height:{0}px; min-height: {0}px;".format(self._default_height)
+
         self._centralizer_html = DIV(
             DIV(
                 DIV(
