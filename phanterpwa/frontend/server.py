@@ -83,6 +83,7 @@ class ApiServer():
             url_args = args
         url_vars = self._process_parameters(parameters)
         onComplete = parameters.get("onComplete", lambda: console.info("GET") if window.PhanterPWA.DEBUG else "")
+        onError = parameters.get("onError", None)
         if "headers" in parameters:
             if parameters["headers"] is not None:
                 for x in parameters["headers"]:
@@ -115,7 +116,7 @@ class ApiServer():
 
         def _after_error(data, ajax_status):
             window.PhanterPWA.ProgressBar.removeEventProgressBar("GET_" + date_stamp)
-            self.on_ajax_error(data, ajax_status)
+            self.on_ajax_error(data, ajax_status, onError)
 
         __pragma__('jsiter')
         ajax_param = {
@@ -153,6 +154,7 @@ class ApiServer():
             url_args = args
         url_vars = self._process_parameters(parameters)
         onComplete = parameters.get("onComplete", lambda: console.info("DELETE") if window.PhanterPWA.DEBUG else "")
+        onError = parameters.get("onError", None)
         if "headers" in parameters:
             if parameters["headers"] is not None:
                 for x in parameters["headers"]:
@@ -164,7 +166,7 @@ class ApiServer():
         url = "{0}/{1}{2}".format(self.remote_address, self._process_args(url_args), self._serialize_vars(url_vars))
         def _after_error(data, ajax_status):
             window.PhanterPWA.ProgressBar.removeEventProgressBar("DELETE_" + date_stamp)
-            self.on_ajax_error(data, ajax_status)
+            self.on_ajax_error(data, ajax_status, onError)
         __pragma__('jsiter')
         ajax_param = {
             'url': url,
@@ -202,6 +204,7 @@ class ApiServer():
         if "form_data" in parameters:
             form_data = parameters["form_data"]
         onComplete = parameters.get("onComplete", lambda: console.info("POST") if window.PhanterPWA.DEBUG else "")
+        onError = parameters.get("onError", None)
         if "headers" in parameters:
             if parameters["headers"] is not None:
                 for x in parameters["headers"]:
@@ -213,7 +216,7 @@ class ApiServer():
         url = "{0}/{1}".format(self.remote_address, self._process_args(url_args))
         def _after_error(data, ajax_status):
             window.PhanterPWA.ProgressBar.removeEventProgressBar("POST_" + date_stamp)
-            self.on_ajax_error(data, ajax_status)
+            self.on_ajax_error(data, ajax_status, onError)
         __pragma__('jsiter')
         ajax_param = {
             'url': url,
@@ -256,6 +259,7 @@ class ApiServer():
         if "form_data" in parameters:
             form_data = parameters["form_data"]
         onComplete = parameters.get("onComplete", lambda: console.info("PUT") if window.PhanterPWA.DEBUG else "")
+        onError = parameters.get("onError", None)
         if "headers" in parameters:
             if parameters["headers"] is not None:
                 for x in parameters["headers"]:
@@ -267,7 +271,7 @@ class ApiServer():
         url = "{0}/{1}".format(self.remote_address, self._process_args(url_args))
         def _after_error(data, ajax_status):
             window.PhanterPWA.ProgressBar.removeEventProgressBar("PUT_" + date_stamp)
-            self.on_ajax_error(data, ajax_status)
+            self.on_ajax_error(data, ajax_status, onError)
         __pragma__('jsiter')
         ajax_param = {
             'url': url,
@@ -373,7 +377,7 @@ class ApiServer():
                     "onComplete": onComplete
                 })
 
-    def on_ajax_error(self, data, status):
+    def on_ajax_error(self, data, status, onError):
         json = data.responseJSON
         message = I18N("Unexpected error!", **{"_pt-br": "Erro inesperado!"})
         reasons = None
@@ -399,7 +403,10 @@ class ApiServer():
                         )
                 window.PhanterPWA.open_code_way(data.status, window.PhanterPWA.Request, window.PhanterPWA.Response, reasons)
         else:
-            window.PhanterPWA.flash(**{'html': message})
+            if callable(onError):
+                onError(data, status)
+            else:
+                window.PhanterPWA.flash(**{'html': message})
 
 
 __pragma__('nokwargs')
