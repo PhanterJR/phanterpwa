@@ -579,7 +579,7 @@ class Auth(web.RequestHandler):
                         'code': 400,
                         'message': 'Invalid mobile number',
                         'i18n': {
-                            'message': self.T('Invalid password or email')
+                            'message': self.T('Invalid mobile number')
                         }
                     })
                 q_user = self.DALDatabase(self.DALDatabase.auth_user.fone_number == fone_number).select().first()
@@ -769,13 +769,13 @@ class Auth(web.RequestHandler):
                                 if self.projectConfig["PROJECT"]["debug"]:
                                     self.logger_api.warning("TWO FACTOR CODE: {0}".format(two_factor_code))
                                 else:
-                                    self.logger_api.warning("SMS to '{0}' -> Activation Code: {1}".format(
+                                    self.logger_api.warning("SMS to '{0}' -> Two Factor Code: {1}".format(
                                         q_user.fone_number,
                                         two_factor_code
                                     ))
                                     e_sms.send()
                             except Exception as e:
-                                result = "SMS to '{0}' don't send! -> Error: {1} -> password: {2}".format(
+                                result = "SMS to '{0}' don't send! -> Error: {1} -> Two Factor Code: {2}".format(
                                     fone_number,
                                     e,
                                     two_factor_code
@@ -867,14 +867,14 @@ class Auth(web.RequestHandler):
                                 if self.projectConfig["PROJECT"]["debug"]:
                                     self.logger_api.warning("TWO FACTOR CODE: {0}".format(two_factor_code))
                                 else:
-                                    self.logger_api.warning("Email from '{0}' to '{1}' -> Activation Code: {2}".format(
+                                    self.logger_api.warning("Email from '{0}' to '{1}' -> Two Factor Code: {2}".format(
                                         self.projectConfig['EMAIL']['default_sender'],
                                         q_user.email,
                                         two_factor_code
                                     ))
                                     e_mail.send()
                             except Exception as e:
-                                result = "Email from '{0}' to '{1}' don't send! -> Error: {2} -> password: {3}".format(
+                                result = "Email from '{0}' to '{1}' don't send! -> Error: {2} -> Two Factor Code: {3}".format(
                                     self.projectConfig['EMAIL']['default_sender'],
                                     dict_arguments['email'],
                                     e,
@@ -1626,7 +1626,7 @@ class ChangeAccount(web.RequestHandler):
                         ))
                         e_mail.send()
                 except Exception as e:
-                    result = "Email from '{0}' to '{1}' don't send! -> Error: {2} -> password: {3}".format(
+                    result = "Email from '{0}' to '{1}' don't send! -> Error: {2} -> Activation Code: {3}".format(
                         self.projectConfig['EMAIL']['default_sender'], dict_arguments['email'], e, activation_code)
                     self.logger_api.error(result, exc_info=True)
                     message = "There was an error trying to send the email."
@@ -1702,13 +1702,13 @@ class ChangeAccount(web.RequestHandler):
                     if self.projectConfig["PROJECT"]["debug"]:
                         self.logger_api.warning("TWO FACTOR CODE: {0}".format(activation_code))
                     else:
-                        self.logger_api.warning("SMS to '{0}' -> Activation Code: {1}".format(
+                        self.logger_api.warning("SMS to '{0}' -> Two Factor Code: {1}".format(
                             new_fone_number,
                             activation_code
                         ))
                         e_sms.send()
                 except Exception as e:
-                    result = "SMS to '{0}' don't send! -> Error: {1} -> password: {2}".format(
+                    result = "SMS to '{0}' don't send! -> Error: {1} -> Two Factor Code: {2}".format(
                         new_fone_number,
                         e,
                         activation_code
@@ -1918,7 +1918,7 @@ class CreateAccount(web.RequestHandler):
                     'code': 400,
                     'message': 'Invalid mobile number',
                     'i18n': {
-                        'message': self.T('Invalid password or email')
+                        'message': self.T('Invalid mobile number')
                     }
                 })
         else:
@@ -2116,127 +2116,51 @@ class RequestAccount(web.RequestHandler):
     @check_public_csrf_token(form_identify="phanterpwa-form-request_password")
     def post(self, *args, **kargs):
         dict_arguments = {k: self.request.arguments.get(k)[0].decode('utf-8') for k in self.request.arguments}
-        result = FieldsDALValidateDictArgs(
-            dict_arguments,
-            Field(
-                'email',
-                'string',
-                requires=IS_EMAIL(
-                    dict_arguments.get('email', None), error_message="The email isn't valid.")),
-        )
-        r = result.validate()
-        if r:
-            message = 'The form has errors'
-
-            i18n_errors = {}
-            for x in result.errors:
-                tran = self.T(result.errors[x])
-                i18n_errors[x] = tran
-            self.set_status(400)
-            return self.write({
-                'status': 'Bad Request',
-                'code': 400,
-                'message': message,
-                'errors': result.errors,
-                'i18n': {
-                    'message': self.T(message),
-                    'errors': i18n_errors
-                }
-            })
-        else:
-            q_user = self.DALDatabase(self.DALDatabase.auth_user.email == dict_arguments['email']).select().first()
-            now = datetime.now()
-            t_expires = self.projectConfig['BACKEND'][self.app_name]['default_time_temporary_password_expire']
-            t_wait = self.projectConfig['BACKEND'][self.app_name]['timeout_to_resend_temporary_password_mail']
-            delta_time_wait = timedelta(seconds=t_expires)
-            if t_expires > t_wait:
-                delta_time_wait = timedelta(seconds=t_expires - t_wait)
-            if not q_user:
+        request_by_phone = False
+        if dict_arguments.get("mobile", False):
+            request_by_phone = True
+            fone_number = dict_arguments.get("mobile")
+            numbers = [str(x) for x in range(10)]
+            new_mobile = ""
+            for n in fone_number:
+                if n in numbers:
+                    new_mobile += n
+            email = "{0}.mobile@phanterpwa.com".format(new_mobile)
+            dict_arguments['email'] = email
+            dict_arguments['fone_number'] = new_mobile
+            if len(new_mobile) < 4 or len(new_mobile) > 15:
                 self.set_status(400)
                 return self.write({
                     'status': 'Bad Request',
                     'code': 400,
-                    'message': 'The user was not found',
-                    'i18n': {'message': self.T('The user was not found')}
-                })
-            elif q_user.timeout_to_resend_temporary_password_mail and\
-                now < (q_user.timeout_to_resend_temporary_password_mail - delta_time_wait):
-                t_delta = (q_user.timeout_to_resend_temporary_password_mail - delta_time_wait) - now
-                msg = "Please, wait approximately {time_next_attempt} to try again."
-                tna = int(t_delta.total_seconds())
-                message = msg.format(time_next_attempt=humanize_seconds(tna))
-                message_i18n = self.T(msg).format(time_next_attempt=humanize_seconds(tna, self.i18nTranslator))
-                self.set_status(400)
-                return self.write({
-                    'status': 'Bad Request',
-                    'code': 400,
-                    'message': message,
-                    'i18n': {'message': message_i18n}
+                    'message': 'Invalid mobile number',
+                    'i18n': {
+                        'message': self.T('Invalid mobile number')
+                    }
                 })
             else:
-                new_password = temporary_password()
-                self.Translator_email.direct_translation = self.phanterpwa_language
-                keys_formatter = dict(
-                    app_name=self.projectConfig['PROJECT']['name'],
-                    user_name="{0} {1}".format(q_user.first_name, q_user.last_name),
-                    password=new_password,
-                    time_expires=humanize_seconds(
-                        self.projectConfig['BACKEND'][self.app_name]['default_time_temporary_password_expire'],
-                        self.Translator_email
-                    ),
-                    copyright=interpolate(self.projectConfig['CONTENT_EMAILS']['copyright'], {'now': datetime.now().year}),
-                    link_to_your_page=self.projectConfig['CONTENT_EMAILS']['link_to_your_site']
-                )
-                email_password.text.formatter(keys_formatter)
-                text_email = email_password.text.html(
-                    minify=True,
-                    translate=True,
-                    formatter=keys_formatter,
-                    i18nInstance=self.Translator_email,
-                    dictionary=self.phanterpwa_language,
-                    do_not_translate=["\n", " ", "\n\n", "&nbsp;"],
-                    escape_string=False
-                )
-
-                html_email = email_password.html.html(
-                    minify=True,
-                    translate=True,
-                    formatter=keys_formatter,
-                    i18nInstance=self.Translator_email,
-                    dictionary=self.phanterpwa_language,
-                    do_not_translate=["\n", " ", "\n\n", "&nbsp;"],
-                    escape_string=False
-                )
-
-                e_mail = MailSender(
-                    self.projectConfig['EMAIL']['default_sender'],
-                    self.projectConfig['EMAIL']['password'],
-                    dict_arguments['email'],
-                    subject="Temporary Password Recovery",
-                    text_message=text_email,
-                    html_message=html_email,
-                    server=self.projectConfig['EMAIL']['server'],
-                    port=self.projectConfig['EMAIL']['port'],
-                    use_tls=self.projectConfig['EMAIL']['use_tls'],
-                    use_ssl=self.projectConfig['EMAIL']['use_ssl']
-                )
-                result = ""
-                try:
-                    if self.projectConfig["PROJECT"]["debug"]:
-                        self.logger_api.warning("TEMPORARY PASSWORD: {0}".format(new_password))
-                    else:
-                        self.logger_api.warning("Email from '{0}' to '{1}' -> Temporary Password Recovery: {2}".format(
-                            self.projectConfig['EMAIL']['default_sender'],
-                            dict_arguments['email'],
-                            new_password
-                        ))
-                        e_mail.send()
-                except Exception as e:
-                    result = "Email from '{0}' to '{1}' don't send! -> Error: {2} -> password: {3}".format(
-                        self.projectConfig['EMAIL']['default_sender'], dict_arguments['email'], e, new_password)
-                    self.logger_api.error(result, exc_info=True)
-                    message = "There was an error trying to send the email."
-                    message_i18n = self.T("There was an error trying to send the email.")
+                q_user = self.DALDatabase(self.DALDatabase.auth_user.fone_number == fone_number).select().first()
+                now = datetime.now()
+                t_expires = self.projectConfig['BACKEND'][self.app_name]['default_time_temporary_password_expire']
+                t_wait = self.projectConfig['BACKEND'][self.app_name]['timeout_to_resend_temporary_password_mail']
+                delta_time_wait = timedelta(seconds=t_expires)
+                if t_expires > t_wait:
+                    delta_time_wait = timedelta(seconds=t_expires - t_wait)
+                if not q_user:
+                    self.set_status(400)
+                    return self.write({
+                        'status': 'Bad Request',
+                        'code': 400,
+                        'message': 'The user was not found',
+                        'i18n': {'message': self.T('The user was not found')}
+                    })
+                elif q_user.timeout_to_resend_temporary_password_mail and\
+                    now < (q_user.timeout_to_resend_temporary_password_mail - delta_time_wait):
+                    t_delta = (q_user.timeout_to_resend_temporary_password_mail - delta_time_wait) - now
+                    msg = "Please, wait approximately {time_next_attempt} to try again."
+                    tna = int(t_delta.total_seconds())
+                    message = msg.format(time_next_attempt=humanize_seconds(tna))
+                    message_i18n = self.T(msg).format(time_next_attempt=humanize_seconds(tna, self.i18nTranslator))
                     self.set_status(400)
                     return self.write({
                         'status': 'Bad Request',
@@ -2245,26 +2169,239 @@ class RequestAccount(web.RequestHandler):
                         'i18n': {'message': message_i18n}
                     })
                 else:
-                    pass_hash = pbkdf2_sha512.hash("password{0}{1}".format(
-                        new_password, self.projectConfig['BACKEND'][self.app_name]['secret_key']))
-                    q_user.update_record(
-                        temporary_password_hash=pass_hash,
-                        temporary_password_expire=datetime.now() +
-                            timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['default_time_temporary_password_expire']),
-                        timeout_to_resend_temporary_password_mail=datetime.now() +
-                            timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['timeout_to_resend_temporary_password_mail'])
+                    new_password = temporary_password()
+                    self.Translator_sms.direct_translation = self.phanterpwa_language
+                    keys_formatter = dict(
+                        app_name=self.projectConfig['PROJECT']['name'],
+                        user_name="{0} {1}".format(q_user.first_name, q_user.last_name),
+                        password=new_password,
+                        time_expires=humanize_seconds(
+                            self.projectConfig['BACKEND'][self.app_name]['default_time_temporary_password_expire'],
+                            self.Translator_sms
+                        ),
+                        copyright=interpolate(self.projectConfig['CONTENT_EMAILS']['copyright'], {'now': datetime.now().year}),
+                        link_to_your_page=self.projectConfig['CONTENT_EMAILS']['link_to_your_site']
                     )
-                    self.DALDatabase.commit()
-                    message = 'An email was sent instructing you how to proceed to recover your account.'
-                    self.set_status(200)
+                    sms_password.text.formatter(keys_formatter)
+                    text_sms = sms_password.text.html(
+                        minify=True,
+                        translate=True,
+                        formatter=keys_formatter,
+                        i18nInstance=self.Translator_sms,
+                        dictionary=self.phanterpwa_language,
+                        do_not_translate=["\n", " ", "\n\n", "&nbsp;"],
+                        escape_string=False
+                    )
+                    if self.SMSSender:
+                        e_sms = self.SMSSender(
+                            q_user.fone_number,
+                            identify="request-password",
+                            text_message=text_sms,
+                            app_name=self.app_name,
+                            projectConfig=self.projectConfig
+                        )
+                    else:
+                        raise SyntaxError("The SMSSender is indefined")
+                    result = ""
+                    try:
+                        if self.projectConfig["PROJECT"]["debug"]:
+                            self.logger_api.warning("TEMPORARY PASSWORD: {0}".format(new_password))
+                        else:
+                            self.logger_api.warning("SMS to '{0}' -> Temporary Password Recovery: {2}".format(
+                                q_user.fone_number,
+                                new_password
+                            ))
+                            e_sms.send()
+                    except Exception as e:
+                        result = "SMS to '{0}' don't send! -> Error: {1} -> Temporary Password: {2}".format(
+                            fone_number,
+                            e,
+                            new_password
+                        )
+                        self.logger_api.error(result, exc_info=True)
+                        message = "There was an error trying to send the sms."
+                        message_i18n = self.T("There was an error trying to send the sms.")
+                        self.DALDatabase.rollback()
+                        self.set_status(400)
+                        return self.write({
+                            'status': 'Bad Request',
+                            'code': 400,
+                            'message': message,
+                            'i18n': {'message': message_i18n}
+                        })
+                    else:
+                        pass_hash = pbkdf2_sha512.hash("password{0}{1}".format(
+                            new_password, self.projectConfig['BACKEND'][self.app_name]['secret_key']))
+                        q_user.update_record(
+                            temporary_password_hash=pass_hash,
+                            temporary_password_expire=datetime.now() +
+                                timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['default_time_temporary_password_expire']),
+                            timeout_to_resend_temporary_password_mail=datetime.now() +
+                                timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['timeout_to_resend_temporary_password_mail'])
+                        )
+                        self.DALDatabase.commit()
+                        message = 'An email was sent instructing you how to proceed to recover your account.'
+                        self.set_status(200)
+                        return self.write({
+                            'status': 'OK',
+                            'code': 200,
+                            'message': message,
+                            'i18n': {
+                                'message': self.T(message)
+                            }
+                        })
+
+
+        else:
+            result = FieldsDALValidateDictArgs(
+                dict_arguments,
+                Field(
+                    'email',
+                    'string',
+                    requires=IS_EMAIL(
+                        dict_arguments.get('email', None), error_message="The email isn't valid.")),
+            )
+            r = result.validate()
+            if r:
+                message = 'The form has errors'
+
+                i18n_errors = {}
+                for x in result.errors:
+                    tran = self.T(result.errors[x])
+                    i18n_errors[x] = tran
+                self.set_status(400)
+                return self.write({
+                    'status': 'Bad Request',
+                    'code': 400,
+                    'message': message,
+                    'errors': result.errors,
+                    'i18n': {
+                        'message': self.T(message),
+                        'errors': i18n_errors
+                    }
+                })
+            else:
+                q_user = self.DALDatabase(self.DALDatabase.auth_user.email == dict_arguments['email']).select().first()
+                now = datetime.now()
+                t_expires = self.projectConfig['BACKEND'][self.app_name]['default_time_temporary_password_expire']
+                t_wait = self.projectConfig['BACKEND'][self.app_name]['timeout_to_resend_temporary_password_mail']
+                delta_time_wait = timedelta(seconds=t_expires)
+                if t_expires > t_wait:
+                    delta_time_wait = timedelta(seconds=t_expires - t_wait)
+                if not q_user:
+                    self.set_status(400)
                     return self.write({
-                        'status': 'OK',
-                        'code': 200,
-                        'message': message,
-                        'i18n': {
-                            'message': self.T(message)
-                        }
+                        'status': 'Bad Request',
+                        'code': 400,
+                        'message': 'The user was not found',
+                        'i18n': {'message': self.T('The user was not found')}
                     })
+                elif q_user.timeout_to_resend_temporary_password_mail and\
+                    now < (q_user.timeout_to_resend_temporary_password_mail - delta_time_wait):
+                    t_delta = (q_user.timeout_to_resend_temporary_password_mail - delta_time_wait) - now
+                    msg = "Please, wait approximately {time_next_attempt} to try again."
+                    tna = int(t_delta.total_seconds())
+                    message = msg.format(time_next_attempt=humanize_seconds(tna))
+                    message_i18n = self.T(msg).format(time_next_attempt=humanize_seconds(tna, self.i18nTranslator))
+                    self.set_status(400)
+                    return self.write({
+                        'status': 'Bad Request',
+                        'code': 400,
+                        'message': message,
+                        'i18n': {'message': message_i18n}
+                    })
+                else:
+                    new_password = temporary_password()
+                    self.Translator_email.direct_translation = self.phanterpwa_language
+                    keys_formatter = dict(
+                        app_name=self.projectConfig['PROJECT']['name'],
+                        user_name="{0} {1}".format(q_user.first_name, q_user.last_name),
+                        password=new_password,
+                        time_expires=humanize_seconds(
+                            self.projectConfig['BACKEND'][self.app_name]['default_time_temporary_password_expire'],
+                            self.Translator_email
+                        ),
+                        copyright=interpolate(self.projectConfig['CONTENT_EMAILS']['copyright'], {'now': datetime.now().year}),
+                        link_to_your_page=self.projectConfig['CONTENT_EMAILS']['link_to_your_site']
+                    )
+                    email_password.text.formatter(keys_formatter)
+                    text_email = email_password.text.html(
+                        minify=True,
+                        translate=True,
+                        formatter=keys_formatter,
+                        i18nInstance=self.Translator_email,
+                        dictionary=self.phanterpwa_language,
+                        do_not_translate=["\n", " ", "\n\n", "&nbsp;"],
+                        escape_string=False
+                    )
+
+                    html_email = email_password.html.html(
+                        minify=True,
+                        translate=True,
+                        formatter=keys_formatter,
+                        i18nInstance=self.Translator_email,
+                        dictionary=self.phanterpwa_language,
+                        do_not_translate=["\n", " ", "\n\n", "&nbsp;"],
+                        escape_string=False
+                    )
+
+                    e_mail = MailSender(
+                        self.projectConfig['EMAIL']['default_sender'],
+                        self.projectConfig['EMAIL']['password'],
+                        dict_arguments['email'],
+                        subject="Temporary Password Recovery",
+                        text_message=text_email,
+                        html_message=html_email,
+                        server=self.projectConfig['EMAIL']['server'],
+                        port=self.projectConfig['EMAIL']['port'],
+                        use_tls=self.projectConfig['EMAIL']['use_tls'],
+                        use_ssl=self.projectConfig['EMAIL']['use_ssl']
+                    )
+                    result = ""
+                    try:
+                        if self.projectConfig["PROJECT"]["debug"]:
+                            self.logger_api.warning("TEMPORARY PASSWORD: {0}".format(new_password))
+                        else:
+                            self.logger_api.warning("Email from '{0}' to '{1}' -> Temporary Password Recovery: {2}".format(
+                                self.projectConfig['EMAIL']['default_sender'],
+                                dict_arguments['email'],
+                                new_password
+                            ))
+                            e_mail.send()
+                    except Exception as e:
+                        result = "Email from '{0}' to '{1}' don't send! -> Error: {2} -> Temporary Password: {3}".format(
+                            self.projectConfig['EMAIL']['default_sender'], dict_arguments['email'], e, new_password)
+                        self.logger_api.error(result, exc_info=True)
+                        message = "There was an error trying to send the email."
+                        message_i18n = self.T("There was an error trying to send the email.")
+                        self.set_status(400)
+                        return self.write({
+                            'status': 'Bad Request',
+                            'code': 400,
+                            'message': message,
+                            'i18n': {'message': message_i18n}
+                        })
+                    else:
+                        pass_hash = pbkdf2_sha512.hash("password{0}{1}".format(
+                            new_password, self.projectConfig['BACKEND'][self.app_name]['secret_key']))
+                        q_user.update_record(
+                            temporary_password_hash=pass_hash,
+                            temporary_password_expire=datetime.now() +
+                                timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['default_time_temporary_password_expire']),
+                            timeout_to_resend_temporary_password_mail=datetime.now() +
+                                timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['timeout_to_resend_temporary_password_mail'])
+                        )
+                        self.DALDatabase.commit()
+                        message = 'An email was sent instructing you how to proceed to recover your account.'
+                        self.set_status(200)
+                        return self.write({
+                            'status': 'OK',
+                            'code': 200,
+                            'message': message,
+                            'i18n': {
+                                'message': self.T(message)
+                            }
+                        })
 
     def options(self, *args):
         self.set_status(200)
@@ -2392,7 +2529,7 @@ class ActiveAccount(web.RequestHandler):
                         ))
                         e_sms.send()
                 except Exception as e:
-                    result = "SMS to '{0}' don't send! -> Error: {1} -> password: {2}".format(
+                    result = "SMS to '{0}' don't send! -> Error: {1} -> Activation Code: {2}".format(
                         self.phanterpwa_current_user.fone_number,
                         e,
                         activation_code

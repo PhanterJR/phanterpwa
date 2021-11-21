@@ -1573,7 +1573,7 @@ class ModalRequestPassword(modal.Modal):
         if self.user_mobile_number:
             window.PhanterPWA.request_password(
                 jQuery("#phanterpwa-widget-input-input-request_password-csrf_token").val(),
-                jQuery("#phanterpwa-widget-input-input-request_password-email").val(),
+                jQuery("#phanterpwa-widget-input-input-request_password-mobile").val(),
                 callback=self.after_submit,
                 user_mobile_number=True
             )
