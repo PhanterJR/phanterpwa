@@ -155,10 +155,6 @@ include phanterpwa/interface/Admin/temp/extends_mtime_components.json
 include phanterpwa/interface/Admin/temp/extends_mtime_scaffold_app.json
 include phanterpwa/interface/Admin/temp/extends_mtime_sindfa.json
 include phanterpwa/interface/Admin/temp/phanterpwa_modules_mtime.json
-include phanterpwa/interface/Admin/temp/project_config_admin.json
-include phanterpwa/interface/Admin/temp/project_config_components.json
-include phanterpwa/interface/Admin/temp/project_config_scaffold_app.json
-include phanterpwa/interface/Admin/temp/project_config_sindfa.json
 include phanterpwa/interface/Admin/temp/statics_mtime_admin.json
 include phanterpwa/interface/Admin/temp/statics_mtime_components.json
 include phanterpwa/interface/Admin/temp/statics_mtime_scaffold_app.json
