@@ -917,6 +917,15 @@ class Auth(web.RequestHandler):
                                 })
 
                     else:
+                        if role != "root":
+                            self.DALDatabase.auth_activity.insert(
+                                auth_user=q_user.id,
+                                request="login",
+                                activity="Logged!",
+                                date_activity=datetime.now()
+                            )
+                            self.DALDatabase.commit()
+
                         self.set_status(200)
                         return self.write({
                             'status': 'OK',
@@ -1085,6 +1094,69 @@ class Auth(web.RequestHandler):
                     })
 
 
+class Activity(web.RequestHandler):
+    """
+        url: 'api/auth/activity/'
+    """
+
+    def initialize(self, app_name, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
+        self.app_name = app_name
+        self.projectConfig = projectConfig
+        self.DALDatabase = DALDatabase
+        self.i18nTranslator = i18nTranslator
+        if logger_api:
+            self.logger_api = logger_api
+        if i18nTranslator:
+            self.T = i18nTranslator.T
+        self.set_header("Access-Control-Allow-Origin", "*")
+        self.set_header(
+            "Access-Control-Allow-Headers",
+            "".join([
+                "phanterpwa-language,",
+                "phanterpwa-application,",
+                "phanterpwa-application-version,",
+                "phanterpwa-client-token,",
+                "phanterpwa-authorization,",
+                "cache-control"
+            ])
+        )
+        self.set_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+        if self.request.headers.get("phanterpwa-language"):
+            self.phanterpwa_language = self.request.headers.get("phanterpwa-language")
+        else:
+            self.phanterpwa_language = browser_language(self.request.headers.get("Accept-Language"))
+        if self.i18nTranslator:
+            self.i18nTranslator.direct_translation = self.phanterpwa_language
+        self.phanterpwa_user_agent = str(self.request.headers.get('User-Agent'))
+        self.phanterpwa_remote_ip = self.request.headers.get("X-Real-IP") or \
+            self.request.headers.get("X-Forwarded-For") or \
+            self.request.remote_ip
+
+    def check_origin(self, origin):
+        return True
+
+    def options(self, *args):
+        self.set_status(200)
+        self.write({"status": "OK"})
+
+    @check_client_token()
+    @check_user_token()
+    def get(self, *args):
+        id_user = self.phanterpwa_current_user.id
+        db = self.DALDatabase
+        r_activity = db(db.auth_activity.auth_user == id_user).select(orderby=~db.auth_activity.id, limitby=(0, 100))
+        self.set_status(200)
+        self.write({
+            'status': 'OK',
+            'code': 200,
+            'message': 'Activity list',
+            'data': json.loads(r_activity.as_json()),
+            'i18n': {
+                'message': self.T('Activity list')
+            }
+        })
+
+
 class TwoFactor(web.RequestHandler):
     """
         url: '/api/auth/two-factor/<authorization_url>'
@@ -1221,7 +1293,14 @@ class TwoFactor(web.RequestHandler):
                             ).delete()
                     self.DALDatabase.commit()
                     user_image = PhanterpwaGalleryUserImage(q_user.id, self.DALDatabase, self.projectConfig)
-
+                    if role != "root":
+                        self.DALDatabase.auth_activity.insert(
+                            auth_user=q_user.id,
+                            request="two-factor",
+                            activity="Logged!",
+                            date_activity=datetime.now()
+                        )
+                        self.DALDatabase.commit()
                     self.set_status(200)
                     return self.write({
                         'status': 'OK',

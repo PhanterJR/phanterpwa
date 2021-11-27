@@ -2479,6 +2479,18 @@ class Profile(gatehandler.Handler):
                                         ),
                                         _class="p-col w1p100"
                                     ),
+                                    DIV(
+                                        HR(),
+                                        H2(I18N("Your Activity")),
+                                        DIV(
+                                            DIV(
+                                                preloaders.android,
+                                                _style="text-align:center; overflow: hidden;"
+                                            ),
+                                            _id="user_activity_wrapper"
+                                        ),
+                                        _class="p-col w1p100"
+                                    ),
                                     _class="p-row"
                                 ),
                                 _class="e-padding_20"
@@ -2500,6 +2512,7 @@ class Profile(gatehandler.Handler):
 
         self.reload()
         self.get_active_sessions()
+        self.get_activity()
 
     def after_submit(self, data, ajax_status):
         if ajax_status == "success":
@@ -2706,6 +2719,40 @@ class Profile(gatehandler.Handler):
         )
         self.Modal.open()
         forms.SignForm("#form-change_account", after_sign=lambda: forms.ValidateForm("#form-change_account"))
+
+    def get_activity(self):
+        window.PhanterPWA.GET(
+            "api",
+            "auth",
+            "activity",
+            onComplete=self._after_get_activity,
+        )
+
+    def _after_get_activity(self, data, ajax_status):
+        if ajax_status == "success":
+            json = data.responseJSON
+            if json.data is not None and json.data is not js_undefined:
+                MyTable = Table(
+                    "activity_table"
+                )
+                cont = 0
+                for x in json.data:
+                    cont += 1
+                    date_created = __new__(Date(x.date_activity))
+                    date_created = date_created.toLocaleDateString(
+                        window.PhanterPWA.I18N.load_storage(), {
+                            "year": "numeric",
+                            "month": "2-digit",
+                            "day": "numeric"
+                        }
+                    )
+                    activity = x.activity
+                    MyTable.append(
+                        TableData(
+                            "data_activity_{0}".format(x.id),
+                            date_created, activity, drag_and_drop=False)
+                    )
+                MyTable.html_to("#user_activity_wrapper")
 
 
 class Oauth(gatehandler.Handler):
