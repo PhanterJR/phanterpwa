@@ -959,10 +959,10 @@ class Autocomplete(Widget):
                 "_id": "phanterpwa-widget-autocomplete-input-{0}".format(identifier),
                 "_value": self._alias_value,
                 "_placeholder": self._placeholder,
-                "_disabled": "disabled",
                 "_data-validators": JSON.stringify(self._validator),
                 "_data-form": self._form,
-                "_name": self._name
+                "_name": self._name,
+                "_tabindex": "0"
             }),
             label,
             DIV(
@@ -974,7 +974,6 @@ class Autocomplete(Widget):
                 I(_class="fas fa-check"),
                 _class="phanterpwa-widget-check"
             ),
-            DIV(_class="phanterpwa-widget-autocomplete-touchpad", _tabindex="0"),
             self._xml_select,
             DIV(
                 self.get_message_error(),
@@ -1189,7 +1188,7 @@ class Autocomplete(Widget):
             p.addClass("has_value")
         else:
             p.removeClass("has_value")
-        p.find("input").trigger("keyup")
+        p.find("input").focus()
 
     def _on_click_label(self, el):
         el = jQuery(el)
@@ -1230,14 +1229,14 @@ class Autocomplete(Widget):
         if p.hasClass("focus"):
             p.removeClass("focus")
             p.removeClass("pre_focus")
-            if self.modal is not None and self.modal is not js_undefined:
-                if callable(self.modal.close):
-                    self.modal.close()
+            # if self.modal is not None and self.modal is not js_undefined:
+            #     if callable(self.modal.close):
+            #         self.modal.close()
         else:
             if stat_modal != "enabled":
-                jQuery(".phanterpwa-widget-autocomplete-wrapper").removeClass("focus").removeClass("pre_focus")
+                jQuery(".phanterpwa-widget-select-wrapper").removeClass("focus").removeClass("pre_focus")
                 p.addClass("focus")
-                setTimeout(lambda: self.open_modal(p), 30)
+                # setTimeout(lambda: self.open_modal(p), 30)
         self._check_value(el)
 
     def _remove_focus(self, el):
@@ -1336,18 +1335,28 @@ class Autocomplete(Widget):
     def _binds(self):
         target = jQuery(self.target_selector)
         self._add_div_animation(target)
-        target.find(".phanterpwa-widget-autocomplete-touchpad").off("click.phanterpwa-event-input_materialize").on(
-            "click.phanterpwa-event-input_materialize",
+
+        target.find("input").off("focus.phanterpwa-event-input_materialize").on(
+            "focus.phanterpwa-event-input_materialize",
             lambda: self._switch_focus(this)
         )
-        target.find(".phanterpwa-widget-autocomplete-touchpad").off("focus.phanterpwa-event-input_materialize").on(
-            "focus.phanterpwa-event-input_materialize",
-            lambda: self._switch_pre_focus(this)
-        )
-        target.find(".phanterpwa-widget-autocomplete-touchpad").off("focusout.phanterpwa-event-input_materialize").on(
+        target.find("input").off("focusout.phanterpwa-event-input_materialize").on(
             "focusout.phanterpwa-event-input_materialize",
-            lambda: self._switch_pre_focus(this)
+            lambda: self._switch_focus(this)
         )
+
+        # target.find(".phanterpwa-widget-autocomplete-touchpad").off("click.phanterpwa-event-input_materialize").on(
+        #     "click.phanterpwa-event-input_materialize",
+        #     lambda: self._switch_focus(this)
+        # )
+        # target.find(".phanterpwa-widget-autocomplete-touchpad").off("focus.phanterpwa-event-input_materialize").on(
+        #     "focus.phanterpwa-event-input_materialize",
+        #     lambda: self._switch_pre_focus(this)
+        # )
+        # target.find(".phanterpwa-widget-autocomplete-touchpad").off("focusout.phanterpwa-event-input_materialize").on(
+        #     "focusout.phanterpwa-event-input_materialize",
+        #     lambda: self._switch_pre_focus(this)
+        # )
         target.find("input").off("change.phanterpwa-event-input_materialize").on(
             "change.phanterpwa-event-input_materialize",
             lambda: self._check_value(this)
@@ -1356,10 +1365,11 @@ class Autocomplete(Widget):
             "click.phanterpwa-event-input_materialize",
             lambda: target.find(".phanterpwa-widget-autocomplete-touchpad").trigger("click")
         )
-        target.find(".phanterpwa-widget-autocomplete-touchpad").off("keydown.open_by_key").on(
-            "keydown.open_by_key",
+        target.find("input").off("keyup.open_by_key").on(
+            "keyup.open_by_key",
             lambda event: self._open_by_key(event, this)
         )
+
     def _on_modal_keypress(self, event):
         code = event.keyCode or event.which
         console.log(code)
@@ -1370,14 +1380,7 @@ class Autocomplete(Widget):
         p = jQuery(el).parent()
         stat_modal = jQuery(
             "#phanterpwa-widget-autocomplete-input-{0}".format(self.identifier)).attr("phanterpwa-widget-pseudomodal")
-        if code == 40:
-            event.preventDefault()
-            #self.open_modal(p)
-            if stat_modal != "enabled":
-                jQuery(".phanterpwa-widget-autocomplete-wrapper").removeClass("focus").removeClass("pre_focus")
-                p.addClass("focus")
-                setTimeout(lambda: self.open_modal(p), 30)
-        elif code == 27:
+        if code == 27:
             p.addClass("pre_focus")
             if self.modal is not None and self.modal is not js_undefined:
                 if callable(self.modal.close):
@@ -1390,7 +1393,13 @@ class Autocomplete(Widget):
             if self.modal is not None and self.modal is not js_undefined:
                 if callable(self.modal.close):
                     self.modal.close()
-        self._check_value(el)
+        elif str(code).isdigit():
+            event.preventDefault()
+            #self.open_modal(p)
+            if stat_modal != "enabled":
+                p.addClass("focus")
+                setTimeout(lambda: self.open_modal(p), 30)
+        # self._check_value(el)
 
     def set_on_click_new_button(self, value):
         if callable(value):
@@ -1438,13 +1447,7 @@ class Autocomplete(Widget):
                 "click.option_select_modal_content",
                 lambda: self._add_new_option(this)
             )
-        jQuery(
-            jQuery(
-                ".phanterpwa-component-pseudomodal-content"
-            ).find(
-                ".phanterpwa-widget-autocomplete-li-option"
-            )[0]
-        ).focus()
+
 
     def start(self):
         self._binds()

@@ -395,7 +395,7 @@ class FormWidget(helpers.XmlConstructor):
                     _class="data_view",
                     form=self.table_name,
                 )
-            elif self._widget_type == "reference" or self._widget_type == "select":
+            elif self._widget_type == "reference" or self._widget_type == "select" or self._widget_type == "autocomplete":
                 va = ""
                 for x in self.json_widget['data_set']:
                     if x[0] == self._value:
@@ -499,7 +499,20 @@ class FormWidget(helpers.XmlConstructor):
                     form=self.table_name,
                     validators=self.validators
                 )
-            
+
+            elif self._widget_type == "autocomplete":
+                w = widgets.Autocomplete(
+                    "{0}-{1}".format(self.table_name, self.input_name),
+                    label=self.json_widget['label'],
+                    name=self.input_name,
+                    editable=self._editable,
+                    can_empty=self._can_empty,
+                    value=self._value,
+                    data_set=self.json_widget['data_set'],
+                    form=self.table_name,
+                    validators=self.validators
+                )
+
             elif self._widget_type == "list_string":
                 ds = self.json_widget.get('data_set', [])
                 w = widgets.ListString(

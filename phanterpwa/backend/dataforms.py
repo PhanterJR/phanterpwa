@@ -355,6 +355,8 @@ class WidgetFromFieldDALFromTableDAL():
                 json_field['value'] = default
                 json_field['type'] = 'reference'
                 json_field['data_set'] = data_ref_table_formated
+                if "type" in self.phanterpwa:
+                    json_field["type"] = self.phanterpwa["type"]
 
             elif (t == "datetime") or\
                     (t == "date") or\
@@ -493,6 +495,8 @@ class WidgetFromFieldDALFromTableDAL():
                         json_field["mask"] = self.phanterpwa["mask"]
                     if "type" in self.phanterpwa:
                         json_field["type"] = self.phanterpwa["type"]
+                    if "widget" in self.phanterpwa:
+                        json_field["widget"] = self.phanterpwa["widget"]
                     if "cutter" in self.phanterpwa:
                         json_field["cutter"] = self.phanterpwa["cutter"]
                     if "width" in self.phanterpwa:
@@ -747,6 +751,8 @@ class CustomField():
                 json_field['fields'] = self.db[ref_table].fields
                 json_field['data_set'] = data_ref_table_formated
                 json_field['editable'] = self.phanterpwa.get("editable", False)
+                if "type" in self.phanterpwa:
+                    json_field["type"] = self.phanterpwa["type"]
                 if json_field['editable']:
                     if 'reference_field' not in self.phanterpwa:
                         raise SyntaxError("".join(["You placed in '", self._field,
