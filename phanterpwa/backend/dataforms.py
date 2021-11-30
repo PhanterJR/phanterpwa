@@ -352,7 +352,7 @@ class WidgetFromFieldDALFromTableDAL():
                         json_field['reference_field'] = 'id'
                     json_field['reference_table'] = ref_table
                 json_field['label'] = FieldInst.label
-                json_field['value'] = default
+                json_field['value'] = self.phanterpwa.get("value", default)
                 json_field['type'] = 'reference'
                 json_field['data_set'] = data_ref_table_formated
                 if "type" in self.phanterpwa:
@@ -434,7 +434,7 @@ class WidgetFromFieldDALFromTableDAL():
                     json_field["validator_format"] = formato_saida
                 if self.simple_widget:
                     json_field['label'] = FieldInst.label
-                    json_field['value'] = default
+                    json_field['value'] = self.phanterpwa.get("value", default)
                     json_field['type'] = "string"
                     json_field['format'] = dformat
                     json_field['mask'] = str(dformat).replace(
@@ -460,7 +460,7 @@ class WidgetFromFieldDALFromTableDAL():
                         json_field["validators"] = new_validators
                 else:
                     json_field['label'] = FieldInst.label
-                    json_field['value'] = default
+                    json_field['value'] = self.phanterpwa.get("value", default)
                     json_field['type'] = FieldInst.type
                     json_field['format'] = dformat
                     json_field['mask'] = dformat
@@ -471,12 +471,12 @@ class WidgetFromFieldDALFromTableDAL():
                     default = self._record[FieldInst]
                 if FieldInst.type == "id":
                     json_field['label'] = FieldInst.label
-                    json_field['value'] = default
+                    json_field['value'] = self.phanterpwa.get("value", default)
                     json_field['type'] = 'id'
 
                 else:
                     json_field['label'] = FieldInst.label
-                    json_field['value'] = default
+                    json_field['value'] = self.phanterpwa.get("value", default)
                     json_field['type'] = FieldInst.type
 
                     if "format" in self.phanterpwa:
@@ -746,7 +746,7 @@ class CustomField():
                         data_ref_table_formated = data_ref_table
 
                 json_field['label'] = FieldInst.label
-                json_field['value'] = default
+                json_field['value'] = self.phanterpwa.get("value", default)
                 json_field['type'] = 'reference'
                 json_field['fields'] = self.db[ref_table].fields
                 json_field['data_set'] = data_ref_table_formated
@@ -841,23 +841,21 @@ class CustomField():
                     json_field["validator_format"] = formato_saida
 
                 json_field['label'] = FieldInst.label
-                json_field['value'] = default
+                json_field['value'] = self.phanterpwa.get("value", default)
                 json_field['type'] = FieldInst.type
                 json_field['format'] = dformat
                 json_field['mask'] = dformat
 
             else:
                 default = FieldInst.default
-                if "value" in self.phanterpwa:
-                    default = self.phanterpwa["value"]
                 if FieldInst.type == "id":
                     json_field['label'] = FieldInst.label
-                    json_field['value'] = default
+                    json_field['value'] = self.phanterpwa.get("value", default)
                     json_field['type'] = 'id'
 
                 else:
                     json_field['label'] = FieldInst.label
-                    json_field['value'] = default
+                    json_field['value'] = self.phanterpwa.get("value", default)
                     json_field['type'] = FieldInst.type
 
                     if "format" in self.phanterpwa:
@@ -1116,7 +1114,7 @@ class FormFromTableDAL():
             "table": self.table._tablename,
             "id": self.record_id,
             "data_view": self._data_view,
-            "widgets": self.json_widgets
+            "widgets": self.json_widgets,
         }
         self._widgets = dict()
         section = dict()
