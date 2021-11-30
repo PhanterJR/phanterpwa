@@ -245,7 +245,6 @@ class Valider():
             self.tests[validate_name] = "Fail"
             is_not_valid = False
             regex = __new__(RegExp(validate_name[6:]))
-
             if value_for_validate.match(regex) is not None:
                 validate_test_pass.append(True)
                 self.tests[validate_name] = "Pass"

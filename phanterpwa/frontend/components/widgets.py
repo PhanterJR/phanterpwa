@@ -9,7 +9,7 @@ __pragma__('alias', "jQuery", "$")
 __pragma__('skip')
 
 # it is ignored on transcrypt
-window = jQuery = console = Array = document = localStorage = M = RegExp = setTimeout =\
+window = jQuery = console = Array = document = localStorage = M = RegExp = setTimeout = String = \
     sessionStorage = this = FileReader = JSON = js_undefined = navigator = __new__ = Date = 0
 
 __pragma__('noskip')
@@ -34,6 +34,7 @@ TD = helpers.XmlConstructor.tagger("td", False)
 TR = helpers.XmlConstructor.tagger("tr", False)
 SCRIPT = helpers.XmlConstructor.tagger("script", False)
 TABLE = helpers.XmlConstructor.tagger("table", False)
+STRONG = helpers.XmlConstructor.tagger("strong", False)
 
 __pragma__('kwargs')
 
@@ -948,12 +949,10 @@ class Autocomplete(Widget):
             wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " has_icon")
         if self._value is not "":
             wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " has_value")
-        select = SELECT(_class="phanterpwa-widget-autocomplete-select", _name=self._name)
+
         table = TABLE(_class="phanterpwa-widget-autocomplete-options-wrapper")
         self._xml_modal = table
-        self._xml_select = select
-        self._create_xml_select()
-        self._create_xml_modal()
+        # self._create_xml_modal()
         html = DIV(
             INPUT(**{
                 "_id": "phanterpwa-widget-autocomplete-input-{0}".format(identifier),
@@ -974,7 +973,6 @@ class Autocomplete(Widget):
                 I(_class="fas fa-check"),
                 _class="phanterpwa-widget-check"
             ),
-            self._xml_select,
             DIV(
                 self.get_message_error(),
                 _class="phanterpwa-widget-message_error phanterpwa-widget-autocomplete-message_error"
@@ -1032,137 +1030,64 @@ class Autocomplete(Widget):
             self._data = new_data
             self._data_dict = data
 
-    def _create_xml_select(self):
-        has_default = False
-        select = SELECT(**{"_class": "phanterpwa-widget-autocomplete-select", "_name": self._name})
-        if self._data is not []:
-            for vdata in self._data:
-                if self._value is not "":
-                    if vdata[0] == self._value:
-                        has_default = True
-                        select.append(OPTION(vdata[1], _value=vdata[0], _selected="selected"))
-                    else:
-                        select.append(OPTION(vdata[1], _value=vdata[0]))
-                else:
-                    select.append(OPTION(vdata[1], _value=vdata[0]))
-            if self._can_empty:
-                if self._placeholder is not None:
-                    select.insert(0, OPTION(
-                        self._placeholder,
-                        _value="",
-                        _selected="selected" if not has_default else None))
-                else:
-                    select.insert(0, OPTION(
-                        "",
-                        _value="",
-                        _selected="selected" if not has_default else None))
-        self._xml_select = select
-
-    def _create_xml_modal(self):
+    def _create_xml_modal(self, value):
         table = TABLE(_class="phanterpwa-widget-autocomplete-options-wrapper")
+        self._value = value
+        self._first_value = ""
         if self._data is not []:
-            if self._can_empty:
-                if self._value is "":
-                    icon_empty = DIV(self._icon_option_selected, _class="phanterpwa-widget-autocomplete-li-icon")
-                else:
-                    icon_empty = DIV(self._icon_option, _class="phanterpwa-widget-autocomplete-li-icon")
+            # if self._can_empty:
+            #     if self._value is "":
+            #         icon_empty = DIV(self._icon_option_selected, _class="phanterpwa-widget-autocomplete-li-icon")
+            #     else:
+            #         icon_empty = DIV(self._icon_option, _class="phanterpwa-widget-autocomplete-li-icon")
 
-                table.append(TR(TD(SPAN(I18N("Empty")),
-                    icon_empty, **{
-                        "_data-value": "",
-                        "_data-target": "phanterpwa-widget-autocomplete-input-{0}".format(self.identifier),
-                        "_data-text": "",
-                        "_tabindex": "0",
-                        "_class": "phanterpwa-widget-autocomplete-li-option empty"
-                })))
-            for vdata in self._data:
-                if self._value is not "":
-                    if vdata[0] == self._value:
-                        table.append(TR(TD(SPAN(vdata[1]),
-                            DIV(self._icon_option_selected, _class="phanterpwa-widget-autocomplete-li-icon"), **{
-                                "_data-value": vdata[0],
-                                "_data-text": vdata[1],
-                                "_data-target": "phanterpwa-widget-autocomplete-input-{0}".format(self.identifier),
-                                "_tabindex": "0",
-                                "_class": "phanterpwa-widget-autocomplete-li-option selected"
-                        })))
+            #     table.append(TR(TD(SPAN(I18N("Empty")),
+            #         icon_empty, **{
+            #             "_data-value": "",
+            #             "_data-target": "phanterpwa-widget-autocomplete-input-{0}".format(self.identifier),
+            #             "_data-text": "",
+            #             "_tabindex": "0",
+            #             "_class": "phanterpwa-widget-autocomplete-li-option empty"
+            #     })))
+            if value is not js_undefined:
+                for vdata in self._data:
+                    if str(vdata[1]).upper().startswith(value.upper()) and value != "":
+                        plain_value = str(vdata[1])[len(value):]
+                        strongest_value = SPAN(STRONG(str(vdata[1])[0:len(value)]), plain_value)
+                        if self._first_value == "":
+                            self._first_value = vdata[1]
 
-                    else:
-                        table.append(TR(TD(SPAN(vdata[1]),
-                            DIV(self._icon_option, _class="phanterpwa-widget-autocomplete-li-icon"), **{
-                                "_data-value": vdata[0],
-                                "_data-text": vdata[1],
-                                "_data-target": "phanterpwa-widget-autocomplete-input-{0}".format(self.identifier),
-                                "_tabindex": "0",
-                                "_class": "phanterpwa-widget-autocomplete-li-option"
-                        })))
-                else:
-                    table.append(TR(TD(SPAN(vdata[1]),
-                        DIV(self._icon_option, _class="phanterpwa-widget-autocomplete-li-icon"), **{
-                            "_data-value": vdata[0],
-                            "_data-text": vdata[1],
-                            "_data-target": "phanterpwa-widget-autocomplete-input-{0}".format(self.identifier),
-                            "_tabindex": "0",
-                            "_class": "phanterpwa-widget-autocomplete-li-option"
-                    })))
-            icon_placeholder = DIV(
-                DIV(
-                    DIV(self._icon_plus, _class="link phanterpwa-widget-autocomplete-li-icon_plus"),
-                    DIV(
-                        INPUT(_class="phanterpwa-widget-autocomplete-li-input"),
-                        DIV(self._icon_confirm, _class="phanterpwa-widget-autocomplete-li-icon_confirm link"),
-                        _class="phanterpwa-widget-autocomplete-li-input-editable"
-                    ),
-                    _class="phanterpwa-widget-autocomplete-li-input-editable-wrapper"
-                ),
-                _class="phanterpwa-widget-autocomplete-li-icon_plus-wrapper"
-            )
+                        if self._value is not "":
+                            if vdata[1] == self._value:
+                                table.append(TR(TD(strongest_value,
+                                    DIV(self._icon_option_selected, _class="phanterpwa-widget-autocomplete-li-icon"), **{
+                                        "_data-value": vdata[0],
+                                        "_data-text": vdata[1],
+                                        "_data-target": "phanterpwa-widget-autocomplete-input-{0}".format(self.identifier),
+                                        "_tabindex": "0",
+                                        "_class": "phanterpwa-widget-autocomplete-li-option selected"
+                                })))
 
-            if self._placeholder is not None:
-                if self._editable:
-                    table.insert(0, TR(TD(SPAN(self._placeholder, _class="phanterpwa-widget-autocomplete-placeholder"),
-                        icon_placeholder, **{
-                            "_data-value": "",
-                            "_data-target": "phanterpwa-widget-autocomplete-input-{0}".format(self.identifier),
-                            "_data-text": "",
-                            "_tabindex": "0",
-                            "_class": "phanterpwa-widget-autocomplete-li-title has_editable"
-                    })))
-                else:
-                    table.insert(0, TR(TD(SPAN(self._placeholder, _class="phanterpwa-widget-autocomplete-placeholder"),
-                        "", **{
-                            "_data-value": "",
-                            "_data-target": "phanterpwa-widget-autocomplete-input-{0}".format(self.identifier),
-                            "_data-text": "",
-                            "_tabindex": "0",
-                            "_class": "phanterpwa-widget-autocomplete-li-title"
-                    })))
-            else:
-                if self._editable:
-                    table.insert(0, TR(TD(SPAN(self._placeholder, _class="phanterpwa-widget-autocomplete-placeholder"),
-                        icon_placeholder, **{
-                            "_data-value": "",
-                            "_data-target": "phanterpwa-widget-autocomplete-input-{0}".format(self.identifier),
-                            "_data-text": "",
-                            "_tabindex": "0",
-                            "_class": "phanterpwa-widget-autocomplete-li-title has_editable"
-                    })))
+                            else:
+                                table.append(TR(TD(strongest_value,
+                                    DIV(self._icon_option, _class="phanterpwa-widget-autocomplete-li-icon"), **{
+                                        "_data-value": vdata[0],
+                                        "_data-text": vdata[1],
+                                        "_data-target": "phanterpwa-widget-autocomplete-input-{0}".format(self.identifier),
+                                        "_tabindex": "0",
+                                        "_class": "phanterpwa-widget-autocomplete-li-option"
+                                })))
+                        else:
+                            table.append(TR(TD(strongest_value,
+                                DIV(self._icon_option, _class="phanterpwa-widget-autocomplete-li-icon"), **{
+                                    "_data-value": vdata[0],
+                                    "_data-text": vdata[1],
+                                    "_data-target": "phanterpwa-widget-autocomplete-input-{0}".format(self.identifier),
+                                    "_tabindex": "0",
+                                    "_class": "phanterpwa-widget-autocomplete-li-option"
+                                }
+                            )))
         self._xml_modal = table
-
-    # def get_message_error(self):
-    #     if self._message_error is not None:
-    #         return self._message_error
-    #     else:
-    #         return ""
-
-    # def set_message_error(self, message_error):
-    #     jQuery("#{0}".format(self.identifier)).find(".phanterpwa-widget-message_error").html(message_error)
-    #     jQuery("#{0}".format(self.identifier)).addClass("has_error")
-    #     self._message_error
-
-    # def del_message_error(self):
-    #     self.set_message_error("")
-    #     jQuery("#{0}".format(self.identifier)).removeClass("has_error")
 
     def validate(self):
         if callable(self._validator):
@@ -1188,7 +1113,6 @@ class Autocomplete(Widget):
             p.addClass("has_value")
         else:
             p.removeClass("has_value")
-        p.find("input").focus()
 
     def _on_click_label(self, el):
         el = jQuery(el)
@@ -1209,35 +1133,42 @@ class Autocomplete(Widget):
             p.addClass("pre_focus")
 
     def open_modal(self, el):
+        value = jQuery(el).val()
+        if value is not js_undefined and value != "":
+            self._create_xml_modal(jQuery(el).val())
 
-        self.modal = PseudoModal(
-            "#phanterpwa-widget-autocomplete-input-{0}".format(self.identifier),
-            self._xml_modal,
-            on_close=lambda: self._after_modal_close(el),
-            width="100%",
-            z_index=self._z_index,
-            recalc_on_scroll=self._recalc_on_scroll
-        )
-        self.modal.start()
-        self._binds_modal_content()
+            self.modal = PseudoModal(
+                "#phanterpwa-widget-autocomplete-input-{0}".format(self.identifier),
+                self._xml_modal,
+                on_close=lambda: self._after_modal_close(el),
+                width="100%",
+                z_index=self._z_index,
+                recalc_on_scroll=self._recalc_on_scroll
+            )
+            self.modal.start()
+            self._binds_modal_content()
+        else:
+            if self.modal is not js_undefined:
+                self.modal.close()
+
+
 
     def _switch_focus(self, el):
         el = jQuery(el)
         p = el.parent()
         stat_modal = jQuery(
-            "#phanterpwa-widget-autocomplete-input-{0}".format(self.identifier)).attr("phanterpwa-widget-pseudomodal")
-        if p.hasClass("focus"):
-            p.removeClass("focus")
-            p.removeClass("pre_focus")
-            # if self.modal is not None and self.modal is not js_undefined:
-            #     if callable(self.modal.close):
-            #         self.modal.close()
-        else:
+            "#phanterpwa-widget-autocomplete-input-{0}".format(self.identifier)
+        ).attr("phanterpwa-widget-pseudomodal")
+        p.removeClass("has_error")
+        if el.js_is(":focus"):
             if stat_modal != "enabled":
-                jQuery(".phanterpwa-widget-select-wrapper").removeClass("focus").removeClass("pre_focus")
+                jQuery(".phanterpwa-widget-wrapper").removeClass("focus").removeClass("pre_focus")
                 p.addClass("focus")
-                # setTimeout(lambda: self.open_modal(p), 30)
+        else:
+            p.removeClass("focus")
         self._check_value(el)
+
+
 
     def _remove_focus(self, el):
         el = jQuery(el)
@@ -1361,45 +1292,49 @@ class Autocomplete(Widget):
             "change.phanterpwa-event-input_materialize",
             lambda: self._check_value(this)
         )
-        target.find("label").off("click.phanterpwa-event-input_materialize").on(
-            "click.phanterpwa-event-input_materialize",
-            lambda: target.find(".phanterpwa-widget-autocomplete-touchpad").trigger("click")
+        target.find("input").off("keypress.open_by_keypress").on(
+            "keypress.open_by_keypress",
+            lambda event: self._open_by_keypress(event, this)
         )
-        target.find("input").off("keyup.open_by_key").on(
-            "keyup.open_by_key",
-            lambda event: self._open_by_key(event, this)
+        target.find("input").off("keyup.open_by_keyup").on(
+            "keyup.open_by_keyup",
+            lambda event: self._open_by_keyup(event, this)
+        )
+        target.find("input").off("keydown.open_by_keydown").on(
+            "keydown.open_by_keydown",
+            lambda event: self._open_by_keydown(event, this)
         )
 
     def _on_modal_keypress(self, event):
         code = event.keyCode or event.which
-        console.log(code)
 
-    def _open_by_key(self, event, el):
+    def _open_by_keypress(self, event, el):
         code = event.keyCode or event.which
-        console.log(code)
         p = jQuery(el).parent()
-        stat_modal = jQuery(
-            "#phanterpwa-widget-autocomplete-input-{0}".format(self.identifier)).attr("phanterpwa-widget-pseudomodal")
-        if code == 27:
-            p.addClass("pre_focus")
-            if self.modal is not None and self.modal is not js_undefined:
-                if callable(self.modal.close):
-                    self.modal.close()
-        elif code == 9:
-            # if self.modal is not js_undefined:
-            #     self.modal.close()
-            p.removeClass("focus")
-            p.removeClass("pre_focus")
-            if self.modal is not None and self.modal is not js_undefined:
-                if callable(self.modal.close):
-                    self.modal.close()
-        elif str(code).isdigit():
-            event.preventDefault()
-            #self.open_modal(p)
-            if stat_modal != "enabled":
-                p.addClass("focus")
-                setTimeout(lambda: self.open_modal(p), 30)
+        if event.charCode:
+            p.addClass("focus")
+            setTimeout(lambda: self.open_modal(el), 30)
         # self._check_value(el)
+
+    def _open_by_keyup(self, event, el):
+        code = event.keyCode or event.which
+        p = jQuery(el).parent()
+        if code == 8 or code == 9:
+            p.addClass("focus")
+            setTimeout(lambda: self.open_modal(el), 30)
+
+    def _open_by_keydown(self, event, el):
+        code = event.keyCode or event.which
+        p = jQuery(el).parent()
+        if code == 9:
+            self._create_xml_modal(jQuery(el).val())
+            if self._first_value == "":
+                if not self._editable:
+                    jQuery(el).val("")
+            else:
+                jQuery(el).val(self._first_value)
+                if self.modal is not js_undefined:
+                    self.modal.close()
 
     def set_on_click_new_button(self, value):
         if callable(value):
