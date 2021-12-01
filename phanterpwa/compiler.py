@@ -285,8 +285,8 @@ class Compiler():
             with open(target_css, "w") as o:
                 o.write(new_css)
             os.unlink(join(dirname(main_file), "_compiler_sass_temp_file.sass"))
-        with open(main_file, "w", encoding="utf-8") as fw:
-            fw.write(new_text_to_save)
+        # with open(main_file, "w", encoding="utf-8") as fw:
+        #     fw.write(new_text_to_save)
 
     @staticmethod
     def target_by_relative_path(src_path, tgt_path, ext_src=None, ext_tgt=None, ignore_files=[], ignore_paths=[]):
