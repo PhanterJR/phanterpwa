@@ -332,6 +332,7 @@ class FormWidget(helpers.XmlConstructor):
         self.fmt = json_widget.get("format", None)
         self._cutter = json_widget.get("cutter", False)
         self._url = json_widget.get("url", None)
+        self._ajax_data_set = json_widget.get("ajax_data_set", False)
         self._nocache = json_widget.get("no-cache", False)
         self._width = json_widget.get("width", 190)
         self._height = json_widget.get("height", 200)
@@ -507,6 +508,7 @@ class FormWidget(helpers.XmlConstructor):
                     name=self.input_name,
                     editable=self._editable,
                     can_empty=self._can_empty,
+                    ajax_data_set=self._ajax_data_set,
                     value=self._value,
                     data_set=self.json_widget['data_set'],
                     form=self.table_name,

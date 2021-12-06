@@ -352,6 +352,12 @@ class Input(Widget):
     def start(self):
         self._binds()
 
+    def set_value(self, value):
+        el = jQuery("#phanterpwa-widget-input-input-{0}".format(self.identifier)).val(value)
+        self._value = value
+        self._check_value(el)
+        self.reload()
+
     def value(self):
         self._value = jQuery("#phanterpwa-widget-input-input-{0}".format(self.identifier)).val()
         return self._value
@@ -492,6 +498,11 @@ class Select(Widget):
                     self._alias_value = data[vdata]
             self._data = new_data
             self._data_dict = data
+
+    def set_new_data_set(self, data):
+        self._data_set(data)
+        self._create_xml_select()
+        self._create_xml_modal()
 
     def _create_xml_select(self):
         has_default = False
@@ -911,6 +922,7 @@ class Autocomplete(Widget):
         self._icon = parameters.get("icon", None)
         self._message_error = parameters.get("message_error", None)
         self._can_empty = parameters.get("can_empty", False)
+        self._ajax_url = parameters.get("ajax_data_set", False)
         self._validator = parameters.get("validators", None)
         self._wear = parameters.get("wear", "material")
         self._form = parameters.get("form", None)
@@ -1029,6 +1041,9 @@ class Autocomplete(Widget):
                     self._alias_value = data[vdata]
             self._data = new_data
             self._data_dict = data
+
+    def set_new_data_set(self, data):
+        self._data_set(data)
 
     def _create_xml_modal(self, value):
         table = TABLE(_class="phanterpwa-widget-autocomplete-options-wrapper")
@@ -1150,8 +1165,6 @@ class Autocomplete(Widget):
         else:
             if self.modal is not js_undefined:
                 self.modal.close()
-
-
 
     def _switch_focus(self, el):
         el = jQuery(el)
@@ -1292,10 +1305,10 @@ class Autocomplete(Widget):
             "change.phanterpwa-event-input_materialize",
             lambda: self._check_value(this)
         )
-        target.find("input").off("keypress.open_by_keypress").on(
-            "keypress.open_by_keypress",
-            lambda event: self._open_by_keypress(event, this)
-        )
+        # target.find("input").off("keyup.open_by_keypress").on(
+        #     "keyup.open_by_keypress",
+        #     lambda event: self._open_by_keyup(event, this)
+        # )
         target.find("input").off("keyup.open_by_keyup").on(
             "keyup.open_by_keyup",
             lambda event: self._open_by_keyup(event, this)
@@ -1305,23 +1318,43 @@ class Autocomplete(Widget):
             lambda event: self._open_by_keydown(event, this)
         )
 
-    def _on_modal_keypress(self, event):
-        code = event.keyCode or event.which
+    # def _on_modal_keypress(self, event):
+    #     code = event.keyCode or event.which
 
-    def _open_by_keypress(self, event, el):
-        code = event.keyCode or event.which
-        p = jQuery(el).parent()
-        if event.charCode:
-            p.addClass("focus")
-            setTimeout(lambda: self.open_modal(el), 30)
-        # self._check_value(el)
+    # def _open_by_keypress(self, event, el):
+    #     code = event.keyCode or event.which
+    #     p = jQuery(el).parent()
+    #     if event.charCode:
+    #         p.addClass("focus")
+    #         setTimeout(lambda: self.open_modal(el), 30)
+    #     # self._check_value(el)
 
     def _open_by_keyup(self, event, el):
         code = event.keyCode or event.which
         p = jQuery(el).parent()
-        if code == 8 or code == 9:
-            p.addClass("focus")
+        p.addClass("focus")
+        if self._ajax_url is not False:
+            formdata = __new__(FormData())
+            formdata.append(
+                "startswith",
+                self.value()
+            )
+            window.PhanterPWA.POST(
+                self._ajax_url,
+                form_data=formdata,
+                onComplete=lambda data, ajax_status: self._data_set_from_ajax(data, ajax_status, el)
+            )
+        else:
             setTimeout(lambda: self.open_modal(el), 30)
+
+    def _data_set_from_ajax(self, data, ajax_status, el):
+        if ajax_status == "success":
+            json = data.responseJSON
+            data = json.data_set
+            if data is not js_undefined:
+                data = list(data)
+                self.set_new_data_set(data)
+                self.open_modal(el)
 
     def _open_by_keydown(self, event, el):
         code = event.keyCode or event.which
@@ -1388,10 +1421,8 @@ class Autocomplete(Widget):
         self._binds()
 
     def value(self):
+        self._value = jQuery("#phanterpwa-widget-autocomplete-input-{0}".format(self.identifier)).val()
         return self._value
-
-    def alias_value(self):
-        return self._alias_value
 
 
 class MultSelect(Widget):
@@ -1551,6 +1582,12 @@ class MultSelect(Widget):
                     self._alias_value[str(vdata)] = data[vdata]
             self._data = new_data
             self._data_dict = data
+
+    def set_new_data_set(self, data):
+        self._data_set(data)
+        self._create_xml_values()
+        self._create_xml_modal()
+        self._create_xml_values()
 
     def _create_xml_values(self):
         values_op = CONCATENATE()

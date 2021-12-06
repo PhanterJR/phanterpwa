@@ -180,78 +180,86 @@ class AuthUser(application.Component):
                 first_name = self.auth_user.first_name
                 last_name = self.auth_user.last_name
                 role = I18N(self.auth_user.role)
-            self.xml_button_login = DIV(
-                DIV(
-                    DIV(
-                        DIV(
-                            IMG(
-                                _id="url_image_user",
-                                _src=user_image,
-                                _alt='user avatar'
-                            ),
-                            _class='cmp-bar_user-img'),
-                        _class='cmp-bar_user-img-container'),
+                complete_name = "{0} {1}".format(
+                    first_name,
+                    last_name
+                )
+            if jQuery("#toggle-cmp-bar_user").lenght == 1:
+                jQuery("#user_first_and_last_name_login").text(complete_name)
+                jQuery("#user_role_login").html(role)
+                src_image = jQuery("#url_image_user").attr("src")
+                if src_image != user_image:
+                    jQuery("#url_image_user").attr("src", user_image)
+            else:
+                self.xml_button_login = DIV(
                     DIV(
                         DIV(
                             DIV(
-                                "{0} {1}".format(
-                                    first_name,
-                                    last_name
+                                IMG(
+                                    _id="url_image_user",
+                                    _src=user_image,
+                                    _alt='user avatar'
                                 ),
-                                _id="user_first_and_last_name_login", _class='cmp-bar_user-name'
-                            ),
-                            DIV(role, _id="user_role_login", _class='cmp-bar_user-role'),
-                            _class='cmp-bar_user-name-role'),
-                        _class='cmp-bar_user-name-role-container'),
+                                _class='cmp-bar_user-img'),
+                            _class='cmp-bar_user-img-container'),
+                        DIV(
+                            DIV(
+                                DIV(
+                                    complete_name,
+                                    _id="user_first_and_last_name_login", _class='cmp-bar_user-name'
+                                ),
+                                DIV(role, _id="user_role_login", _class='cmp-bar_user-role'),
+                                _class='cmp-bar_user-name-role'),
+                            _class='cmp-bar_user-name-role-container'),
+                        DIV(
+                            DIV(
+                                DIV(_class="led"),
+                                _class="cmd-bar_user-expands"),
+                            _class="cmd-bar_user-expand-container"),
+                        _class="cmp-bar_user-info-container"),
+                    _id="toggle-cmp-bar_user",
+                    _class="cmp-bar_user-container black link wave_on_click waves-phanterpwa"
+                )
+
+                self.xml_button_login_options = CONCATENATE(
                     DIV(
                         DIV(
-                            DIV(_class="led"),
-                            _class="cmd-bar_user-expands"),
-                        _class="cmd-bar_user-expand-container"),
-                    _class="cmp-bar_user-info-container"),
-                _id="toggle-cmp-bar_user",
-                _class="cmp-bar_user-container black link wave_on_click waves-phanterpwa"
-            )
-
-            self.xml_button_login_options = CONCATENATE(
-                DIV(
-                    DIV(
-                        I(_class="fas fa-user-circle"),
-                        I18N("Profile", **{"_pt-br": "Perfil"}),
-                        **{"_phanterpwa-way": "profile",
-                            "_class": "option-label-menu"}
+                            I(_class="fas fa-user-circle"),
+                            I18N("Profile", **{"_pt-br": "Perfil"}),
+                            **{"_phanterpwa-way": "profile",
+                                "_class": "option-label-menu"}
+                        ),
+                        _id="component-auth_user-option-profile",
+                        _class='component-auth_user-option link wave_on_click waves-phanterpwa'
                     ),
-                    _id="component-auth_user-option-profile",
-                    _class='component-auth_user-option link wave_on_click waves-phanterpwa'
-                ),
-                DIV(
                     DIV(
-                        I(_class="fas fa-unlock"),
-                        I18N("Lock", **{"_pt-br": "Bloquear"}),
-                        **{"_phanterpwa-way": "lock",
-                            "_class": "option-label-menu"}
+                        DIV(
+                            I(_class="fas fa-unlock"),
+                            I18N("Lock", **{"_pt-br": "Bloquear"}),
+                            **{"_phanterpwa-way": "lock",
+                                "_class": "option-label-menu"}
+                        ),
+                        _id="component-auth_user-option-lock",
+                        _class='component-auth_user-option link wave_on_click waves-phanterpwa'
                     ),
-                    _id="component-auth_user-option-lock",
-                    _class='component-auth_user-option link wave_on_click waves-phanterpwa'
-                ),
-                DIV(
                     DIV(
-                        I(_class="fas fa-power-off"),
-                        I18N("Logout", **{"_pt-br": "Sair"}),
-                        _class="option-label-menu"
-                    ),
-                    _id="component-auth_user-option-logout",
-                    _class='component-auth_user-option link wave_on_click waves-phanterpwa'
+                        DIV(
+                            I(_class="fas fa-power-off"),
+                            I18N("Logout", **{"_pt-br": "Sair"}),
+                            _class="option-label-menu"
+                        ),
+                        _id="component-auth_user-option-logout",
+                        _class='component-auth_user-option link wave_on_click waves-phanterpwa'
+                    )
                 )
-            )
 
-            self.xml_button_login.html_to(self.element_target.find(
-                ".phanterpwa-component-auth_user-button-toggle"
-            ))
+                self.xml_button_login.html_to(self.element_target.find(
+                    ".phanterpwa-component-auth_user-button-toggle"
+                ))
 
-            self.xml_button_login_options.html_to(self.element_target.find(
-                ".phanterpwa-component-auth_user-button-toggle-options"
-            ))
+                self.xml_button_login_options.html_to(self.element_target.find(
+                    ".phanterpwa-component-auth_user-button-toggle-options"
+                ))
 
             self.element_target.find("#component-auth_user-option-logout").off("click.auth_user-option-logout").on(
                 "click.auth_user-option-logout",
@@ -2086,7 +2094,8 @@ class LeftBarAuthUserLogin(left_bar.LeftBarUserMenu):
             last_name = self.auth_user.last_name
             user_name = "{0} {1}".format(first_name, last_name)
             role = I18N(self.auth_user.role)
-        element.find("#phanterpwa-component-left_bar-url-imagem-user").attr("src", user_image)
+        if element.find("#phanterpwa-component-left_bar-url-imagem-user").attr("src") != user_image:
+            element.find("#phanterpwa-component-left_bar-url-imagem-user").attr("src", user_image)
         element.find("#phanterpwa-component-left_bar-name-user").text(user_name)
         jQuery("#phanterpwa-component-left_bar-submenu-button-logout").off("click.left_bar_buton_logout").on(
             "click.left_bar_buton_logout",

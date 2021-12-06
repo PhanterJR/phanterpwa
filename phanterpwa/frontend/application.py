@@ -228,11 +228,15 @@ class PhanterPWA():
                     l.append([x, I(_class="fas fa-at")])
             return l
 
-    def XWAY(self, *args, **kargs):
+    def _xway(self, *args, **kargs):
         all_args = self.ApiServer._process_args(args)
         url_vars = self.ApiServer._process_parameters(kargs)
         all_vars = self.ApiServer._serialize_vars(url_vars)
-        current_uri = "/#_phanterpwa:/{0}{1}".format(all_args, all_vars)
+        current_uri = "{0}{1}".format(all_args, all_vars)
+        return current_uri
+
+    def XWAY(self, *args, **kargs):
+        current_uri = "/#_phanterpwa:/{0}{1}".format(self._xway(*args, **kargs))
         return current_uri
 
     @staticmethod
@@ -1005,9 +1009,14 @@ class PhanterPWA():
         else:
             return None
 
+    def open_xway(self, *args, **kargs):
+        self.open_way(self._xway(*args, **kargs))
+
     def open_way(self, way):
         if way == self.get_current_way():
             self.open_current_way()
+        elif way == "" or way is None or way is js_undefined:
+            window.location = "#_phanterpwa:/404".format(way)
         else:
             window.location = "#_phanterpwa:/{0}".format(way)
 
@@ -1023,7 +1032,6 @@ class PhanterPWA():
         way = self._get_way_from_url_hash()
         self.Request = WayRequest()
         self.Request.open_way(way)
-        #self.open_way(self.get_current_way())
 
     def update_current_way(self):
         window.location.reload()
@@ -1361,7 +1369,7 @@ class WayRequest():
 
     def _open_way(self, way):
         self._process_way(way)
-        self._body_flag(self.gate, way)
+        self._body_flag(self.gate)
         last_way = window.PhanterPWA.get_current_way()
         self.last_way = last_way
         if self.gate in window.PhanterPWA.Gates:

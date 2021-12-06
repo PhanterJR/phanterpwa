@@ -517,6 +517,8 @@ class WidgetFromFieldDALFromTableDAL():
                 json_field["disabled"] = self.phanterpwa['disabled']
             if "editable" in self.phanterpwa:
                 json_field["editable"] = self.phanterpwa['editable']
+            if "ajax_data_set" in self.phanterpwa:
+                json_field["ajax_data_set"] = self.phanterpwa['ajax_data_set']
             for x in self.phanterpwa:
                 if x.startswith("_"):
                     json_field[x] = self.phanterpwa[x]
@@ -892,6 +894,8 @@ class CustomField():
                 json_field["disabled"] = self.phanterpwa['disabled']
             if "editable" in self.phanterpwa:
                 json_field["editable"] = self.phanterpwa['editable']
+            if "ajax_data_set" in self.phanterpwa:
+                json_field["ajax_data_set"] = self.phanterpwa['ajax_data_set']
             for x in self.phanterpwa:
                 if x.startswith("_"):
                     json_field[x] = self.phanterpwa[x]
