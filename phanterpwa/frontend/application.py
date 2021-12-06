@@ -236,7 +236,7 @@ class PhanterPWA():
         return current_uri
 
     def XWAY(self, *args, **kargs):
-        current_uri = "/#_phanterpwa:/{0}{1}".format(self._xway(*args, **kargs))
+        current_uri = "/#_phanterpwa:/{0}".format(self._xway(*args, **kargs))
         return current_uri
 
     @staticmethod
