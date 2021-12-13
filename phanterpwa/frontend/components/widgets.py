@@ -3417,17 +3417,25 @@ class FloatMenu(Widget):
             if isinstance(button, helpers.XmlConstructor) and button.tag.upper() == "I":
                 class_button = " icon_button"
             self._button = button
-        self._xml_menu = []
+        self._xml_menu = DIV(
+            _id="phanterpwa-widget-floatmenu-options-content-{0}".format(identifier),
+            _class="phanterpwa-widget-floatmenu-options-wrapper")
         self._onopen = parameters.get('onOpen', None)
         self._options = options
+        self._total_options = 0
         for x in self._options:
+            self._total_options += 1
             self.add_option(x)
 
-        html = DIV(
+        html = DIV(DIV(
             self._button,
-            DIV(_class="phanterpwa-widget-floatmenu-options-content"),
             _class="phanterpwa-widget-floatmenu-button{0}".format(class_button),
-            _phanterpwa_dowpdown_target="drop_{0}".format(identifier)
+            ),
+            DIV(
+                self._xml_menu,
+                _class="phanterpwa-widget-floatmenu-options-content"
+            ),
+            _class="phanterpwa-widget-floatmenu-wrapper"
         )
         if "_class" in parameters:
             parameters["_class"] = "{0}{1}".format(parameters["_class"], " phanterpwa-widget-floatmenu")
@@ -3444,7 +3452,9 @@ class FloatMenu(Widget):
             self._xml_menu.append(DIV(option, _class="phanterpwa-widget-floatbutton wave_on_click"))
 
     def _on_click(self, el):
-        element = jQuery(el).find(".phanterpwa-widget-floatmenu-options-content")
+        target = jQuery(self.target_selector)
+        target.find(".phanterpwa-widget-floatmenu-wrapper")
+        element = target.find(".phanterpwa-widget-floatmenu-wrapper")
         if element.hasClass("enabled"):
             element.removeClass("enabled")
         else:

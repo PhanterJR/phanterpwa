@@ -61,6 +61,37 @@
     &.phanterpwa-widget-menubox
         text-align: center
         padding: 0
+    &.phanterpwa-widget-floatmenu
+        position: fixed
+        bottom: 20px
+        right: 20px
+        background-color: $components
+        border-radius: 50px
+        line-height: 50px
+        width: 50px
+        height: 50px
+        text-align: center
+        color: $white
+        z-index: 31
+        .phanterpwa-widget-floatmenu-wrapper
+            .phanterpwa-widget-floatmenu-options-content
+                position: absolute
+                bottom: 50px
+                height: auto
+                overflow: hidden
+                max-height: 0px
+                border-radius: 40px
+                transition: max-height linear 0.5s
+                .icon_button
+                    background-color: $components
+                    margin-bottom: -55px
+                    transition: margin-bottom linear 0.5s
+
+            &.enabled
+                .phanterpwa-widget-floatmenu-options-content
+                    max-height: 600px
+                    .icon_button
+                        margin-bottom: 5px
 
 
 .phanterpwa-widget
