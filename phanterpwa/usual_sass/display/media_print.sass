@@ -11,6 +11,7 @@
 
 @page
     margin: 0 !important
+
 @media print
     body
         padding: 0 !important
@@ -18,6 +19,55 @@
         background-color: transparent !important
         *
             visibility: hidden
+        .phanterpwa-simple-media-print
+            position: absolute
+            left: 0
+            top: 0
+            .media-print-visible
+                visibility: visible !important
+                *
+                    visibility: visible !important
+                thead
+                    height: 20px
+                    display: table-header-group
+
+                tfoot
+                    height: 20px
+                    display: table-footer-group
+
+                tr
+                    page-break-inside: avoid
+
+                tbody
+                    page-break-inside: avoid
+                    page-break-after: auto
+                .media-print-inside-invisible
+                    visibility: hidden !important
+                    display: none
+                    *
+                        visibility: hidden !important
+            .media-print-invisible
+                visibility: hidden !important
+                *
+                    visibility: hidden !important
+                .media-print-inside-visible
+                    visibility: visible !important
+                    *
+                        visibility: visible !important
+                    thead
+                        height: 20px
+                        display: table-header-group
+
+                    tfoot
+                        height: 20px
+                        display: table-footer-group
+
+                    tr
+                        page-break-inside: avoid
+
+                    tbody
+                        page-break-inside: avoid
+                        page-break-after: auto
         .phanterpwa-media-print-container
             table
                 page-break-inside: auto
@@ -35,6 +85,14 @@
             tfoot
                 display: table-footer-group
                 visibility: visible
+            .media-print-visible
+                visibility: visible !important
+                *
+                    visibility: visible !important
+            .media-print-inside-invisible
+                visibility: hidden
+                *
+                    visibility: hidden !important
 
             position: absolute
             left: 0
