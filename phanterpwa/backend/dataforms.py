@@ -266,8 +266,8 @@ class WidgetFromFieldDALFromTableDAL():
                         elif item:
                             result.append(item)
                 return result
-            auto_validators = u_list(self.__ppwa_check_validators(FieldInst.requires))
 
+            auto_validators = u_list(self.__ppwa_check_validators(FieldInst.requires))
             if "validators" not in self.phanterpwa:
                 json_field["validators"] = auto_validators
             else:

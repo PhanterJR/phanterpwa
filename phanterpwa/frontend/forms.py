@@ -15,7 +15,7 @@ __pragma__('alias', "jQuery", "$")
 __pragma__('skip')
 
 # it is ignored on transcrypt
-window = jQuery = console = document = localStorage = M = RegExp =\
+window = jQuery = console = document = localStorage = M = RegExp = Array =\
     sessionStorage = this = FileReader = JSON = js_undefined = navigator = __new__ = Date = 0
 
 __pragma__('noskip')
@@ -399,8 +399,12 @@ class FormWidget(helpers.XmlConstructor):
             elif self._widget_type == "reference" or self._widget_type == "select" or self._widget_type == "autocomplete":
                 va = ""
                 for x in self.json_widget['data_set']:
-                    if x[0] == self._value:
-                        va = x[1]
+                    if len(x) == 2 and Array.isArray(x):
+                        if str(x[0]) == str(self._value):
+                            va = x[1]
+                    else:
+                        if str(x) == str(self._value):
+                            va = x
 
                 w = widgets.Inert(
                     "{0}-{1}".format(self.table_name, self.input_name),
