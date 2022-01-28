@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import datetime
 import phanterpwa
 import configparser
 from glob import glob
@@ -164,6 +165,7 @@ class ProjectConfig():
                 self._ini_project["PROJECT"][k] = str(cfg["PROJECT"][k])
             if "compilation" not in cfg["PROJECT"]:
                 cfg["PROJECT"]["compilation"] = 0
+                cfg["PROJECT"]["date_compilation"] = str(datetime.datetime.now())
                 cfg["PROJECT"]["versioning"] = "{0}.{1}".format(
                     cfg["PROJECT"].get("version", "0.0.1"),
                     0

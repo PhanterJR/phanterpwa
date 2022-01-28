@@ -194,6 +194,7 @@ class Handler():
         self._has_authorization = self.check_has_authorization()
         if self._has_authorization is True:
             window.PhanterPWA.Response = self
+            self.set_title()
         else:
             if callable(self._on_error):
                 self._on_error(self._has_authorization, self)
@@ -208,6 +209,15 @@ class Handler():
         for x in self.request.widgets.keys():
             pass
             #self.request.widgets[x].start()
+
+    def set_title(self, value=None):
+        if value is None:
+            title = jQuery("title").text()
+            if window.PhanterPWA.CONFIG.PROJECT.title != title:
+                jQuery("title").text(window.PhanterPWA.CONFIG.PROJECT.title)
+        else:
+            jQuery("title").text(value)
+
 
 
 class ErrorHandler():

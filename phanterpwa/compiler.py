@@ -83,6 +83,7 @@ class Compiler():
             self.current_compilation = self.config['PROJECT'].get("compilation", 0)
             self.current_compilation += 1
         self.config['PROJECT']["compilation"] = self.current_compilation
+        self.config["PROJECT"]["date_compilation"] = str(datetime.datetime.now())
         self.config['PROJECT']['versioning'] = "{0}.{1}".format(
             self.config["PROJECT"].get("version", "0.0.1"),
             self.current_compilation
@@ -881,6 +882,7 @@ class Compiler():
                 "title": self.config["PROJECT"]["title"],
                 "version": self.config["PROJECT"]["version"],
                 "compilation": self.config["PROJECT"]["compilation"],
+                "date_compilation": self.config["PROJECT"]["date_compilation"],
                 "versioning": self.config["PROJECT"]["versioning"],
                 "debug": self.config["PROJECT"]["debug"],
                 "author": self.config["PROJECT"]["author"],
