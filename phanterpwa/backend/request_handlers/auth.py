@@ -1445,7 +1445,7 @@ class ImageUser(web.RequestHandler):
     def check_origin(self, origin):
         return True
 
-    @check_url_token()
+    @check_url_token(ignore_user_agent=True)
     def get(self, *args, **kargs):
         """
         Receive request to create and response with a token csrf or captcha

@@ -353,7 +353,7 @@ def check_cas_token(ignore_locked=True):
     return decorator
 
 
-def check_url_token():
+def check_url_token(ignore_user_agent=False):
     def decorator(f):
         @wraps(f)
         def check_url_token_decorator(self, *args, **kargs):
@@ -403,9 +403,14 @@ def check_url_token():
             except BadSignature:
                 token_content = None
             if token_content:
-                if "user_agent" in token_content and "id_client" in token_content:
-                    if token_content['user_agent'] == self.phanterpwa_user_agent:
+                if "user_agent" in token_content:
+                    if ignore_user_agent:
                         self.phanterpwa_url_token_checked = token_content
+                    else:
+                        if token_content['user_agent'] == self.phanterpwa_user_agent:
+                            self.phanterpwa_url_token_checked = token_content
+
+
             if self.phanterpwa_url_token_checked:
                 return f(self, *args, **kargs)
             else:
