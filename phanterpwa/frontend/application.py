@@ -1361,11 +1361,11 @@ class WayRequest():
         else:
             return None
 
-    def get_param(self, k):
+    def get_param(self, k, default=None):
         if self.params is not None and self.params is not js_undefined:
-            return self.params.get(k, None)
+            return self.params.get(k, default)
         else:
-            return None
+            return default
 
     def _open_way(self, way):
         self._process_way(way)
