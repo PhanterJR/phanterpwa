@@ -105,6 +105,7 @@ class WidgetFromFieldDALFromTableDAL():
         self.section = None
         self.position = None
         self.group = None
+        self._custom_label = None
         self.out_of_form = False
         self.simple_widget = simple_widget
         self.phanterpwa = dict()
@@ -118,6 +119,8 @@ class WidgetFromFieldDALFromTableDAL():
 
             if "data_view" in self.phanterpwa:
                 self._data_view = self.phanterpwa["data_view"]
+            if "label" in self.phanterpwa:
+                self._custom_label = self.phanterpwa["label"]
             if "position" in self.phanterpwa:
                 self.position = self.phanterpwa["position"]
             if "section" in self.phanterpwa:
@@ -351,7 +354,10 @@ class WidgetFromFieldDALFromTableDAL():
                     else:
                         json_field['reference_field'] = 'id'
                     json_field['reference_table'] = ref_table
-                json_field['label'] = FieldInst.label
+                if self._custom_label:
+                    json_field['label'] = self._custom_label
+                else:
+                    json_field['label'] = FieldInst.label
                 json_field['value'] = self.phanterpwa.get("value", default)
                 json_field['type'] = 'reference'
                 json_field['data_set'] = data_ref_table_formated
