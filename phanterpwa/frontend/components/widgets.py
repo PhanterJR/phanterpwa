@@ -3459,6 +3459,8 @@ class FloatMenu(Widget):
             element.removeClass("enabled")
         else:
             element.addClass("enabled")
+            if callable(self._onopen):
+                self._onopen(self)
 
     def reload(self):
         self.start()
