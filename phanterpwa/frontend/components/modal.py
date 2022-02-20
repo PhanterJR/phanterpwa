@@ -26,10 +26,12 @@ class Modal():
         self.title = ""
         self.content = ""
         self.footer = ""
+        self.buttons_panel = ""
         self.header_height = 80
         self.footer_height = 80
         self._max_content_height = 400
         self._form = parameters.get("form", None)
+        _class_panel = ""
         if "title" in parameters:
             self.title = parameters["title"]
         if "content" in parameters:
@@ -38,6 +40,9 @@ class Modal():
             self.footer = parameters["footer"]
         else:
              self.footer_height = 20
+        if "buttons_panel" in parameters:
+            _class_panel = " has_buttons_panel"
+            self.buttons_panel = parameters["buttons_panel"]
         if "header_height" in parameters:
             self.header_height = parameters["header_height"]
         if "footer_height" in parameters:
@@ -77,7 +82,8 @@ class Modal():
             ),
             DIV(
                 self.content,
-                _class="phanterpwa-component-modal-content-container"
+                DIV(self.buttons_panel, _class="phanterpwa-component-modal-button-panel"),
+                _class="phanterpwa-component-modal-content-container{0}".format(_class_panel)
             ),
             DIV(
                 self.footer,
