@@ -9,7 +9,7 @@ from ..helpers import DIV, I, INPUT, CANVAS, CONCATENATE
 from ..xmlconstructor import XmlConstructor
 import io
 import os
-from PIL import Image as PILImage
+from PIL import Image as PILImage, ImageOps
 
 
 class PhanterpwaGalleryInput(XmlConstructor):
@@ -402,6 +402,7 @@ class PhanterpwaGalleryCutter(object):
         imageBytes = self.imageBytes
         nome_da_imagem = self.nome_da_imagem
         im = PILImage.open(imageBytes)
+        im = ImageOps.exif_transpose(im)
         newsizex = int(float(self.newsizex))
         newsizey = int(float(self.newsizey))
         cuttersizex = int(float(self.cuttersizex))
@@ -442,6 +443,7 @@ class PhanterpwaGalleryImageBytes(object):
         nome_da_imagem = self.nome_da_imagem
         nome_do_arquivo, extensao = os.path.splitext(nome_da_imagem)
         im = PILImage.open(self.imageBytes)
+        print(im.getdata())
         jpeg_image_buffer = io.BytesIO()
         if extensao.lower() == '.png' or self.force_png:
             self.extensao = 'png'

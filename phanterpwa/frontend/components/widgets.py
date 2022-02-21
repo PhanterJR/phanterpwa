@@ -3838,7 +3838,7 @@ class TableData(Widget):
                 can_drop = False
         if can_drop:
             posY = ev.screenY
-            if posY > window.PhanterPWA.drag["posY"]:
+            if posY is not js_undefined and posY > window.PhanterPWA.drag["posY"]:
                 jQuery(window.PhanterPWA.drag["el"]).insertAfter(el)
             else:
                 jQuery(window.PhanterPWA.drag["el"]).insertBefore(el)

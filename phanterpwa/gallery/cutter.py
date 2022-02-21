@@ -1,6 +1,6 @@
 import os
 import io
-from PIL import Image as PILImage
+from PIL import Image as PILImage, ImageOps
 
 
 class PhanterpwaGalleryCutter(object):
@@ -12,8 +12,10 @@ class PhanterpwaGalleryCutter(object):
         self.force_png = force_png
         if isinstance(imageBytes, bytes):
             self._img = PILImage.open(io.BytesIO(imageBytes))
+            self._img = ImageOps.exif_transpose(self._img)
         else:
             self._img = PILImage.open(imageBytes)
+            self._img = ImageOps.exif_transpose(self._img)
         if self._img.mode == "P":
             self._img = PILImage.open(imageBytes).convert("RGBA")
             self.content_type = "image/png"
