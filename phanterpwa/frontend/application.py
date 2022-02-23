@@ -239,6 +239,9 @@ class PhanterPWA():
         current_uri = "/#_phanterpwa:/{0}".format(self._xway(*args, **kargs))
         return current_uri
 
+    def relative_way(self, *args, **kargs):
+        return self._xway(*args, **kargs)
+
     @staticmethod
     def get_app_name(self):
         return window.PhanterPWA.CONFIG["APP"]["name"]
