@@ -1008,8 +1008,8 @@ class RoleManager(web.RequestHandler):
                 }
             })
         else:
-            result.insert(table)
-            q_role = db(db.auth_group.id == result.id).select().first()
+            id_record = result.insert(table)
+            q_role = db(db.auth_group.id == id_record).select().first()
             if q_role:
                 self.set_status(200)
                 db.commit()
