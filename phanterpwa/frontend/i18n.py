@@ -94,8 +94,20 @@ class I18NServer():
                     else:
                         t_elem.text(translate)
 
+        def eachTitleElement(el):
+            t_elem = jQuery(el)
+            word = t_elem.attr("phanterpwa-i18n-title")
+            if word is not None and word is not js_undefined:
+                if t_elem[0].hasAttribute(self.userLang):
+                    t_elem.attr("title", t_elem.attr(self.userLang))
+                else:
+                    translate = self.translate(word)
+                    t_elem.attr(self.userLang, translate)
+                    t_elem.attr("title", translate)
+
         if self.target[0] is not js_undefined:
             self.target.find("span[phanterpwa-i18n]").each(lambda: eachElement(this))
+            self.target.find("[phanterpwa-i18n-title]").each(lambda: eachTitleElement(this))
         return self.target
 
 

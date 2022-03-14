@@ -22,6 +22,7 @@ FORM = helpers.XmlConstructor.tagger("form")
 SPAN = helpers.XmlConstructor.tagger("span")
 IMG = helpers.XmlConstructor.tagger("img", True)
 HR = helpers.XmlConstructor.tagger("hr", True)
+BR = helpers.XmlConstructor.tagger("br", True)
 I = helpers.XmlConstructor.tagger("i")
 H2 = helpers.XmlConstructor.tagger("h2")
 P = helpers.XmlConstructor.tagger("p")
@@ -398,7 +399,7 @@ class ModalLogin(modal.Modal):
         else:
             self.AuthUser = AuthUserCmp
 
-        self.xml_social_logins = DIV(_class='phanterpwa-modal-login-social-buttons-container')
+        self.xml_social_logins = []
         self._icons_social_login = {}
         if self.user_mobile_number is True:
             email_mobile_input = forms.FormWidget(
@@ -433,22 +434,17 @@ class ModalLogin(modal.Modal):
                     self._icons_social_login[social_name] = icon
                 self.xml_social_logins.append(
                     DIV(
-                        DIV(
-                            icon,
-                            I18N(
-                                "Login with {0}".format(str(social_name).capitalize())
-                            ),
-                            **{
-                                "_class": "btn btn-social_login link",
-                                "_data-social_login": social_name
-                            }
-                        ),
-                        _class="btn-social_login-wrapper",
+                        icon,
+                        _class="btn-social_login icon_button link",
+                        _title="Login with {0}".format(str(social_name).capitalize()),
+                        **{
+                            "_phanterpwa-i18n-title": "Login with {0}".format(str(social_name).capitalize()),
+                            "_data-social_login": social_name
+                        }
                     )
                 )
 
         tcontent = DIV(
-            self.xml_social_logins,
             DIV(
                 DIV(
                     DIV(
@@ -556,16 +552,6 @@ class ModalLogin(modal.Modal):
                     button_login_by_social,
                     _class="hidden_on_not_has_auth_user"
                 ),
-                forms.FormButton(
-                    "register",
-                    I18N("Create an account", **{"_pt-br": "Criar uma conta"}),
-                    _class="btn-autoresize wave_on_click waves-phanterpwa"
-                ),
-                forms.FormButton(
-                    "password",
-                    I18N("Recover password", **{"_pt-br": "Esqueci a senha"}),
-                    _class="btn-autoresize wave_on_click waves-phanterpwa"
-                ),
                 _class='phanterpwa-form-buttons-container'
             ),
             _class="p-col w1p100"
@@ -584,6 +570,32 @@ class ModalLogin(modal.Modal):
                 "header_height": 50,
                 "footer_height": 200,
                 "title": I18N("Login"),
+                "buttons_panel": DIV(
+                    *self.xml_social_logins,
+                    DIV(
+                        I(_class="fas fa-sign-in-alt"),
+                        _id="phanterpwa-widget-form-form_button-register",
+                        _class="icon_button",
+                        _title="Create an account",
+                        **{"_phanterpwa-i18n-title": "Create an account", "_pt-br": "Criar uma Conta"}
+                    ),
+                    DIV(
+                        I(
+                            DIV(
+                                DIV(
+                                    SPAN(I(_class="fas fa-key"), _class="icombine-container-first"),
+                                    SPAN(I(_class="fas fa-sync"), _class="icombine-container-last"),
+                                    _class="icombine-container"
+                                ),
+                                _class="phanterpwa-snippet-icombine"
+                            ),
+                        ),
+                        _id="phanterpwa-widget-form-form_button-password",
+                        _title="Recover password",
+                        _class="icon_button",
+                        **{"_phanterpwa-i18n-title": "Recover password", "_pt-br": "Esqueci a Senha"}
+                    )
+                ),
                 "content": tcontent,
                 "footer": tfooter,
                 "after_open": self.binds
@@ -673,7 +685,6 @@ class ModalLogin(modal.Modal):
         if cont < size:
             jQuery(el).val(self.prefix_mobile_number).trigger("keyup")
 
-
     def _on_click_social_button(self, el):
         social = jQuery(el).data("social_login")
         if social == "mobile":
@@ -760,7 +771,6 @@ class ModalLogin(modal.Modal):
                     )
                     self.Modal.open()
                     forms.SignForm("#form-register", has_captcha=True, after_sign=lambda: forms.ValidateForm("#form-register"))
-
 
     def submit(self):
         self.clear_errors()
@@ -1062,41 +1072,36 @@ class ModalRegister(modal.Modal):
                 }
             )
         password = parameters.get("password", "")
-        self._xml_button = ""
+        self._xml_button = []
         if "SMS" in window.PhanterPWA.CONFIG:
             if self.user_mobile_number is True:
-                self._xml_button = DIV(DIV(
+                self._xml_button.append(
                     DIV(
                         I(_class="fas fa-envelope"),
-                        I18N(
-                            "Register with {0}".format(str("email").capitalize()),
-                            **{"_pt-br": "Registrar com o {0}".format(str("email").capitalize())}
-                        ),
+                        _class="btn-social_login icon_button link",
+                        _title="Register with {0}".format(str("email").capitalize()),
                         **{
-                            "_class": "btn btn-social_login link",
-                            "_data-social_login": "email"
+                            "_phanterpwa-i18n-title": "Register with {0}".format(str("email").capitalize()),
+                            "_data-social_login": "email",
+                            "_pt-br": "Registrar com o {0}".format(str("email").capitalize())
                         }
-                    ),
-                    _class="btn-social_login-wrapper",
-                ), _style="display: table;margin: auto;")
+                    )
+                )
             else:
-                self._xml_button = DIV(DIV(
+                self._xml_button.append(
                     DIV(
                         I(_class="fas fa-mobile-alt"),
-                        I18N(
-                            "Register with {0}".format(str("mobile").capitalize()),
-                            **{"_pt-br": "Registrar com o {0}".format(str("mobile").capitalize())}
-                        ),
+                        _class="btn-social_login icon_button link",
+                        _title="Register with {0}".format(str("mobile").capitalize()),
                         **{
-                            "_class": "btn btn-social_login link",
-                            "_data-social_login": "mobile"
+                            "_phanterpwa-i18n-title": "Register with {0}".format(str("mobile").capitalize()),
+                            "_data-social_login": "mobile",
+                            "_pt-br": "Registrar com o {0}".format(str("mobile").capitalize())
                         }
-                    ),
-                    _class="btn-social_login-wrapper",
-                ), _style="display: table;margin: auto;")
+                    )
+                )
 
         tcontent = DIV(
-            self._xml_button,
             forms.FormWidget(
                 "register",
                 "first_name",
@@ -1155,16 +1160,6 @@ class ModalRegister(modal.Modal):
                     I18N("Create", **{"_pt-br": "Criar"}),
                     _class="btn-autoresize wave_on_click waves-phanterpwa"
                 ),
-                forms.FormButton(
-                    "login",
-                    I18N("Login", **{"_pt-br": "Login"}),
-                    _class="btn-autoresize wave_on_click waves-phanterpwa"
-                ),
-                forms.FormButton(
-                    "password",
-                    I18N("Recover password", **{"_pt-br": "Esqueci a senha"}),
-                    _class="btn-autoresize wave_on_click waves-phanterpwa"
-                ),
                 _class='phanterpwa-form-buttons-container'
             ),
             _class="p-col w1p100"
@@ -1178,6 +1173,32 @@ class ModalRegister(modal.Modal):
                 "header_height": 50,
                 "footer_height": 200,
                 "title": I18N("Register", **{"_pt-br": "Registrar"}),
+                "buttons_panel": DIV(
+                    *self._xml_button,
+                    DIV(
+                        I(_class="fas fa-user-circle"),
+                        _id="phanterpwa-widget-form-form_button-login",
+                        _class="icon_button",
+                        _title="Login",
+                        **{"_phanterpwa-i18n-title": "Login", "_pt-br": "Logar-se"}
+                    ),
+                    DIV(
+                        I(
+                            DIV(
+                                DIV(
+                                    SPAN(I(_class="fas fa-key"), _class="icombine-container-first"),
+                                    SPAN(I(_class="fas fa-sync"), _class="icombine-container-last"),
+                                    _class="icombine-container"
+                                ),
+                                _class="phanterpwa-snippet-icombine"
+                            ),
+                        ),
+                        _id="phanterpwa-widget-form-form_button-password",
+                        _title="Recover password",
+                        _class="icon_button",
+                        **{"_phanterpwa-i18n-title": "Recover password", "_pt-br": "Esqueci a Senha"}
+                    )
+                ),
                 "content": tcontent,
                 "footer": tfooter,
                 "after_open": self.binds
@@ -1253,7 +1274,6 @@ class ModalRegister(modal.Modal):
         )
 
     def fix_prefix(self, el):
-        console.log(el)
         value = jQuery(el).val()
         numbers = [str(x) for x in range(10)]
         cont = 0
@@ -1376,39 +1396,39 @@ class ModalRequestPassword(modal.Modal):
                 }
             )
 
-        self._xml_button = ""
+        self._xml_button = []
         if "SMS" in window.PhanterPWA.CONFIG:
             if self.user_mobile_number is True:
-                self._xml_button = DIV(DIV(
+                self._xml_button.append(
                     DIV(
                         I(_class="fas fa-envelope"),
-                        I18N(
-                            "Recover with {0}".format(str("email").capitalize())
-                        ),
+                        _class="btn-social_login icon_button link",
+                        _title="Recover with {0}".format(str("email").capitalize()),
                         **{
-                            "_class": "btn btn-social_login link",
-                            "_data-social_login": "email"
+                            "_phanterpwa-i18n-title": "Register with {0}".format(str("email").capitalize()),
+                            "_data-social_login": "email",
+                            "_pt-br": "Recuperar com o {0}".format(str("email").capitalize())
                         }
-                    ),
-                    _class="btn-social_login-wrapper",
-                ), _style="display: table;margin: auto;")
+                    )
+                )
             else:
-                self._xml_button = DIV(DIV(
+                self._xml_button = [
                     DIV(
                         I(_class="fas fa-mobile-alt"),
-                        I18N(
-                            "Recover with {0}".format(str("mobile").capitalize())
-                        ),
+                        _class="btn-social_login icon_button link",
+                        _title="Recover with {0}".format(str("mobile").capitalize()),
                         **{
-                            "_class": "btn btn-social_login link",
-                            "_data-social_login": "mobile"
+                            "_phanterpwa-i18n-title": "Register with {0}".format(str("mobile").capitalize()),
+                            "_data-social_login": "mobile",
+                            "_pt-br": "Recuperar com o {0}".format(str("mobile").capitalize())
                         }
-                    ),
-                    _class="btn-social_login-wrapper",
-                ), _style="display: table;margin: auto;")
+                    )
+                ]
+
         tcontent = DIV(
-            self._xml_button,
+            BR(),
             widget_email,
+            DIV(_style="min-height: 35px;display: table;width: 10px;"),
             _class="phanterpwa-request_password-form-inputs p-row"
         ).jquery()
         if self.auth_user is not None and self.auth_user is not js_undefined:
@@ -1425,16 +1445,6 @@ class ModalRequestPassword(modal.Modal):
                     I18N("Recover", **{"_pt-br": "Recuperar"}),
                     _class="btn-autoresize wave_on_click waves-phanterpwa"
                 ),
-                forms.FormButton(
-                    "register",
-                    I18N("Create an Account", **{"_pt-br": "Criar uma Conta"}),
-                    _class="btn-autoresize wave_on_click waves-phanterpwa"
-                ),
-                forms.FormButton(
-                    "login",
-                    I18N("Login", **{"_pt-br": "Login"}),
-                    _class="btn-autoresize wave_on_click waves-phanterpwa"
-                ),
                 _class='phanterpwa-form-buttons-container'
             ),
             _class="p-col w1p100"
@@ -1448,6 +1458,24 @@ class ModalRequestPassword(modal.Modal):
                 "header_height": 50,
                 "footer_height": 200,
                 "title": I18N("Recover Password", **{"_pt-br": "Recuperar Senha"}),
+                "buttons_panel": DIV(
+                    *self._xml_button,
+                    DIV(
+                        I(_class="fas fa-user-circle"),
+                        _id="phanterpwa-widget-form-form_button-login",
+                        _class="icon_button",
+                        _title="Login",
+                        **{"_phanterpwa-i18n-title": "Login", "_pt-br": "Logar-se"}
+                    ),
+                    DIV(
+                        I(_class="fas fa-sign-in-alt"),
+                        _id="phanterpwa-widget-form-form_button-register",
+                        _class="icon_button",
+                        _title="Create an account",
+                        **{"_phanterpwa-i18n-title": "Create an account", "_pt-br": "Criar uma Conta"}
+                    ),
+                ),
+
                 "content": tcontent,
                 "footer": tfooter,
                 "after_open": self.binds

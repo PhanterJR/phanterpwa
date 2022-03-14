@@ -490,8 +490,8 @@ def check_public_csrf_token(form_identify=None, ignore_locked=True):
                 self.set_status(400)
                 return self.write(dict_response)
             t = Serialize(
-                self.projectConfig['BACKEND'][self.app_name]['secret_key'],
-                self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire']
+                "csrf-{0}".format(self.projectConfig['BACKEND'][self.app_name]['secret_key']),
+                self.projectConfig['BACKEND'][self.app_name]['default_time_csrf_token_expire']
             )
             token_content = None
             try:
@@ -554,6 +554,75 @@ def check_public_csrf_token(form_identify=None, ignore_locked=True):
                                         )
                                     dict_response['help_debug'] = help_debug
                                     self.set_status(400)
+                                    return self.write(dict_response)
+                            return f(self, *args, **kargs)
+                        else:
+                            msg = "The crsf token is invalid! The client has an unstable address."
+                            dict_response = {
+                                'status': 'Bad Request',
+                                'code': 400,
+                                'message': msg,
+                                'i18n': {
+                                    'message': self.i18nTranslator.T(msg) if self.i18nTranslator else msg
+                                }
+                            }
+                            fi = getframeinfo(currentframe())
+                            if not self.projectConfig['PROJECT']['debug']:
+                                help_debug = "({0}){1}.{2}->({3})@{4}:{5}".format(
+                                    getfile(self.__class__),
+                                    self.__class__.__name__,
+                                    f.__name__,
+                                    fi.filename,
+                                    fi.function,
+                                    fi.lineno + 19
+                                )
+                            else:
+                                help_debug = "{0}.{1}@{2}:{3}".format(
+                                    self.__class__.__name__,
+                                    f.__name__,
+                                    fi.function,
+                                    fi.lineno + 19
+                                )
+                            dict_response['help_debug'] = help_debug
+                            self.set_status(400)
+                            return self.write(dict_response)
+                    else:
+                        if self.phanterpwa_user_agent == token_content.get("user_agent") and\
+                                self.phanterpwa_remote_ip == token_content.get("ip"):
+                            if form_identify:
+                                self.phanterpwa_form_identify = token_content["form_identify"]
+                                if (isinstance(form_identify, str) and form_identify == self.phanterpwa_form_identify) or \
+                                        (isinstance(form_identify, (list, tuple)) and self.phanterpwa_form_identify in form_identify):
+
+                                    msg = "The form has already been processed"
+                                    trans_msg = self.i18nTranslator.T(msg)
+                                    dict_response = {
+                                        'status': 'Accepted',
+                                        'code': 202,
+                                        'message': msg,
+                                        'i18n': {
+                                            'message': trans_msg
+                                        }
+                                    }
+                                    fi = getframeinfo(currentframe())
+                                    if not self.projectConfig['PROJECT']['debug']:
+                                        help_debug = "({0}){1}.{2}->({3})@{4}:{5}".format(
+                                            getfile(self.__class__),
+                                            self.__class__.__name__,
+                                            f.__name__,
+                                            fi.filename,
+                                            fi.function,
+                                            fi.lineno + 19
+                                        )
+                                    else:
+                                        help_debug = "{0}.{1}@{2}:{3}".format(
+                                            self.__class__.__name__,
+                                            f.__name__,
+                                            fi.function,
+                                            fi.lineno + 19
+                                        )
+                                    dict_response['help_debug'] = help_debug
+                                    self.set_status(202)
                                     return self.write(dict_response)
                             return f(self, *args, **kargs)
                         else:

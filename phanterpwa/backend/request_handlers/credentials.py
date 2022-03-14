@@ -419,7 +419,7 @@ class SignForms(web.RequestHandler):
             self.DALDatabase((self.DALDatabase.csrf.client == id_client) &
                 (self.DALDatabase.csrf.form_identify == form_identify)).delete()
             t = Serialize(
-                self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                "csrf-{0}".format(self.projectConfig['BACKEND'][self.app_name]['secret_key']),
                 self.projectConfig['BACKEND'][self.app_name]['default_time_csrf_token_expire']
             )
             id_csrf = self.DALDatabase.csrf.insert(
@@ -519,7 +519,7 @@ class SignLockForm(web.RequestHandler):
             self.DALDatabase((self.DALDatabase.csrf.client == id_client) &
                 (self.DALDatabase.csrf.form_identify == form_identify)).delete()
             t = Serialize(
-                self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                "csrf-{0}".format(self.projectConfig['BACKEND'][self.app_name]['secret_key']),
                 self.projectConfig['BACKEND'][self.app_name]['default_time_csrf_token_expire']
             )
             id_csrf = self.DALDatabase.csrf.insert(
@@ -632,7 +632,7 @@ class SignCaptchaForms(web.RequestHandler):
                 (self.DALDatabase.captcha.form_identify == form_identify)).delete()
             captcha = Captcha(
                 form_identify,
-                secret_key=self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                secret_key="csrf-{0}".format(self.projectConfig['BACKEND'][self.app_name]['secret_key']),
                 time_token_expire=self.projectConfig['BACKEND'][self.app_name]['default_time_csrf_token_expire'],
                 translator=self.Translator_captcha
             )
@@ -690,7 +690,7 @@ class SignCaptchaForms(web.RequestHandler):
             q_captcha.delete_record()
             captcha = Captcha(
                 form_identify,
-                self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                "csrf-{0}".format(self.projectConfig['BACKEND'][self.app_name]['secret_key']),
                 self.projectConfig['BACKEND'][self.app_name]['default_time_csrf_token_expire'],
                 translator=self.Translator_captcha
             )
@@ -704,7 +704,7 @@ class SignCaptchaForms(web.RequestHandler):
                 )
                 if id_csrf:
                     t = Serialize(
-                        self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                        "csrf-{0}".format(self.projectConfig['BACKEND'][self.app_name]['secret_key']),
                         self.projectConfig['BACKEND'][self.app_name]['default_time_csrf_token_expire']
                     )
                     sign_captha = t.dumps({
@@ -736,7 +736,7 @@ class SignCaptchaForms(web.RequestHandler):
                         (self.DALDatabase.captcha.form_identify == form_identify)).delete()
                     captcha = Captcha(
                         form_identify,
-                        secret_key=self.projectConfig['BACKEND'][self.app_name]['secret_key'],
+                        secret_key="csrf-{0}".format(self.projectConfig['BACKEND'][self.app_name]['secret_key']),
                         time_token_expire=self.projectConfig['BACKEND'][self.app_name]['default_time_csrf_token_expire'],
                         translator=self.Translator_captcha
                     )

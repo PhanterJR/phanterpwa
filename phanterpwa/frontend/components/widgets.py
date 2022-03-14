@@ -4249,47 +4249,52 @@ class GalleryInput():
     def addInputPanel(self):
 
         other_inputs = ""
+        name = ""
+        x_name = self.config.get('name', None)
+        if x_name is not None:
+            name = "-{0}".format(str(x_name))
         if self.config['cutter']:
+
             cutter_vars = [
                 INPUT(
                     _id='phanterpwa-gallery-input-cutterSizeX{0}'.format(self.namespace),
-                    _name='phanterpwa-gallery-input-cutterSizeX',
+                    _name='phanterpwa-gallery-input-cutterSizeX{0}'.format(name),
                     _value="",
                     _type="text"
                 ),
                 INPUT(
                     _id='phanterpwa-gallery-input-cutterSizeY{0}'.format(self.namespace),
-                    _name='phanterpwa-gallery-input-cutterSizeY',
+                    _name='phanterpwa-gallery-input-cutterSizeY{0}'.format(name),
                     _value="",
                     _type="text"
                 ),
                 INPUT(
                     _id='phanterpwa-gallery-input-positionX{0}'.format(self.namespace),
-                    _name='phanterpwa-gallery-input-positionX',
+                    _name='phanterpwa-gallery-input-positionX{0}'.format(name),
                     _value="",
                     _type="text"
                 ),
                 INPUT(
                     _id='phanterpwa-gallery-input-positionY{0}'.format(self.namespace),
-                    _name='phanterpwa-gallery-input-positionY',
+                    _name='phanterpwa-gallery-input-positionY{0}'.format(name),
                     _value="",
                     _type="text"
                 ),
                 INPUT(
                     _id='phanterpwa-gallery-input-newSizeX{0}'.format(self.namespace),
-                    _name='phanterpwa-gallery-input-newSizeX',
+                    _name='phanterpwa-gallery-input-newSizeX{0}'.format(name),
                     _value="",
                     _type="text"
                 ),
                 INPUT(
                     _id='phanterpwa-gallery-input-newSizeY{0}'.format(self.namespace),
-                    _name='phanterpwa-gallery-input-newSizeY',
+                    _name='phanterpwa-gallery-input-newSizeY{0}'.format(name),
                     _value="",
                     _type="text"
                 ),
                 INPUT(
                     _id='phanterpwa-gallery-input-rotation{0}'.format(self.namespace),
-                    _name='phanterpwa-gallery-input-rotation',
+                    _name='phanterpwa-gallery-input-rotation{0}'.format(name),
                     _value="",
                     _type="text"
                 )
@@ -4315,7 +4320,7 @@ class GalleryInput():
                 _class="phanterpwa-gallery-upload-input-file",
                 _type="file",
                 _id="phanterpwa-gallery-input-file-{0}".format(self.namespace),
-                _name="phanterpwa-gallery-file-input"
+                _name="phanterpwa-gallery-file-input{0}".format(name),
             ),
             _id="phanterpwa-gallery-input-container-{0}".format(self.namespace),
             _class="phanterpwa-gallery-input-container"

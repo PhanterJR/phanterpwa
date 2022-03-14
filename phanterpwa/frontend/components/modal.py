@@ -39,7 +39,7 @@ class Modal():
         if "footer" in parameters:
             self.footer = parameters["footer"]
         else:
-             self.footer_height = 20
+            self.footer_height = 20
         if "buttons_panel" in parameters:
             _class_panel = " has_buttons_panel"
             self.buttons_panel = parameters["buttons_panel"]
@@ -48,12 +48,13 @@ class Modal():
         if "footer_height" in parameters:
             self.footer_height = parameters["footer_height"]
         if "_class" in parameters:
-            parameters["_class"] = "{0}{1}".format(
+            parameters["_class"] = "{0}{1}{2}".format(
                 parameters["_class"].strip(),
-                " phanterpwa-component-modal-wrapper phanterpwa-container"
+                " phanterpwa-component-modal-wrapper phanterpwa-container",
+                _class_panel
             )
         else:
-            parameters["_class"] = "phanterpwa-component-modal-wrapper phanterpwa-container"
+            parameters["_class"] = "phanterpwa-component-modal-wrapper phanterpwa-container{0}".format(_class_panel)
         if "after_open" in parameters:
             self._after_open = parameters["after_open"]
 
@@ -80,10 +81,11 @@ class Modal():
                 ),
                 _class="phanterpwa-component-modal-header-container"
             ),
+            DIV(self.buttons_panel, _class="phanterpwa-component-modal-button-panel"),
             DIV(
                 self.content,
-                DIV(self.buttons_panel, _class="phanterpwa-component-modal-button-panel"),
-                _class="phanterpwa-component-modal-content-container{0}".format(_class_panel)
+                
+                _class="phanterpwa-component-modal-content-container"
             ),
             DIV(
                 self.footer,
