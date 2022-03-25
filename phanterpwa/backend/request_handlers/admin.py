@@ -347,16 +347,16 @@ class UserManager(web.RequestHandler):
                 }
             })
         else:
-            q_user = q_user.first()
+            r_user = q_user.first()
         dict_arguments = {k: self.request.arguments.get(k)[0].decode('utf-8') for k in self.request.arguments}
         dict_arguments['id'] = id_user
-        first_name = dict_arguments['first_name']
-        last_name = dict_arguments['last_name']
-        email_now = q_user.email
+        first_name = dict_arguments.get('first_name', r_user.first_name)
+        last_name = dict_arguments.get('last_name', r_user.last_name)
+        email_now = r_user.email
         new_email = dict_arguments['email']
-        two_factor = checkbox_bool(dict_arguments.get('two_factor', False))
-        multiple_login = checkbox_bool(dict_arguments.get('permit_mult_login', False))
-        activated = checkbox_bool(dict_arguments.get('activated', False))
+        two_factor = checkbox_bool(dict_arguments.get('two_factor', r_user.two_factor))
+        multiple_login = checkbox_bool(dict_arguments.get('permit_mult_login', r_user.permit_mult_login))
+        activated = checkbox_bool(dict_arguments.get('activated', r_user.activated))
 
         db.auth_user.email.requires = [IS_EMAIL()]
         table = db.auth_user
@@ -384,7 +384,7 @@ class UserManager(web.RequestHandler):
                 }
             })
         else:
-            if dict_arguments["auth_group"]:
+            if dict_arguments.get("auth_group", None):
                 try:
                     auth_group = ast.literal_eval(json.loads(dict_arguments["auth_group"]))
                 except Exception:
@@ -435,24 +435,24 @@ class UserManager(web.RequestHandler):
             multiple_login_change = False
             activated_change = False
 
-            if(first_name != q_user.first_name):
-                q_user.update_record(first_name=first_name)
+            if(first_name != r_user.first_name):
+                r_user.update_record(first_name=first_name)
                 first_name_change = True
 
-            if(last_name != q_user.last_name):
-                q_user.update_record(last_name=last_name)
+            if(last_name != r_user.last_name):
+                r_user.update_record(last_name=last_name)
                 last_name_change = True
 
-            if(two_factor != q_user.two_factor_login):
-                q_user.update_record(two_factor_login=two_factor)
+            if(two_factor != r_user.two_factor_login):
+                r_user.update_record(two_factor_login=two_factor)
                 two_factor_change = True
 
-            if(multiple_login != q_user.permit_mult_login):
-                q_user.update_record(permit_mult_login=multiple_login)
+            if(multiple_login != r_user.permit_mult_login):
+                r_user.update_record(permit_mult_login=multiple_login)
                 multiple_login_change = True
 
-            if(activated != q_user.activated):
-                q_user.update_record(activated=activated)
+            if(activated != r_user.activated):
+                r_user.update_record(activated=activated)
                 activated_change = True
 
 
@@ -487,13 +487,12 @@ class UserManager(web.RequestHandler):
                     self.DALDatabase,
                     self.projectConfig
                 )
-                image_change = upload_image.set_image(
+                upload_image.set_image(
                     *cutedImage
                 )
-            activate = q_user.activated
+            activate = r_user.activated
             if new_email != email_now:
                 activation_code = generate_activation_code()
-                self.Translator_email.direct_translation = self.phanterpwa_language
                 keys_formatter = dict(
                     app_name=self.projectConfig['PROJECT']['name'],
                     user_name="{0} {1}".format(
@@ -502,8 +501,7 @@ class UserManager(web.RequestHandler):
                     ),
                     code=activation_code,
                     time_expires=humanize_seconds(
-                        self.projectConfig['BACKEND'][self.app_name]['default_time_activation_code_expire'],
-                        self.Translator_email
+                        self.projectConfig['BACKEND'][self.app_name]['default_time_activation_code_expire']
                     ),
                     copyright=interpolate(self.projectConfig['CONTENT_EMAILS']['copyright'], {'now': datetime.now().year}),
                     link_to_your_page=self.projectConfig['CONTENT_EMAILS']['link_to_your_site']
@@ -513,8 +511,6 @@ class UserManager(web.RequestHandler):
                     minify=True,
                     translate=True,
                     formatter=keys_formatter,
-                    i18nInstance=self.Translator_email,
-                    dictionary=self.phanterpwa_language,
                     do_not_translate=["\n", " ", "\n\n", "&nbsp;"],
                     escape_string=False
                 )
@@ -522,8 +518,6 @@ class UserManager(web.RequestHandler):
                     minify=True,
                     translate=True,
                     formatter=keys_formatter,
-                    i18nInstance=self.Translator_email,
-                    dictionary=self.phanterpwa_language,
                     do_not_translate=["\n", " ", "\n\n", "&nbsp;"],
                     escape_string=False
                 )
@@ -566,13 +560,13 @@ class UserManager(web.RequestHandler):
                         'i18n': {'message': message_i18n}
                     })
                 else:
-                    q_user.update_record(
+                    r_user.update_record(
                         activation_code=activation_code.split("-")[0],
                         timeout_to_resend_activation_email=datetime.now() +
                             timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['default_time_activation_code_expire'])
                     )
                     activate = False
-                    q_user.update_record(email=new_email, activated=activate)
+                    r_user.update_record(email=new_email, activated=activate)
                     q_list = self.DALDatabase(
                         (self.DALDatabase.email_user_list.auth_user == id_user) &
                         (self.DALDatabase.email_user_list.email == email_now)
@@ -588,48 +582,17 @@ class UserManager(web.RequestHandler):
                         )
                     email_change = True
 
-            q_role = self.DALDatabase(
-                (self.DALDatabase.auth_membership.auth_user == id_user) &
-                (self.DALDatabase.auth_group.id == self.DALDatabase.auth_membership.auth_group)
-            ).select(
-                self.DALDatabase.auth_group.id, self.DALDatabase.auth_group.role, orderby=self.DALDatabase.auth_group.grade
-            )
-            roles = [x.role for x in q_role]
-            dict_roles = {x.id: x.role for x in q_role}
-            roles_id = [x.id for x in q_role]
-            role = None
-            if roles:
-                role = roles[-1]
-            q_client = self.DALDatabase(
+            self.DALDatabase(
                 (self.DALDatabase.client.auth_user == id_user)
             ).delete()
             self.DALDatabase.commit()
-            user_image = PhanterpwaGalleryUserImage(id_user, self.DALDatabase, self.projectConfig)
             self.set_status(200)
             return self.write({
                 'status': 'OK',
                 'code': 200,
                 'message': 'Account was successfully changed',
-                'auth_user': {
-                    'id': str(id_user),
-                    'first_name': E(first_name),
-                    'last_name': E(last_name),
-                    'email': new_email,
-                    'remember_me': False,
-                    'roles': roles,
-                    'role': role,
-                    'dict_roles': dict_roles,
-                    'roles_id': roles_id,
-                    'activated': activate,
-                    'image': user_image.id_image,
-                    'two_factor': q_user.two_factor_login,
-                    'multiple_login': q_user.permit_mult_login,
-                    'locale': q_user.locale,
-                    'social_login': None
-                },
                 'i18n': {
                     'message': self.T('Account was successfully changed'),
-                    'auth_user': {'role': self.T(role)}
                 }
             })
 

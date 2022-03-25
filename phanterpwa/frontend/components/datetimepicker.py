@@ -1293,7 +1293,8 @@ class Datepickers():
                 ),
                 _class="phanterpwa-centralizer-wrapper"
             ),
-            _class="phanterpwa-fixed-fulldisplay"
+            _class="phanterpwa-fixed-fulldisplay",
+            _style="z-index: 1008;"
         )
 
         def _selecting(el):

@@ -37,6 +37,7 @@ CONCATENATE = helpers.CONCATENATE
 
 __pragma__('kwargs')
 
+
 class Administration(gatehandler.Handler):
 
     @decorators.check_authorization(lambda: window.PhanterPWA.auth_user_has_role("root"))
@@ -495,7 +496,7 @@ class UsersList(helpers.XmlConstructor):
             "click.active_account_menu"
         ).on(
             "click.active_account_menu",
-            lambda: self._active_account(this)
+            lambda: self._modal_active_account(this)
         )
 
     def _modal_temporary_password(self, el):
@@ -726,6 +727,7 @@ class UsersList(helpers.XmlConstructor):
             value = element.val()
             if value != "":
                 self.search()
+
     def search(self):
         widgets = window.PhanterPWA.Request.widgets
         search = widgets["search_users"].value()
@@ -786,6 +788,108 @@ class UsersList(helpers.XmlConstructor):
             window.PhanterPWA.open_way("admin/users")
         else:
             window.PhanterPWA.flash(html="Problem deleting")
+
+    def _modal_active_account(self, el):
+        email = jQuery(el).data("email")
+        id_user = jQuery(el).data("id")
+        content = DIV(
+            "With this action you will be abruptly active the user's account",
+            ". Do you want continue?",
+            DIV(
+                forms.FormWidget(
+                    "auth_user",
+                    "fake_email",
+                    **{
+                        "value": email,
+                        "label": "Email",
+                        "data_view": True,
+                        "type": "string",
+                        "form": "auth_user",
+                        "_placeholder": "Email",
+                        "_class": "p-col w1p100"
+                    }
+                ),
+                forms.FormWidget(
+                    "auth_user",
+                    "email",
+                    **{
+                        "value": email,
+                        "label": "Email",
+                        "type": "hidden",
+                        "form": "auth_user",
+                        "_placeholder": "Email",
+                        "_class": "p-col w1p100"
+                    }
+                ),
+                forms.FormWidget(
+                    "auth_user",
+                    "activated",
+                    **{
+                        "value": True,
+                        "label": "Activated",
+                        "type": "hidden",
+                        "form": "auth_user",
+                        "_placeholder": "Activated",
+                        "_class": "p-col w1p100"
+                    }
+                ),
+            ),
+            _class="p-row"
+        )
+        footer = DIV(
+            forms.SubmitButton(
+                "yes_change",
+                "Yes",
+                _class="btn-autoresize wave_on_click waves-phanterpwa"
+            ),
+            forms.FormButton(
+                "no_change",
+                "No",
+                _class="btn-autoresize wave_on_click waves-phanterpwa"
+            ),
+            _class='phanterpwa-form-buttons-container'
+        )
+        self.modal_active_account = modal.Modal(
+            "#modal_user",
+            **{
+                "title": "Active account ({0})".format(email),
+                "content": content,
+                "footer": footer,
+                "form": "auth_user"
+            }
+        )
+        self.modal_active_account.open()
+        jQuery("#phanterpwa-widget-form-submit_button-yes_change").off(
+            "click.yes_change"
+        ).on(
+            "click.yes_change",
+            lambda: self._request_active_account(id_user)
+        )
+        jQuery("#phanterpwa-widget-form-form_button-no_change").off(
+            "click.no_change"
+        ).on(
+            "click.no_change",
+            lambda: self.modal_active_account.close()
+        )
+        forms.SignForm("#form-auth_user", after_sign=lambda: forms.ValidateForm("#form-auth_user"))
+
+    def _request_active_account(self, id_user):
+        form_active_account = jQuery("#form-auth_user")[0]
+        form_active_account = __new__(FormData(form_active_account))
+        window.PhanterPWA.PUT(
+            "api",
+            "admin",
+            "usermanager",
+            id_user,
+            form_data=form_active_account,
+            onComplete=lambda data, ajax_status: self._after_request_active_account(data, ajax_status)
+        )
+
+    def _after_request_active_account(self, data, ajax_status):
+        if ajax_status == "success":
+            self.modal_active_account.close()
+        else:
+            forms.SignForm("#form-auth_user", after_sign=lambda: forms.ValidateForm("#form-auth_user"))
 
 
 class RolesList(helpers.XmlConstructor):

@@ -3571,6 +3571,9 @@ class XmlConstructor(object):
         elif isinstance(attr_value, XmlConstructor):
             v = attr_value.xml()
             return v
+        elif isinstance(attr_value, (float, int)):
+            v = str(attr_value)
+            return v
         else:
             return attr_value
 
