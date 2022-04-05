@@ -2824,8 +2824,19 @@ class CheckBox(Widget):
                 self._value = True
                 jQuery(self.target_selector).find(".phanterpwa-widget-checkbox-wrapper").addClass("has_true")
             else:
-                self._value = True
+                self._value = False
                 jQuery(self.target_selector).find(".phanterpwa-widget-checkbox-wrapper").removeClass("has_true")
+            jQuery(self.target_selector).find("input").prop("checked", self._value).val(self._value).trigger("change")
+
+    def _on_check_change(self, el):
+        if not self._disabled:
+            if jQuery(el)[0].checked:
+                self._value = True
+                jQuery(self.target_selector).find(".phanterpwa-widget-checkbox-wrapper").addClass("has_true")
+            else:
+                self._value = False
+                jQuery(self.target_selector).find(".phanterpwa-widget-checkbox-wrapper").removeClass("has_true")
+        else:
             jQuery(self.target_selector).find("input").prop("checked", self._value).val(self._value)
 
     def set_disabled(self):
@@ -2846,7 +2857,7 @@ class CheckBox(Widget):
             else:
                 p.addClass("has_true")
                 self._value = True
-            p.find("input").prop("checked", self._value).val(self._value)
+            p.find("input").prop("checked", self._value).val(self._value).trigger("change")
 
     def _switch_focus(self, el):
         el = jQuery(el)
@@ -2875,7 +2886,10 @@ class CheckBox(Widget):
             "focusout.phanterpwa-event-checkbox-focus",
             lambda: self._switch_focus(this)
         )
-
+        jQuery(self.target_selector).find("input").off("change.phanterpwa-event-checkbox-change").on(
+            "change.phanterpwa-event-checkbox-change",
+            lambda: self._on_check_change(this)
+        )
 
     def start(self):
         self._binds()
