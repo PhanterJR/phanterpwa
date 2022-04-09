@@ -354,7 +354,7 @@ class UserManager(web.RequestHandler):
         last_name = dict_arguments.get('last_name', r_user.last_name)
         email_now = r_user.email
         new_email = dict_arguments['email']
-        two_factor = checkbox_bool(dict_arguments.get('two_factor', r_user.two_factor))
+        two_factor = checkbox_bool(dict_arguments.get('two_factor', r_user.two_factor_login))
         multiple_login = checkbox_bool(dict_arguments.get('permit_mult_login', r_user.permit_mult_login))
         activated = checkbox_bool(dict_arguments.get('activated', r_user.activated))
 
