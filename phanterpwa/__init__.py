@@ -3,14 +3,14 @@
 # license: MIT
 
 __author__ = "PhanterJR<junior.conex@gmail.com>"
-__version__ = "13.10.3"
+__version__ = "13.10.4"
 __install_requeriments__ = [
     "psutil",
     "tornado",
     "libsass",
-    "transcrypt",
+    "transcrypt==3.7.16",
     "pillow",
-    "itsdangerous",
+    "itsdangerous==1.1",
     "requests-oauthlib",
     "pydal>=19.04",
     "passlib",
