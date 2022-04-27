@@ -2,129 +2,46 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
-*.so
-
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
 eggs/
 .eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
 *.egg-info/
-.installed.cfg
 *.egg
 MANIFEST
-
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-.hypothesis/
-.pytest_cache/
-
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
+dist/
+build/
+*.json
+*.ini
 *.log
-local_settings.py
-db.sqlite3
-
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-target/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# pyenv
-.python-version
-
-# celery beat schedule file
-celerybeat-schedule
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-*.ffs_db
-setup.bat
-*.pid
-phanterpwa/interface/*.json
-
-apenas_enviar.bat
-*.table
-*secret.ini
-phanterpwa/interface/Admin/frontapps/admin/statics*
-phanterpwa/interface/Admin/frontapps/admin/sources*
-*.map
-*.sublime-project
-*.sublime-workspace
-phanterpwa.sublime-project
-phanterpwa.sublime-workspace
-phanterpwa/interface/Admin/config.json
-.apenas_enviar.bat
-.setup.bat
-phanterpwa/interface/Admin/backapps/api/app.ini
-phanterpwa/interface/Admin/temp/project_config_admin.json
-phanterpwa/interface/Admin/temp/project_config_admin.json
-phanterpwa/interface/Admin/temp/statics_mtime_admin.json
-phanterpwa/interface/Admin/temp/styles_mtime_admin.json
-phanterpwa/interface/Admin/temp/templates_mtime_admin.json
-phanterpwa/interface/Admin/temp/transcrypts_mtime_admin.json
 *.sqlite
+app.ini
+project.ini
+secret.ini
+config.json
+backapps/*/uploads/*
+backapps/*/databases/*
+frontapps/*/sources/transcrypts/__target__/*
+frontapps/*/www/*
+frontapps/*/sources/styles/application.sass
+frontapps/*/statics/css/phanterpwa.css
+frontapps/*/statics/json/manifest.json
+frontapps/*/statics/json/manifest.webmanifest
+frontapps/*/statics/xml/browserconfig.xml
+*.table
+
+!lib/codemirror.css
+!lib/codemirror.js
+frontapps/*/sources/transcrypts/auto/*
+temp/*
+trash/*
+logs/*
+!backapps/*/uploads/readme.txt
+!log/readme.txt
+!temp/readme.txt
+!trash/readme.txt
+!backapps/*/databases/readme.txt
+tests/profile_image_cutted/1_profile_arbritary_cut.jpg
+tests/profile_image_cutted/2_profile_arbritary_cut.jpg
+tests/profile_image_cutted/3_profile_arbritary_cut.jpg
+tests/profile_image_cutted/profile_h_auto.jpg
+tests/profile_image_cutted/profile_v_auto.jpg
+*.bat
