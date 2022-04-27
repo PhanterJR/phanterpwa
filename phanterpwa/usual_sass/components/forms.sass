@@ -39,24 +39,24 @@
     display: none
 
 .basic-profile-user-img-container, .form-image-user-img
-    height: 145px
-    width: 145px
+    height: 100px
+    width: 100px
     overflow: hidden
     border-radius: 100%
     margin-left: auto
     margin-right: auto
     @media #{$width1}
+        height: 90px
+        width: 90px
+    @media #{$width2}
+        height: 90px
+        width: 90px
+    @media #{$width3}
         height: 100px
         width: 100px
-    @media #{$width2}
+    @media #{$width4}
         height: 110px
         width: 110px
-    @media #{$width3}
-        height: 130px
-        width: 130px
-    @media #{$width4}
-        height: 145px
-        width: 145px
 .phanterpwa-form-buttons-container
     display: block
     width: 100%
@@ -68,7 +68,11 @@
     min-height: 120px
 
 .basic-profile-user-role, .form-profile-user-role
-    font-size: 0.8rem
+    font-size: 0.7rem
+    color: grey
+
+.basic-profile-user-email, .form-profile-user-email
+    font-size: 0.9rem
     color: grey
 
 .buttons-form-container

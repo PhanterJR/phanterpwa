@@ -461,6 +461,11 @@ class ModalLogin(modal.Modal):
                             _class="form-profile-user-name"
                         ),
                         DIV(
+                            email,
+                            _id='form-login-profile-user-email',
+                            _class="form-profile-user-email"
+                        ),
+                        DIV(
                             role,
                             _id='form-login-profile-user-role',
                             _class="form-profile-user-role"

@@ -1,4 +1,5 @@
 import os
+import io
 import sys
 import sass
 import json
@@ -10,7 +11,7 @@ import time
 import datetime
 import re
 import traceback
-from pathlib import PurePath
+from pathlib import (PurePath, Path)
 from glob import glob, iglob
 from phanterpwa.configer import ProjectConfig
 from phanterpwa.tools import interpolate
@@ -208,9 +209,10 @@ class Compiler():
 
     def phanterpwa_usual_sass(self, app):
         print("\nProcess PhanterPWA usual sass...")
+        variables = join(PATH_PHANTERPWA, "usual_sass", "variables.sass")
         main_file = join(PATH_PHANTERPWA, "usual_sass", "phanterpwa.sass")
-        if exists(join(dirname(main_file), "_compiler_sass_temp_file.sass")):
-            os.unlink(join(dirname(main_file), "_compiler_sass_temp_file.sass"))
+        # if exists(join(dirname(main_file), "_compiler_sass_temp_file.sass")):
+        #     os.unlink(join(dirname(main_file), "_compiler_sass_temp_file.sass"))
         target_dir = join(self.projectpath, "frontapps", app, "statics", "css")
         if not isdir(target_dir):
             try:
@@ -223,69 +225,63 @@ class Compiler():
             join(PATH_PHANTERPWA, "usual_sass"), ignore_files=["__init__.py"], ignore_paths=["__pycache__"])
         sass_files = (normpath(x) for x in sfiles if x.endswith(".sass"))
 
-        with open(main_file, 'r', encoding="utf-8") as f:
+        with open(variables, 'r', encoding="utf-8") as f:
             txt = f.read()
-            txt = re.sub(
-                r"/\* start change programmatically[\W\w]*end change programmatically \*[\r\n]?/",
-                "",
-                txt
-            )
-            if re.search(r"\$app-version: [\"\'][0-9]{0, 3}\.[0-9]{0, 3}\.[0-9]{0, }\.[0-9]{0, }\"", txt):
-                new_text_to_save = re.sub(
-                    r"\$app-version: [\"\'][0-9]{0, 3}\.[0-9]{0, 3}\.[0-9]{0, }\.[0-9]{0, }\"",
-                    "$app-version: \"{0}\"".format(self.versioning),
-                    txt
-                )
-            else:
-                new_text_to_save = "".join([
-                    "/* start change programmatically */\n",
-                    "$app-version: \"{0}\"\n".format(self.versioning),
-                    "/* end change programmatically */",
-                    txt
-                ])
-            txt = new_text_to_save
-            txt = "/* SASS Source Code (MAIN FILE): {0} */\n\n{1}".format(main_file, txt)
-            has_import = False
-            for x in sass_files:
-                if x != normpath(main_file):
-                    c = "/* SASS Source Code: {0} */\n\n".format(x)
-                    p = PurePath(x)
-                    p = p.relative_to(dirname(main_file))
-                    l = [*p.parts]
-                    l[-1] = l[-1][0:-5]
-                    patter = "@import '{0}'".format("/".join(l))
-                    txt = "".join(["\n", txt, c, patter, "\n\n"])
-                    has_import = True
-            if has_import:
-                print("    Creating imports and adding in temp file",
-                    dirname(main_file), "_compiler_sass_temp_file.sass")
 
-            with open(join(dirname(main_file), "_compiler_sass_temp_file.sass"), "w", encoding="utf-8") as f2:
-                f2.write(txt)
-            print("    Convert sass to css: {0}".format(target_css))
-            if self.minify:
-                new_css = sass.compile(
-                    filename=join(dirname(main_file), "_compiler_sass_temp_file.sass"),
-                    output_style="compressed"
-                )
-            else:
-                new_css = sass.compile(
-                    filename=join(dirname(main_file), "_compiler_sass_temp_file.sass"),
-                    output_style="expanded"
-                )
-                new_css = re.sub(
-                    r"^/\* start change programmatically[\W\w]*end change programmatically \*/$",
-                    "",
-                    new_css)
-            if isfile(join(self.projectpath, "temp", "_compiler_sass_temp_file.sass")):
-                os.unlink(join(self.projectpath, "temp", "_compiler_sass_temp_file.sass"))
-            shutil.copy(
-                join(dirname(main_file), "_compiler_sass_temp_file.sass"),
-                join(self.projectpath, "temp", "_compiler_sass_temp_file.sass")
+        new_text_to_save = "".join([
+            "//change programmatically\n",
+            "$app-version: \"{0}\"\n".format(self.versioning),
+            "//change programmatically\n"
+        ])
+        with open(main_file, 'r', encoding="utf-8") as f:
+            main_txt = f.read()
+        txt = "\n".join([
+            new_text_to_save,
+            "\n/* SASS Source Code (VARIABLES): {0} */".format(variables),
+            txt,
+            "\n/* SASS Source Code (MAIN FILE): {0} */".format(main_file),
+            main_txt
+        ])
+        has_import = False
+        for x in sass_files:
+            if x != normpath(main_file) and x !=normpath(variables):
+                c = "/* SASS Source Code: {0} */\n\n".format(x)
+                p = PurePath(x)
+                p = p.relative_to(dirname(main_file))
+                l = [*p.parts]
+                l[-1] = l[-1][0:-5]
+                patter = "@import '{0}'".format("/".join(l))
+                txt = "".join(["\n", txt, c, patter, "\n\n"])
+                has_import = True
+        if has_import:
+            print("    Creating imports...")
+        # ftempsass = io.StringIO()
+        # with open(ftempsass, "w", encoding="utf-8") as f2:
+        #     f2.write(txt)
+        print("    Convert sass to css: {0}".format(target_css))
+        if self.minify:
+            new_css = sass.compile(
+                string=txt,
+                output_style="compressed",
+                indented=True,
+                include_paths=[dirname(main_file)]
             )
-            with open(target_css, "w") as o:
-                o.write(new_css)
-            os.unlink(join(dirname(main_file), "_compiler_sass_temp_file.sass"))
+        else:
+            new_css = sass.compile(
+                string=txt,
+                output_style="expanded",
+                indented=True,
+                include_paths=[dirname(main_file)]
+            )
+        # if isfile(join(self.projectpath, "temp", "_compiler_sass_temp_file.sass")):
+        #     os.unlink(join(self.projectpath, "temp", "_compiler_sass_temp_file.sass"))
+        # shutil.copy(
+        #     join(dirname(main_file), "_compiler_sass_temp_file.sass"),
+        #     join(self.projectpath, "temp", "_compiler_sass_temp_file.sass")
+        # )
+        with open(target_css, "w") as o:
+            o.write(new_css)
+        # os.unlink(join(dirname(main_file), "_compiler_sass_temp_file.sass"))
         # with open(main_file, "w", encoding="utf-8") as fw:
         #     fw.write(new_text_to_save)
 
@@ -492,37 +488,6 @@ class Compiler():
             return True
         return False
 
-    # def modules_files_monitor(self):
-    #     t = join(dirname(phanterpwa.__file__), "frontapps")
-    #     lfi = self.get_files_dir(t, ignore_files=["__init__.py"], ignore_paths=["__pycache__"])
-    #     return [x for x in lfi] + [
-    #         join(dirname(phanterpwa.__file__), "xmlconstructor.py"),
-    #         join(dirname(phanterpwa.__file__), "helpers.py")
-    #     ]
-
-    # def _check_phanterpwa_modules(self):
-    #     t_files = self.modules_files_monitor()
-    #     has_change = False
-    #     if isfile(join(self.tempfolder, "phanterpwa_modules_mtime.json")):
-    #         with open(join(self.tempfolder,
-    #                 "phanterpwa_modules_mtime.json"), "r", encoding="utf-8") as f:
-    #             content = json.load(f)
-    #             for x in t_files:
-    #                 if x in content:
-    #                     if getmtime(x) != content[x]:
-    #                         has_change = True
-    #                 else:
-    #                     has_change = True
-    #     else:
-    #         has_change = True
-    #     if has_change:
-    #         for app in self.app_list:
-    #             if exists(join(self.tempfolder, "transcrypts_mtime_{0}.json".format(app))):
-    #                 os.unlink(join(self.tempfolder, "transcrypts_mtime_{0}.json".format(app)))
-
-    #             if exists(join(self.tempfolder, "templates_mtime_{0}.json".format(app))):
-    #                 os.unlink(join(self.tempfolder, "templates_mtime_{0}.json".format(app)))
-
     def _check_template_extends_change(self, app):
         extends_files = self.extends_files(app)
         if isfile(join(self.tempfolder, "extends_mtime_{0}.json".format(app))):
@@ -629,12 +594,25 @@ class Compiler():
         appConfig = self.config
         changed = self._check_styles_change(app)
         if changed or self.full_compilation:
+            variables = join(PATH_PHANTERPWA, "usual_sass", "variables.sass")
+            with open(variables, 'r', encoding="utf-8") as f:
+                txt = f.read()
+
+            new_text_to_save = "".join([
+                "//change programmatically\n",
+                "$app-version: \"{0}\"\n".format(self.versioning),
+                "//change programmatically",
+                txt
+            ])
             main_file = join(
                 self.path_styles_folder(app), "{0}.sass".format(
                     appConfig["FRONTEND"][app]['styles_main_file'])
             )
-            if exists(join(dirname(main_file), "_compiler_sass_temp_file.sass")):
-                os.unlink(join(dirname(main_file), "_compiler_sass_temp_file.sass"))
+            if not exists(main_file):
+                Path(main_file).touch()
+
+            # if exists(join(dirname(main_file), "_compiler_sass_temp_file.sass")):
+            #     os.unlink(join(dirname(main_file), "_compiler_sass_temp_file.sass"))
             target_css = join(
                 self.path_build_styles_folder(app),
                     "{0}.css".format(appConfig["FRONTEND"][app]['styles_main_file'])
@@ -646,71 +624,66 @@ class Compiler():
 
             sass_files = self.style_files(app)
 
-            with open(main_file, 'r', encoding="utf-8") as f:
+            variables = join(PATH_PHANTERPWA, "usual_sass", "variables.sass")
+            with open(variables, 'r', encoding="utf-8") as f:
                 txt = f.read()
-                txt = re.sub(
-                    r"/\* start change programmatically[\W\w]*end change programmatically \*[\r\n]?/",
-                    "",
-                    txt
-                )
-                if re.search(r"\$app-version: [\"\'][0-9]{0, 3}\.[0-9]{0, 3}\.[0-9]{0, }\.[0-9]{0, }\"", txt):
-                    new_text_to_save = re.sub(
-                        r"\$app-version: [\"\'][0-9]{0, 3}\.[0-9]{0, 3}\.[0-9]{0, }\.[0-9]{0, }\"",
-                        "$app-version: \"{0}\"".format(self.versioning),
-                        txt
-                    )
-                else:
-                    new_text_to_save = "".join([
-                        "/* start change programmatically */\n",
-                        "$app-version: \"{0}\"\n".format(self.versioning),
-                        "/* end change programmatically */",
-                        txt
-                    ])
-                txt = new_text_to_save
-                txt = "/* SASS Source Code (MAIN FILE): {0} */\n\n{1}".format(main_file, txt)
-                has_import = False
-                for x in sass_files:
-                    if x != normpath(main_file):
-                        c = "/* SASS Source Code: {0} */\n\n".format(x)
-                        p = PurePath(x)
-                        p = p.relative_to(dirname(main_file))
-                        l = [*p.parts]
-                        l[-1] = l[-1][0:-5]
-                        patter = "@import '{0}'".format("/".join(l))
-                        txt = "".join(["\n", txt, c, patter, "\n\n"])
-                        has_import = True
-                if has_import:
-                    print("    Creating imports and adding in temp file",
-                        dirname(main_file), "_compiler_sass_temp_file.sass")
 
-                with open(join(dirname(main_file), "_compiler_sass_temp_file.sass"), "w", encoding="utf-8") as f2:
-                    f2.write(txt)
-                print("    Convert sass to css: {0}".format(target_css))
-                if self.minify:
-                    new_css = sass.compile(
-                        filename=join(dirname(main_file), "_compiler_sass_temp_file.sass"),
-                        output_style="compressed"
-                    )
-                else:
-                    new_css = sass.compile(
-                        filename=join(dirname(main_file), "_compiler_sass_temp_file.sass"),
-                        output_style="expanded"
-                    )
-                    new_css = re.sub(
-                        r"^/\* start change programmatically[\W\w]*end change programmatically \*/$",
-                        "",
-                        new_css)
-                if isfile(join(self.projectpath, "temp", "_compiler_sass_temp_file.sass")):
-                    os.unlink(join(self.projectpath, "temp", "_compiler_sass_temp_file.sass"))
-                shutil.copy(
-                    join(dirname(main_file), "_compiler_sass_temp_file.sass"),
-                    join(self.projectpath, "temp", "_compiler_sass_temp_file.sass")
+            new_text_to_save = "".join([
+                "//change programmatically\n",
+                "$app-version: \"{0}\"\n".format(self.versioning),
+                "//change programmatically\n"
+            ])
+            with open(main_file, 'r', encoding="utf-8") as f:
+                main_txt = f.read()
+            txt = "\n".join([
+                new_text_to_save,
+                "\n/* SASS Source Code (VARIABLES): {0} */".format(variables),
+                txt,
+                "\n/* SASS Source Code (MAIN FILE): {0} */".format(main_file),
+                main_txt
+            ])
+            has_import = False
+            for x in sass_files:
+                if x != normpath(main_file):
+                    c = "/* SASS Source Code: {0} */\n\n".format(x)
+                    p = PurePath(x)
+                    p = p.relative_to(dirname(main_file))
+                    l = [*p.parts]
+                    l[-1] = l[-1][0:-5]
+                    patter = "@import '{0}'".format("/".join(l))
+                    txt = "".join(["\n", txt, c, patter, "\n\n"])
+                    has_import = True
+            if has_import:
+                print("    Creating imports")
+
+            # with open(join(dirname(main_file), "_compiler_sass_temp_file.sass"), "w", encoding="utf-8") as f2:
+            #     f2.write(txt)
+            print("    Convert sass to css: {0}".format(target_css))
+            if self.minify:
+                new_css = sass.compile(
+                    string=txt,
+                    output_style="compressed",
+                    indented=True,
+                    include_paths=[dirname(main_file)]
                 )
-                with open(target_css, "w") as o:
-                    o.write(new_css)
-                os.unlink(join(dirname(main_file), "_compiler_sass_temp_file.sass"))
-            with open(main_file, "w", encoding="utf-8") as fw:
-                fw.write(new_text_to_save)
+            else:
+                new_css = sass.compile(
+                    string=txt,
+                    output_style="expanded",
+                    indented=True,
+                    include_paths=[dirname(main_file)]
+                )
+            # if isfile(join(self.projectpath, "temp", "_compiler_sass_temp_file.sass")):
+            #     os.unlink(join(self.projectpath, "temp", "_compiler_sass_temp_file.sass"))
+            # shutil.copy(
+            #     join(dirname(main_file), "_compiler_sass_temp_file.sass"),
+            #     join(self.projectpath, "temp", "_compiler_sass_temp_file.sass")
+            # )
+            with open(target_css, "w") as o:
+                o.write(new_css)
+            # os.unlink(join(dirname(main_file), "_compiler_sass_temp_file.sass"))
+            # with open(main_file, "w", encoding="utf-8") as fw:
+            #     fw.write(new_text_to_save)
         else:
             print("    Skiping styles...")
 
