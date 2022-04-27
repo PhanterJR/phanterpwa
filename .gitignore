@@ -10,6 +10,7 @@ MANIFEST
 dist/
 build/
 
+# phanterpwa
 *.ini
 *.log
 *.sqlite
