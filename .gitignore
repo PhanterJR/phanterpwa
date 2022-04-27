@@ -9,7 +9,7 @@ eggs/
 MANIFEST
 dist/
 build/
-*.json
+
 *.ini
 *.log
 *.sqlite

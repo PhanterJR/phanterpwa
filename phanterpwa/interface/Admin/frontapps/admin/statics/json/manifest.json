@@ -1,0 +1,22 @@
+{
+  "short_name": "PhanterPWA",
+  "name": "PhanterPWA Scaffold",
+  "description": "Weather forecast information",
+  "icons": [
+    {
+      "src": "/static/0.0.1/favicons/android-chrome-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/static/0.0.1/favicons/android-chrome-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#3367D6",
+  "display": "standalone",
+  "scope": "/",
+  "theme_color": "#3367D6"
+}
