@@ -39,6 +39,7 @@ class EchoWebSocket(websocket.WebSocketHandler):
         self.connections.add(self)
 
     def on_message(self, message):
+        print(len(self.connections))
         if message.startswith("{"):
             msg = None
             try:
@@ -88,7 +89,17 @@ class EchoWebSocket(websocket.WebSocketHandler):
                 else:
                     self.write_message("reload")
         else:
+            print("veio")
             self.write_message(u"You said: " + message)
+            for con in self.get_connections():
+                print("usuario:", id(con))
+                con.write_message(
+                    "O usuário {0} falou: {1}".format(id(self), message)
+                )
+
+    @classmethod
+    def get_connections(cls):
+        return cls.connections
 
     def on_close(self):
         if self.phanterpwa_current_user:
