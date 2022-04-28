@@ -1124,77 +1124,79 @@ class WatchingFiles():
     def monitoring(self):
         print("Starting WatchingFiles...")
         while True:
-            dirs_delete = dict(self._dirs)
-            files_delete = dict(self._files)
-            for x in os.walk(self.path_monitoring):
-                p = PurePath(x[0])
-                if not set(p.parts).intersection(set(self.ignore_paths)):
-                    df = os.path.normpath(os.path.join(self.path_destiny, p.relative_to(self.path_monitoring)))
-                    self._dirs[x[0]] = [os.path.getmtime(x[0]), df]
-                    if x[0] in dirs_delete:
-                        del dirs_delete[x[0]]
-                    if not os.path.isdir(df):
-                        os.makedirs(df, exist_ok=True)
-                        print("Creating Destiny Dirs: {0}".format(df))
-                    for y in x[2]:
-                        f = os.path.normpath(os.path.join(x[0], y))
-                        d = os.path.normpath(os.path.join(self.path_destiny, p.relative_to(self.path_monitoring), y))
-                        if f in files_delete:
-                            del files_delete[f]
-                        if f not in self._files:
+            self.sincronize()
+
+    def sincronize(self):
+        dirs_delete = dict(self._dirs)
+        files_delete = dict(self._files)
+        for x in os.walk(self.path_monitoring):
+            p = PurePath(x[0])
+            if not set(p.parts).intersection(set(self.ignore_paths)):
+                df = os.path.normpath(os.path.join(self.path_destiny, p.relative_to(self.path_monitoring)))
+                self._dirs[x[0]] = [os.path.getmtime(x[0]), df]
+                if x[0] in dirs_delete:
+                    del dirs_delete[x[0]]
+                if not os.path.isdir(df):
+                    os.makedirs(df, exist_ok=True)
+                    print("Creating Destiny Dirs: {0}".format(df))
+                for y in x[2]:
+                    f = os.path.normpath(os.path.join(x[0], y))
+                    d = os.path.normpath(os.path.join(self.path_destiny, p.relative_to(self.path_monitoring), y))
+                    if f in files_delete:
+                        del files_delete[f]
+                    if f not in self._files:
+                        self._files[
+                            f
+                        ] = [os.path.getmtime(f), d]
+                        print("New File: {0}\nCoping {0} to {1}".format(f, d))
+                        shutil.copy2(f, d)
+                    else:
+                        if self._files[f][0] != os.path.getmtime(f):
                             self._files[
                                 f
                             ] = [os.path.getmtime(f), d]
-                            print("New File: {0}\nCoping {0} to {1}".format(f, d))
+                            print("Was Modify: {0}\nCoping {0} to {1}".format(f, d))
                             shutil.copy2(f, d)
-                        else:
-                            if self._files[f][0] != os.path.getmtime(f):
-                                self._files[
-                                    f
-                                ] = [os.path.getmtime(f), d]
-                                print("Was Modify: {0}\nCoping {0} to {1}".format(f, d))
-                                shutil.copy2(f, d)
-                            elif not os.path.isfile(d):
-                                shutil.copy2(f, d)
-                                print("Not Found: {1}\nCoping {0} to {1}".format(f, d))
-            if dirs_delete:
-                print("Deleting dirs:", dirs_delete)
+                        elif not os.path.isfile(d):
+                            shutil.copy2(f, d)
+                            print("Not Found: {1}\nCoping {0} to {1}".format(f, d))
+        if dirs_delete:
+            print("Deleting dirs:", dirs_delete)
 
-                for dd in tuple(dirs_delete.keys()):
-                    target = dirs_delete[dd][1]
-                    print(target)
-                    if os.path.isdir(target):
-                        try:
-                            shutil.rmtree(target)
-                        except OSError as e:
-                            print("Error: %s - %s." % (e.filename, e.strerror))
-                            pass
-                        while os.path.exists(target):
-                            pass
-                        del dirs_delete[dd]
-                        del self._dirs[dd]
-                    else:
-                        del dirs_delete[dd]
-                        del self._dirs[dd]
+            for dd in tuple(dirs_delete.keys()):
+                target = dirs_delete[dd][1]
+                print(target)
+                if os.path.isdir(target):
+                    try:
+                        shutil.rmtree(target)
+                    except OSError as e:
+                        print("Error: %s - %s." % (e.filename, e.strerror))
+                        pass
+                    while os.path.exists(target):
+                        pass
+                    del dirs_delete[dd]
+                    del self._dirs[dd]
+                else:
+                    del dirs_delete[dd]
+                    del self._dirs[dd]
 
-            if files_delete:
-                print("Deleting files:", files_delete)
+        if files_delete:
+            print("Deleting files:", files_delete)
 
-                for ff in tuple(files_delete.keys()):
-                    target = files_delete[ff][1]
-                    print(target)
-                    if os.path.isfile(target):
-                        try:
-                            os.unlink(target)
-                        except OSError as e:
-                            print("Error: %s - %s." % (e.filename, e.strerror))
-                            pass
-                        while os.path.exists(target):
-                            pass
-                        del files_delete[ff]
-                        del self._files[ff]
-                    else:
-                        del files_delete[ff]
-                        del self._files[ff]
-            time.sleep(1)
-
+            for ff in tuple(files_delete.keys()):
+                target = files_delete[ff][1]
+                print(target)
+                if os.path.isfile(target):
+                    try:
+                        os.unlink(target)
+                    except OSError as e:
+                        print("Error: %s - %s." % (e.filename, e.strerror))
+                        pass
+                    while os.path.exists(target):
+                        pass
+                    del files_delete[ff]
+                    del self._files[ff]
+                else:
+                    del files_delete[ff]
+                    del self._files[ff]
+        time.sleep(1)

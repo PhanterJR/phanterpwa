@@ -490,57 +490,42 @@ class ProjectConfig():
         with open(t, "w", encoding="utf-8") as f:
             json.dump(self._config, f, ensure_ascii=True, indent=4)
 
-        for x in self.project_ini.sections():
-            for y in self.project_ini.items(x):
-                v = str(self._config[x][y[0]])
-                self.project_ini[x][y[0]] = v
+        if not os.path.exists(join(self._config["PROJECT"]["path"], 'project.ini')):
+            for x in self.project_ini.sections():
+                for y in self.project_ini.items(x):
+                    v = str(self._config[x][y[0]])
+                    self.project_ini[x][y[0]] = v
+            with open(join(self._config["PROJECT"]["path"], 'project.ini'), 'w', encoding="utf-8") as configfile:
+                self._ini_project.write(configfile)
 
-        for x in self.project_secret_ini.sections():
-            for y in self.project_secret_ini.items(x):
-                v = str(self._config[x][y[0]])
-                self.project_secret_ini[x][y[0]] = v
-
-        with open(join(self._config["PROJECT"]["path"], 'project.ini'), 'w', encoding="utf-8") as configfile:
-            self._ini_project.write(configfile)
-
-        with open(join(self._config["PROJECT"]["path"], 'secret.ini'), 'w', encoding="utf-8") as configfile:
-            self._ini_secret.write(configfile)
+        if not os.path.exists(join(self._config["PROJECT"]["path"], 'secret.ini')):
+            for x in self.project_secret_ini.sections():
+                for y in self.project_secret_ini.items(x):
+                    v = str(self._config[x][y[0]])
+                    self.project_secret_ini[x][y[0]] = v
+            with open(join(self._config["PROJECT"]["path"], 'secret.ini'), 'w', encoding="utf-8") as configfile:
+                self._ini_secret.write(configfile)
 
         for a in self.backend_ini:
-            for x in self.backend_ini[a].sections():
-                if x == "APP":
-                    for y in self.backend_ini[a].items(x):
-                        v = str(self._config['BACKEND'][a][y[0]])
-                        self.backend_ini[a][x][y[0]] = v
-            with open(join(self._config["PROJECT"]["path"], "backapps", a, 'app.ini'), 'w', encoding="utf-8") as configfile:
-                self.backend_ini[a].write(configfile)
+            if not os.path.exists(join(self._config["PROJECT"]["path"], "backapps", a, 'app.ini')):
+                for x in self.backend_ini[a].sections():
+                    if x == "BACKEND":
+                        for y in self.backend_ini[a].items(x):
+                            v = str(self._config['BACKEND'][a][y[0]])
+                            self.backend_ini[a][x][y[0]] = v
+                with open(join(self._config["PROJECT"]["path"], "backapps", a, 'app.ini'), 'w', encoding="utf-8") as configfile:
+                    self.backend_ini[a].write(configfile)
 
         for a in self.frontend_ini:
-            for x in self.frontend_ini[a].sections():
-                if x == "APP":
-                    for y in self.frontend_ini[a].items(x):
-                        v = str(self._config['FRONTEND'][a][y[0]])
-                        self.frontend_ini[a][x][y[0]] = v
-            with open(join(self._config["PROJECT"]["path"], "frontapps", a, 'app.ini'), 'w', encoding="utf-8") as configfile:
-                self.frontend_ini[a].write(configfile)
+            if not os.path.exists(join(self._config["PROJECT"]["path"], "frontapps", a, 'app.ini')):
+                for x in self.frontend_ini[a].sections():
+                    if x == "FRONTEND":
+                        for y in self.frontend_ini[a].items(x):
+                            v = str(self._config['FRONTEND'][a][y[0]])
+                            self.frontend_ini[a][x][y[0]] = v
+                with open(join(self._config["PROJECT"]["path"], "frontapps", a, 'app.ini'), 'w', encoding="utf-8") as configfile:
+                    self.frontend_ini[a].write(configfile)
 
-        # for a in self.backend_secret_ini:
-        #     for x in self.backend_secret_ini[a].sections():
-        #         if x == "APP":
-        #             for y in self.backend_secret_ini[a].items(x):
-        #                 v = str(self._config['BACKEND'][a][y[0]])
-        #                 self.backend_secret_ini[a][x][y[0]] = v
-        #     with open(join(self._config["PROJECT"]["path"], "backapps", a, 'secret.ini'), 'w', encoding="utf-8") as configfile:
-        #         self.backend_secret_ini[a].write(configfile)
-
-        # for a in self.frontend_secret_ini:
-        #     for x in self.frontend_secret_ini[a].sections():
-        #         if x == "APP":
-        #             for y in self.frontend_secret_ini[a].items(x):
-        #                 v = str(self._config['FRONTEND'][a][y[0]])
-        #                 self.frontend_secret_ini[a][x][y[0]] = v
-        #     with open(join(self._config["PROJECT"]["path"], "frontapps", a, 'secret.ini'), 'w', encoding="utf-8") as configfile:
-        #         self.frontend_secret_ini[a].write(configfile)
 
     def __iter__(self):
         for c in self._config:
