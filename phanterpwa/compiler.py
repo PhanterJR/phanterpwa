@@ -597,13 +597,6 @@ class Compiler():
             variables = join(PATH_PHANTERPWA, "usual_sass", "variables.sass")
             with open(variables, 'r', encoding="utf-8") as f:
                 txt = f.read()
-
-            new_text_to_save = "".join([
-                "//change programmatically\n",
-                "$app-version: \"{0}\"\n".format(self.versioning),
-                "//change programmatically",
-                txt
-            ])
             main_file = join(
                 self.path_styles_folder(app), "{0}.sass".format(
                     appConfig["FRONTEND"][app]['styles_main_file'])
