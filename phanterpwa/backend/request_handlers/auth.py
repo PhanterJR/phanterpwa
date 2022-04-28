@@ -1204,8 +1204,29 @@ class TwoFactor(web.RequestHandler):
 
     @check_client_token()
     def put(self, *args):
+        dict_arguments = {k: self.request.arguments.get(k)[0].decode('utf-8') for k in self.request.arguments}
+        two_factor_code = dict_arguments.get("code", None)
+        checked_code = None
+        try:
+            checked_code = check_activation_code(
+                two_factor_code
+            )
+        except Exception:
+            self.logger_api.error("Problem on check activation code", exc_info=True)
+        if not checked_code:
+            self.set_status(400)
+            return self.write({
+                'status': 'Bad Request',
+                'code': 400,
+                'message': 'Invalid two factor code',
+                'i18n': {
+                    'message': self.T('Invalid two factor code')
+                }
+            })
+
         authorization_url = args[0]
-        if authorization_url:
+        if authorization_url and checked_code:
+            db = self.DALDatabase
             token_content = None
             two_factor_serialize = URLSafeSerializer(
                 self.projectConfig['BACKEND'][self.app_name]["secret_key"],
@@ -1219,12 +1240,30 @@ class TwoFactor(web.RequestHandler):
                 token_content = None
             if token_content and 'id_user' in token_content:
                 id_user = token_content['id_user']
-                q_user = self.DALDatabase(self.DALDatabase.auth_user.id == id_user).select().first()
-                q_client = self.DALDatabase(
-                    (self.DALDatabase.client.auth_user == id_user) &
-                    (self.DALDatabase.client.token == self.phanterpwa_client_token)
+                q_user = db(db.auth_user.id == id_user).select().first()
+                q_client = db(
+                    (db.client.auth_user == id_user) &
+                    (db.client.token == self.phanterpwa_client_token)
                 ).select().first()
                 if q_user and q_client and not q_client.locked:
+                    r_twofactor_code = db(
+                        (db.two_factor_login.auth_user == q_user.id)
+                        & (db.two_factor_login.two_factor_code == checked_code)
+                        & (db.two_factor_login.two_factor_url == authorization_url)
+                    ).select().first()
+                    if not r_twofactor_code:
+                        self.set_status(400)
+                        return self.write({
+                            'status': 'Bad Request',
+                            'code': 400,
+                            'message': 'Invalid two factor code',
+                            'i18n': {
+                                'message': self.T('Invalid two factor code')
+                            }
+                        })
+                    else:
+                        db(db.two_factor_login.auth_user == q_user.id).delete()
+                        db.commit()
 
                     remember_me = q_client.remember_me
                     timeout_token_user = self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire']
@@ -1240,11 +1279,11 @@ class TwoFactor(web.RequestHandler):
                     }
                     token_user = t_user.dumps(content)
                     token_user = token_user.decode('utf-8')
-                    q_role = self.DALDatabase(
-                        (self.DALDatabase.auth_membership.auth_user == q_user.id) &
-                        (self.DALDatabase.auth_group.id == self.DALDatabase.auth_membership.auth_group)
+                    q_role = db(
+                        (db.auth_membership.auth_user == q_user.id) &
+                        (db.auth_group.id == db.auth_membership.auth_group)
                     ).select(
-                        self.DALDatabase.auth_group.id, self.DALDatabase.auth_group.role, orderby=self.DALDatabase.auth_group.grade
+                        db.auth_group.id, db.auth_group.role, orderby=db.auth_group.grade
                     )
                     roles = [x.role for x in q_role]
                     dict_roles = {x.id: x.role for x in q_role}
@@ -1262,8 +1301,8 @@ class TwoFactor(web.RequestHandler):
                         salt="url_secret_key"
                     )
                     q_client.delete_record()
-                    id_client = self.DALDatabase.client.insert(auth_user=q_user.id, date_created=datetime.now())
-                    q_client = self.DALDatabase(self.DALDatabase.client.id == id_client).select().first()
+                    id_client = db.client.insert(auth_user=q_user.id, date_created=datetime.now())
+                    q_client = db(db.client.id == id_client).select().first()
                     content = {
                         'id_user': str(q_user.id),
                         'id_client': str(id_client),
@@ -1282,25 +1321,25 @@ class TwoFactor(web.RequestHandler):
                     )
 
                     if not q_user.permit_mult_login:
-                        r_client = self.DALDatabase(
-                            (self.DALDatabase.client.auth_user == q_user.id) &
-                            (self.DALDatabase.client.token != token_client)
+                        r_client = db(
+                            (db.client.auth_user == q_user.id) &
+                            (db.client.token != token_client)
                         ).select()
                         if r_client:
-                            r_client = self.DALDatabase(
-                                (self.DALDatabase.client.auth_user == q_user.id) &
-                                (self.DALDatabase.client.token != token_client)
+                            r_client = db(
+                                (db.client.auth_user == q_user.id) &
+                                (db.client.token != token_client)
                             ).delete()
-                    self.DALDatabase.commit()
-                    user_image = PhanterpwaGalleryUserImage(q_user.id, self.DALDatabase, self.projectConfig)
+                    db.commit()
+                    user_image = PhanterpwaGalleryUserImage(q_user.id, db, self.projectConfig)
                     if role != "root":
-                        self.DALDatabase.auth_activity.insert(
+                        db.auth_activity.insert(
                             auth_user=q_user.id,
                             request="two-factor",
                             activity="Logged!",
                             date_activity=datetime.now()
                         )
-                        self.DALDatabase.commit()
+                        db.commit()
                     self.set_status(200)
                     return self.write({
                         'status': 'OK',
@@ -1334,16 +1373,16 @@ class TwoFactor(web.RequestHandler):
                         }
                     })
 
-        self.set_status(400)
-        return self.write({
-            'status': 'Bad Request',
-            'code': 400,
-            'message': 'Invalid password or email',
-            'as': self.phanterpwa_authorization,
-            'i18n': {
-                'message': self.T('Invalid password or email')
-            }
-        })
+        else:
+            self.set_status(401)
+            return self.write({
+                'status': 'Unauthorized',
+                'code': 401,
+                'message': 'Invalid activation code',
+                'i18n': {
+                    'message': self.T('Invalid activation code')
+                }
+            })
 
 
 class LockUser(web.RequestHandler):
