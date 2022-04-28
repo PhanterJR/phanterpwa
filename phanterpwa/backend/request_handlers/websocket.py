@@ -10,9 +10,17 @@ from itsdangerous import (
 )
 check_compilation = re.compile(r"check_compilation\[([0-9]*)\]")
 
+MSG = u"""______  _                    _               ______  _    _   ___  ")
+| ___ \| |                  | |              | ___ \| |  | | / _ \ 
+| |_/ /| |__    __ _  _ __  | |_   ___  _ __ | |_/ /| |  | |/ /_\ \\
+|  __/ | '_ \  / _` || '_ \ | __| / _ \| '__||  __/ | |/\| ||  _  |
+| |    | | | || (_| || | | || |_ |  __/| |   | |    \  /\  /| | | |
+\_|    |_| |_| \__,_||_| |_| \__| \___||_|   \_|     \/  \/ \_| |_/
 
+"""
 class EchoWebSocket(websocket.WebSocketHandler):
-    connections = set()
+    _connections = set()
+    _online_users = {}
 
     def initialize(self, app_name, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
         self.app_name = app_name
@@ -29,14 +37,15 @@ class EchoWebSocket(websocket.WebSocketHandler):
         return True
 
     def open(self):
-        self.write_message(u"______  _                    _               ______  _    _   ___  ")
-        self.write_message(u"| ___ \| |                  | |              | ___ \| |  | | / _ \ ")
-        self.write_message(u"| |_/ /| |__    __ _  _ __  | |_   ___  _ __ | |_/ /| |  | |/ /_\ \\")
-        self.write_message(u"|  __/ | '_ \  / _` || '_ \ | __| / _ \| '__||  __/ | |/\| ||  _  |")
-        self.write_message(u"| |    | | | || (_| || | | || |_ |  __/| |   | |    \  /\  /| | | |")
-        self.write_message(u"\_|    |_| |_| \__,_||_| |_| \__| \___||_|   \_|     \/  \/ \_| |_/")
+        # self.write_message(u"______  _                    _               ______  _    _   ___  ")
+        # self.write_message(u"| ___ \| |                  | |              | ___ \| |  | | / _ \ ")
+        # self.write_message(u"| |_/ /| |__    __ _  _ __  | |_   ___  _ __ | |_/ /| |  | |/ /_\ \\")
+        # self.write_message(u"|  __/ | '_ \  / _` || '_ \ | __| / _ \| '__||  __/ | |/\| ||  _  |")
+        # self.write_message(u"| |    | | | || (_| || | | || |_ |  __/| |   | |    \  /\  /| | | |")
+        # self.write_message(u"\_|    |_| |_| \__,_||_| |_| \__| \___||_|   \_|     \/  \/ \_| |_/")
+        self.write_message(MSG)
         self.phanterpwa_current_user = None
-        self.connections.add(self)
+        self.get_connections().add(self)
 
     def on_message(self, message):
         print(len(self.connections))
@@ -68,16 +77,16 @@ class EchoWebSocket(websocket.WebSocketHandler):
                         q_user = self.DALDatabase(self.DALDatabase.auth_user.id == id_user).select().first()
                         if q_user:
                             self.phanterpwa_current_user = q_user
+                            if self.phanterpwa_current_user.id in self.online_users:
+                                for con in self.online_users[self.phanterpwa_current_user.id]:
+                                    if not con.ws_connection:
+                                        self.online_users[self.phanterpwa_current_user.id].remove(con)
+                                self.online_users[self.phanterpwa_current_user.id].add(self)
+                            else:
+                                self.online_users[self.phanterpwa_current_user.id] = set(self)
                             if msg == "command_online":
                                 print("{0} webSocket opened".format(self.phanterpwa_current_user.email))
-                                q_user.update_record(websocket_opened=True)
-                                self.DALDatabase.commit()
                                 self.write_message(u"__ You're online")
-                                return
-                            elif msg == "command_offline":
-                                q_user.update_record(websocket_opened=False)
-                                self.DALDatabase.commit()
-                                self.write_message(u"__ You're offline. Bye.")
                                 return
 
         if message[:17] == "check_compilation":
@@ -89,7 +98,6 @@ class EchoWebSocket(websocket.WebSocketHandler):
                 else:
                     self.write_message("reload")
         else:
-            print("veio")
             self.write_message(u"You said: " + message)
             for con in self.get_connections():
                 print("usuario:", id(con))
@@ -98,14 +106,30 @@ class EchoWebSocket(websocket.WebSocketHandler):
                 )
 
     @classmethod
-    def get_connections(cls):
-        return cls.connections
+    def get_online_user(cls, id_user):
+        user_cons = cls.online_users().get(id_user, set())
+        for con in user_cons:
+            if not user_cons.ws_connection:
+                user_cons.remove(con)
+        return user_cons
+
+    @classmethod
+    def check_user_is_online(cls, id_user):
+        if id_user in cls.get_online_user():
+            return True
+        else:
+            return False
+
+    @classmethod
+    def connections(cls):
+        return cls._connections
 
     def on_close(self):
         if self.phanterpwa_current_user:
-            self.phanterpwa_current_user.update_record(websocket_opened=False)
-            self.DALDatabase.commit()
-            print("{0} webSocket closed".format(self.phanterpwa_current_user.email))
+            try:
+                del self.online_users[self.phanterpwa_current_user.id]
+            except KeyError:
+                pass
         else:
             print("Unknow webSocket closed")
-        self.connections.remove(self)
+        self.connections().remove(self)
