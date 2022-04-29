@@ -10,7 +10,7 @@ from itsdangerous import (
 )
 check_compilation = re.compile(r"check_compilation\[([0-9]*)\]")
 
-MSG = u"""______  _                    _               ______  _    _   ___  ")
+MSG = u"""______  _                    _               ______  _    _   ___  
 | ___ \| |                  | |              | ___ \| |  | | / _ \ 
 | |_/ /| |__    __ _  _ __  | |_   ___  _ __ | |_/ /| |  | |/ /_\ \\
 |  __/ | '_ \  / _` || '_ \ | __| / _ \| '__||  __/ | |/\| ||  _  |
@@ -48,7 +48,6 @@ class EchoWebSocket(websocket.WebSocketHandler):
         self.get_connections().add(self)
 
     def on_message(self, message):
-        print(len(self.connections))
         if message.startswith("{"):
             msg = None
             try:
@@ -77,33 +76,33 @@ class EchoWebSocket(websocket.WebSocketHandler):
                         q_user = self.DALDatabase(self.DALDatabase.auth_user.id == id_user).select().first()
                         if q_user:
                             self.phanterpwa_current_user = q_user
-                            if self.phanterpwa_current_user.id in self.online_users:
-                                for con in self.online_users[self.phanterpwa_current_user.id]:
+                            if self.phanterpwa_current_user.id in self._online_users:
+                                for con in self._online_users[self.phanterpwa_current_user.id]:
                                     if not con.ws_connection:
-                                        self.online_users[self.phanterpwa_current_user.id].remove(con)
-                                self.online_users[self.phanterpwa_current_user.id].add(self)
+                                        self._online_users[self.phanterpwa_current_user.id].remove(con)
+                                self._online_users[self.phanterpwa_current_user.id].add(self)
                             else:
-                                self.online_users[self.phanterpwa_current_user.id] = set(self)
+                                self._online_users[self.phanterpwa_current_user.id] = set([self])
                             if msg == "command_online":
                                 print("{0} webSocket opened".format(self.phanterpwa_current_user.email))
                                 self.write_message(u"__ You're online")
                                 return
 
-        if message[:17] == "check_compilation":
-            r = check_compilation.findall(message)
-            if r:
-                app_compilation = r[0]
-                if str(self.projectConfig['PROJECT']['compilation']) == app_compilation:
-                    self.write_message("Compilation: {0}".format(app_compilation))
-                else:
-                    self.write_message("reload")
-        else:
-            self.write_message(u"You said: " + message)
-            for con in self.get_connections():
-                print("usuario:", id(con))
-                con.write_message(
-                    "O usuário {0} falou: {1}".format(id(self), message)
-                )
+            if message[:17] == "check_compilation":
+                r = check_compilation.findall(message)
+                if r:
+                    app_compilation = r[0]
+                    if str(self.projectConfig['PROJECT']['compilation']) == app_compilation:
+                        self.write_message("Compilation: {0}".format(app_compilation))
+                    else:
+                        self.write_message("reload")
+            else:
+                self.write_message(u"You said: " + message)
+                for con in self.get_connections():
+                    print("usuario:", id(con))
+                    con.write_message(
+                        "O usuário {0} falou: {1}".format(id(self), message)
+                    )
 
     @classmethod
     def get_online_user(cls, id_user):
@@ -121,15 +120,16 @@ class EchoWebSocket(websocket.WebSocketHandler):
             return False
 
     @classmethod
-    def connections(cls):
+    def get_connections(cls):
         return cls._connections
 
     def on_close(self):
         if self.phanterpwa_current_user:
+            print(self.phanterpwa_current_user.email)
             try:
-                del self.online_users[self.phanterpwa_current_user.id]
+                del self._online_users[self.phanterpwa_current_user.id]
             except KeyError:
                 pass
         else:
             print("Unknow webSocket closed")
-        self.connections().remove(self)
+        self.get_connections().remove(self)
