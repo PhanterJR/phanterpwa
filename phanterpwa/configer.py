@@ -289,6 +289,7 @@ class ProjectConfig():
                         app_sections = ini_app.sections()
                         required_on_ini = [
                             "title",
+                            "description",
                             "transcrypt_main_file",
                             "styles_main_file",
                             "views_main_file"

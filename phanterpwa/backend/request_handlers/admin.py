@@ -45,6 +45,9 @@ from phanterpwa.backend.dataforms import (
 from phanterpwa.backend.request_handlers.auth import (
     arbritary_login
 )
+from phanterpwa.backend.request_handlers.websocket import (
+    EchoWebSocket
+)
 from phanterpwa.gallery.cutter import PhanterpwaGalleryCutter
 from phanterpwa.gallery.integrationDAL import PhanterpwaGalleryUserImage
 new_group_re = re.compile(r"\$[0-9]{13}\:(.{0,})")
@@ -227,7 +230,7 @@ class UserManager(web.RequestHandler):
             sort = dict_arguments.get("sort", "asc")
             page = dict_arguments.get("page", "1")
             order_list = ["id", "first_name", "last_name", "email",
-                "permit_mult_login", "activated", "websocket_opened"]
+                "permit_mult_login", "activated"]
             if orderby in order_list:
                 _orderby = db.auth_user[orderby]
             else:
@@ -235,19 +238,27 @@ class UserManager(web.RequestHandler):
 
             if sort == "desc":
                 _orderby = ~_orderby
-
+            conns = EchoWebSocket.get_connections()
+            onlines = [conn.phanterpwa_current_user.id for conn in conns if conn.phanterpwa_current_user is not None]
             query = db.auth_user
             msg = "Users"
             if search and search_field:
                 msg = "Search by \"{0}\" on \"{1}\"".format(search, search_field)
                 if search_field in ["first_name", "last_name", "email"]:
                     query = db.auth_user[search_field].contains(search)
-                elif search_field in ["activated", "permit_mult_login", "websocket_opened"]:
+                elif search_field in ["activated", "permit_mult_login"]:
                     query = db.auth_user[search_field] == checkbox_bool(search)
                 elif search_field in ["id", "grade"] and search.isdigit():
                     query = db.auth_group[search_field] == int(search)
                 elif search_field in order_list:
                     query = db.auth_user[search_field] == search
+                elif search_field == "websocket_opened":
+                    if checkbox_bool(search):
+                        query = db.auth_user.id.belongs(onlines)
+                    else:
+                        query = ~db.auth_user.id.belongs(onlines)
+
+
             t_users = db(query).count()
             displayed_records = t_users
             if t_users > limit:
@@ -291,6 +302,7 @@ class UserManager(web.RequestHandler):
                         ["permit_mult_login", "Allows Multiple Logins"],
                         ["activated", "Activated"],
                         ["websocket_opened", "Online"]
+                        
                     ],
                     'sortable': order_list
                 },
@@ -311,7 +323,11 @@ class UserManager(web.RequestHandler):
             }
 
             if q_users:
-                users['data'] = json.loads(q_users.as_json())
+                users['data'] = []
+                for user in q_users:
+                    us = json.loads(user.as_json())
+                    us["websocket_opened"] = True if user.id in onlines else False
+                    users['data'].append(us)
             else:
                 msg = "No record found"
 

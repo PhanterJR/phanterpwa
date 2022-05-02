@@ -19,12 +19,14 @@ project_config_sample = {
     },
     "FRONTEND": {
         "sample_app": {
-            "title": "PhanterPWA Frontend"
+            "title": "PhanterPWA Frontend",
+            "description": "Frontend Application PhanterPWA",
         }
     },
     "BACKEND": {
         "sample_app": {
             "title": "PhanterPWA Backend",
+            "description": "Backend Application PhanterPWA",
             "build_folder": "",
             "transcrypt_main_file": "application",
             "styles_main_file": "application",

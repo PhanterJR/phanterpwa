@@ -214,7 +214,7 @@ class Handler():
         if value is None:
             title = jQuery("title").text()
             if window.PhanterPWA.CONFIG.PROJECT.title != title:
-                jQuery("title").text(window.PhanterPWA.CONFIG.PROJECT.title)
+                jQuery("title").text(window.PhanterPWA.CONFIG.APP.title or window.PhanterPWA.CONFIG.PROJECT.title)
         else:
             jQuery("title").text(value)
 
