@@ -1569,8 +1569,9 @@ class ChangeAccount(web.RequestHandler):
         url: 'api/auth/change/'
     """
 
-    def initialize(self, app_name, projectConfig, DALDatabase, Translator_email, SMSSender=None, i18nTranslator=None, logger_api=None):
+    def initialize(self, app_name, projectConfig, DALDatabase, Translator_email, SMSSender=None, i18nTranslator=None, logger_api=None, AuthActivityNoRelational=None):
         self.app_name = app_name
+        self.AuthActivityNoRelational = AuthActivityNoRelational
         self.projectConfig = projectConfig
         self.DALDatabase = DALDatabase
         self.SMSSender = SMSSender
@@ -1911,13 +1912,29 @@ class ChangeAccount(web.RequestHandler):
                     (self.DALDatabase.client.auth_user == self.phanterpwa_current_user.id) &
                     (self.DALDatabase.client.token == self.phanterpwa_client_token)
                 ).select().first()
+                message = 'Account was successfully changed'
+                i18nmessage = self.T(message)
+                if self.AuthActivityNoRelational:
+                    self.AuthActivityNoRelational.set_activity(
+                        id_user=self.phanterpwa_current_user.id,
+                        request="change",
+                        activity=i18nmessage,
+                        date_activity=datetime.now()
+                    )
+                else:
+                    self.DALDatabase.auth_activity.insert(
+                        auth_user=self.phanterpwa_current_user.id,
+                        request="change",
+                        activity=i18nmessage,
+                        date_activity=datetime.now()
+                    )
                 self.DALDatabase.commit()
                 user_image = PhanterpwaGalleryUserImage(self.phanterpwa_current_user.id, self.DALDatabase, self.projectConfig)
                 self.set_status(200)
                 return self.write({
                     'status': 'OK',
                     'code': 200,
-                    'message': 'Account was successfully changed',
+                    'message': message,
                     'auth_user': {
                         'id': str(self.phanterpwa_current_user.id),
                         'first_name': E(first_name),
@@ -1937,7 +1954,7 @@ class ChangeAccount(web.RequestHandler):
                         'social_login': None
                     },
                     'i18n': {
-                        'message': self.T('Account was successfully changed'),
+                        'message': i18nmessage,
                         'auth_user': {'role': self.T(role)}
                     }
                 })
@@ -1966,8 +1983,9 @@ class CreateAccount(web.RequestHandler):
         url: 'api/auth/create/'
     """
 
-    def initialize(self, app_name, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
+    def initialize(self, app_name, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None, AuthActivityNoRelational=None):
         self.app_name = app_name
+        self.AuthActivityNoRelational = AuthActivityNoRelational
         self.projectConfig = projectConfig
         self.DALDatabase = DALDatabase
         self.i18nTranslator = i18nTranslator
@@ -2140,6 +2158,22 @@ class CreateAccount(web.RequestHandler):
                         (self.DALDatabase.client.auth_user == id_user)
                         & (self.DALDatabase.client.token != self.phanterpwa_client_token)
                     ).remove()
+            message = 'The user has been added.'
+            i18nmessage = self.T(message)
+            if self.AuthActivityNoRelational:
+                self.AuthActivityNoRelational.set_activity(
+                    id_user=id_user,
+                    request="create",
+                    activity=i18nmessage,
+                    date_activity=datetime.now()
+                )
+            else:
+                self.DALDatabase.auth_activity.insert(
+                    auth_user=id_user,
+                    request="create",
+                    activity=i18nmessage,
+                    date_activity=datetime.now()
+                )
             self.DALDatabase.commit()
             user_image = PhanterpwaGalleryUserImage(id_user, self.DALDatabase, self.projectConfig)
             self.set_status(201)
@@ -2156,7 +2190,7 @@ class CreateAccount(web.RequestHandler):
             return self.write({
                 'status': 'Created',
                 'code': 201,
-                'message': 'The user has been added',
+                'message': message,
                 'authorization': token_user,
                 'client_token': token_client,
                 'url_token': token_url,
@@ -2179,7 +2213,7 @@ class CreateAccount(web.RequestHandler):
                     'social_login': None
                 },
                 'i18n': {
-                    'message': self.T('The user has been added'),
+                    'message': i18nmessage,
                     'auth_user': {
                         'role': self.T(role)
                     }
@@ -2215,7 +2249,7 @@ class RequestAccount(web.RequestHandler):
         url: '/api/auth/request-password/'
     """
 
-    def initialize(self, app_name, projectConfig, DALDatabase, Translator_email, i18nTranslator=None, logger_api=NoneAuthActivityNoRelational=None):
+    def initialize(self, app_name, projectConfig, DALDatabase, Translator_email, i18nTranslator=None, logger_api=None, AuthActivityNoRelational=None):
         self.app_name = app_name
         self.AuthActivityNoRelational = AuthActivityNoRelational
         self.projectConfig = projectConfig
@@ -2380,18 +2414,19 @@ class RequestAccount(web.RequestHandler):
                                 timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['timeout_to_resend_temporary_password_mail'])
                         )
                         message = 'An SMS was sent instructing you how to proceed to recover your account.'
+                        i18nmessage = self.T(message)
                         if self.AuthActivityNoRelational:
                             self.AuthActivityNoRelational.set_activity(
                                 id_user=q_user.id,
                                 request="request-password",
-                                activity=self.T(message),
+                                activity=i18nmessage,
                                 date_activity=datetime.now()
                             )
                         else:
                             self.DALDatabase.auth_activity.insert(
                                 auth_user=q_user.id,
                                 request="request-password",
-                                activity=self.T(message),
+                                activity=i18nmessage,
                                 date_activity=datetime.now()
                             )
                         self.DALDatabase.commit()
@@ -2401,7 +2436,7 @@ class RequestAccount(web.RequestHandler):
                             'code': 200,
                             'message': message,
                             'i18n': {
-                                'message': self.T(message)
+                                'message': i18nmessage
                             }
                         })
 
@@ -2546,18 +2581,19 @@ class RequestAccount(web.RequestHandler):
                                 timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['timeout_to_resend_temporary_password_mail'])
                         )
                         message = 'An email was sent instructing you how to proceed to recover your account.'
+                        i18nmessage = self.T(message)
                         if self.AuthActivityNoRelational:
                             self.AuthActivityNoRelational.set_activity(
                                 id_user=q_user.id,
                                 request="request-password",
-                                activity=self.T(message),
+                                activity=i18nmessage,
                                 date_activity=datetime.now()
                             )
                         else:
                             self.DALDatabase.auth_activity.insert(
                                 auth_user=q_user.id,
                                 request="request-password",
-                                activity=self.T(message),
+                                activity=i18nmessage,
                                 date_activity=datetime.now()
                             )
                         self.DALDatabase.commit()
@@ -2567,7 +2603,7 @@ class RequestAccount(web.RequestHandler):
                             'code': 200,
                             'message': message,
                             'i18n': {
-                                'message': self.T(message)
+                                'message': i18nmessage
                             }
                         })
 
@@ -2724,14 +2760,14 @@ class ActiveAccount(web.RequestHandler):
                     i18nmessage = self.T(message)
                     if self.AuthActivityNoRelational:
                         self.AuthActivityNoRelational.set_activity(
-                            id_user=q_user.id,
+                            id_user=self.phanterpwa_current_user.id,
                             request="active-account",
                             activity=i18nmessage,
                             date_activity=datetime.now()
                         )
                     else:
                         self.DALDatabase.auth_activity.insert(
-                            auth_user=q_user.id,
+                            auth_user=self.phanterpwa_current_user.id,
                             request="active-account",
                             activity=i18nmessage,
                             date_activity=datetime.now()
@@ -2831,14 +2867,14 @@ class ActiveAccount(web.RequestHandler):
                     i18nmessage = self.T(message)
                     if self.AuthActivityNoRelational:
                         self.AuthActivityNoRelational.set_activity(
-                            id_user=q_user.id,
+                            id_user=self.phanterpwa_current_user.id,
                             request="active-account",
                             activity=i18nmessage,
                             date_activity=datetime.now()
                         )
                     else:
                         self.DALDatabase.auth_activity.insert(
-                            auth_user=q_user.id,
+                            auth_user=self.phanterpwa_current_user.id,
                             request="active-account",
                             activity=i18nmessage,
                             date_activity=datetime.now()
@@ -3211,14 +3247,14 @@ class ChangePassword(web.RequestHandler):
             i18nmessage = self.T(message)
             if self.AuthActivityNoRelational:
                 self.AuthActivityNoRelational.set_activity(
-                    id_user=q_user.id,
+                    id_user=self.phanterpwa_current_user.id,
                     request="change-password",
                     activity=i18nmessage,
                     date_activity=datetime.now()
                 )
             else:
                 self.DALDatabase.auth_activity.insert(
-                    auth_user=q_user.id,
+                    auth_user=self.phanterpwa_current_user.id,
                     request="change-password",
                     activity=i18nmessage,
                     date_activity=datetime.now()
@@ -3382,7 +3418,7 @@ class AuthActivityNoRelational():
     def clean(self, id_user):
         db = self.DALDatabase
         exedent_records = db(
-            db.auth_activity_no_relational.auth_user == int(id_user)
+            db.auth_activity_no_relational.id_user == int(id_user)
         )._select(
             db.auth_activity_no_relational.id,
             orderby=~db.auth_activity_no_relational.id,
