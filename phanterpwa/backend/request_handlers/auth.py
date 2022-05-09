@@ -278,8 +278,9 @@ class Auth(web.RequestHandler):
         url: '/api/auth/'
     """
 
-    def initialize(self, app_name, projectConfig, DALDatabase, Translator_email, SMSSender=None, i18nTranslator=None, logger_api=None):
+    def initialize(self, app_name, projectConfig, DALDatabase, Translator_email, SMSSender=None, i18nTranslator=None, logger_api=None, AuthActivityNoRelational=None):
         self.app_name = app_name
+        self.AuthActivityNoRelational = AuthActivityNoRelational
         self.projectConfig = projectConfig
         self.DALDatabase = DALDatabase
         self.Translator_email = Translator_email
@@ -917,7 +918,14 @@ class Auth(web.RequestHandler):
                                 })
 
                     else:
-                        if role != "root":
+                        if self.AuthActivityNoRelational:
+                            self.AuthActivityNoRelational.set_activity(
+                                id_user=q_user.id,
+                                request="login",
+                                activity="Logged!",
+                                date_activity=datetime.now()
+                            )
+                        else:
                             self.DALDatabase.auth_activity.insert(
                                 auth_user=q_user.id,
                                 request="login",
@@ -1099,8 +1107,9 @@ class Activity(web.RequestHandler):
         url: 'api/auth/activity/'
     """
 
-    def initialize(self, app_name, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
+    def initialize(self, app_name, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None, AuthActivityNoRelational=None):
         self.app_name = app_name
+        self.AuthActivityNoRelational = AuthActivityNoRelational
         self.projectConfig = projectConfig
         self.DALDatabase = DALDatabase
         self.i18nTranslator = i18nTranslator
@@ -1144,7 +1153,10 @@ class Activity(web.RequestHandler):
     def get(self, *args):
         id_user = self.phanterpwa_current_user.id
         db = self.DALDatabase
-        r_activity = db(db.auth_activity.auth_user == id_user).select(orderby=~db.auth_activity.id, limitby=(0, 100))
+        if self.AuthActivityNoRelational:
+            r_activity = self.AuthActivityNoRelational.get_rows_by_user_id(id_user)
+        else:
+            r_activity = db(db.auth_activity.auth_user == id_user).select(orderby=~db.auth_activity.id, limitby=(0, 100))
         self.set_status(200)
         self.write({
             'status': 'OK',
@@ -1162,8 +1174,9 @@ class TwoFactor(web.RequestHandler):
         url: '/api/auth/two-factor/<authorization_url>'
     """
 
-    def initialize(self, app_name, projectConfig, DALDatabase, Translator_email, i18nTranslator=None, logger_api=None):
+    def initialize(self, app_name, projectConfig, DALDatabase, Translator_email, i18nTranslator=None, logger_api=None, AuthActivityNoRelational=None):
         self.app_name = app_name
+        self.AuthActivityNoRelational = AuthActivityNoRelational
         self.projectConfig = projectConfig
         self.DALDatabase = DALDatabase
         self.Translator_email = Translator_email
@@ -1332,14 +1345,22 @@ class TwoFactor(web.RequestHandler):
                             ).delete()
                     db.commit()
                     user_image = PhanterpwaGalleryUserImage(q_user.id, db, self.projectConfig)
-                    if role != "root":
-                        db.auth_activity.insert(
+                    if self.AuthActivityNoRelational:
+                        self.AuthActivityNoRelational.set_activity(
+                            id_user=q_user.id,
+                            request="two-factor",
+                            activity="Logged!",
+                            date_activity=datetime.now()
+                        )
+                    else:
+                        self.DALDatabase.auth_activity.insert(
                             auth_user=q_user.id,
                             request="two-factor",
                             activity="Logged!",
                             date_activity=datetime.now()
                         )
-                        db.commit()
+                        self.DALDatabase.commit()
+
                     self.set_status(200)
                     return self.write({
                         'status': 'OK',
@@ -2194,8 +2215,9 @@ class RequestAccount(web.RequestHandler):
         url: '/api/auth/request-password/'
     """
 
-    def initialize(self, app_name, projectConfig, DALDatabase, Translator_email, i18nTranslator=None, logger_api=None):
+    def initialize(self, app_name, projectConfig, DALDatabase, Translator_email, i18nTranslator=None, logger_api=NoneAuthActivityNoRelational=None):
         self.app_name = app_name
+        self.AuthActivityNoRelational = AuthActivityNoRelational
         self.projectConfig = projectConfig
         self.DALDatabase = DALDatabase
         self.i18nTranslator = i18nTranslator
@@ -2357,8 +2379,22 @@ class RequestAccount(web.RequestHandler):
                             timeout_to_resend_temporary_password_mail=datetime.now() +
                                 timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['timeout_to_resend_temporary_password_mail'])
                         )
+                        message = 'An SMS was sent instructing you how to proceed to recover your account.'
+                        if self.AuthActivityNoRelational:
+                            self.AuthActivityNoRelational.set_activity(
+                                id_user=q_user.id,
+                                request="request-password",
+                                activity=self.T(message),
+                                date_activity=datetime.now()
+                            )
+                        else:
+                            self.DALDatabase.auth_activity.insert(
+                                auth_user=q_user.id,
+                                request="request-password",
+                                activity=self.T(message),
+                                date_activity=datetime.now()
+                            )
                         self.DALDatabase.commit()
-                        message = 'An email was sent instructing you how to proceed to recover your account.'
                         self.set_status(200)
                         return self.write({
                             'status': 'OK',
@@ -2509,8 +2545,22 @@ class RequestAccount(web.RequestHandler):
                             timeout_to_resend_temporary_password_mail=datetime.now() +
                                 timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['timeout_to_resend_temporary_password_mail'])
                         )
-                        self.DALDatabase.commit()
                         message = 'An email was sent instructing you how to proceed to recover your account.'
+                        if self.AuthActivityNoRelational:
+                            self.AuthActivityNoRelational.set_activity(
+                                id_user=q_user.id,
+                                request="request-password",
+                                activity=self.T(message),
+                                date_activity=datetime.now()
+                            )
+                        else:
+                            self.DALDatabase.auth_activity.insert(
+                                auth_user=q_user.id,
+                                request="request-password",
+                                activity=self.T(message),
+                                date_activity=datetime.now()
+                            )
+                        self.DALDatabase.commit()
                         self.set_status(200)
                         return self.write({
                             'status': 'OK',
@@ -2531,8 +2581,9 @@ class ActiveAccount(web.RequestHandler):
         url: '/api/auth/active-account/'
     """
 
-    def initialize(self, app_name, projectConfig, DALDatabase, Translator_email, SMSSender=None, i18nTranslator=None, logger_api=None):
+    def initialize(self, app_name, projectConfig, DALDatabase, Translator_email, SMSSender=None, i18nTranslator=None, logger_api=None, AuthActivityNoRelational=None):
         self.app_name = app_name
+        self.AuthActivityNoRelational = AuthActivityNoRelational
         self.projectConfig = projectConfig
         self.SMSSender = SMSSender
         self.DALDatabase = DALDatabase
@@ -2669,8 +2720,23 @@ class ActiveAccount(web.RequestHandler):
                         timeout_to_resend_activation_email=datetime.now() +
                             timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['default_time_activation_code_expire'])
                     )
+                    message = 'An SMS was sent instructing you how to proceed to activate your account.'
+                    i18nmessage = self.T(message)
+                    if self.AuthActivityNoRelational:
+                        self.AuthActivityNoRelational.set_activity(
+                            id_user=q_user.id,
+                            request="active-account",
+                            activity=i18nmessage,
+                            date_activity=datetime.now()
+                        )
+                    else:
+                        self.DALDatabase.auth_activity.insert(
+                            auth_user=q_user.id,
+                            request="active-account",
+                            activity=i18nmessage,
+                            date_activity=datetime.now()
+                        )
                     self.DALDatabase.commit()
-                    message = 'An sms was sent instructing you how to proceed to activate your account.'
                     self.set_status(200)
                     return self.write({
                         'status': 'OK',
@@ -2678,7 +2744,7 @@ class ActiveAccount(web.RequestHandler):
                         'message': message,
                         'email': self.phanterpwa_current_user.email,
                         'i18n': {
-                            'message': self.T(message)
+                            'message': i18nmessage
                         }
                     })
 
@@ -2761,8 +2827,23 @@ class ActiveAccount(web.RequestHandler):
                         timeout_to_resend_activation_email=datetime.now() +
                             timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['default_time_activation_code_expire'])
                     )
-                    self.DALDatabase.commit()
                     message = 'An email was sent instructing you how to proceed to activate your account.'
+                    i18nmessage = self.T(message)
+                    if self.AuthActivityNoRelational:
+                        self.AuthActivityNoRelational.set_activity(
+                            id_user=q_user.id,
+                            request="active-account",
+                            activity=i18nmessage,
+                            date_activity=datetime.now()
+                        )
+                    else:
+                        self.DALDatabase.auth_activity.insert(
+                            auth_user=q_user.id,
+                            request="active-account",
+                            activity=i18nmessage,
+                            date_activity=datetime.now()
+                        )
+                    self.DALDatabase.commit()
                     self.set_status(200)
                     return self.write({
                         'status': 'OK',
@@ -2770,7 +2851,7 @@ class ActiveAccount(web.RequestHandler):
                         'message': message,
                         'email': self.phanterpwa_current_user.email,
                         'i18n': {
-                            'message': self.T(message)
+                            'message': i18nmessage
                         }
                     })
 
@@ -2905,6 +2986,22 @@ class ActiveAccount(web.RequestHandler):
                         (self.DALDatabase.client.auth_user == q_user.id) &
                         (self.DALDatabase.client.token == self.phanterpwa_client_token)
                     ).select().first()
+                    message = 'The Account has been activated'
+                    i18nmessage = self.T(message)
+                    if self.AuthActivityNoRelational:
+                        self.AuthActivityNoRelational.set_activity(
+                            id_user=q_user.id,
+                            request="active-account",
+                            activity=i18nmessage,
+                            date_activity=datetime.now()
+                        )
+                    else:
+                        self.DALDatabase.auth_activity.insert(
+                            auth_user=q_user.id,
+                            request="active-account",
+                            activity=i18nmessage,
+                            date_activity=datetime.now()
+                        )
                     self.DALDatabase.commit()
                     user_image = PhanterpwaGalleryUserImage(q_user.id, self.DALDatabase, self.projectConfig)
                     self.set_status(200)
@@ -2929,9 +3026,9 @@ class ActiveAccount(web.RequestHandler):
                             'locale': q_user.locale,
                             'social_login': None
                         },
-                        'message': 'The Account has been activated',
+                        'message': message,
                         'i18n': {
-                            'message': self.T('The Account has been activated'),
+                            'message': i18nmessage,
                             'auth_user': {'role': self.T(role)}
                         }
                     })
@@ -2979,8 +3076,9 @@ class ChangePassword(web.RequestHandler):
         url: '/api/auth/change-password'
     """
 
-    def initialize(self, app_name, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
+    def initialize(self, app_name, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None, AuthActivityNoRelational=None):
         self.app_name = app_name
+        self.AuthActivityNoRelational = AuthActivityNoRelational
         self.projectConfig = projectConfig
         self.DALDatabase = DALDatabase
         self.i18nTranslator = i18nTranslator
@@ -3109,14 +3207,30 @@ class ChangePassword(web.RequestHandler):
                 login_attempts=0,
                 password_hash=pass_hash
             )
+            message = 'Password changed!'
+            i18nmessage = self.T(message)
+            if self.AuthActivityNoRelational:
+                self.AuthActivityNoRelational.set_activity(
+                    id_user=q_user.id,
+                    request="change-password",
+                    activity=i18nmessage,
+                    date_activity=datetime.now()
+                )
+            else:
+                self.DALDatabase.auth_activity.insert(
+                    auth_user=q_user.id,
+                    request="change-password",
+                    activity=i18nmessage,
+                    date_activity=datetime.now()
+                )
             self.DALDatabase.commit()
             self.set_status(200)
             return self.write({
                 'status': 'OK',
                 'code': 200,
-                'message': 'Password changed!',
+                'message': message,
                 'i18n': {
-                    'message': self.T('Password changed!'),
+                    'message': i18nmessage,
                 }
             })
 
@@ -3237,3 +3351,42 @@ class SMSGateway(web.RequestHandler):
                 'message': self.T('Invalid SMS authorization')
             }
         })
+
+
+class AuthActivityNoRelational():
+    def __init__(self, DALDatabase):
+        self.DALDatabase = DALDatabase
+
+    def get_rows_by_user_id(self, id_user):
+        db = self.DALDatabase
+        return db(
+            db.auth_activity_no_relational.id_user == int(id_user)
+        ).select(
+            orderby=~db.auth_activity_no_relational.id,
+            limitby=(0, 100)
+        )
+
+    def set_activity(self, id_user, request, activity, date_activity=None):
+        db = self.DALDatabase
+        if date_activity is None:
+            date_activity = datetime.now()
+        db.auth_activity_no_relational.insert(
+            id_user=int(id_user),
+            request=request,
+            activity=activity,
+            date_activity=date_activity
+        )
+        db.commit()
+        self.clean(id_user)
+
+    def clean(self, id_user):
+        db = self.DALDatabase
+        exedent_records = db(
+            db.auth_activity_no_relational.auth_user == int(id_user)
+        )._select(
+            db.auth_activity_no_relational.id,
+            orderby=~db.auth_activity_no_relational.id,
+            limitby=(100, 1000)
+        )
+        db(db.auth_activity_no_relational.id.belongs(exedent_records)).delete()
+        db.commit()

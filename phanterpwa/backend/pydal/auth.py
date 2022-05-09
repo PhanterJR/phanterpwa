@@ -147,7 +147,6 @@ class AuthTables():
         ]
 
         if self.DALDatabase(self.DALDatabase.auth_group).isempty():
-            self.DALDatabase._adapter.reconnect()
             self.DALDatabase.auth_group.insert(
                 role="root", grade=100, description="Administrator of application (Developer)")
             self.DALDatabase.auth_group.insert(role="administrator", grade=10, description="Super user of site")
@@ -155,10 +154,20 @@ class AuthTables():
             self.DALDatabase.commit()
 
         if self.DALDatabase(self.DALDatabase.auth_membership).isempty():
-            self.DALDatabase._adapter.reconnect()
             if self.DALDatabase.auth_user[1]:
                 id_role = self.DALDatabase(self.DALDatabase.auth_group.role == 'root').select().first()
                 if id_role:
                     self.DALDatabase.auth_membership.insert(auth_user=1,
                     auth_group=id_role.id)
                     self.DALDatabase.commit()
+
+
+class AuthActivityNoRelationalTable():
+    def __init__(self, DALDatabase):
+        self.DALDatabase = DALDatabase
+
+        self.DALDatabase.define_table('auth_activity_no_relational',
+            Field('id_user', 'integer'),
+            Field('request', 'text'),
+            Field('activity', 'string'),
+            Field('date_activity', 'datetime', default=datetime.now()))

@@ -3,7 +3,7 @@
 # license: MIT
 
 __author__ = "PhanterJR<junior.conex@gmail.com>"
-__version__ = "13.10.9"
+__version__ = "13.10.10"
 __install_requeriments__ = [
     "psutil",
     "tornado",
