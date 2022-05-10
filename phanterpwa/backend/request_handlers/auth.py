@@ -3426,3 +3426,86 @@ class AuthActivityNoRelational():
         )
         db(db.auth_activity_no_relational.id.belongs(exedent_records)).delete()
         db.commit()
+
+
+class AuthUserAutoComplete(web.RequestHandler):
+    """
+        url: '/api/auth/autocomplete/?'
+    """
+
+    def initialize(self, *args, **kargs):
+        self.app_name = kargs.get("app_name", None)
+        self.projectConfig = kargs.get("projectConfig", None)
+        self.DALDatabase = kargs.get("DALDatabase", None)
+        self.i18nTranslator = kargs.get("i18nTranslator", None)
+        logger_api = kargs.get("logger_api", None)
+        if logger_api:
+            self.logger_api = logger_api
+        if self.i18nTranslator:
+            self.T = self.i18nTranslator.T
+        self.set_header("Access-Control-Allow-Origin", "*")
+        self.set_header(
+            "Access-Control-Allow-Headers",
+            "".join([
+                "phanterpwa-language,",
+                "phanterpwa-application,",
+                "phanterpwa-application-version,",
+                "phanterpwa-client-token,",
+                "phanterpwa-authorization,",
+                "cache-control"
+            ])
+        )
+        self.set_header('Access-Control-Allow-Methods', 'GET, OPTIONS, POST, PUT, DELETE')
+        if self.request.headers.get("phanterpwa-language"):
+            self.phanterpwa_language = self.request.headers.get("phanterpwa-language")
+        else:
+            self.phanterpwa_language = browser_language(self.request.headers.get("Accept-Language"))
+        if self.i18nTranslator:
+            self.i18nTranslator.direct_translation = self.phanterpwa_language
+        self.phanterpwa_user_agent = str(self.request.headers.get('User-Agent'))
+        self.phanterpwa_remote_ip = str(self.request.remote_ip)
+
+    def check_origin(self, origin):
+        return True
+
+    def options(self, *args):
+        self.set_status(200)
+        self.write({"status": "OK"})
+
+    @requires_authentication(roles_name=["root", "administrator", "Administrador Master SME", "Administrador Master Escola", "Professor(a)", "Coordenação SME"])
+    def post(self, *args, **kargs):
+        """
+        Receive request to create and response with a token csrf or captcha
+        """
+        dict_arguments = {k: self.request.arguments.get(k)[0].decode('utf-8') for k in self.request.arguments}
+        db = self.DALDatabase
+        if "startswith" in dict_arguments:
+            data_set = []
+            startswith = str(dict_arguments['startswith']).strip()
+            s_auth_user = db(
+                db.auth_user.email.startswith(startswith)
+            ).select(
+                db.auth_user.email,
+                db.auth_user.id,
+                orderby=db.auth_user.email,
+                groupby=db.auth_user.email,
+                limitby=[0, 100]
+            )
+            data_set = [
+                [
+                    x.id,
+                    x.email
+                ] for x in s_auth_user
+            ]
+            self.set_status(200)
+            return self.write({
+                "status": "OK",
+                "code": 200,
+                "data_set": data_set
+            })
+        else:
+            self.set_status(400)
+            return self.write({
+                "status": "Bad Request",
+                "code": 400
+            })
