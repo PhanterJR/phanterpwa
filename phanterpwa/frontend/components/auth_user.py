@@ -24,6 +24,7 @@ IMG = helpers.XmlConstructor.tagger("img", True)
 HR = helpers.XmlConstructor.tagger("hr", True)
 BR = helpers.XmlConstructor.tagger("br", True)
 I = helpers.XmlConstructor.tagger("i")
+A = helpers.XmlConstructor.tagger("a")
 H2 = helpers.XmlConstructor.tagger("h2")
 P = helpers.XmlConstructor.tagger("p")
 LABEL = helpers.XmlConstructor.tagger("label")
@@ -156,6 +157,9 @@ class AuthUser(application.Component):
         if LeftBar is not None and LeftBar is not js_undefined:
             LeftBar.reload()
         window.PhanterPWA.Components["auth_user"].start()
+        Messages = window.PhanterPWA.Components['messages']
+        if Messages is not None and Messages is not js_undefined:
+            Messages.start()
 
     def start(self):
         self.element_target = jQuery(self.target_selector)
@@ -2032,6 +2036,65 @@ class LeftBar(left_bar.LeftBar):
             )
         )
 
+class Messages(application.Component):
+    def __init__(self, target_selector, **parameters):
+        time = __new__(Date())
+        self.initime = time.getTime()
+        self.target_selector = target_selector
+        self.element_target = jQuery(self.target_selector)
+        message_link = parameters.get('messages_link', window.PhanterPWA.XWAY("messages"))
+
+        html = DIV(
+            DIV(
+                A(I(_class="fas fa-envelope"), DIV(_class="phanterpwa-component-messages-total_messages"), _href=message_link),
+                _class="link phanterpwa-component-messages-button"
+            ),
+            _id="phanterpwa-component-messages-container",
+            _class="phanterpwa-component-messages-container"
+        )
+        application.Component.__init__(self, "messages", html)
+        window.PhanterPWA.MessagesCmp = self
+
+    def start(self):
+        if self.element_target.length == 1 and window.PhanterPWA.get_auth_user() is not None:
+            self.element_target.html(self.jquery())
+            window.PhanterPWA.GET(
+                "api",
+                "messages",
+                "count",
+                onComplete=self.after_get_count_messages
+            )
+        else:
+            self.element_target.html("")
+    def reload(self):
+        time = __new__(Date())
+        if (time.getTime() - self.initime) > 5000:
+            self.initime = time.getTime()
+            self.start()
+
+    def after_get_count_messages(self, data, ajax_status):
+        if ajax_status == "success":
+            json = data.responseJSON
+            total_messages = json.total_messages
+            element = self.element_target.find(
+                ".phanterpwa-component-messages-total_messages"
+            )
+            element.removeClass("has-messages")
+            if json.total_messages is not None and json.total_messages is not js_undefined:
+                if str(json.total_messages).isdigit():
+                    total_messages = int(total_messages)
+                    element.addClass(
+                        "has-messages"
+                    ).removeClass(
+                        "has-two-digits"
+                    ).removeClass(
+                        "has-three-digits"
+                    )
+                    if total_messages > 9 and total_messages < 100:
+                        element.addClass("has-two-digits")
+                    elif total_messages > 99:
+                        element.addClass("has-three-digits")
+
 
 class LeftBarAuthUserLogin(left_bar.LeftBarUserMenu):
     def __init__(self):
@@ -2096,12 +2159,6 @@ class LeftBarAuthUserLogin(left_bar.LeftBarUserMenu):
 
     def logout(self):
         window.PhanterPWA.logout()
-        self.start()
-        window.PhanterPWA.logout()
-        LeftBar = window.PhanterPWA.Components['left_bar']
-        if LeftBar is not None and LeftBar is not js_undefined:
-            LeftBar.reload()
-        window.PhanterPWA.Components['auth_user'].start()
 
     def start(self):
         element = jQuery("#phanterpwa-component-left_bar").find(
@@ -2238,7 +2295,6 @@ class LeftBarAuthUserNoLogin(left_bar.LeftBarMenu):
         forms.SignForm("#form-request_password", has_captcha=True, after_sign=lambda: forms.ValidateForm("#form-request_password"))
 
     def start(self):
-
         element = jQuery("#phanterpwa-component-left_bar").find(
             "#phanterpwa-component-left_bar-menu_button-{0}".format(self.identifier)
         )

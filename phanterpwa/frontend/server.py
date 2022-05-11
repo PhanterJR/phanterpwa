@@ -103,6 +103,8 @@ class ApiServer():
                     get_cache(window.PhanterPWA.Cache[current_uri])
 
         def _after_sucess(data):
+            if reload_phanterpwa:
+                window.PhanterPWA.reload()
             data_hash = data.hash
             data_uri = data.uri
             if data_hash is not js_undefined and data_uri is not js_undefined:
@@ -122,7 +124,7 @@ class ApiServer():
         ajax_param = {
             'url': url,
             'type': "GET",
-            'complete': lambda a, b, c: (onComplete(a, b, c), window.PhanterPWA.reload() if reload_phanterpwa else None),
+            'complete': lambda a, b, c: onComplete(a, b, c),
             'success': _after_sucess,
             'error': _after_error,
             'datatype': 'json',

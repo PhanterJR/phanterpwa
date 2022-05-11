@@ -3472,7 +3472,7 @@ class AuthUserAutoComplete(web.RequestHandler):
         self.set_status(200)
         self.write({"status": "OK"})
 
-    @requires_authentication(roles_name=["root", "administrator", "Administrador Master SME", "Administrador Master Escola", "Professor(a)", "Coordenação SME"])
+    @check_user_token()
     def post(self, *args, **kargs):
         """
         Receive request to create and response with a token csrf or captcha

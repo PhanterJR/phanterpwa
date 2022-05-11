@@ -4,6 +4,14 @@ from datetime import datetime
 from tornado import (
     web
 )
+from phanterpwa.backend.decorators import (
+    # check_client_token,
+    # check_url_token,
+    # check_public_csrf_token,
+    check_private_csrf_token,
+    check_user_token
+)
+from phanterpwa.i18n import browser_language
 from itsdangerous import (
     TimedJSONWebSignatureSerializer as Serialize,
     BadSignature,
@@ -16,14 +24,11 @@ class Messages(web.RequestHandler):
     """
         /api/messages/(count|inbox)
     """
-    def initialize(self, app_name, projectConfig, DALDatabase, Translator_email, SMSSender=None, i18nTranslator=None, logger_api=None, AuthActivityNoRelational=None):
+    def initialize(self, app_name, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
         self.app_name = app_name
-        self.AuthActivityNoRelational = AuthActivityNoRelational
         self.projectConfig = projectConfig
         self.DALDatabase = DALDatabase
-        self.Translator_email = Translator_email
         self.i18nTranslator = i18nTranslator
-        self.SMSSender = SMSSender
         if logger_api:
             self.logger_api = logger_api
         if i18nTranslator:
@@ -94,7 +99,7 @@ class Messages(web.RequestHandler):
                 db.auth_user.first_name,
                 db.auth_user.last_name,
                 groupby=db.internal_messages.id,
-                orderby=~db.internal_messages.message_read, ~db.internal_messages.send_on,
+                orderby=~db.internal_messages.message_read | ~db.internal_messages.send_on,
                 limitby=(0, 200)
             )
             self.set_status(200)
@@ -117,14 +122,11 @@ class Message(web.RequestHandler):
     """
         /api/message/([0-9]+)?/?
     """
-    def initialize(self, app_name, projectConfig, DALDatabase, Translator_email, SMSSender=None, i18nTranslator=None, logger_api=None, AuthActivityNoRelational=None):
+    def initialize(self, app_name, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
         self.app_name = app_name
-        self.AuthActivityNoRelational = AuthActivityNoRelational
         self.projectConfig = projectConfig
         self.DALDatabase = DALDatabase
-        self.Translator_email = Translator_email
         self.i18nTranslator = i18nTranslator
-        self.SMSSender = SMSSender
         if logger_api:
             self.logger_api = logger_api
         if i18nTranslator:
@@ -182,7 +184,7 @@ class Message(web.RequestHandler):
                 'status': 'OK',
                 'code': 200,
                 'message': message,
-                'i18n': {'message': i18nmessage}
+                'i18n': {'message': i18nmessage},
                 'internal_message': json.loads(r_message.as_json()),
             })
 
@@ -193,7 +195,7 @@ class Message(web.RequestHandler):
             'status': 'Bad Request',
             'code': 400,
             'message': message,
-            'i18n': {'message': i18nmessage}
+            'i18n': {'message': i18nmessage},
         })
 
     @check_user_token()
@@ -242,7 +244,7 @@ class Message(web.RequestHandler):
             'csrf': sign_csrf,
             'id_new_message': id_new_message,
             'message': message,
-            'i18n': {'message': i18nmessage}
+            'i18n': {'message': i18nmessage},
             'internal_message': json.loads(r_message.as_json()),
         })
 
@@ -256,63 +258,63 @@ class Message(web.RequestHandler):
             subject = dict_arguments.get("subject", None)
             recipients = dict_arguments.get("recipients", None)
             if all([text_message, subject, recipients]):
-            try:
-                list_recipients = ast.literal_eval(json.loads(recipients))
-            except Exception:
-                list_recipients = ast.literal_eval(recipients)
-            if isinstance(list_recipients, list):
-                set_recipients = set((int(x) for x in list_recipients))
-                c_recipients = db(db.auth_user.id.belongs(set_recipients)).count()
-                if c_recipients == len(set_recipients):
-                    for recips in set_recipients:
-                        db.internal_messages_recipients.insert(
-                            internal_messages= r_message.id,
-                            recipients=recips.id,
-                            message_read=False
-                        )
-                        r_message.update_record(
-                            text_message=text_message,
-                            message_sent=True,
-                            subject=subject,
-                            send_on=datetime.now()
-                        )
-                    message = 'The message has been sent.'
-                    i18nmessage self.T(message)
-                    db.commit()
+                try:
+                    list_recipients = ast.literal_eval(json.loads(recipients))
+                except Exception:
+                    list_recipients = ast.literal_eval(recipients)
+                if isinstance(list_recipients, list):
+                    set_recipients = set((int(x) for x in list_recipients))
+                    c_recipients = db(db.auth_user.id.belongs(set_recipients)).count()
+                    if c_recipients == len(set_recipients):
+                        for recips in set_recipients:
+                            db.internal_messages_recipients.insert(
+                                internal_messages= r_message.id,
+                                recipients=recips.id,
+                                message_read=False
+                            )
+                            r_message.update_record(
+                                text_message=text_message,
+                                message_sent=True,
+                                subject=subject,
+                                send_on=datetime.now()
+                            )
+                        message = 'The message has been sent.'
+                        i18nmessage = self.T(message)
+                        db.commit()
 
-                    self.set_status(200)
-                    return self.write({
-                        'status': 'OK',
-                        'code': 200,
-                        'message': message,
-                        'i18n': {'message': i18nmessage}
-                    })
-                else:
-                    message = 'Any recipient added does not exist'
-                    i18nmessage self.T(message)
-                    self.set_status(400)
-                    return self.write({
-                        'status': 'Bad Request',
-                        'code': 400,
-                        'message': message,
-                        'i18n': {'message': i18nmessage}
-                    })
+                        self.set_status(200)
+                        return self.write({
+                            'status': 'OK',
+                            'code': 200,
+                            'message': message,
+                            'i18n': {'message': i18nmessage},
+                        })
+                    else:
+                        message = 'Any recipient added does not exist'
+                        i18nmessage = self.T(message)
+                        self.set_status(400)
+                        return self.write({
+                            'status': 'Bad Request',
+                            'code': 400,
+                            'message': message,
+                            'i18n': {'message': i18nmessage},
+                        })
 
             message = 'Recipient cannot be empty'
-            i18nmessage self.T(message)
+            i18nmessage = self.T(message)
             self.set_status(400)
             return self.write({
                 'status': 'Bad Request',
                 'code': 400,
                 'message': message,
-                'i18n': {'message': i18nmessage}
+                'i18n': {'message': i18nmessage},
             })
         message = 'The form has errors'
-        i18nmessage self.T(message)
+        i18nmessage = self.T(message)
         self.set_status(400)
         return self.write({
             'status': 'Bad Request',
             'code': 400,
             'message': message,
-            'i18n': {'message': i18nmessage}
+            'i18n': {'message': i18nmessage},
         })

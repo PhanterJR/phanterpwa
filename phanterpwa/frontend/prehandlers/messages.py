@@ -129,6 +129,4 @@ class Messages(gatehandler.Handler):
                 )
 
 
-
-
 __pragma__('nokwargs')

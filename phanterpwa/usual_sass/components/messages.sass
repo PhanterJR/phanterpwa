@@ -1,0 +1,35 @@
+#phanterpwa-component-messages-container
+    .phanterpwa-component-messages-button
+        line-height: 60px
+        padding: 3px 15px 0px 5px
+        position: relative
+        .phanterpwa-component-messages-total_messages
+            display: None
+            color: white
+            font-size: 0.7rem
+            position: absolute
+            top: 10px
+            background-color: red
+            height: 16px
+            width: 16px
+            line-height: 16px
+            text-align: center
+            border-radius: 20px
+            padding: 0
+            right: 2px
+            font-weight: bold
+            font-family: arial
+            &.has-messages
+                display: block
+            &.has-two-digits
+                font-size: 0.6rem
+            &.has-three-digits
+                font-size: 0.5rem
+        a
+            text-decoration: none
+            i
+                color: grey
+                font-size: 1.5em
+            &:hover
+                i
+                    color: $attention
