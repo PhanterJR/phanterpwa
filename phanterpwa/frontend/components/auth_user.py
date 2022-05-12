@@ -28,7 +28,11 @@ A = helpers.XmlConstructor.tagger("a")
 H2 = helpers.XmlConstructor.tagger("h2")
 P = helpers.XmlConstructor.tagger("p")
 LABEL = helpers.XmlConstructor.tagger("label")
-STRONG = helpers.XmlConstructor.tagger("strong")
+TABLE = helpers.XmlConstructor.tagger("table")
+TR = helpers.XmlConstructor.tagger("tr")
+TD = helpers.XmlConstructor.tagger("td")
+TH = helpers.XmlConstructor.tagger("th")
+BODY = helpers.XmlConstructor.tagger("body")
 I18N = helpers.I18N
 CONCATENATE = helpers.CONCATENATE
 XSECTION = helpers.XSECTION
@@ -157,9 +161,9 @@ class AuthUser(application.Component):
         if LeftBar is not None and LeftBar is not js_undefined:
             LeftBar.reload()
         window.PhanterPWA.Components["auth_user"].start()
-        Messages = window.PhanterPWA.Components['messages']
-        if Messages is not None and Messages is not js_undefined:
-            Messages.start()
+        CmpMessages = window.PhanterPWA.Components['messages']
+        if CmpMessages is not None and CmpMessages is not js_undefined:
+            CmpMessages.start()
 
     def start(self):
         self.element_target = jQuery(self.target_selector)
@@ -2036,13 +2040,13 @@ class LeftBar(left_bar.LeftBar):
             )
         )
 
-class Messages(application.Component):
+class MessagesMonitor(application.Component):
     def __init__(self, target_selector, **parameters):
         time = __new__(Date())
         self.initime = time.getTime()
         self.target_selector = target_selector
         self.element_target = jQuery(self.target_selector)
-        message_link = parameters.get('messages_link', window.PhanterPWA.XWAY("messages"))
+        message_link = parameters.get('messages_link', window.PhanterPWA.XWAY("messages", "inbox"))
 
         html = DIV(
             DIV(
@@ -2075,21 +2079,24 @@ class Messages(application.Component):
     def after_get_count_messages(self, data, ajax_status):
         if ajax_status == "success":
             json = data.responseJSON
-            total_messages = json.total_messages
+            total_messages = json.new_messages
             element = self.element_target.find(
                 ".phanterpwa-component-messages-total_messages"
             )
-            element.removeClass("has-messages")
-            if json.total_messages is not None and json.total_messages is not js_undefined:
-                if str(json.total_messages).isdigit():
+            element.removeClass(
+                "has-messages"
+            ).removeClass(
+                "has-two-digits"
+            ).removeClass(
+                "has-three-digits"
+            )
+            if total_messages is not None and total_messages is not js_undefined:
+                if str(total_messages).isdigit():
                     total_messages = int(total_messages)
-                    element.addClass(
-                        "has-messages"
-                    ).removeClass(
-                        "has-two-digits"
-                    ).removeClass(
-                        "has-three-digits"
-                    )
+                    if total_messages > 0:
+                        element.removeClass(
+                            "has-messages"
+                        )
                     if total_messages > 9 and total_messages < 100:
                         element.addClass("has-two-digits")
                     elif total_messages > 99:
@@ -3266,6 +3273,280 @@ class TwoFactor(gatehandler.Handler):
         )
         xml_content.html_to("#main-container")
         self.binds()
+
+
+class Messages(gatehandler.Handler):
+    @decorators.check_authorization(lambda: window.PhanterPWA.get_auth_user() is not None)
+    def initialize(self):
+        arg0 = self.request.get_arg(0)
+        arg1 = self.request.get_arg(1)
+        arg2 = self.request.get_arg(2)
+        if arg0 == "inbox":
+            caption = DIV(
+                LABEL(I18N("RECEIVED MESSAGES", **{"_pt-BR": "MENSAGENS RECEBIDAS"})),
+                DIV(
+                    DIV(
+                        DIV(
+                            DIV(
+                                DIV(
+                                    DIV(preloaders.android, _style="width: 300px; height: 300px; overflow: hidden; margin: auto;"),
+                                    _style="text-align:center; padding: 50px 0;"
+                                ),
+                                _id="content-messages",
+                                _style="min-height: 300px;",
+                                _class="phanterpwa-widget-table-container phanterpwa-widget"
+                            ),
+                            _class="phanterpwa-card-panel-control-content"
+                        ),
+                        DIV(
+                            DIV(
+                                I(_class="fas fa-plus"),
+                                _class="icon_button actived create-messages"
+                            ),
+                            DIV(
+                                I(_class="fas fa-paper-plane"),
+                                _class="icon_button actived send-messages"
+                            ),
+                            DIV(
+                                I(_class="fas fa-sync-alt"),
+                                _class="icon_button actived reload-messages"
+                            ),
+                            _class="phanterpwa-card-panel-control-buttons"
+                        ),
+                        _class="phanterpwa-card-panel-control-wrapper has_buttons"
+                    ),
+                    _class="phanterpwa-card-panel-control-container"
+                ),
+                _class="phanterpwa-card-panel-control"
+            )
+            html = CONCATENATE(
+                DIV(
+                    DIV(
+                        DIV(
+                            DIV(I18N("MESSAGES", **{'pt-BR': "MENSAGENS"}), _class="phanterpwa-breadcrumb"),
+                            DIV(I18N("INBOX", **{'pt-BR': "CAIXA DE ENTRADA"}), _class="phanterpwa-breadcrumb"),
+                            _class="phanterpwa-breadcrumb-wrapper"
+                        ),
+                        _class="p-container extend"),
+                    _class='title_page_container card'
+                ),
+                DIV(
+                    DIV(
+                        caption,
+                        _class='p-row'
+                    ),
+                    _id="phanterpwa-messages-wrapper",
+                    _class="phanterpwa-container p-container extend"
+                ),
+                DIV(_id="modal-send-messages-container")
+            )
+            html.html_to("#main-container")
+            self.get_messages()
+            self.binds()
+
+    def binds(self):
+        source = jQuery("#phanterpwa-messages-wrapper")
+        source.find(
+            ".create-messages"
+        ).off(
+            "click.create-messages"
+        ).on(
+            "click.create-messages",
+            self.modal_send_message_open
+        )
+        source.find(
+            ".reload-messages"
+        ).off(
+            "click.reload-messages"
+        ).on(
+            "click.reload-messages",
+            self.try_again
+        )
+
+    def get_messages(self):
+        window.PhanterPWA.GET(
+            "api",
+            "messages",
+            "inbox",
+            onComplete=self.after_get_messages
+        )
+
+    def after_get_messages(self, data, ajax_status):
+        if ajax_status == "success":
+            json = data.responseJSON
+            table = TABLE(
+                TR(
+                    TH(
+                        I18N("Sender", **{"_pt-BR": "Remetente"}),
+                        _class="phanterpwa-widget-table-head-th"
+                    ),
+                    TH(
+                        I18N("Subject", **{"_pt-BR": "Assunto"}),
+                        _class="phanterpwa-widget-table-head-th"
+                    ),
+                    TH(
+                        I18N("Datetime", **{"_pt-BR": "Dia e Hora"}),
+                        _class="phanterpwa-widget-table-head-th"
+                    ),
+                    _class="phanterpwa-widget-table-head phanterpwa-widget"
+                ),
+                _class="phanterpwa-messages-table phanterpwa-widget-table p-row"
+            )
+            has_messages = False
+            for x in json.internal_messages:
+                has_messages = True
+                _class="phanterpwa-widget-table-data phanterpwa-widget phanterpwa-messages-table-line "
+                readed = x.internal_messages_recipients.message_read
+                if str(readed).lower() == "true":
+                    _class="phanterpwa-messages-table-line no-read"
+                sender = DIV(
+                    "{0} {1}".format(x.auth_user.first_name, x.auth_user.last_name),
+                    SPAN("<", x.auth_user.email, ">", _class="phanterpwa-messages-table-email"),
+                    **{
+                        "_title": x.auth_user.email,
+                        "_data-id_auth_user": x.auth_user.id,
+                        "_data-email": x.auth_user.email,
+                    }
+                )
+                date_and_time = x.internal_messages.send_on
+                subject = DIV(x.internal_messages.subject, _class="phanterpwa-messages-table-subject")
+                table.append(
+                    TR(
+                        TD(
+                            sender,
+                            _class="phanterpwa-widget-table-data-td"
+                        ),
+                        TD(
+                            subject,
+                            _class="phanterpwa-widget-table-data-td"
+                        ),
+                        TD(
+                            date_and_time,
+                            _class="phanterpwa-widget-table-data-td"
+                        ),
+                        _class=_class
+                    )
+                )
+            if not has_messages:
+                table.append(
+                    TR(
+                        TH(
+                            I18N(
+                                "There are no messages to display",
+                                **{"_pt-BR": "Não há mensagens a serem exibidas"}
+                            ),
+                            _class="phanterpwa-widget-table-head-th",
+                            _colspan=3
+                        ),
+                        _class="phanterpwa-widget-table-head phanterpwa-widget"
+                    )
+                )
+            table.html_to("#content-messages")
+        else:
+            html =  DIV(
+                H2(
+                    I18N(
+                        "There was a problem trying to download the messages, please try again by clicking below."
+                        **{"_pt-BR": "Houve um problema ao tentar baixar as mensagens, tente novamente clicando abaixo."}
+                    )
+                ),
+                DIV(
+                    BUTTON(
+                        I18N(
+                            "Try Again!",
+                            **{"_pt-BR": "Tentar Novamente."}
+                        ),
+                        _id="phanterpwa-try-get-messages-again",
+                        _class="btn",
+                    )
+                ),
+                _style="text-align:center; padding: 50px 0;"
+            )
+            html.html_to("#content-messages")
+            jQuery(
+                "#phanterpwa-try-get-messages-again"
+            ).off(
+                "click.phanterpwa-try-get-messages-again"
+            ).on(
+                "click.phanterpwa-try-get-messages-again",
+                self.try_again
+            )
+
+    def try_again(self):
+        html =  DIV(
+            DIV(preloaders.android, _style="width: 300px; height: 300px; overflow: hidden; margin: auto;"),
+            _style="text-align:center; padding: 50px 0;"
+        )
+        html.html_to("#content-messages")
+        self.get_messages()
+
+    def get_send_message_form(self):
+
+        window.PhanterPWA.POST(
+            "api",
+            "message",
+            onComplete=self.after_get_messages_send
+        )
+
+    def after_get_messages_send(self, data, ajax_status):
+        if ajax_status == "success":
+            json = data.responseJSON
+            id_new_message = json.id_new_message
+            csrf = json.csrf
+            html = DIV(
+                widgets.Input(
+                    "messages-csrf",
+                    value=csrf,
+                   kind="hidden"
+                ),
+                widgets.Input(
+                    "messages-id",
+                    value=id_new_message,
+                    kind="hidden"
+                ),
+                widgets.ListString(
+                    "messages-recipes",
+                    label=I18N("Recipient", **{"_pt-BR": "Destinatário"}),
+                ),
+                widgets.Input(
+                    "messages-subject",
+                    label=I18N("Subject", **{"_pt-BR": "Assunto"}),
+                ),
+                widgets.Textarea(
+                    "messages-menssage",
+                    label=I18N("Message", **{"_pt-BR": "Mensagem"}),
+                ),
+                _class="phanterpwa-messages-send-form-wrapper"
+            )
+            html.html_to("#content-messages-modal-messages")
+
+    def modal_send_message_open(self):
+        content =  DIV(
+            DIV(
+                DIV(preloaders.android, _style="width: 300px; height: 300px; overflow: hidden; margin: auto;"),
+                _style="text-align:center; padding: 50px 0;"
+            ),
+            _id="content-messages-modal-messages"
+        )
+        footer = DIV(
+            forms.SubmitButton(
+                "button-modal-send-messages",
+                I18N("Send", **{"_pt-BR": "Enviar"}),
+                _class="btn-autoresize wave_on_click waves-phanterpwa"
+            ),
+            _class='phanterpwa-form-buttons-container'
+        )
+        self.modal_send_message = modal.Modal(
+            "#modal-send-messages-container",
+            **{
+                "title": I18N("CREATE NEW MESSAGE", **{"_pt-BR": "CRIAR NOVA MENSAGEM"}),
+                "content": content,
+                "footer": footer,
+                "form": "send-messages"
+            }
+        )
+        self.modal_send_message.open()
+        self.get_send_message_form()
 
 
 __pragma__('nokwargs')

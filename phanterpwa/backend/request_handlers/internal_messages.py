@@ -80,7 +80,7 @@ class Messages(web.RequestHandler):
             return self.write({
                 'status': 'OK',
                 'code': 200,
-                'total_messages': c_messages,
+                'new_messages': c_messages,
             })
         elif arg0 == "inbox":
             message = 'list of available messages'
@@ -99,7 +99,7 @@ class Messages(web.RequestHandler):
                 db.auth_user.first_name,
                 db.auth_user.last_name,
                 groupby=db.internal_messages.id,
-                orderby=~db.internal_messages.message_read | ~db.internal_messages.send_on,
+                orderby=~db.internal_messages_recipients.message_read | ~db.internal_messages.send_on,
                 limitby=(0, 200)
             )
             self.set_status(200)
@@ -200,6 +200,7 @@ class Message(web.RequestHandler):
 
     @check_user_token()
     def post(self, *args):
+        db = self.DALDatabase
         db(
             (db.internal_messages.senders == self.phanterpwa_current_user.id)
             & (db.internal_messages.subject == None)
@@ -233,7 +234,7 @@ class Message(web.RequestHandler):
         })
         sign_csrf = sign_csrf.decode("utf-8")
         q_csrf = db(db.csrf.id == id_csrf).select().first()
-        q_csrf.update_record(token=sign_captha)
+        q_csrf.update_record(token=sign_csrf)
         message = 'Create new message'
         i18nmessage = self.T(message)
         db.commit()
@@ -245,13 +246,13 @@ class Message(web.RequestHandler):
             'id_new_message': id_new_message,
             'message': message,
             'i18n': {'message': i18nmessage},
-            'internal_message': json.loads(r_message.as_json()),
         })
 
     @check_private_csrf_token(form_identify=["phanterpwa-form-message"])
     def put(self, *args):
         dict_arguments = {k: self.request.arguments.get(k)[0].decode('utf-8') for k in self.request.arguments}
         arg0 = args[0]
+        db = self.DALDatabase
         r_message = db(db.internal_messages.id == arg0).select().first()
         if r_message and r_message.senders == self.phanterpwa_current_user.id:
             text_message = dict_arguments.get("text_message", None)
