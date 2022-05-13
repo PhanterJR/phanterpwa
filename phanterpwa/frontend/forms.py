@@ -815,13 +815,20 @@ class ValidateForm():
         widget_instance = instances_wg[jQuery("#phanterpwa-widget-{0}-{1}".format(
                 table_name, input_name)).attr("phanterpwa-widget")]
         if widget_instance is not js_undefined:
-            value_for_validate = self.element_target.find("input[name='{0}']".format(input_name)).val()
+            if isinstance(widget_instance, widgets.Textarea):
+                value_for_validate = self.element_target.find("textarea[name='{0}']".format(input_name)).val()
+            else:
+                value_for_validate = self.element_target.find("input[name='{0}']".format(input_name)).val()
             is_empty_or = False
             if "IS_EMPTY_OR" in validate_test:
                 if (value_for_validate is js_undefined) or \
                     (value_for_validate is None) or (value_for_validate == ""):
                     validate_test_pass.append(True)
                     is_empty_or = True
+                elif isinstance(instances_wg, widgets.ListString):
+                    if value_for_validate == "[]":
+                        validate_test_pass.append(True)
+                        is_empty_or = True
                 validate_test.pop("IS_EMPTY_OR")
             if not is_empty_or:
                 for x in validate_test:
@@ -871,6 +878,9 @@ class ValidateForm():
             if (value_for_validate is js_undefined) or \
                 (value_for_validate is None) or (value_for_validate == ""):
                 validate_test_pass.append(False)
+            elif isinstance(widget_instance, widgets.ListString):
+                if value_for_validate == "[]":
+                    validate_test_pass.append(False)
             else:
                 validate_test_pass.append(True)
         if validate_name == "IS_ACTIVATION_CODE":

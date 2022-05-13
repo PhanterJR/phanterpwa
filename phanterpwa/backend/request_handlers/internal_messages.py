@@ -214,20 +214,20 @@ class Message(web.RequestHandler):
         )
         id_client = int(self.phanterpwa_client_token_checked["id_client"])
         db((db.csrf.client == id_client) &
-            (db.csrf.form_identify == "phanterpwa-form-message")).delete()
+            (db.csrf.form_identify == "phanterpwa-form-send-messages")).delete()
         t = Serialize(
             "csrf-{0}".format(self.projectConfig['BACKEND'][self.app_name]['secret_key']),
             self.projectConfig['BACKEND'][self.app_name]['default_time_csrf_token_expire']
         )
         id_csrf = db.csrf.insert(
-            form_identify="phanterpwa-form-message",
+            form_identify="phanterpwa-form-send-messages",
             user_agent=self.phanterpwa_user_agent,
             ip=self.phanterpwa_remote_ip,
             client=id_client
         )
         sign_csrf = t.dumps({
             'id': str(id_csrf),
-            'form_identify': "phanterpwa-form-message",
+            'form_identify': "phanterpwa-form-send-messages",
             'user_agent': self.phanterpwa_user_agent,
             'ip': self.phanterpwa_remote_ip,
             'user': self.phanterpwa_current_user.id
@@ -248,7 +248,7 @@ class Message(web.RequestHandler):
             'i18n': {'message': i18nmessage},
         })
 
-    @check_private_csrf_token(form_identify=["phanterpwa-form-message"])
+    @check_private_csrf_token(form_identify=["phanterpwa-form-send-messages"])
     def put(self, *args):
         dict_arguments = {k: self.request.arguments.get(k)[0].decode('utf-8') for k in self.request.arguments}
         arg0 = args[0]

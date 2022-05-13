@@ -33,6 +33,7 @@ TR = helpers.XmlConstructor.tagger("tr")
 TD = helpers.XmlConstructor.tagger("td")
 TH = helpers.XmlConstructor.tagger("th")
 BODY = helpers.XmlConstructor.tagger("body")
+STRONG = helpers.XmlConstructor.tagger("strong")
 I18N = helpers.I18N
 CONCATENATE = helpers.CONCATENATE
 XSECTION = helpers.XSECTION
@@ -3495,30 +3496,45 @@ class Messages(gatehandler.Handler):
             csrf = json.csrf
             html = DIV(
                 widgets.Input(
-                    "messages-csrf",
+                    "send-messages-csrf",
+                    name="csrf",
+                    form="send-messages",
                     value=csrf,
-                   kind="hidden"
+                    validators=["IS_NOT_EMPTY"],
+                    kind="hidden"
                 ),
                 widgets.Input(
-                    "messages-id",
+                    "send-messages-id",
+                    name="id",
+                    form="send-messages",
                     value=id_new_message,
                     kind="hidden"
                 ),
                 widgets.ListString(
-                    "messages-recipes",
+                    "send-messages-recipes",
+                    name="recipes",
+                    form="send-messages",
+                    validators=["IS_NOT_EMPTY"],
                     label=I18N("Recipient", **{"_pt-BR": "Destinatário"}),
                 ),
                 widgets.Input(
-                    "messages-subject",
+                    "send-messages-subject",
+                    name="subject",
+                    form="send-messages",
+                    validators=["IS_NOT_EMPTY"],
                     label=I18N("Subject", **{"_pt-BR": "Assunto"}),
                 ),
                 widgets.Textarea(
-                    "messages-menssage",
+                    "send-messages-menssage",
+                    name="menssage",
+                    form="send-messages",
+                    validators=["IS_NOT_EMPTY"],
                     label=I18N("Message", **{"_pt-BR": "Mensagem"}),
                 ),
                 _class="phanterpwa-messages-send-form-wrapper"
             )
             html.html_to("#content-messages-modal-messages")
+            forms.ValidateForm("#form-send-messages")
 
     def modal_send_message_open(self):
         content =  DIV(
@@ -3530,7 +3546,7 @@ class Messages(gatehandler.Handler):
         )
         footer = DIV(
             forms.SubmitButton(
-                "button-modal-send-messages",
+                "send-messages",
                 I18N("Send", **{"_pt-BR": "Enviar"}),
                 _class="btn-autoresize wave_on_click waves-phanterpwa"
             ),

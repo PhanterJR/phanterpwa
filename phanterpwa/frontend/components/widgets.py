@@ -296,7 +296,6 @@ class Input(Widget):
         self._check_value(el)
 
     def reload(self):
-
         self.start()
 
     def _binds(self):
@@ -2307,7 +2306,7 @@ class ListString(Widget):
             lambda: self._add_value_predefinition(this)
         )
         jQuery("#phanterpwa-widget-list_string-input-{0}".format(
-            self.identifier)).val(JSON.stringify(JSON.stringify(self._input_value)))
+            self.identifier)).val(JSON.stringify(JSON.stringify(self._input_value))).trigger("change")
         jQuery("#phanterpwa-widget-list_string-list_values-{0}".format(self.identifier)).html(
             self._xml_list_string.jquery()
         ).find(".phanterpwa-widget-list_string-plus_icon-container").find(
@@ -2353,7 +2352,7 @@ class ListString(Widget):
             self._value.append([key_value, new_value])
         self._process_list_string()
         jQuery("#phanterpwa-widget-list_string-input-{0}".format(
-            self.identifier)).val(JSON.stringify(self._input_value))
+            self.identifier)).val(JSON.stringify(self._input_value)).trigger("change")
         jQuery("#phanterpwa-widget-list_string-list_values-{0}".format(self.identifier)).html(
             self._xml_list_string.jquery()
         ).find(".phanterpwa-widget-list_string-plus_icon-container").find(
@@ -2404,7 +2403,7 @@ class ListString(Widget):
             lambda: self._add_value_predefinition(this)
         )
         jQuery("#phanterpwa-widget-list_string-input-{0}".format(
-            self.identifier)).val(JSON.stringify(self._input_value))
+            self.identifier)).val(JSON.stringify(self._input_value)).trigger("change")
         jQuery("#phanterpwa-widget-list_string-list_values-{0}".format(self.identifier)).html(
             self._xml_list_string.jquery()
         ).find(
@@ -2722,6 +2721,9 @@ class Textarea(Widget):
     def start(self):
         self._binds()
 
+    def value(self):
+        self._value = jQuery("#phanterpwa-widget-textarea-textarea-{0}".format(self.identifier)).val()
+        return self._value
 
 class Inert(Widget):
     def __init__(self, identifier, **parameters):

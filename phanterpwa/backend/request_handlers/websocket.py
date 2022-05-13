@@ -37,15 +37,9 @@ class EchoWebSocket(websocket.WebSocketHandler):
         return True
 
     def open(self):
-        # self.write_message(u"______  _                    _               ______  _    _   ___  ")
-        # self.write_message(u"| ___ \| |                  | |              | ___ \| |  | | / _ \ ")
-        # self.write_message(u"| |_/ /| |__    __ _  _ __  | |_   ___  _ __ | |_/ /| |  | |/ /_\ \\")
-        # self.write_message(u"|  __/ | '_ \  / _` || '_ \ | __| / _ \| '__||  __/ | |/\| ||  _  |")
-        # self.write_message(u"| |    | | | || (_| || | | || |_ |  __/| |   | |    \  /\  /| | | |")
-        # self.write_message(u"\_|    |_| |_| \__,_||_| |_| \__| \___||_|   \_|     \/  \/ \_| |_/")
         self.write_message(MSG)
         self.phanterpwa_current_user = None
-        self.get_connections().add(self)
+        self.add_connection(self)
 
     def on_message(self, message):
         if message.startswith("{"):
@@ -76,13 +70,16 @@ class EchoWebSocket(websocket.WebSocketHandler):
                         q_user = self.DALDatabase(self.DALDatabase.auth_user.id == id_user).select().first()
                         if q_user:
                             self.phanterpwa_current_user = q_user
-                            if self.phanterpwa_current_user.id in self._online_users:
-                                for con in self._online_users[self.phanterpwa_current_user.id]:
-                                    if not con.ws_connection:
-                                        self._online_users[self.phanterpwa_current_user.id].remove(con)
-                                self._online_users[self.phanterpwa_current_user.id].add(self)
-                            else:
-                                self._online_users[self.phanterpwa_current_user.id] = set([self])
+                            try:
+                                new_set = set(self._online_users[self.phanterpwa_current_user.id])
+                            except KeyError:
+                                new_set = set([self])
+                            for con in new_set:
+                                if not con.ws_connection:
+                                    new_set.remove(con)
+                            new_set.add(self)
+                            self._online_users[self.phanterpwa_current_user.id] = new_set
+
                             if msg == "command_online":
                                 print("{0} webSocket opened".format(self.phanterpwa_current_user.email))
                                 self.write_message(u"__ You're online")
@@ -105,23 +102,40 @@ class EchoWebSocket(websocket.WebSocketHandler):
                     )
 
     @classmethod
-    def get_online_user(cls, id_user):
-        user_cons = cls.online_users().get(id_user, set())
+    def get_online_users(cls):
+        user_cons = cls.get_connections()
+        new_dict = dict()
         for con in user_cons:
-            if not user_cons.ws_connection:
-                user_cons.remove(con)
-        return user_cons
+            if con.phanterpwa_current_user and con.ws_connection:
+                try:
+                    new_set = set(new_dict[con.phanterpwa_current_user.id])
+                except KeyError:
+                    new_set = set()
+                new_set.add(con)
+                new_dict[con.phanterpwa_current_user.id] = new_set
+        return new_dict
 
     @classmethod
     def check_user_is_online(cls, id_user):
-        if id_user in cls.get_online_user():
+        if id_user in cls.get_online_users():
             return True
         else:
             return False
 
     @classmethod
     def get_connections(cls):
-        return cls._connections
+        return tuple(cls._connections)
+
+    @classmethod
+    def add_connection(cls, connection):
+        cls._connections.add(connection)
+
+    @classmethod
+    def remove_connection(cls, connection):
+        try:
+            cls._connections.remove(connection)
+        except KeyError:
+            pass
 
     def on_close(self):
         if self.phanterpwa_current_user:
@@ -132,4 +146,4 @@ class EchoWebSocket(websocket.WebSocketHandler):
                 pass
         else:
             print("Unknow webSocket closed")
-        self.get_connections().remove(self)
+        self.remove_connection(self)
