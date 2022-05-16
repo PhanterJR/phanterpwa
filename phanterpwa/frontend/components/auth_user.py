@@ -3493,11 +3493,12 @@ class Messages(gatehandler.Handler):
         if ajax_status == "success":
             json = data.responseJSON
             id_new_message = json.id_new_message
+            self.id_new_message = id_new_message
             csrf = json.csrf
             html = DIV(
                 widgets.Input(
                     "send-messages-csrf",
-                    name="csrf",
+                    name="csrf_token",
                     form="send-messages",
                     value=csrf,
                     validators=["IS_NOT_EMPTY"],
@@ -3511,8 +3512,8 @@ class Messages(gatehandler.Handler):
                     kind="hidden"
                 ),
                 widgets.ListString(
-                    "send-messages-recipes",
-                    name="recipes",
+                    "send-messages-recipients",
+                    name="recipients",
                     form="send-messages",
                     validators=["IS_NOT_EMPTY"],
                     label=I18N("Recipient", **{"_pt-BR": "Destinatário"}),
@@ -3526,7 +3527,7 @@ class Messages(gatehandler.Handler):
                 ),
                 widgets.Textarea(
                     "send-messages-menssage",
-                    name="menssage",
+                    name="text_message",
                     form="send-messages",
                     validators=["IS_NOT_EMPTY"],
                     label=I18N("Message", **{"_pt-BR": "Mensagem"}),
@@ -3535,6 +3536,10 @@ class Messages(gatehandler.Handler):
             )
             html.html_to("#content-messages-modal-messages")
             forms.ValidateForm("#form-send-messages")
+            jQuery("#phanterpwa-widget-form-submit_button-send-messages").off('click.modal_send_message').on(
+                'click.modal_send_message',
+                lambda: self.submit_message(this)
+            )
 
     def modal_send_message_open(self):
         content =  DIV(
@@ -3563,6 +3568,22 @@ class Messages(gatehandler.Handler):
         )
         self.modal_send_message.open()
         self.get_send_message_form()
+
+    def submit_message(self, el):
+        disabled = jQuery(el).attr("disabled")
+        if disabled != "disabled":
+            formdata = __new__(FormData(jQuery("#form-send-messages")[0]))
+            window.PhanterPWA.PUT(
+                "api",
+                "message",
+                self.id_new_message,
+                onComplete=self.after_submit_message,
+                form_data=formdata,
+            )
+
+    def after_submit_message(self, data, ajax_status):
+        if ajax_status == "success":
+            self.modal_send_message.close()
 
 
 __pragma__('nokwargs')

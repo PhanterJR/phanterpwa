@@ -1,4 +1,5 @@
 import ast
+import re
 import json
 from datetime import datetime
 from tornado import (
@@ -18,7 +19,11 @@ from itsdangerous import (
     SignatureExpired,
     URLSafeSerializer
 )
+from pydal.validators import (
+    IS_EMAIL
+)
 
+re_email_messages = re.compile(r"\$[0-9]{13}\:.+")
 
 class Messages(web.RequestHandler):
     """
@@ -143,7 +148,7 @@ class Message(web.RequestHandler):
                 "cache-control"
             ])
         )
-        self.set_header('Access-Control-Allow-Methods', 'GET, OPTIONS, POST, DELETE')
+        self.set_header('Access-Control-Allow-Methods', 'GET, OPTIONS, POST, PUT, DELETE')
         if self.request.headers.get("phanterpwa-language"):
             self.phanterpwa_language = self.request.headers.get("phanterpwa-language")
         else:
@@ -264,13 +269,13 @@ class Message(web.RequestHandler):
                 except Exception:
                     list_recipients = ast.literal_eval(recipients)
                 if isinstance(list_recipients, list):
-                    set_recipients = set((int(x) for x in list_recipients))
+                    set_recipients, no_pass, error = self.filter_recipients(list_recipients)
                     c_recipients = db(db.auth_user.id.belongs(set_recipients)).count()
                     if c_recipients == len(set_recipients):
                         for recips in set_recipients:
                             db.internal_messages_recipients.insert(
                                 internal_messages= r_message.id,
-                                recipients=recips.id,
+                                recipients=recips,
                                 message_read=False
                             )
                             r_message.update_record(
@@ -319,3 +324,30 @@ class Message(web.RequestHandler):
             'message': message,
             'i18n': {'message': i18nmessage},
         })
+
+    def filter_recipients(self, values):
+        tests = []
+        email_pass = []
+        email_no_pass = []
+        messages_error = self.T("Emails were not found: {0}")
+        errors = None
+        db = self.DALDatabase
+        for x in values:
+            if re_email_messages.match(x):
+                t_email = x[15:]
+                if t_email not in tests:
+                    tests.append(t_email)
+                    if not IS_EMAIL()(t_email)[1]:
+                        r_auth_user = db(db.auth_user.email == t_email).select(db.auth_user.id).first()
+                        if r_auth_user:
+                            email_pass.append(r_auth_user.id)
+                        else:
+                            email_no_pass.append(t_email)
+                    else:
+                        email_no_pass.append(t_email)
+            else:
+                raise ValueError("The value is invalid! Given: {0}".format(x))
+        if email_no_pass:
+            errors = messages_error.format(str(email_no_pass)) 
+
+        return (email_pass, email_no_pass, errors)
