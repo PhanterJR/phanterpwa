@@ -2095,13 +2095,16 @@ class MessagesMonitor(application.Component):
                 if str(total_messages).isdigit():
                     total_messages = int(total_messages)
                     if total_messages > 0:
-                        element.removeClass(
+                        element.addClass(
                             "has-messages"
                         )
+                        element.text(total_messages)
                     if total_messages > 9 and total_messages < 100:
                         element.addClass("has-two-digits")
+                        element.text(total_messages)
                     elif total_messages > 99:
                         element.addClass("has-three-digits")
+                        element.text("99+")
 
 
 class LeftBarAuthUserLogin(left_bar.LeftBarUserMenu):

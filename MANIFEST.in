@@ -237,6 +237,7 @@ include phanterpwa/usual_sass/components/developer.sass
 include phanterpwa/usual_sass/components/easy.sass
 include phanterpwa/usual_sass/components/flash.sass
 include phanterpwa/usual_sass/components/forms.sass
+include phanterpwa/usual_sass/components/messages.sass
 include phanterpwa/usual_sass/components/modal.sass
 include phanterpwa/usual_sass/components/modal_login.sass
 include phanterpwa/usual_sass/components/phanterpwa_gallery.sass
