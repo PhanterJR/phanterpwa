@@ -27,7 +27,7 @@ re_email_messages = re.compile(r"\$[0-9]{13}\:.+")
 
 class Messages(web.RequestHandler):
     """
-        /api/messages/(count|inbox)
+        /api/messages/(count|inbox|outbox)
     """
     def initialize(self, app_name, projectConfig, DALDatabase, i18nTranslator=None, logger_api=None):
         self.app_name = app_name
@@ -115,6 +115,45 @@ class Messages(web.RequestHandler):
                 'i18n': {'message': i18nmessage},
                 'internal_messages': json.loads(s_messages.as_json()),
             })
+        elif arg0 == "outbox":
+            message = 'list of available messages'
+            i18nmessage = self.T(message)
+            s_messages = db(
+                (db.internal_messages.senders == id_user)
+            ).iterselect(
+                db.internal_messages.id,
+                db.internal_messages.subject,
+                db.internal_messages.send_on,
+                groupby=db.internal_messages.id,
+                orderby=~db.internal_messages.send_on,
+                limitby=(0, 200)
+            )
+            internal_messages = []
+            for x in s_messages:
+                dict_send = json.loads(s_messages.as_json())
+                dict_send['recipients_and_read_status'] = [
+                    [
+                        "{0} {1} <{2}>".format(
+                            r.recipients.first_name,
+                            r.recipients.last_name,
+                            r.recipients.email
+                        ),
+                        r.message_read
+                    ] for r in db(
+                        db.internal_messages_recipients.internal_messages == x.id
+                    ).select() 
+                ]
+                internal_messages.append(dict_send)
+
+            self.set_status(200)
+            return self.write({
+                'status': 'OK',
+                'code': 200,
+                'message': message,
+                'i18n': {'message': i18nmessage},
+                'internal_messages': internal_messages,
+            })
+
         self.set_status(400)
         return self.write({
             'status': 'Bad Request',
@@ -175,10 +214,14 @@ class Message(web.RequestHandler):
         id_user = self.phanterpwa_current_user.id
         r_message = db(
             (db.internal_messages_recipients.internal_messages == arg0)
+            & (db.internal_messages_recipients.internal_messages == db.internal_messages.id)
             & (db.internal_messages_recipients.recipients == id_user)
-        ).select().first()
+        ).select(
+            db.internal_messages.text_message,
+            db.internal_messages_recipients.ALL,
+        ).first()
         if r_message:
-            r_message.update_record(
+            r_message.internal_messages_recipients.update_record(
                 message_read=True
             )
             db.commit()
@@ -190,7 +233,7 @@ class Message(web.RequestHandler):
                 'code': 200,
                 'message': message,
                 'i18n': {'message': i18nmessage},
-                'internal_message': json.loads(r_message.as_json()),
+                'internal_message': json.loads(r_message.internal_messages.as_json()),
             })
 
         message = 'message not found'

@@ -33,3 +33,26 @@
             &:hover
                 i
                     color: $attention
+#phanterpwa-messages-wrapper
+    .phanterpwa-messages-table-line
+        pointer-events: none
+        &.no-read
+            font-weight: bold
+        &:hover
+            color: $attention
+        .phanterpwa-messages-table-button_read
+            pointer-events: auto
+            cursor: pointer
+
+    .phanterpwa-card-panel-control-content
+        .phanterpwa-widget
+            &.phanterpwa-widget-table-container
+                td
+                    border: unset
+                tbody
+                    border-top: 1px solid $material_level06
+                    border-bottom: 1px solid $material_level06
+                    .phanterpwa-messages-inbox-message_content
+                        background: white
+                        padding: 20px
+                        box-shadow: 0px 0px 4px inset

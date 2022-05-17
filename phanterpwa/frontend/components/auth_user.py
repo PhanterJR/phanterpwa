@@ -29,6 +29,7 @@ H2 = helpers.XmlConstructor.tagger("h2")
 P = helpers.XmlConstructor.tagger("p")
 LABEL = helpers.XmlConstructor.tagger("label")
 TABLE = helpers.XmlConstructor.tagger("table")
+TBODY = helpers.XmlConstructor.tagger("tbody")
 TR = helpers.XmlConstructor.tagger("tr")
 TD = helpers.XmlConstructor.tagger("td")
 TH = helpers.XmlConstructor.tagger("th")
@@ -2048,7 +2049,7 @@ class MessagesMonitor(application.Component):
         self.target_selector = target_selector
         self.element_target = jQuery(self.target_selector)
         message_link = parameters.get('messages_link', window.PhanterPWA.XWAY("messages", "inbox"))
-
+        self.interval = parameters.get('interval', 30000)
         html = DIV(
             DIV(
                 A(I(_class="fas fa-envelope"), DIV(_class="phanterpwa-component-messages-total_messages"), _href=message_link),
@@ -2071,9 +2072,15 @@ class MessagesMonitor(application.Component):
             )
         else:
             self.element_target.html("")
+
+    def update(self):
+        time = __new__(Date())
+        self.initime = time.getTime()
+        self.start()
+
     def reload(self):
         time = __new__(Date())
-        if (time.getTime() - self.initime) > 5000:
+        if (time.getTime() - self.initime) > self.interval:
             self.initime = time.getTime()
             self.start()
 
@@ -3307,13 +3314,14 @@ class Messages(gatehandler.Handler):
                                 I(_class="fas fa-plus"),
                                 _class="icon_button actived create-messages"
                             ),
-                            DIV(
+                            A(
                                 I(_class="fas fa-paper-plane"),
+                                _href=window.PhanterPWA.XWAY("messages", "outbox"),
                                 _class="icon_button actived send-messages"
                             ),
                             DIV(
                                 I(_class="fas fa-sync-alt"),
-                                _class="icon_button actived reload-messages"
+                                _class="icon_button actived reload-inbox-messages"
                             ),
                             _class="phanterpwa-card-panel-control-buttons"
                         ),
@@ -3345,9 +3353,71 @@ class Messages(gatehandler.Handler):
                 DIV(_id="modal-send-messages-container")
             )
             html.html_to("#main-container")
-            self.get_messages()
+            self.get_inbox_messages()
             self.binds()
-
+        if arg0 == "outbox":
+            caption = DIV(
+                LABEL(I18N("SENT MESSAGES", **{"_pt-BR": "MENSAGENS ENVIADAS"})),
+                DIV(
+                    DIV(
+                        DIV(
+                            DIV(
+                                DIV(
+                                    DIV(preloaders.android, _style="width: 300px; height: 300px; overflow: hidden; margin: auto;"),
+                                    _style="text-align:center; padding: 50px 0;"
+                                ),
+                                _id="content-messages",
+                                _style="min-height: 300px;",
+                                _class="phanterpwa-widget-table-container phanterpwa-widget"
+                            ),
+                            _class="phanterpwa-card-panel-control-content"
+                        ),
+                        DIV(
+                            DIV(
+                                I(_class="fas fa-plus"),
+                                _class="icon_button actived create-messages"
+                            ),
+                            A(
+                                I(_class="fas fa-inbox"),
+                                _href=window.PhanterPWA.XWAY("messages", "inbox"),
+                                _class="icon_button actived send-messages"
+                            ),
+                            DIV(
+                                I(_class="fas fa-sync-alt"),
+                                _class="icon_button actived reload-outbox-messages"
+                            ),
+                            _class="phanterpwa-card-panel-control-buttons"
+                        ),
+                        _class="phanterpwa-card-panel-control-wrapper has_buttons"
+                    ),
+                    _class="phanterpwa-card-panel-control-container"
+                ),
+                _class="phanterpwa-card-panel-control"
+            )
+            html = CONCATENATE(
+                DIV(
+                    DIV(
+                        DIV(
+                            DIV(I18N("MESSAGES", **{'pt-BR': "MENSAGENS"}), _class="phanterpwa-breadcrumb"),
+                            DIV(I18N("OUTBOX", **{'pt-BR': "CAIXA DE SAÍDA"}), _class="phanterpwa-breadcrumb"),
+                            _class="phanterpwa-breadcrumb-wrapper"
+                        ),
+                        _class="p-container extend"),
+                    _class='title_page_container card'
+                ),
+                DIV(
+                    DIV(
+                        caption,
+                        _class='p-row'
+                    ),
+                    _id="phanterpwa-messages-wrapper",
+                    _class="phanterpwa-container p-container extend"
+                ),
+                DIV(_id="modal-send-messages-container")
+            )
+            html.html_to("#main-container")
+            
+            self.binds()
     def binds(self):
         source = jQuery("#phanterpwa-messages-wrapper")
         source.find(
@@ -3359,23 +3429,100 @@ class Messages(gatehandler.Handler):
             self.modal_send_message_open
         )
         source.find(
-            ".reload-messages"
+            ".reload-inbox-messages"
         ).off(
-            "click.reload-messages"
+            "click.reload-inbox-messages"
         ).on(
-            "click.reload-messages",
-            self.try_again
+            "click.reload-inbox-messages",
+            self.try_again_inbox
+        )
+        source.find(
+            ".reload-outbox-messages"
+        ).off(
+            "click.reload-outbox-messages"
+        ).on(
+            "click.reload-outbox-messages",
+            self.try_again_outbox
         )
 
-    def get_messages(self):
+    def binds_inbox_messages(self):
+        jQuery(".phanterpwa-messages-table-button_read").off("click.button_read-messages").on(
+            "click.button_read-messages",
+            lambda: self.get_inbox_message_content(this)
+        )
+
+    def binds_outbox_messages(self):
+        jQuery(".phanterpwa-messages-button-outbox").off("click.button-outbox").on(
+            "click.button-outbox",
+            lambda: self.get_outbox_message_content(this)
+        )
+
+    def get_inbox_message_content(self, el):
+        element = jQuery(el)
+        id_message = element.data("id_message")
+        target = jQuery("#{0}".format(element.data("target")))
+        if target.hasClass("has_message"):
+            target.slideToggle()
+        else:
+            window.PhanterPWA.GET(
+                "api",
+                "message",
+                id_message,
+                onComplete=lambda data, ajax_status: self.after_get_inbox_message(data, ajax_status, target)
+            )
+
+    def get_outbox_message_content(self, el):
+        element = jQuery(el)
+        id_message = element.data("id_message")
+        target = jQuery("#{0}".format(element.data("target")))
+        if target.hasClass("has_message"):
+            target.slideToggle()
+        else:
+            window.PhanterPWA.GET(
+                "api",
+                "message",
+                id_message,
+                onComplete=lambda data, ajax_status: self.after_get_outbox_message(data, ajax_status, target)
+            )
+
+    def after_get_inbox_message(self, data, ajax_status, target):
+        if ajax_status == "success":
+            json = data.responseJSON
+            content = TD(
+                DIV(
+                    json.internal_message.text_message,
+                    _class="phanterpwa-messages-inbox-message_content"
+                ),
+                _colspan="3"
+            )
+            jQuery(target).addClass("has_message").html(content.jquery()).slideToggle()
+
+    def after_get_outbox_message(self, data, ajax_status, target):
+        if ajax_status == "success":
+            json = data.responseJSON
+            content = DIV(
+                json.internal_message.text_message,
+                _class="phanterpwa-messages-inbox-message_content"
+            )
+            jQuery(target).addClass("has_message").html(content.jquery()).slideToggle()
+
+    def get_inbox_messages(self):
         window.PhanterPWA.GET(
             "api",
             "messages",
             "inbox",
-            onComplete=self.after_get_messages
+            onComplete=self.after_get_inbox_messages
         )
 
-    def after_get_messages(self, data, ajax_status):
+    def get_outbox_messages(self):
+        window.PhanterPWA.GET(
+            "api",
+            "messages",
+            "outbox",
+            onComplete=self.after_get_outbox_messages
+        )
+
+    def after_get_inbox_messages(self, data, ajax_status):
         if ajax_status == "success":
             json = data.responseJSON
             table = TABLE(
@@ -3401,8 +3548,8 @@ class Messages(gatehandler.Handler):
                 has_messages = True
                 _class="phanterpwa-widget-table-data phanterpwa-widget phanterpwa-messages-table-line "
                 readed = x.internal_messages_recipients.message_read
-                if str(readed).lower() == "true":
-                    _class="phanterpwa-messages-table-line no-read"
+                if str(readed).lower() != "true":
+                    _class="phanterpwa-widget-table-data phanterpwa-widget phanterpwa-messages-table-line no-read"
                 sender = DIV(
                     "{0} {1}".format(x.auth_user.first_name, x.auth_user.last_name),
                     SPAN("<", x.auth_user.email, ">", _class="phanterpwa-messages-table-email"),
@@ -3414,23 +3561,40 @@ class Messages(gatehandler.Handler):
                 )
                 date_and_time = x.internal_messages.send_on
                 subject = DIV(x.internal_messages.subject, _class="phanterpwa-messages-table-subject")
-                table.append(
+                table.append(TBODY(
                     TR(
                         TD(
                             sender,
-                            _class="phanterpwa-widget-table-data-td"
+                            _class="phanterpwa-widget-table-data-td phanterpwa-messages-table-button_read",
+                            **{
+                                "_data-id_message": x.internal_messages.id,
+                                "_data-target": "phanterpwa-messages-content-{0}".format(x.internal_messages.id)
+                            }
                         ),
                         TD(
                             subject,
-                            _class="phanterpwa-widget-table-data-td"
+                            _class="phanterpwa-widget-table-data-td phanterpwa-messages-table-button_read",
+                            **{
+                                "_data-id_message": x.internal_messages.id,
+                                "_data-target": "phanterpwa-messages-content-{0}".format(x.internal_messages.id)
+                            }
                         ),
                         TD(
                             date_and_time,
-                            _class="phanterpwa-widget-table-data-td"
+                            _class="phanterpwa-widget-table-data-td phanterpwa-messages-table-button_read",
+                            **{
+                                "_data-id_message": x.internal_messages.id,
+                                "_data-target": "phanterpwa-messages-content-{0}".format(x.internal_messages.id)
+                            }
                         ),
                         _class=_class
+                    ),
+                    TR(
+                        _class="phanterpwa-messages-content",
+                        _style="display:none;",
+                        _id="phanterpwa-messages-content-{0}".format(x.internal_messages.id)
                     )
-                )
+                ))
             if not has_messages:
                 table.append(
                     TR(
@@ -3446,6 +3610,7 @@ class Messages(gatehandler.Handler):
                     )
                 )
             table.html_to("#content-messages")
+            self.binds_inbox_messages()
         else:
             html =  DIV(
                 H2(
@@ -3473,19 +3638,134 @@ class Messages(gatehandler.Handler):
                 "click.phanterpwa-try-get-messages-again"
             ).on(
                 "click.phanterpwa-try-get-messages-again",
-                self.try_again
+                self.try_again_inbox
             )
 
-    def try_again(self):
+    def after_get_outbox_messages(self, data, ajax_status):
+        if ajax_status == "success":
+            json = data.responseJSON
+            table = TABLE(
+                TR(
+                    TH(
+                        I18N("Subject", **{"_pt-BR": "Assunto"}),
+                        _class="phanterpwa-widget-table-head-th"
+                    ),
+                    TH(
+                        I18N("Datetime", **{"_pt-BR": "Dia e Hora"}),
+                        _class="phanterpwa-widget-table-head-th"
+                    ),
+                    _class="phanterpwa-widget-table-head phanterpwa-widget"
+                ),
+                _class="phanterpwa-messages-table phanterpwa-widget-table p-row"
+            )
+            has_messages = False
+            for x in json.internal_messages:
+                has_messages = True
+                _class="phanterpwa-widget-table-data phanterpwa-widget phanterpwa-messages-table-line "
+                readed = x.internal_messages_recipients.message_read
+                if str(readed).lower() != "true":
+                    _class="phanterpwa-widget-table-data phanterpwa-widget phanterpwa-messages-table-line no-read"
+                sender = DIV(
+                    "{0} {1}".format(x.auth_user.first_name, x.auth_user.last_name),
+                    SPAN("<", x.auth_user.email, ">", _class="phanterpwa-messages-table-email"),
+                    **{
+                        "_title": x.auth_user.email,
+                        "_data-id_auth_user": x.auth_user.id,
+                        "_data-email": x.auth_user.email,
+                    }
+                )
+                date_and_time = x.internal_messages.send_on
+                subject = DIV(x.internal_messages.subject, _class="phanterpwa-messages-table-subject")
+                table.append(TBODY(
+                    TR(
+                        TD(
+                            subject,
+                            _class="phanterpwa-widget-table-data-td phanterpwa-messages-table-button_read",
+                            **{
+                                "_data-id_message": x.internal_messages.id,
+                                "_data-target": "phanterpwa-messages-content-{0}".format(x.internal_messages.id)
+                            }
+                        ),
+                        TD(
+                            date_and_time,
+                            _class="phanterpwa-widget-table-data-td phanterpwa-messages-table-button_read",
+                            **{
+                                "_data-id_message": x.internal_messages.id,
+                                "_data-target": "phanterpwa-messages-content-{0}".format(x.internal_messages.id)
+                            }
+                        ),
+                        _class=_class
+                    ),
+                    TR(
+                        _class="phanterpwa-messages-content",
+                        _style="display:none;",
+                        _id="phanterpwa-messages-content-{0}".format(x.internal_messages.id)
+                    )
+                ))
+            if not has_messages:
+                table.append(
+                    TR(
+                        TH(
+                            I18N(
+                                "There are no messages to display",
+                                **{"_pt-BR": "Não há mensagens a serem exibidas"}
+                            ),
+                            _class="phanterpwa-widget-table-head-th",
+                            _colspan=3
+                        ),
+                        _class="phanterpwa-widget-table-head phanterpwa-widget"
+                    )
+                )
+            table.html_to("#content-messages")
+            self.binds_outbox_messages()
+        else:
+            html =  DIV(
+                H2(
+                    I18N(
+                        "There was a problem trying to download the messages, please try again by clicking below."
+                        **{"_pt-BR": "Houve um problema ao tentar baixar as mensagens, tente novamente clicando abaixo."}
+                    )
+                ),
+                DIV(
+                    BUTTON(
+                        I18N(
+                            "Try Again!",
+                            **{"_pt-BR": "Tentar Novamente."}
+                        ),
+                        _id="phanterpwa-try-get-messages-again",
+                        _class="btn",
+                    )
+                ),
+                _style="text-align:center; padding: 50px 0;"
+            )
+            html.html_to("#content-messages")
+            jQuery(
+                "#phanterpwa-try-get-messages-again"
+            ).off(
+                "click.phanterpwa-try-get-messages-again"
+            ).on(
+                "click.phanterpwa-try-get-messages-again",
+                self.try_again_outbox
+            )
+
+
+    def try_again_inbox(self):
         html =  DIV(
             DIV(preloaders.android, _style="width: 300px; height: 300px; overflow: hidden; margin: auto;"),
             _style="text-align:center; padding: 50px 0;"
         )
         html.html_to("#content-messages")
-        self.get_messages()
+        self.get_inbox_messages()
+
+    def try_again_inbox(self):
+        html =  DIV(
+            DIV(preloaders.android, _style="width: 300px; height: 300px; overflow: hidden; margin: auto;"),
+            _style="text-align:center; padding: 50px 0;"
+        )
+        html.html_to("#content-messages")
+        self.get_outbox_messages()
 
     def get_send_message_form(self):
-
         window.PhanterPWA.POST(
             "api",
             "message",
