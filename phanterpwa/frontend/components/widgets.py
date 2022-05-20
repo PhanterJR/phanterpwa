@@ -2552,6 +2552,7 @@ class Textarea(Widget):
         self._validator = parameters.get("validators", None)
         self._wear = parameters.get("wear", "material")
         self._form = parameters.get("form", None)
+        self._is_firts_start = False
         wrapper_attr = {
             "_class": "phanterpwa-widget-wrapper phanterpwa-widget-textarea-wrapper phanterpwa-widget-wear-{0}".format(
                 self._wear)
@@ -2664,7 +2665,7 @@ class Textarea(Widget):
             p.removeClass("focus")
         self._check_value(el)
 
-    def reload(self):
+    def firts_start(self):
         self.start()
 
     def _autoresize(self, el):
@@ -2720,10 +2721,14 @@ class Textarea(Widget):
 
     def start(self):
         self._binds()
+        if self._is_firts_start is False:
+            jQuery(self.target_selector).find("textarea").trigger("input")
+            self._is_firts_start = True
 
     def value(self):
         self._value = jQuery("#phanterpwa-widget-textarea-textarea-{0}".format(self.identifier)).val()
         return self._value
+
 
 class Inert(Widget):
     def __init__(self, identifier, **parameters):

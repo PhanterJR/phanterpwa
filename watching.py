@@ -26,7 +26,7 @@ if __name__ == '__main__':
                 pass
     ins = WatchingFiles(
         os.path.normpath("C:\\GitHub\\phanterpwa\\phanterpwa"),
-        os.path.normpath("C:\\Virtualenv\\py37\\Lib\\site-packages\\phanterpwa"),
+        os.path.normpath("C:\\Virtualenv\\py37\\phanterpwaenv\\Lib\\site-packages\\phanterpwa"),
         ignore_paths=["__pycache__", "www"]
     )
     ins.monitoring()
