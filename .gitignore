@@ -45,4 +45,5 @@ tests/profile_image_cutted/2_profile_arbritary_cut.jpg
 tests/profile_image_cutted/3_profile_arbritary_cut.jpg
 tests/profile_image_cutted/profile_h_auto.jpg
 tests/profile_image_cutted/profile_v_auto.jpg
+watching.py
 *.bat
