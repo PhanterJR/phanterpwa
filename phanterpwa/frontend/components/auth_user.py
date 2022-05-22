@@ -3355,7 +3355,7 @@ class Messages(gatehandler.Handler):
             html.html_to("#main-container")
             self.get_inbox_messages()
             self.binds()
-        if arg0 == "outbox":
+        elif arg0 == "outbox":
             caption = DIV(
                 LABEL(I18N("SENT MESSAGES", **{"_pt-BR": "MENSAGENS ENVIADAS"})),
                 DIV(
@@ -3416,8 +3416,9 @@ class Messages(gatehandler.Handler):
                 DIV(_id="modal-send-messages-container")
             )
             html.html_to("#main-container")
-            
+            self.get_outbox_messages()
             self.binds()
+
     def binds(self):
         source = jQuery("#phanterpwa-messages-wrapper")
         source.find(
@@ -3459,6 +3460,7 @@ class Messages(gatehandler.Handler):
 
     def get_inbox_message_content(self, el):
         element = jQuery(el)
+        element.parent().removeClass("no-read").addClass("read")
         id_message = element.data("id_message")
         target = jQuery("#{0}".format(element.data("target")))
         if target.hasClass("has_message"):
@@ -3546,10 +3548,10 @@ class Messages(gatehandler.Handler):
             has_messages = False
             for x in json.internal_messages:
                 has_messages = True
-                _class="phanterpwa-widget-table-data phanterpwa-widget phanterpwa-messages-table-line "
+                _class = "phanterpwa-widget-table-data phanterpwa-widget phanterpwa-messages-table-line "
                 readed = x.internal_messages_recipients.message_read
                 if str(readed).lower() != "true":
-                    _class="phanterpwa-widget-table-data phanterpwa-widget phanterpwa-messages-table-line no-read"
+                    _class = "phanterpwa-widget-table-data phanterpwa-widget phanterpwa-messages-table-line no-read"
                 sender = DIV(
                     "{0} {1}".format(x.auth_user.first_name, x.auth_user.last_name),
                     SPAN("<", x.auth_user.email, ">", _class="phanterpwa-messages-table-email"),
@@ -3661,45 +3663,41 @@ class Messages(gatehandler.Handler):
             has_messages = False
             for x in json.internal_messages:
                 has_messages = True
-                _class="phanterpwa-widget-table-data phanterpwa-widget phanterpwa-messages-table-line "
-                readed = x.internal_messages_recipients.message_read
-                if str(readed).lower() != "true":
-                    _class="phanterpwa-widget-table-data phanterpwa-widget phanterpwa-messages-table-line no-read"
-                sender = DIV(
-                    "{0} {1}".format(x.auth_user.first_name, x.auth_user.last_name),
-                    SPAN("<", x.auth_user.email, ">", _class="phanterpwa-messages-table-email"),
-                    **{
-                        "_title": x.auth_user.email,
-                        "_data-id_auth_user": x.auth_user.id,
-                        "_data-email": x.auth_user.email,
-                    }
-                )
-                date_and_time = x.internal_messages.send_on
-                subject = DIV(x.internal_messages.subject, _class="phanterpwa-messages-table-subject")
+                recipients = x.recipients_and_read_status
+                xml_recs_stats = DIV()
+                for reci in recipients:
+                    readed = reci[1]
+                    if str(readed).lower() != "true":
+                        xml_recs_stats.append(DIV(STRONG(reci[1]), ":", "view"))
+                    else:
+                        xml_recs_stats.append(DIV(STRONG(reci[1]), ":", "view"))
+
+                date_and_time = x.send_on
+                subject = DIV(x.subject, _class="phanterpwa-messages-table-subject")
                 table.append(TBODY(
                     TR(
                         TD(
                             subject,
                             _class="phanterpwa-widget-table-data-td phanterpwa-messages-table-button_read",
                             **{
-                                "_data-id_message": x.internal_messages.id,
-                                "_data-target": "phanterpwa-messages-content-{0}".format(x.internal_messages.id)
+                                "_data-id_message": x.id,
+                                "_data-target": "phanterpwa-messages-content-{0}".format(x.id)
                             }
                         ),
                         TD(
                             date_and_time,
                             _class="phanterpwa-widget-table-data-td phanterpwa-messages-table-button_read",
                             **{
-                                "_data-id_message": x.internal_messages.id,
-                                "_data-target": "phanterpwa-messages-content-{0}".format(x.internal_messages.id)
+                                "_data-id_message": x.id,
+                                "_data-target": "phanterpwa-messages-content-{0}".format(x.id)
                             }
-                        ),
-                        _class=_class
+                        )
                     ),
                     TR(
+                        xml_recs_stats,
                         _class="phanterpwa-messages-content",
                         _style="display:none;",
-                        _id="phanterpwa-messages-content-{0}".format(x.internal_messages.id)
+                        _id="phanterpwa-messages-content-{0}".format(x.id)
                     )
                 ))
             if not has_messages:

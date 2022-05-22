@@ -130,7 +130,8 @@ class Messages(web.RequestHandler):
             )
             internal_messages = []
             for x in s_messages:
-                dict_send = json.loads(s_messages.as_json())
+                dict_send = json.loads(s_messages.as_json())[0]
+                print(dict_send)
                 dict_send['recipients_and_read_status'] = [
                     [
                         "{0} {1} <{2}>".format(
@@ -141,7 +142,7 @@ class Messages(web.RequestHandler):
                         r.message_read
                     ] for r in db(
                         db.internal_messages_recipients.internal_messages == x.id
-                    ).select() 
+                    ).select()
                 ]
                 internal_messages.append(dict_send)
 
