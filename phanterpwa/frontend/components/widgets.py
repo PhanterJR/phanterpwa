@@ -201,24 +201,24 @@ class Input(Widget):
         )
         Widget.__init__(self, identifier, html, **parameters)
 
-    def get_message_error(self):
-        if self._message_error is not None:
-            return self._message_error
-        else:
-            return ""
+    # def get_message_error(self):
+    #     if self._message_error is not None:
+    #         return self._message_error
+    #     else:
+    #         return ""
 
-    def set_message_error(self, message_error):
-        if message_error is not None:
-            jQuery(self.target_selector).find(
-                ".phanterpwa-widget-message_error").html(message_error)
-            jQuery(self.target_selector).find(
-                ".phanterpwa-widget-wrapper").addClass("has_error")
-        self._message_error = message_error
+    # def set_message_error(self, message_error):
+    #     if message_error is not None:
+    #         jQuery(self.target_selector).find(
+    #             ".phanterpwa-widget-message_error").html(message_error)
+    #         jQuery(self.target_selector).find(
+    #             ".phanterpwa-widget-wrapper").addClass("has_error")
+    #     self._message_error = message_error
 
-    def del_message_error(self):
-        self.set_message_error(None)
-        jQuery(self.target_selector).find(
-            ".phanterpwa-widget-wrapper").removeClass("has_error")
+    # def del_message_error(self):
+    #     self.set_message_error(None)
+    #     jQuery(self.target_selector).find(
+    #         ".phanterpwa-widget-wrapper").removeClass("has_error")
 
     def validate(self):
         if callable(self._validator):
@@ -2258,11 +2258,6 @@ class ListString(Widget):
         del self._data_dict[val]
         self.add_new_value([val, alias_val])
 
-    def get_message_error(self):
-        if self._message_error is not None:
-            return self._message_error
-        else:
-            return ""
 
     def set_on_click_new_button(self, value):
         if callable(value):
@@ -2270,15 +2265,21 @@ class ListString(Widget):
         else:
             console.error("The 'on_click_new_butto' value must be callable.")
 
-    def set_message_error(self, message_error):
-        jQuery("#phanterpwa-widget-{0}".format(self.identifier)).find(
-            ".phanterpwa-widget-message_error").html(message_error)
-        jQuery("#phanterpwa-widget-{0}".format(self.identifier)).addClass("has_error")
-        self._message_error
+    # def get_message_error(self):
+    #     if self._message_error is not None:
+    #         return self._message_error
+    #     else:
+    #         return ""
+    # def set_message_error(self, message_error):
+    #     jQuery("#phanterpwa-widget-{0}".format(self.identifier)).find(
+    #         ".phanterpwa-widget-message_error").html(message_error)
+    #     jQuery(self.target_selector).find(
+    #         ".phanterpwa-widget-wrapper").addClass("has_error")
+    #     self._message_error
 
-    def del_message_error(self):
-        self.set_message_error("")
-        jQuery("#phanterpwa-widget-{0}".format(self.identifier)).removeClass("has_error")
+    # def del_message_error(self):
+    #     self.set_message_error("")
+    #     jQuery("#phanterpwa-widget-{0}".format(self.identifier)).removeClass("has_error")
 
     def validate(self):
         if callable(self._validator):
@@ -2600,21 +2601,21 @@ class Textarea(Widget):
         )
         Widget.__init__(self, identifier, html, **parameters)
 
-    def get_message_error(self):
-        if self._message_error is not None:
-            return self._message_error
-        else:
-            return ""
+    # def get_message_error(self):
+    #     if self._message_error is not None:
+    #         return self._message_error
+    #     else:
+    #         return ""
 
-    def set_message_error(self, message_error):
-        jQuery("#phanterpwa-widget-{0}".format(self.identifier)).find(
-            ".phanterpwa-widget-message_error").html(message_error)
-        jQuery("#phanterpwa-widget-{0}".format(self.identifier)).addClass("has_error")
-        self._message_error
+    # def set_message_error(self, message_error):
+    #     jQuery("#phanterpwa-widget-{0}".format(self.identifier)).find(
+    #         ".phanterpwa-widget-message_error").html(message_error)
+    #     jQuery("#phanterpwa-widget-{0}".format(self.identifier)).addClass("has_error")
+    #     self._message_error
 
-    def del_message_error(self):
-        self.set_message_error("")
-        jQuery("#phanterpwa-widget-{0}".format(self.identifier)).removeClass("has_error")
+    # def del_message_error(self):
+    #     self.set_message_error("")
+    #     jQuery("#phanterpwa-widget-{0}".format(self.identifier)).removeClass("has_error")
 
     def validate(self):
         if callable(self._validator):
