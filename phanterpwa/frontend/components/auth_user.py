@@ -3755,7 +3755,7 @@ class Messages(gatehandler.Handler):
         html.html_to("#content-messages")
         self.get_inbox_messages()
 
-    def try_again_inbox(self):
+    def try_again_outbox(self):
         html =  DIV(
             DIV(preloaders.android, _style="width: 300px; height: 300px; overflow: hidden; margin: auto;"),
             _style="text-align:center; padding: 50px 0;"

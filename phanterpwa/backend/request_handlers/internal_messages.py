@@ -130,7 +130,7 @@ class Messages(web.RequestHandler):
             )
             internal_messages = []
             for x in s_messages:
-                dict_send = json.loads(s_messages.as_json())[0]
+                dict_send = json.loads(x.as_json())
                 print(dict_send)
                 dict_send['recipients_and_read_status'] = [
                     [
@@ -155,11 +155,14 @@ class Messages(web.RequestHandler):
                 'internal_messages': internal_messages,
             })
 
+        message = 'Bad Request'
+        i18nmessage = self.T(message)
         self.set_status(400)
         return self.write({
             'status': 'Bad Request',
             'code': 400,
-            'total_messages': json.loads(s_messages.as_json()),
+            'message': message,
+            'i18n': {'message': i18nmessage},
         })
 
 
@@ -237,7 +240,7 @@ class Message(web.RequestHandler):
                 'internal_message': json.loads(r_message.internal_messages.as_json()),
             })
 
-        message = 'message not found'
+        message = 'Message not found'
         i18nmessage = self.T(message)
         self.set_status(400)
         return self.write({

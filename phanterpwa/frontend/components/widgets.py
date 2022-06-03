@@ -23,6 +23,7 @@ DIV = helpers.XmlConstructor.tagger("div", False)
 I = helpers.XmlConstructor.tagger("i", False)
 INPUT = helpers.XmlConstructor.tagger("input", True)
 HR = helpers.XmlConstructor.tagger("hr", True)
+A = helpers.XmlConstructor.tagger("a")
 LABEL = helpers.XmlConstructor.tagger("label", False)
 TEXTAREA = helpers.XmlConstructor.tagger("textarea", False)
 SELECT = helpers.XmlConstructor.tagger("select", False)
@@ -3448,17 +3449,28 @@ class FloatMenu(Widget):
         for x in self._options:
             self._total_options += 1
             self.add_option(x)
-
-        html = DIV(DIV(
-            self._button,
-            _class="phanterpwa-widget-floatmenu-button{0}".format(class_button),
-            ),
+        container_icon = DIV(
+            _class="phanterpwa-widget-floatmenu-wrapper"
+        )
+        if "_href" in parameters:
+            container_icon = A(
+                _class="phanterpwa-widget-floatmenu-wrapper",
+                _href=parameters["_href"]
+            )
+            parameters["_href"] = None
+        container_icon.append(
+            DIV(
+                self._button,
+                _class="phanterpwa-widget-floatmenu-button{0}".format(class_button),
+            )
+        )
+        container_icon.append(
             DIV(
                 self._xml_menu,
                 _class="phanterpwa-widget-floatmenu-options-content"
-            ),
-            _class="phanterpwa-widget-floatmenu-wrapper"
+            )
         )
+        html = container_icon
         if "_class" in parameters:
             parameters["_class"] = "{0}{1}".format(parameters["_class"], " phanterpwa-widget-floatmenu")
         else:
