@@ -265,4 +265,28 @@ class CONCATENATE(XmlConstructor):
         return jQuery(html)
 
 
+class XTAGGER(XmlConstructor):
+    def __init__(self, field_name, *content, **parameters):
+        DIV = XmlConstructor.tagger("div")
+        STRONG = XmlConstructor.tagger("strong")
+        SPAN = XmlConstructor.tagger("span")
+        if "_class" in parameters:
+            parameters["_class"] = "{0}{1}".format(parameters["_class"], " phanterpwa-tagger-container")
+        else:
+            parameters["_class"] = "phanterpwa-tagger-container"
+        self.__child_html = DIV(
+            STRONG(field_name),
+            SPAN(*content),
+            _class="phanterpwa-tagger e-tagger-wrapper"
+        )
+        XmlConstructor.__init__(self, 'div', False, self.__child_html, **parameters)
+
+    def append(self, value):
+        self.__child_html.content.append(value)
+
+    def insert(self, pos, value):
+        self.__child_html.content.insert(pos, value)
+
+
+
 __pragma__('nokwargs')
