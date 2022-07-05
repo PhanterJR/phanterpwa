@@ -2900,6 +2900,9 @@ class CheckBox(Widget):
             lambda: self._on_check_change(this)
         )
 
+    def value(self):
+        return self._value
+
     def start(self):
         self._binds()
         if jQuery("#phanterpwa-widget-checkbox-input-{0}".format(self.identifier)).prop("checked"):
