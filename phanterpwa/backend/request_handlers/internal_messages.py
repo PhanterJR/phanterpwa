@@ -13,11 +13,11 @@ from phanterpwa.backend.decorators import (
     check_user_token
 )
 from phanterpwa.i18n import browser_language
-from itsdangerous import (
-    TimedJSONWebSignatureSerializer as Serialize,
-    BadSignature,
+from phanterpwa.backend.security import (
+    Serialize,
     SignatureExpired,
-    URLSafeSerializer
+    BadSignature,
+    URLSafeSerializer,
 )
 from pydal.validators import (
     IS_EMAIL
@@ -284,7 +284,6 @@ class Message(web.RequestHandler):
             'ip': self.phanterpwa_remote_ip,
             'user': self.phanterpwa_current_user.id
         })
-        sign_csrf = sign_csrf.decode("utf-8")
         q_csrf = db(db.csrf.id == id_csrf).select().first()
         q_csrf.update_record(token=sign_csrf)
         message = 'Create new message'

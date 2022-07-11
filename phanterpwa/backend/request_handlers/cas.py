@@ -38,11 +38,11 @@ from phanterpwa.gallery.integrationDAL import PhanterpwaGalleryUserImage
 from tornado import (
     web
 )
-from itsdangerous import (
-    TimedJSONWebSignatureSerializer as Serialize,
-    BadSignature,
+from phanterpwa.backend.security import (
+    Serialize,
     SignatureExpired,
-    URLSafeSerializer
+    BadSignature,
+    URLSafeSerializer,
 )
 from pydal import Field
 from pydal.validators import (
@@ -183,7 +183,6 @@ class CAS(web.RequestHandler):
                         'email': email
                     }
                     token_user = t_user.dumps(content)
-                    token_user = token_user.decode('utf-8')
                     q_role = self.DALDatabase(
                         (self.DALDatabase.auth_membership.auth_user == q_user.id) &
                         (self.DALDatabase.auth_group.id == self.DALDatabase.auth_membership.auth_group)
@@ -220,7 +219,6 @@ class CAS(web.RequestHandler):
 
                     token_url = t_url.dumps(content)
                     token_client = t_client.dumps(content)
-                    token_client = token_client.decode('utf-8')
                     q_client.update_record(
                         token=token_client,
                         date_created=datetime.now(),

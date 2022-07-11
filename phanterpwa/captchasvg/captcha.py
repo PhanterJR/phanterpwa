@@ -5,10 +5,11 @@ import json
 from glob import glob
 from phanterpwa.helpers import DIV, XML, SVG, SPAN
 from phanterpwa.i18n import Translator
-from itsdangerous import (
-    TimedJSONWebSignatureSerializer as Serialize,
+from phanterpwa.backend.security import (
+    Serialize,
+    SignatureExpired,
     BadSignature,
-    SignatureExpired
+    URLSafeSerializer,
 )
 __dirname__ = os.path.dirname(__file__)
 
@@ -200,7 +201,7 @@ class Captcha(object):
             'choice': choice,
             'option': self._option
         })
-        self._signature = sign_captha.decode("utf-8")
+        self._signature = sign_captha
 
     def check(self, signature, option):
         read_signature = None
@@ -272,7 +273,7 @@ class Captcha(object):
                 sign_option = self.serializer.dumps({
                     'option': str(x)
                 })
-                token_option = sign_option.decode("utf-8")
+                token_option = sign_option
             p = os.path.join(__dirname__, "recipes", "{0}.recs".format(recipe))
             with open(p, 'r', encoding='utf-8') as f:
                 svg_recipe = f.read()

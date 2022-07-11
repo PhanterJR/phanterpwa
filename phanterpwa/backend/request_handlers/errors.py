@@ -16,9 +16,11 @@ from tornado import (
     web
 )
 from phanterpwa.third_parties.xss import xssescape as E
-from itsdangerous import (
-    TimedJSONWebSignatureSerializer as Serialize,
-    URLSafeSerializer
+from phanterpwa.backend.security import (
+    Serialize,
+    SignatureExpired,
+    BadSignature,
+    URLSafeSerializer,
 )
 
 from datetime import (

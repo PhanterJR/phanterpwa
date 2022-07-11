@@ -100,7 +100,7 @@ class PhanterPWA():
         self.WS = websocket.WebSocketPhanterPWA(self.CONFIG["APP"]["websocket_address"])
         if self.DEBUG:
             self.add_component(Developer_Toolbar())
-        self.Valider = validations.Valid
+        self.Valider = validations.Valider
 
         window.onerror = self.onGlobalError
 

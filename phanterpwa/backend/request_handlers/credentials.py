@@ -11,11 +11,11 @@ from phanterpwa.gallery.integrationDAL import PhanterpwaGalleryUserImage
 from tornado import (
     web
 )
-from itsdangerous import (
-    TimedJSONWebSignatureSerializer as Serialize,
-    BadSignature,
+from phanterpwa.backend.security import (
+    Serialize,
     SignatureExpired,
-    URLSafeSerializer
+    BadSignature,
+    URLSafeSerializer,
 )
 
 from datetime import (
@@ -136,7 +136,6 @@ class SignClient(web.RequestHandler):
                                             }
                                             token_url = t_url.dumps(content)
                                             token_client = t_client.dumps(content)
-                                            token_client = token_client.decode("utf-8")
                                             q_client.delete_record()
                                             q_client = self.DALDatabase(
                                                 self.DALDatabase.client.id == new_client).select().first()
@@ -257,7 +256,6 @@ class SignClient(web.RequestHandler):
                                     }
                                     token_url = t_url.dumps(content)
                                     token_client = t_client.dumps(content)
-                                    token_client = token_client.decode('utf-8')
                                     q.update_record(
                                         token=token_client,
                                         id_user=q_user.id,
@@ -333,7 +331,6 @@ class SignClient(web.RequestHandler):
             'remote_addr': self.phanterpwa_remote_ip
         }
         token_client = t_client.dumps(content)
-        token_client = token_client.decode('utf-8')
         q_client = self.DALDatabase(self.DALDatabase.client.id == id_client).select(self.DALDatabase.client.id).first()
         if q_client:
             q_client.update_record(token=token_client)
@@ -436,7 +433,6 @@ class SignForms(web.RequestHandler):
                     'ip': self.phanterpwa_remote_ip,
                     'user': self.phanterpwa_current_user.id
                 })
-                sign_captha = sign_captha.decode("utf-8")
                 q_csrf = self.DALDatabase(self.DALDatabase.csrf.id == id_csrf).select().first()
                 q_csrf.update_record(token=sign_captha)
                 msg = "Form signed"
@@ -535,7 +531,6 @@ class SignLockForm(web.RequestHandler):
                     'user_agent': self.phanterpwa_user_agent,
                     'ip': self.phanterpwa_remote_ip
                 })
-                sign_captha = sign_captha.decode("utf-8")
                 q_csrf = self.DALDatabase(self.DALDatabase.csrf.id == id_csrf).select().first()
                 q_csrf.update_record(token=sign_captha)
             msg = "Form signed"
@@ -713,7 +708,6 @@ class SignCaptchaForms(web.RequestHandler):
                         'user_agent': self.phanterpwa_user_agent,
                         'ip': self.phanterpwa_remote_ip
                     })
-                    sign_captha = sign_captha.decode("utf-8")
                     q_csrf = self.DALDatabase(self.DALDatabase.csrf.id == id_csrf).select().first()
                     q_csrf.update_record(token=sign_captha)
                 self.DALDatabase.commit()
@@ -869,7 +863,6 @@ class ReSing(web.RequestHandler):
                 'email': self.phanterpwa_current_user.email
             }
             token_user = t_user.dumps(content_user)
-            token_user = token_user.decode('utf-8')
             token_client = self.phanterpwa_client_token
             token_url = t_url.dumps(content_client)
             msg = 'Re-sign just user token'
@@ -920,10 +913,8 @@ class ReSing(web.RequestHandler):
                 'email': self.phanterpwa_current_user.email
             }
             token_user = t_user.dumps(content_user)
-            token_user = token_user.decode('utf-8')
             token_url = t_url.dumps(content)
             token_client = t_client.dumps(content)
-            token_client = token_client.decode("utf-8")
             q_client.delete_record()
             q_client = self.DALDatabase(self.DALDatabase.client.id == new_client).select().first()
             q_client.update_record(

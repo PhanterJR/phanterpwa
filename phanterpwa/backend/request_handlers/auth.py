@@ -42,11 +42,11 @@ from phanterpwa.gallery.integrationDAL import PhanterpwaGalleryUserImage
 from tornado import (
     web
 )
-from itsdangerous import (
-    TimedJSONWebSignatureSerializer as Serialize,
-    BadSignature,
+from phanterpwa.backend.security import (
+    Serialize,
     SignatureExpired,
-    URLSafeSerializer
+    BadSignature,
+    URLSafeSerializer,
 )
 from pydal import Field
 from pydal.validators import (
@@ -76,7 +76,6 @@ def arbritary_login(app_name, projectConfig, db, email, user_agent, remote_ip, c
             'email': email
         }
         token_user = t_user.dumps(content)
-        token_user = token_user.decode('utf-8')
         q_role = db(
             (db.auth_membership.auth_user == q_user.id) &
             (db.auth_group.id == db.auth_membership.auth_group)
@@ -109,7 +108,6 @@ def arbritary_login(app_name, projectConfig, db, email, user_agent, remote_ip, c
         }
         token_url = t_url.dumps(content)
         token_client = t_client.dumps(content)
-        token_client = token_client.decode('utf-8')
         q_client.update_record(
             token=token_client,
             date_created=datetime.now(),
@@ -199,7 +197,6 @@ def arbritary_new_user(app_name, projectConfig, db, email, first_name, last_name
             'email': dict_arguments['email']
         }
         token_user = t_user.dumps(content_user)
-        token_user = token_user.decode('utf-8')
         token_client = _client_token
         id_client = db.client.update_or_insert(auth_user=r.id)
         t_client = Serialize(
@@ -218,7 +215,6 @@ def arbritary_new_user(app_name, projectConfig, db, email, first_name, last_name
         }
         token_url = t_url.dumps(content_client)
         token_client = t_client.dumps(content_client)
-        token_client = token_client.decode('utf-8')
         q_client = db(db.client.id == id_client).select().first()
         q_client.update_record(
             token=token_client,
@@ -668,7 +664,6 @@ class Auth(web.RequestHandler):
                         }
 
                     token_user = t_user.dumps(content)
-                    token_user = token_user.decode('utf-8')
                     q_role = self.DALDatabase(
                         (self.DALDatabase.auth_membership.auth_user == q_user.id) &
                         (self.DALDatabase.auth_group.id == self.DALDatabase.auth_membership.auth_group)
@@ -705,7 +700,6 @@ class Auth(web.RequestHandler):
 
                     token_url = t_url.dumps(content)
                     token_client = t_client.dumps(content)
-                    token_client = token_client.decode('utf-8')
                     q_client.update_record(
                         token=token_client,
                         date_created=datetime.now(),
@@ -1291,7 +1285,6 @@ class TwoFactor(web.RequestHandler):
                         'email': str(q_user.email)
                     }
                     token_user = t_user.dumps(content)
-                    token_user = token_user.decode('utf-8')
                     q_role = db(
                         (db.auth_membership.auth_user == q_user.id) &
                         (db.auth_group.id == db.auth_membership.auth_group)
@@ -1325,7 +1318,6 @@ class TwoFactor(web.RequestHandler):
 
                     token_url = t_url.dumps(content)
                     token_client = t_client.dumps(content)
-                    token_client = token_client.decode('utf-8')
                     q_client.update_record(
                         token=token_client,
                         date_created=datetime.now(),
@@ -2120,7 +2112,6 @@ class CreateAccount(web.RequestHandler):
                 'email': dict_arguments['email']
             }
             token_user = t_user.dumps(content_user)
-            token_user = token_user.decode('utf-8')
             token_client = self.phanterpwa_client_token
             id_client = self.DALDatabase.client.update_or_insert(auth_user=id_user)
             t_client = Serialize(
@@ -2139,7 +2130,6 @@ class CreateAccount(web.RequestHandler):
             }
             token_url = t_url.dumps(content_client)
             token_client = t_client.dumps(content_client)
-            token_client = token_client.decode('utf-8')
             q_client = self.DALDatabase(self.DALDatabase.client.id == id_client).select().first()
             q_client.update_record(
                 token=token_client,

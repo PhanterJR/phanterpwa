@@ -204,6 +204,7 @@ class ProjectConfig():
                                 "wait_time_to_try_activate_again": 3900,
                                 "timeout_to_resend_activation_email": 300,
                                 "timeout_to_resign": 600,
+                                "timeout_to_next_login_attempt": 4200,
                                 "max_login_attempts": 5,
                                 "max_activation_attempts": 5,
                                 "default_time_user_token_expire": 7200,

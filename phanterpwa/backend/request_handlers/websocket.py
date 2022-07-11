@@ -3,10 +3,11 @@ import json
 from tornado import (
     websocket
 )
-from itsdangerous import (
-    TimedJSONWebSignatureSerializer as Serialize,
+from phanterpwa.backend.security import (
+    Serialize,
+    SignatureExpired,
     BadSignature,
-    SignatureExpired
+    URLSafeSerializer,
 )
 check_compilation = re.compile(r"check_compilation\[([0-9]*)\]")
 

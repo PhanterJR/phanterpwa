@@ -1,9 +1,9 @@
 from functools import wraps
-from itsdangerous import (
-    TimedJSONWebSignatureSerializer as Serialize,
-    BadSignature,
+from .security import (
+    Serialize,
     SignatureExpired,
-    URLSafeSerializer
+    BadSignature,
+    URLSafeSerializer,
 )
 from inspect import currentframe, getframeinfo, getfile
 
