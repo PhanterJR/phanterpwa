@@ -98,6 +98,7 @@ setuptools.setup(
     exclude_package_data={'': ["sync.ffs_db", "secret.ini", "phanterpwa.pid"]},
     zip_safe=False,
     platforms='any',
+    python_requires=">=3.9",
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Web Environment',
