@@ -82,7 +82,6 @@ class EchoWebSocket(websocket.WebSocketHandler):
                             self._online_users[self.phanterpwa_current_user.id] = new_set
 
                             if msg == "command_online":
-                                print("{0} webSocket opened".format(self.phanterpwa_current_user.email))
                                 self.write_message(u"__ You're online")
                                 return
 
@@ -97,7 +96,6 @@ class EchoWebSocket(websocket.WebSocketHandler):
             else:
                 self.write_message(u"You said: " + message)
                 for con in self.get_connections():
-                    print("usuario:", id(con))
                     con.write_message(
                         "O usuário {0} falou: {1}".format(id(self), message)
                     )
@@ -140,11 +138,8 @@ class EchoWebSocket(websocket.WebSocketHandler):
 
     def on_close(self):
         if self.phanterpwa_current_user:
-            print(self.phanterpwa_current_user.email)
             try:
                 del self._online_users[self.phanterpwa_current_user.id]
             except KeyError:
                 pass
-        else:
-            print("Unknow webSocket closed")
         self.remove_connection(self)
