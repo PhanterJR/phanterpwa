@@ -125,3 +125,14 @@ run_points = DIV(
         _class="phanterpwa-preloader-wrapper"),
     _class="phanterpwa-components-preloaders-run_points"
 )
+
+indefined_text = DIV(
+    DIV(
+        DIV(
+            DIV(_class="indefined_text"),
+            _class="preloader-wrapper enabled"
+        ),
+        _class="phanterpwa-preloader-wrapper"
+    ),
+    _class="phanterpwa-components-preloaders-indefined_text"
+)

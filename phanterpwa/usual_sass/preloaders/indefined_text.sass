@@ -1,0 +1,39 @@
+.phanterpwa-components-preloaders-indefined_text
+    .phanterpwa-preloader-wrapper
+        padding: 3px
+
+    .indefined_text
+        height: 2rem
+        position: absolute
+        left: 120%
+        background-color: #e8e8e8
+        width: 50%
+        transform: skewX(-42deg)
+        min-width: 30px
+        max-width: 300px
+
+    .preloader-wrapper
+        height: 2rem
+        background-color: #d7d7d7
+        position: relative
+        overflow: hidden
+        &.enabled
+            .indefined_text
+                -webkit-animation: phanterpwa_indefined_text 1s infinite ease-in-out
+                animation: phanterpwa_indefined_text 1s infinite ease-in-out
+
+@-webkit-keyframes phanterpwa_indefined_text
+    0%
+        left: -20%
+    50%
+        left: 100%
+    100%
+        left: 150%
+   
+@keyframes phanterpwa_indefined_text
+    0%
+        left: -20%
+    50%
+        left: 100%
+    100%
+        left: 150%
