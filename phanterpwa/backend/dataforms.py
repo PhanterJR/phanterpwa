@@ -117,22 +117,24 @@ class WidgetFromFieldDALFromTableDAL():
                 if x not in self.phanterpwa:
                     self.phanterpwa[x] = self.table[self._field].phanterpwa[x]
 
-            if "data_view" in self.phanterpwa:
-                self._data_view = self.phanterpwa["data_view"]
-            if "label" in self.phanterpwa:
-                self._custom_label = self.phanterpwa["label"]
-            if "position" in self.phanterpwa:
-                self.position = self.phanterpwa["position"]
-            if "section" in self.phanterpwa:
-                self.section = self.phanterpwa["section"]
-            elif "group" in self.phanterpwa:
-                self.group = self.phanterpwa["group"]
-            if "out_of_form" in self.phanterpwa and\
-                    self.phanterpwa["out_of_form"] is True:
-                self.out_of_form = True
-            if "simple_widget" in self.phanterpwa and\
-                    self.phanterpwa["simple_widget"] is True:
-                self.simple_widget = True
+        if "data_view" in self.phanterpwa:
+            self._data_view = self.phanterpwa["data_view"]
+        if "label" in self.phanterpwa:
+            self._custom_label = self.phanterpwa["label"]
+        if "position" in self.phanterpwa:
+            self.position = self.phanterpwa["position"]
+        if "section" in self.phanterpwa:
+            self.section = self.phanterpwa["section"]
+        elif "group" in self.phanterpwa:
+            self.group = self.phanterpwa["group"]
+        if "out_of_form" in self.phanterpwa and\
+                self.phanterpwa["out_of_form"] is True:
+            self.out_of_form = True
+        if "simple_widget" in self.phanterpwa and\
+                self.phanterpwa["simple_widget"] is True:
+            self.simple_widget = True
+
+
         if "_class" not in self.phanterpwa:
             self.phanterpwa["_class"] = "p-col w1p100"
 
@@ -476,12 +478,12 @@ class WidgetFromFieldDALFromTableDAL():
                 if self._record_id:
                     default = self._record[FieldInst]
                 if FieldInst.type == "id":
-                    json_field['label'] = FieldInst.label
+                    json_field['label'] = self.phanterpwa.get("label", FieldInst.label)
                     json_field['value'] = self.phanterpwa.get("value", default)
                     json_field['type'] = 'id'
 
                 else:
-                    json_field['label'] = FieldInst.label
+                    json_field['label'] = self.phanterpwa.get("label", FieldInst.label)
                     json_field['value'] = self.phanterpwa.get("value", default)
                     json_field['type'] = FieldInst.type
 
