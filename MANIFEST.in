@@ -263,6 +263,7 @@ include phanterpwa/usual_sass/plugins/codemirror.sass
 include phanterpwa/usual_sass/preloaders/android.sass
 include phanterpwa/usual_sass/preloaders/discs.sass
 include phanterpwa/usual_sass/preloaders/explosion.sass
+include phanterpwa/usual_sass/preloaders/indefined_text.sass
 include phanterpwa/usual_sass/preloaders/run_points.sass
 include phanterpwa/usual_sass/preloaders/square.sass
 include phanterpwa/usual_sass/preloaders/squares.sass
