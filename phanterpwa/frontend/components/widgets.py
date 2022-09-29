@@ -4147,6 +4147,7 @@ class Image(Widget):
         self._width = parameters.get("width", 190)
         self._height = parameters.get("height", 200)
         self._data_view = parameters.get("data_view", False)
+        self._after_cut = parameters.get("after_cut", None)
         self.identifier = identifier
         self.__child_html = DIV(
             _id="phanterpwa-widget-image-wrapper-{0}".format(identifier),
@@ -4172,7 +4173,8 @@ class Image(Widget):
                 "img_name": "Image_{0}".format(self.identifier),
                 "width": self._width,
                 "height": self._height,
-                "data_view": self._data_view
+                "data_view": self._data_view,
+                "afterCut": self._after_cut
             }
         )
 
