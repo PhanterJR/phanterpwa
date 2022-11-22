@@ -95,10 +95,6 @@ class EchoWebSocket(websocket.WebSocketHandler):
                         self.write_message("reload")
             else:
                 self.write_message(u"You said: " + message)
-                for con in self.get_connections():
-                    con.write_message(
-                        "O usuário {0} falou: {1}".format(id(self), message)
-                    )
 
     @classmethod
     def get_online_users(cls):
