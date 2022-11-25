@@ -178,7 +178,10 @@ class Input(Widget):
                     I(_class="fas fa-lock"),
                     _class="phanterpwa-widget-check"
                 )
-
+        if callable(self._validator):
+            data_validators = ["PROGRAMMATICALLY"]
+        elif self._validator is not None:
+            data_validators = JSON.stringify(self._validator)
         html = DIV(
             INPUT(**{
                 "_id": "phanterpwa-widget-input-input-{0}".format(identifier),
@@ -188,7 +191,7 @@ class Input(Widget):
                 "_placeholder": self._placeholder,
                 "_disabled": self._disabled,
                 "_type": self._type,
-                "_data-validators": JSON.stringify(self._validator),
+                "_data-validators": data_validators,
                 "_data-form": self._form,
             }),
             label,
@@ -420,13 +423,18 @@ class Select(Widget):
         self._xml_select = select
         self._create_xml_select()
         self._create_xml_modal()
+        data_validators = None
+        if callable(self._validator):
+            data_validators = ["PROGRAMMATICALLY"]
+        elif self._validator is not None:
+            data_validators = JSON.stringify(self._validator)
         html = DIV(
             INPUT(**{
                 "_id": "phanterpwa-widget-select-input-{0}".format(identifier),
                 "_value": self._alias_value,
                 "_placeholder": self._placeholder,
                 "_disabled": "disabled",
-                "_data-validators": JSON.stringify(self._validator),
+                "_data-validators": data_validators,
                 "_data-form": self._form,
                 "_name": self._name
             }),
@@ -965,12 +973,16 @@ class Autocomplete(Widget):
         table = TABLE(_class="phanterpwa-widget-autocomplete-options-wrapper")
         self._xml_modal = table
         # self._create_xml_modal()
+        if callable(self._validator):
+            data_validators = ["PROGRAMMATICALLY"]
+        elif self._validator is not None:
+            data_validators = JSON.stringify(self._validator)
         html = DIV(
             INPUT(**{
                 "_id": "phanterpwa-widget-autocomplete-input-{0}".format(identifier),
                 "_value": self._alias_value,
                 "_placeholder": self._placeholder,
-                "_data-validators": JSON.stringify(self._validator),
+                "_data-validators": data_validators,
                 "_data-form": self._form,
                 "_name": self._name,
                 "_tabindex": "0"
@@ -1065,8 +1077,12 @@ class Autocomplete(Widget):
             #             "_class": "phanterpwa-widget-autocomplete-li-option empty"
             #     })))
             if value is not js_undefined:
+                java_regex = __new__(RegExp("[\u0300-\u036f]"))
                 for vdata in self._data:
-                    if str(vdata[1]).upper().startswith(value.upper()) and value != "":
+
+                    bvalue = str(vdata[1]).normalize("NFD").replace(java_regex, "").upper()
+                    cvalue = value.normalize("NFD").replace(java_regex, "").upper()
+                    if bvalue.startswith(cvalue) and value != "":
                         plain_value = str(vdata[1])[len(value):]
                         strongest_value = SPAN(STRONG(str(vdata[1])[0:len(value)]), plain_value)
                         if self._first_value == "":
@@ -1486,6 +1502,10 @@ class MultSelect(Widget):
         self._create_xml_select()
         self._create_xml_modal()
         self._create_xml_values()
+        if callable(self._validator):
+            data_validators = ["PROGRAMMATICALLY"]
+        elif self._validator is not None:
+            data_validators = JSON.stringify(self._validator)
         html = DIV(
             DIV(_class="phanterpwa-widget-multselect-touchpad", _tabindex="0"),
             DIV(
@@ -1502,7 +1522,7 @@ class MultSelect(Widget):
                 "_value": JSON.stringify(self._value),
                 "_placeholder": self._placeholder,
                 "_type": "hidden",
-                "_data-validators": JSON.stringify(self._validator),
+                "_data-validators": data_validators,
                 "_data-form": self._form,
             }),
 
@@ -2083,7 +2103,10 @@ class ListString(Widget):
             wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " has_mask")
         self._process_list_string()
         self._process_list_predefinition_string()
-
+        if callable(self._validator):
+            data_validators = ["PROGRAMMATICALLY"]
+        elif self._validator is not None:
+            data_validators = JSON.stringify(self._validator)
         html = DIV(
             DIV(
                 self._xml_list_string,
@@ -2098,7 +2121,7 @@ class ListString(Widget):
                 "_value": JSON.stringify(self._input_value),
                 "_placeholder": self._placeholder,
                 "_type": "hidden",
-                "_data-validators": JSON.stringify(self._validator),
+                "_data-validators": data_validators,
                 "_data-form": self._form,
             }),
             label,
@@ -2577,7 +2600,10 @@ class Textarea(Widget):
 
         if self._value is not "":
             wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " has_value")
-
+        if callable(self._validator):
+            data_validators = ["PROGRAMMATICALLY"]
+        elif self._validator is not None:
+            data_validators = JSON.stringify(self._validator)
         html = DIV(
             TEXTAREA(
                 self._value,
@@ -2586,7 +2612,7 @@ class Textarea(Widget):
                     "_class": "phanterpwa-widget-textarea-textarea",
                     "_name": self._name,
                     "_placeholder": self._placeholder,
-                    "_data-validators": JSON.stringify(self._validator),
+                    "_data-validators": data_validators,
                     "_data-form": self._form
             }),
             label,
