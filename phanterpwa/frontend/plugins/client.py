@@ -4,7 +4,7 @@ __pragma__('skip')
 
 # it is ignored on transcrypt
 window = jQuery = console = document = localStorage = URL =\
-    sessionStorage = this = FileReader = JSON = js_undefined = navigator = __new__ = Date = 0
+    sessionStorage = this = FileReader = JSON = WebSocket = js_undefined = navigator = setTimeout = __new__ = Date = 0
 
 __pragma__('noskip')
 
@@ -58,7 +58,7 @@ class Ajax():
         _crossDomain = parameters.get("crossDomain", True)
         _error = parameters.get("error", None)
         _success = parameters.get("success", None)
-        _user_headers = parameters.get("headers", {}):
+        _user_headers = parameters.get("headers", {})
         for x in _user_headers.keys():
             _headers[x] = _user_headers[x]
         _all_args = self._process_args(url_args)
@@ -70,7 +70,7 @@ class Ajax():
             'url': _url,
             'type': "GET",
             'complete': lambda a, b, c: _complete(a, b, c),
-            'success': _sucess,
+            'success': _success,
             'error': _error,
             'datatype': _datatype,
             'crossDomain': _crossDomain,
@@ -94,7 +94,7 @@ class Ajax():
         _crossDomain = parameters.get("crossDomain", True)
         _error = parameters.get("error", None)
         _success = parameters.get("success", None)
-        _user_headers = parameters.get("headers", {}):
+        _user_headers = parameters.get("headers", {})
         for x in _user_headers.keys():
             _headers[x] = _user_headers[x]
         _all_args = self._process_args(url_args)
@@ -107,7 +107,7 @@ class Ajax():
             'url': _url,
             'type': "DELETE",
             'complete': lambda a, b, c: _complete(a, b, c),
-            'success': _sucess,
+            'success': _success,
             'error': _error,
             'datatype': _datatype,
             'crossDomain': _crossDomain,
@@ -132,7 +132,7 @@ class Ajax():
         _crossDomain = parameters.get("crossDomain", True)
         _error = parameters.get("error", None)
         _success = parameters.get("success", None)
-        _user_headers = parameters.get("headers", {}):
+        _user_headers = parameters.get("headers", {})
         for x in _user_headers.keys():
             _headers[x] = _user_headers[x]
         _all_args = self._process_args(url_args)
@@ -145,7 +145,7 @@ class Ajax():
             'type': "POST",
             'data': _form_data,
             'complete': lambda a, b, c: _complete(a, b, c),
-            'success': _sucess,
+            'success': _success,
             'error': _error,
             'datatype': _datatype,
             'crossDomain': _crossDomain,
@@ -173,7 +173,7 @@ class Ajax():
         _crossDomain = parameters.get("crossDomain", True)
         _error = parameters.get("error", None)
         _success = parameters.get("success", None)
-        _user_headers = parameters.get("headers", {}):
+        _user_headers = parameters.get("headers", {})
         for x in _user_headers.keys():
             _headers[x] = _user_headers[x]
         _all_args = self._process_args(url_args)
@@ -186,7 +186,7 @@ class Ajax():
             'type': "PUT",
             'data': _form_data,
             'complete': lambda a, b, c: _complete(a, b, c),
-            'success': _sucess,
+            'success': _success,
             'error': _error,
             'datatype': _datatype,
             'crossDomain': _crossDomain,
@@ -412,7 +412,7 @@ class Websocket():
         _crossDomain = parameters.get("crossDomain", True)
         _error = parameters.get("error", None)
         _success = parameters.get("success", None)
-        _user_headers = parameters.get("headers", {}):
+        _user_headers = parameters.get("headers", {})
         for x in _user_headers.keys():
             _headers[x] = _user_headers[x]
         _all_args = self._process_args(url_args)
@@ -424,7 +424,7 @@ class Websocket():
             'url': _url,
             'type': "GET",
             'complete': lambda a, b, c: _complete(a, b, c),
-            'success': _sucess,
+            'success': _success,
             'error': _error,
             'datatype': _datatype,
             'crossDomain': _crossDomain,
@@ -448,7 +448,7 @@ class Websocket():
         _crossDomain = parameters.get("crossDomain", True)
         _error = parameters.get("error", None)
         _success = parameters.get("success", None)
-        _user_headers = parameters.get("headers", {}):
+        _user_headers = parameters.get("headers", {})
         for x in _user_headers.keys():
             _headers[x] = _user_headers[x]
         _all_args = self._process_args(url_args)
@@ -461,7 +461,7 @@ class Websocket():
             'url': _url,
             'type': "DELETE",
             'complete': lambda a, b, c: _complete(a, b, c),
-            'success': _sucess,
+            'success': _success,
             'error': _error,
             'datatype': _datatype,
             'crossDomain': _crossDomain,
@@ -486,7 +486,7 @@ class Websocket():
         _crossDomain = parameters.get("crossDomain", True)
         _error = parameters.get("error", None)
         _success = parameters.get("success", None)
-        _user_headers = parameters.get("headers", {}):
+        _user_headers = parameters.get("headers", {})
         for x in _user_headers.keys():
             _headers[x] = _user_headers[x]
         _all_args = self._process_args(url_args)
@@ -499,7 +499,7 @@ class Websocket():
             'type': "POST",
             'data': _form_data,
             'complete': lambda a, b, c: _complete(a, b, c),
-            'success': _sucess,
+            'success': _success,
             'error': _error,
             'datatype': _datatype,
             'crossDomain': _crossDomain,
@@ -527,7 +527,7 @@ class Websocket():
         _crossDomain = parameters.get("crossDomain", True)
         _error = parameters.get("error", None)
         _success = parameters.get("success", None)
-        _user_headers = parameters.get("headers", {}):
+        _user_headers = parameters.get("headers", {})
         for x in _user_headers.keys():
             _headers[x] = _user_headers[x]
         _all_args = self._process_args(url_args)
@@ -540,7 +540,7 @@ class Websocket():
             'type': "PUT",
             'data': _form_data,
             'complete': lambda a, b, c: _complete(a, b, c),
-            'success': _sucess,
+            'success': _success,
             'error': _error,
             'datatype': _datatype,
             'crossDomain': _crossDomain,

@@ -349,7 +349,7 @@ def check_cas_token(ignore_locked=True):
                 self.set_status(401)
                 return self.write(dict_response)
 
-        return check_client_token_decorator
+        return check_cas_token_decorator
     return decorator
 
 

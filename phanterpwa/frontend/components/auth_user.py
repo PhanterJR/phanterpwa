@@ -35,6 +35,7 @@ TD = helpers.XmlConstructor.tagger("td")
 TH = helpers.XmlConstructor.tagger("th")
 BODY = helpers.XmlConstructor.tagger("body")
 STRONG = helpers.XmlConstructor.tagger("strong")
+BUTTON = helpers.XmlConstructor.tagger("button")
 I18N = helpers.I18N
 CONCATENATE = helpers.CONCATENATE
 XSECTION = helpers.XSECTION
@@ -120,6 +121,8 @@ class AuthUser(application.Component):
 
     def modal_login(self, **parameters):
         self.close_menu()
+        if "close_on_click_outside" not in parameters:
+            parameters["close_on_click_outside"] = False
         self.Modal = ModalLogin(
             "#modal-container",
             social_logins=window.PhanterPWA.social_login_list(),
@@ -584,6 +587,7 @@ class ModalLogin(modal.Modal):
                 "_id": "form-login",
                 "header_height": 50,
                 "footer_height": 200,
+                "close_on_click_outside": False,
                 "title": I18N("Login"),
                 "buttons_panel": DIV(
                     *self.xml_social_logins,
@@ -1225,12 +1229,14 @@ class ModalRegister(modal.Modal):
         if self.user_mobile_number:
             window.PhanterPWA.Components['auth_user'].modal_login(
                 user_mobile_number=True,
-                other_account=True
+                other_account=True,
+                close_on_click_outside=False
             )
         else:
             window.PhanterPWA.Components['auth_user'].modal_login(
                 user_mobile_number=False,
-                other_account=True
+                other_account=True,
+                close_on_click_outside=False
             )
 
     def open_modal_request_password(self):
@@ -1502,11 +1508,13 @@ class ModalRequestPassword(modal.Modal):
         if self.user_mobile_number:
             window.PhanterPWA.Components['auth_user'].modal_login(
                 user_mobile_number=True,
-                other_account=True
+                other_account=True,
+                close_on_click_outside=False
             )
         else:
             window.PhanterPWA.Components['auth_user'].modal_login(
-                other_account=True
+                other_account=True,
+                close_on_click_outside=False
             )
 
     def open_modal_register(self):
@@ -1663,7 +1671,7 @@ class AlertActivationAccount(top_slide.TopSlide):
         )
 
     def _process_alert_content(self):
-        email = PhanterPWA.get_auth_user().email
+        email = window.PhanterPWA.get_auth_user().email
         if str(email).endswith(".mobile@phanterpwa.com"):
             html = CONCATENATE(
                 DIV(
@@ -2291,7 +2299,8 @@ class LeftBarAuthUserNoLogin(left_bar.LeftBarMenu):
         self.close_all()
         self.Modal = ModalLogin(
             "#modal-container",
-            social_logins=window.PhanterPWA.social_login_list()
+            social_logins=window.PhanterPWA.social_login_list(),
+            close_on_click_outside=False
         )
         self.Modal.open()
         forms.SignForm("#form-login", has_captcha=True, after_sign=lambda: forms.ValidateForm("#form-login"))
@@ -3152,7 +3161,7 @@ class Lock(gatehandler.Handler):
             jQuery("#form-lock #phanterpwa-widget-input-input-lock-email").val(self.last_auth_user.email)
             if self.last_auth_user.remember_me:
                 # jQuery("#form-lock #phanterpwa-widget-checkbox-input-lock-remember_me").attr("checked", "checked").val(True)
-                PhanterPWA.Request.widgets["lock-remember_me"].set_value(True)
+                window.PhanterPWA.Request.widgets["lock-remember_me"].set_value(True)
             jQuery(
                 "#form-lock-profile-user-name"
             ).text(

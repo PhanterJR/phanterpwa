@@ -10,7 +10,7 @@ __pragma__('skip')
 
 # it is ignored on transcrypt
 window = jQuery = console = Array = document = localStorage = M = RegExp = setTimeout = String = \
-    sessionStorage = this = FileReader = JSON = js_undefined = navigator = __new__ = Date = 0
+    sessionStorage = this = FileReader = JSON = js_undefined = navigator = Hammer = FormData = __new__ = Date = 0
 
 __pragma__('noskip')
 

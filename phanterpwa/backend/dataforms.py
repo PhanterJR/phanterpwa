@@ -8,7 +8,8 @@ from phanterpwa.helpers import (
     DIV,
     I,
     INPUT,
-    LABEL
+    LABEL,
+    BUTTON
 )
 
 from pydal.objects import (Set, Table, Field)
@@ -1010,8 +1011,8 @@ class FormFromTableDAL():
             new_value = dict_args[key]
             if key in self._widgets and key in self.fields:
                 if key in self.custom_validates:
-                    if callable(self.custom_validates):
-                        r = self.custom_validates[Field_instance.name](new_value)
+                    if callable(self.custom_validates[key]):
+                        r = self.custom_validates[key](new_value)
                         if len(r) == 2 and isinstance(r, (tuple, list)):
                             if r[1] is not None:
                                 self._errors[key] = r[1]
@@ -1221,16 +1222,22 @@ class FormFromTableDAL():
         if submit_button is not None:
             self._buttons_container = DIV(
                 submit_button,
-                _class='buttons-form-container'
+                _class='phanterpwa-form-buttons-container'
             )
         else:
             self._buttons_container = DIV(
-                SubmitButton(
-                    "phanterpwa-widget-submit_button-{0}".format(self.table_name),
-                    "Submit",
-                    _phanterpwa_widget_submit_button=True
+                DIV(
+                    DIV(
+                        DIV(
+                            _id="phanterpwa-widget-form-submit_button-{0}".format(self.table_name),
+                            _class="btn-autoresize wave_on_click waves-phanterpwa btn phanterpwa-widget-form-form_button link",
+                            _phanterpwa_widget_submit_button=self.table_name
+                        ),
+                        _class="button-form"
+                    ),
+                    _class="phanterpwa-widget-form-form_button-container"
                 ),
-                _class='buttons-form-container'
+                _class='phanterpwa-form-buttons-container'
             )
 
 

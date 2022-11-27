@@ -32,6 +32,7 @@ class Modal():
         self._max_content_height = 400
         self._form = parameters.get("form", None)
         _class_panel = ""
+        self._close_on_click_outside = parameters.get("close_on_click_outside", True)
         if "title" in parameters:
             self.title = parameters["title"]
         if "content" in parameters:
@@ -146,8 +147,10 @@ class Modal():
             self._after_close(self)
 
     def _close_on_click_container(self, event, target_element):
-        if (event.target is target_element):
-            self.close()
+        console.log(self._close_on_click_outside)
+        if self._close_on_click_outside is True:
+            if (event.target is target_element):
+                self.close()
 
     def open(self):
         self.start()
