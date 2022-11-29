@@ -42,6 +42,7 @@ XSECTION = helpers.XSECTION
 Table = widgets.Table
 TableHead = widgets.TableHead
 TableData = widgets.TableData
+XML = helpers.XML
 
 __pragma__('kwargs')
 
@@ -2872,10 +2873,18 @@ class Profile(gatehandler.Handler):
                         }
                     )
                     activity = x.activity
+                    activity = activity.replace(" __", " <strong>").replace("__ ", "</strong> ")
+                    if activity.endswith("__"):
+                        activity = "".join([activity[0:-2], "</strong>"])
+                    if activity.startswith("__"):
+                        activity = "".join(["<strong>", activity[2:]])
                     MyTable.append(
                         TableData(
                             "data_activity_{0}".format(x.id),
-                            date_created, activity, drag_and_drop=False)
+                            date_created,
+                            XML(activity),
+                            drag_and_drop=False
+                        )
                     )
                 MyTable.html_to("#user_activity_wrapper")
 
