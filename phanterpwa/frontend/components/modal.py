@@ -147,7 +147,6 @@ class Modal():
             self._after_close(self)
 
     def _close_on_click_container(self, event, target_element):
-        console.log(self._close_on_click_outside)
         if self._close_on_click_outside is True:
             if (event.target is target_element):
                 self.close()

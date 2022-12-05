@@ -161,6 +161,11 @@
                 width: 25px
                 position: relative
                 height: 25px
+                label
+                    position: relative
+                    font-size: 1rem
+                    top: 2px
+                    left: 0
 
                 .phanterpwa-widget-checkbox-option-container
                     position: absolute
@@ -1472,7 +1477,7 @@
 
 
 .phanterpwa-widget
-    .phanterpwa-widget-list_string-wrapper 
+    .phanterpwa-widget-list_string-wrapper
         .phanterpwa-widget-list_string-list_values
             width: 100%
             height: 32px
@@ -1566,6 +1571,98 @@
                     cursor: pointer
                     &:hover
                         color: $attention
+        .phanterpwa-widget-list_string-vertical-container
+            display: flex
+            .phanterpwa-widget-list_string-vertical-list_values
+                width: 100%
+                overflow: hidden
+                &:focus
+                    outline: none
+                .phanterpwa-widget-list_string-value-content
+                    padding: 0px 40px 0px 15px
+                    position: relative
+                    line-height: 40px
+                    text-align: center
+                    margin: 5px
+                    background-color: $components
+                    border-radius: 20px
+                    color: $fg_components
+                    &:focus
+                        outline: none
+                        color: $attention
+                        .phanterpwa-widget-list_string-value-icon_close
+                            color: $attention
+                    .phanterpwa-widget-list_string-value-icon_close
+                        position: absolute
+                        top: 0px
+                        right: 0px
+                        width: 40px
+                        color: $fg_components
+                        cursor: pointer
+                        &:hover
+                            color: $attention
+                    &.widget-liststring-fixed
+                        padding: 0px 15px 0px 15px
+                        background-color: $attention
+                        &:focus
+                            color: $fg_components
+                .phanterpwa-widget-list_string-plus_icon-container
+                    opacity: 0
+                    padding: 0px 40px 0px 0px
+                    position: relative
+                    line-height: 40px
+                    margin: 5px
+                    height: 40px
+                    width: 40px
+                    background-color: $grey03
+                    color: $components
+                    border-radius: 20px
+                    transition: width 0.3s ease, opacity 0.3s ease
+                    &.has_input
+                        padding: 0px 40px 0px 15px
+                        min-width: 100px
+                        width: 200px
+                        transition: width 0.3s ease
+                    .icon_button
+                        position: absolute
+                        position: absolute
+                        top: 0px
+                        right: 0px
+                        width: 40px
+                        cursor: pointer
+                        &:hover
+                            color: $attention
+                    &:focus
+                        outline: none
+                        .icon_button
+                            color: $attention                    
+            .phanterpwa-widget-list_string-vertical-list_predefinitions_values
+                display: table
+                width: 100%
+                background-color: $grey02
+                height: 100%
+
+                .phanterpwa-widget-list_string-value-predefinition-content
+                    padding: 0px 40px 0px 15px
+                    position: relative
+                    line-height: 40px
+                    text-align: center
+                    margin: 5px
+                    background-color: $grey04
+                    border-radius: 20px
+                    color: $components
+                    &:focus
+                        outline: none
+                        color: $attention
+                    .phanterpwa-widget-list_string-value-icon_plus_predifinition
+                        position: absolute
+                        top: 0px
+                        right: 0px
+                        width: 40px
+                        color: $components
+                        cursor: pointer
+                        &:hover
+                            color: $attention
         &.focus
             .phanterpwa-widget-list_string-list_values
                 min-height: 50px
@@ -1579,6 +1676,42 @@
             .phanterpwa-widget-list_string-plus_icon-container
                 opacity: 1
                 transition: width 0.3s ease, opacity 0.3s ease
+            &.choices
+                label
+                    position: relative !important
+                    font-size: 1rem !important
+                    top: 2px
+                    left: 0
+        &.choices
+            label
+                position: relative
+                font-size: 1rem
+                top: 2px
+                left: 0
+            hr
+                display: none
+            .phanterpwa-widget-list_string-choices_table
+                .phanterpwa-widget.phanterpwa-widget-table-container
+                    &.table
+                        overflow: hidden !important
+                    .phanterpwa-widget-table
+                        td
+                            &.phanterpwa-widget-table-data-td
+                                padding: 0px
+
+            .phanterpwa-widget
+                .phanterpwa-widget-wrapper
+                    &.phanterpwa-widget-checkbox-wrapper
+                        padding: 0px
+                        label
+                            position: relative
+                            font-size: 1rem
+                            top: 2px
+                            left: 0
+                        hr
+                            display: none
+                        .material-widgets-animation-onfocus
+                            display: none
 
 table
     &.phanterpwa-widget-select-options-wrapper

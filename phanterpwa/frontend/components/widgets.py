@@ -2055,6 +2055,7 @@ class MultSelect(Widget):
 class ListString(Widget):
     def __init__(self, identifier, **parameters):
         self._label = parameters.get("label", None)
+        self._identifier = identifier
         self._placeholder = parameters.get("placeholder", None)
         self._editable = parameters.get("editable", True)
         self._name = parameters.get("name", None)
@@ -2077,6 +2078,8 @@ class ListString(Widget):
                 self._wear
             )
         }
+        if self._kind == "choices":
+            wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " choices")
         parameters["_id"] = identifier
         if "_class" in parameters:
             parameters["_class"] = "{0}{1}".format(parameters["_class"], " phanterpwa-widget-list_string")
@@ -2103,43 +2106,103 @@ class ListString(Widget):
             wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " has_mask")
         self._process_list_string()
         self._process_list_predefinition_string()
+        self._create_choices_table()
         if callable(self._validator):
             data_validators = ["PROGRAMMATICALLY"]
         elif self._validator is not None:
             data_validators = JSON.stringify(self._validator)
-        html = DIV(
-            DIV(
-                self._xml_list_string,
-                _id="phanterpwa-widget-list_string-list_values-{0}".format(identifier),
-                _class="phanterpwa-widget-list_string-list_values",
-                _tabindex=0
-            ),
-            INPUT(**{
-                "_id": "phanterpwa-widget-list_string-input-{0}".format(identifier),
-                "_class": "phanterpwa-widget-list_string-input",
-                "_name": self._name,
-                "_value": JSON.stringify(self._input_value),
-                "_placeholder": self._placeholder,
-                "_type": "hidden",
-                "_data-validators": data_validators,
-                "_data-form": self._form,
-            }),
-            label,
-            DIV(
-                self._xml_list_predefinition_string,
-                _class="phanterpwa-widget-list_string-list_predefinitions_values"
-            ),
-            DIV(
-                I(_class="fas fa-check"),
-                _class="phanterpwa-widget-check"
-            ),
-            xml_icon,
-            DIV(
-                self.get_message_error(),
-                _class="phanterpwa-widget-message_error phanterpwa-widget-list_string-message_error"
-            ),
-            **wrapper_attr
-        )
+        if self._kind == "vertical":
+            html = DIV(
+                DIV(
+                    label,
+                    DIV(
+                        DIV(
+                            self._xml_list_string,
+                            _id="phanterpwa-widget-list_string-list_values-{0}".format(identifier),
+                            _class="phanterpwa-widget-list_string-vertical-list_values",
+                        ),
+                        _class="p-col w1p50"
+                    ),
+                    DIV(
+                        DIV(
+                            self._xml_list_predefinition_string,
+                            _class="phanterpwa-widget-list_string-vertical-list_predefinitions_values"
+                        ),
+                        _class="p-col w1p50"
+                    ),
+                    _class="phanterpwa-widget-list_string-vertical-container p-row",
+                    _tabindex=0
+                ),
+                INPUT(**{
+                    "_id": "phanterpwa-widget-list_string-input-{0}".format(identifier),
+                    "_class": "phanterpwa-widget-list_string-input",
+                    "_name": self._name,
+                    "_value": JSON.stringify(self._input_value),
+                    "_placeholder": self._placeholder,
+                    "_type": "hidden",
+                    "_data-validators": data_validators,
+                    "_data-form": self._form,
+                }),
+                xml_icon,
+                DIV(
+                    self.get_message_error(),
+                    _class="phanterpwa-widget-message_error phanterpwa-widget-list_string-message_error"
+                ),
+                **wrapper_attr
+            )
+        elif self._kind == "choices":
+            html = DIV(
+                INPUT(**{
+                    "_id": "phanterpwa-widget-list_string-input-{0}".format(identifier),
+                    "_class": "phanterpwa-widget-list_string-input",
+                    "_name": self._name,
+                    "_value": JSON.stringify(self._input_value),
+                    "_placeholder": self._placeholder,
+                    "_type": "hidden",
+                    "_data-validators": data_validators,
+                    "_data-form": self._form,
+                }),
+                label,
+                DIV(
+                    self._xml_choices_table,
+                    _class="phanterpwa-widget-list_string-choices_table"
+                ),
+                **wrapper_attr
+            )
+        else:
+            html = DIV(
+                DIV(
+                    self._xml_list_string,
+                    _id="phanterpwa-widget-list_string-list_values-{0}".format(identifier),
+                    _class="phanterpwa-widget-list_string-list_values",
+                    _tabindex=0
+                ),
+                INPUT(**{
+                    "_id": "phanterpwa-widget-list_string-input-{0}".format(identifier),
+                    "_class": "phanterpwa-widget-list_string-input",
+                    "_name": self._name,
+                    "_value": JSON.stringify(self._input_value),
+                    "_placeholder": self._placeholder,
+                    "_type": "hidden",
+                    "_data-validators": data_validators,
+                    "_data-form": self._form,
+                }),
+                label,
+                DIV(
+                    self._xml_list_predefinition_string,
+                    _class="phanterpwa-widget-list_string-list_predefinitions_values"
+                ),
+                DIV(
+                    I(_class="fas fa-check"),
+                    _class="phanterpwa-widget-check"
+                ),
+                xml_icon,
+                DIV(
+                    self.get_message_error(),
+                    _class="phanterpwa-widget-message_error phanterpwa-widget-list_string-message_error"
+                ),
+                **wrapper_attr
+            )
         Widget.__init__(self, identifier, html, **parameters)
 
     def _process_list_string(self):
@@ -2250,6 +2313,104 @@ class ListString(Widget):
             self._data = new_data
             self._data_dict = data
 
+    def _create_choices_table(self):
+        table_choices = TABLE(
+            _class="phanterpwa-widget-table p-row"
+        )
+        cont = 0
+        self._widgets_check_boxes = {}
+        for x in self._data:
+            cont += 1
+            identifier = "option_{0}_{1}".format(self._identifier, cont)
+            if x[0] in self._fixed or x[1] in self._fixed:
+                check_box = CheckBox(
+                    identifier,
+                    label=x[1],
+                    name=x[0],
+                    value=True,
+                    on_change=lambda wg: self._on_change_option(wg),
+                    disabled=True
+                )
+                self._widgets_check_boxes[x[0]] = check_box
+                table_choices.append(
+                    TR(
+                        TD(
+                            DIV(
+                                check_box,
+                                _class="phanterpwa-widget-list_string-choice_option",
+                            ),
+                            **{
+                                "_data-value": x[0],
+                                "_data-alias": x[1],
+                                "_data-widget_checkbox": identifier,
+                                "_class": "phanterpwa-widget-table-data-td"
+                            }
+                        ),
+                        _class="phanterpwa-widget-table-data phanterpwa-widget"
+                    )
+                )
+            elif x[0] in self._input_value:
+                check_box = CheckBox(
+                    identifier,
+                    label=x[1],
+                    name=x[0],
+                    value=True,
+                    on_change=lambda wg: self._on_change_option(wg),
+                )
+                self._widgets_check_boxes[x[0]] = check_box
+                table_choices.append(
+                    TR(
+                        TD(
+                            DIV(
+                                check_box,
+                                _class="phanterpwa-widget-list_string-choice_option",
+                            ),
+                            **{
+                                "_data-value": x[0],
+                                "_data-alias": x[1],
+                                "_data-widget_checkbox": identifier,
+                                "_class": "phanterpwa-widget-table-data-td"
+                            }
+                        ),
+                        _class="phanterpwa-widget-table-data phanterpwa-widget"
+                    )
+                )
+            else:
+                check_box = CheckBox(
+                    identifier,
+                    label=x[1],
+                    name=x[0],
+                    value=False,
+                    on_change=lambda wg: self._on_change_option(wg),
+                )
+                self._widgets_check_boxes[x[0]] = check_box
+                table_choices.append(
+                    TR(
+                        TD(
+                            DIV(
+                                check_box,
+                                _class="phanterpwa-widget-list_string-choice_option",
+                            ),
+                            **{
+                                "_data-value": x[0],
+                                "_data-alias": x[1],
+                                "_data-widget_checkbox": identifier,
+                                "_class": "phanterpwa-widget-table-data-td"
+                            }
+                        ),
+                        _class="phanterpwa-widget-table-data phanterpwa-widget"
+                    )
+                )
+        self._xml_choices_table = DIV(table_choices, _class="table phanterpwa-widget-table-container phanterpwa-widget")
+
+    def _on_change_option(self, wg):
+        val = wg._name
+        alias = wg._label
+        if wg.value():
+            self.add_new_value([val, alias])
+        else:
+            self.remove_value(val)
+
     def _process_list_predefinition_string(self):
         xml = CONCATENATE()
         data_dict_keys = self._data_dict.keys()
@@ -2312,17 +2473,28 @@ class ListString(Widget):
     def add_new_value(self, value):
         if isinstance(value, (list, tuple)):
             if len(value) == 2:
-                self._value.append(value)
+                have_value = False
+                for x in self._value:
+                    if x[0] == value[0]:
+                        have_value == True
+                if not have_value:
+                    self._value.append(value)
             else:
                 console.error("New value must be list, tuple (length == 2) or string")
         elif isinstance(value, str):
             self._value.append(["${0}:{1}".format(__new__(Date().getTime()), value), value])
         self._process_list_string()
         self._process_list_predefinition_string()
+        # self._create_choices_table()
         target = jQuery(self.target_selector)
-        self._xml_list_predefinition_string.html_to(
-            target.find(".phanterpwa-widget-list_string-list_predefinitions_values")
-        )
+        if self._kind == "vertical":
+            self._xml_list_predefinition_string.html_to(
+                target.find(".phanterpwa-widget-list_string-vertical-list_predefinitions_values")
+            )
+        else:
+            self._xml_list_predefinition_string.html_to(
+                target.find(".phanterpwa-widget-list_string-list_predefinitions_values")
+            )
 
         target.find(".phanterpwa-widget-list_string-value-predefinition-content").find(
             ".phanterpwa-widget-list_string-value-icon_plus_predifinition"
@@ -2406,6 +2578,9 @@ class ListString(Widget):
     def _on_click_remove(self, el):
         p = jQuery(el).parent()
         val = str(p.data("value"))
+        self.remove_value(val)
+
+    def remove_value(self, val):
         new_value = []
         self._dict_input_value = {}
         for x in self._value:
@@ -2417,10 +2592,18 @@ class ListString(Widget):
         self._value = new_value
         self._process_list_string()
         self._process_list_predefinition_string()
+        # self._create_choices_table()
         target = jQuery(self.target_selector)
-        self._xml_list_predefinition_string.html_to(
-            target.find(".phanterpwa-widget-list_string-list_predefinitions_values")
-        )
+        if self._kind == "vertical":
+            self._xml_list_predefinition_string.html_to(
+                target.find(".phanterpwa-widget-list_string-vertical-list_predefinitions_values")
+            )
+        elif self._kind == "choices":
+            pass
+        else:
+            self._xml_list_predefinition_string.html_to(
+                target.find(".phanterpwa-widget-list_string-list_predefinitions_values")
+            )
         target.find(".phanterpwa-widget-list_string-value-predefinition-content").find(
             ".phanterpwa-widget-list_string-value-icon_plus_predifinition"
         ).off("click.plus_predefinition_liststring").on(
@@ -2806,8 +2989,10 @@ class CheckBox(Widget):
         self._value = parameters.get("value", False)
         self._can_empty = parameters.get("can_empty", False)
         self._wear = parameters.get("wear", "material")
+        self._kind = parameters.get("kind", None)
         self._form = parameters.get("form", None)
         self._disabled = parameters.get("disabled", False)
+        self._on_change = parameters.get("on_change", None)
 
         wrapper_attr = {
             "_class": "phanterpwa-widget-wrapper phanterpwa-widget-checkbox-wrapper phanterpwa-widget-wear-{0}".format(
@@ -2871,6 +3056,8 @@ class CheckBox(Widget):
             else:
                 self._value = False
                 jQuery(self.target_selector).find(".phanterpwa-widget-checkbox-wrapper").removeClass("has_true")
+            if callable(self._on_change):
+                self._on_change(self)
         else:
             jQuery(self.target_selector).find("input").prop("checked", self._value).val(self._value)
 

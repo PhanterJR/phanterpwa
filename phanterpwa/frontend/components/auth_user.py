@@ -693,7 +693,6 @@ class ModalLogin(modal.Modal):
         )
 
     def fix_prefix(self, el):
-        console.log(el)
         value = jQuery(el).val()
         numbers = [str(x) for x in range(10)]
         cont = 0
@@ -1566,7 +1565,6 @@ class ModalRequestPassword(modal.Modal):
         )
 
     def fix_prefix(self, el):
-        console.log(el)
         value = jQuery(el).val()
         numbers = [str(x) for x in range(10)]
         cont = 0
