@@ -3412,7 +3412,7 @@ class AuthActivityNoRelational():
         )._select(
             db.auth_activity_no_relational.id,
             orderby=~db.auth_activity_no_relational.id,
-            limitby=(100, 1000)
+            limitby=(2000, 3000)
         )
         db(db.auth_activity_no_relational.id.belongs(exedent_records)).delete()
         db.commit()
