@@ -337,6 +337,7 @@ class FormWidget(helpers.XmlConstructor):
         self._width = json_widget.get("width", 190)
         self._height = json_widget.get("height", 200)
         self._disabled = json_widget.get("disabled", None)
+        self._on_change = json_widget.get("on_change", None)
         if "_id" not in json_widget:
             json_widget["_id"] = "phanterpwa-widget-wrapper-{0}-{1}".format(self.table_name, self.input_name)
         if "type" not in json_widget:
@@ -441,7 +442,7 @@ class FormWidget(helpers.XmlConstructor):
                     name=self.input_name,
                     value=self._value is True,
                     disabled=True,
-                    form=self.table_name
+                    form=self.table_name,
                 )
 
             elif self._widget_type == "image":
@@ -561,7 +562,8 @@ class FormWidget(helpers.XmlConstructor):
                     label=self.json_widget['label'],
                     name=self.input_name,
                     value=self._value is True,
-                    form=self.table_name
+                    form=self.table_name,
+                    on_change=self._on_change
                 )
 
             elif self._widget_type == "password":
