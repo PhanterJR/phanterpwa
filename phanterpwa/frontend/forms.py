@@ -338,6 +338,7 @@ class FormWidget(helpers.XmlConstructor):
         self._height = json_widget.get("height", 200)
         self._disabled = json_widget.get("disabled", None)
         self._on_change = json_widget.get("on_change", None)
+        self._wear = json_widget.get("wear", None)
         if "_id" not in json_widget:
             json_widget["_id"] = "phanterpwa-widget-wrapper-{0}-{1}".format(self.table_name, self.input_name)
         if "type" not in json_widget:
@@ -485,6 +486,7 @@ class FormWidget(helpers.XmlConstructor):
                     label=self.json_widget['label'],
                     name=self.input_name,
                     value=dvalue,
+                    wear=self._wear,
                     format=dformat,
                     kind=self._widget_type,
                     mask=dformat,
@@ -501,6 +503,7 @@ class FormWidget(helpers.XmlConstructor):
                     editable=self._editable,
                     can_empty=self._can_empty,
                     value=self._value,
+                    wear=self._wear,
                     data_set=self.json_widget['data_set'],
                     form=self.table_name,
                     validators=self.validators
@@ -515,6 +518,7 @@ class FormWidget(helpers.XmlConstructor):
                     can_empty=self._can_empty,
                     ajax_data_set=self._ajax_data_set,
                     value=self._value,
+                    wear=self._wear,
                     data_set=self.json_widget['data_set'],
                     form=self.table_name,
                     validators=self.validators
@@ -529,6 +533,7 @@ class FormWidget(helpers.XmlConstructor):
                     #editable=self._editable,
                     #can_empty=self._can_empty,
                     value=self._value,
+                    wear=self._wear,
                     data_set=ds,
                     form=self.table_name,
                     #validators=self.validators
@@ -542,6 +547,7 @@ class FormWidget(helpers.XmlConstructor):
                     editable=self._editable,
                     can_empty=self._can_empty,
                     value=self._value,
+                    wear=self._wear,
                     mask=self._mask,
                     form=self.table_name,
                     validators=self.validators
@@ -553,6 +559,7 @@ class FormWidget(helpers.XmlConstructor):
                     label=self.json_widget['label'],
                     name=self.input_name,
                     value=self._value,
+                    wear=self._wear,
                     form=self.table_name,
                 )
 
@@ -563,6 +570,7 @@ class FormWidget(helpers.XmlConstructor):
                     name=self.input_name,
                     value=self._value is True,
                     form=self.table_name,
+                    wear=self._wear,
                     on_change=self._on_change
                 )
 
@@ -572,6 +580,7 @@ class FormWidget(helpers.XmlConstructor):
                     label=self.json_widget['label'],
                     name=self.input_name,
                     value=self._value,
+                    wear=self._wear,
                     form=self.table_name,
                     validators=self.validators,
                     kind="password",
@@ -584,6 +593,7 @@ class FormWidget(helpers.XmlConstructor):
                     label=self.json_widget['label'],
                     name=self.input_name,
                     value=self._value,
+                    wear=self._wear,
                     editable=self._editable,
                     can_empty=self._can_empty,                
                     mask=self._mask,
@@ -599,6 +609,7 @@ class FormWidget(helpers.XmlConstructor):
                     label=self.json_widget['label'],
                     name=self.input_name,
                     value=self._url,
+                    wear=self._wear,
                     form=self.table_name,
                     cutter=self._cutter,
                     nocache=self._nocache,
@@ -612,6 +623,7 @@ class FormWidget(helpers.XmlConstructor):
                     label=self.json_widget['label'],
                     name=self.input_name,
                     value=self._value,
+                    wear=self._wear,
                     editable=self._editable,
                     can_empty=self._can_empty,
                     disabled=self._disabled,
