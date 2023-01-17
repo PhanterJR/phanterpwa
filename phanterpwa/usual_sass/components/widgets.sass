@@ -364,8 +364,6 @@
         &.phanterpwa-widget-wear-shadows
             position: relative
             padding-top: 5px
-            &.has_label
-                padding: 22px 5px
             input, textarea
                 border-radius: 5px
                 line-height: 1.5rem
@@ -383,13 +381,17 @@
                 transition: color 0.3s ease
             .phanterpwa-widget-check
                 position: absolute
-                top: 32px
+                top: 17px
                 right: 13px
                 font-size: 0.7rem
                 &.has_value
                 label
                     color: $components
                     transition: color 0.3s ease
+            &.has_label
+                padding: 22px 5px
+                .phanterpwa-widget-check
+                    top: 32px
             &.focus
                 input, textarea
                     box-shadow: 0px 0px 5px $components
@@ -403,6 +405,11 @@
                 .phanterpwa-widget-message_error
                     height: auto
                     transition: height 0.3s ease
+            &.has_icon
+                padding-right: 50px
+                .phanterpwa-widget-icon-wrapper
+                    top: 20px
+
         &.phanterpwa-widget-wear-elegant
             position: relative
             padding-top: 5px
