@@ -2046,6 +2046,12 @@ table
                             transition: color 0.5s ease
 
 .phanterpwa-widget-menubox-options-content
+    .phanterpwa-widget-menubox-option-no_icon
+        margin-right: 60px
+    .phanterpwa-widget-menubox-option-icon-content
+        width: 20px
+        padding-right: 10px
+
     hr
         margin: 0
         color: $material_level05
@@ -2062,6 +2068,9 @@ table
         cursor: pointer
         &:hover
             background-color: rgb(224, 224, 224)
+        .phanterpwa-widget-menubox-option-icon-content
+            display: none
+
     a.phanterpwa-widget-menubox-option
         display: block
         text-decoration: none
@@ -2078,6 +2087,14 @@ table
             cursor: pointer
             &:hover
                 background-color: rgb(224, 224, 224)
+    &.menu_option_has_icon
+        .phanterpwa-widget-menubox-option
+            text-align: left
+            .phanterpwa-widget-menubox-option-icon-content
+                display: inline-block
+                width: 20px
+                padding-right: 10px
+
 .phanterpwa-widget
     .phanterpwa-widget-inert-wrapper
         &.phanterpwa-widget-wear-material

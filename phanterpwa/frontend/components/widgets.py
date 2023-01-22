@@ -3248,6 +3248,7 @@ class RadioBox(Widget):
 class MenuBox(Widget):
     def __init__(self, identifier, button, *options, **parameters):
         class_button = ""
+        self.menu_option_has_icon = False
         if button is js_undefined or button is None:
             self._button = I(_class="fas fa-ellipsis-v")
             class_button = " icon_button"
@@ -3281,6 +3282,8 @@ class MenuBox(Widget):
 
     def add_option(self, option):
         if isinstance(option, MenuOption):
+            if option.has_icon:
+                self.menu_option_has_icon = True
             self._xml_menu.append(option)
         elif isinstance(option, helpers.XmlConstructor) and option.tag.upper() == "HR":
             self._xml_menu.append(option)
@@ -3307,6 +3310,9 @@ class MenuBox(Widget):
             on_open=self._onopen
         )
         self.modal.start()
+        if self.menu_option_has_icon:
+            jQuery("#phanterpwa-widget-menubox-options-content-{0}".format(
+                self.identifier)).addClass("menu_option_has_icon")
         if self._close_after_click_in is True:
             jQuery("#phanterpwa-widget-menubox-options-content-{0}".format(
                 self.identifier)).find(".phanterpwa-widget-menubox-option").off(
@@ -3354,16 +3360,31 @@ class MenuBox(Widget):
             "click.open_menu_phanterpwa",
             lambda: self._on_click(this)
         )
+
         if callable(self._onreload):
             self._onreload(target)
 
 
 class MenuOption(helpers.XmlConstructor):
     def __init__(self, *content, **attributes):
+        self.has_icon = False
         if "_class" in attributes:
             attributes['_class'] = "phanterpwa-widget-menubox-option {0}".format(attributes['_class'])
         else:
             attributes['_class'] = "phanterpwa-widget-menubox-option"
+        icon = attributes.get("icon")
+        if icon is None:
+            icon = ""
+        else:
+            self.has_icon = True
+            attributes['_class'] = "{0} {1}".format(attributes['_class'], "has_icon")
+        content = [
+            SPAN(
+                DIV(icon, _class="phanterpwa-widget-menubox-option-icon-content"),
+                _class="phanterpwa-widget-menubox-option-icon-wrapper"
+            ),
+            SPAN(*content, _class="phanterpwa-widget-menubox-option-content")
+        ]
         tag = "div"
         if "_href" in attributes:
             tag = "a"
