@@ -2056,7 +2056,7 @@ class MessagesMonitor(application.Component):
         self.target_selector = target_selector
         self.element_target = jQuery(self.target_selector)
         message_link = parameters.get('messages_link', window.PhanterPWA.XWAY("messages", "inbox"))
-        self.interval = parameters.get('interval', 30000)
+        self.interval = parameters.get('interval', 600000)
         html = DIV(
             DIV(
                 A(I(_class="fas fa-envelope"), DIV(_class="phanterpwa-component-messages-total_messages"), _href=message_link),

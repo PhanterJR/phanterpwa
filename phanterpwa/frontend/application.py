@@ -72,6 +72,7 @@ class PhanterPWA():
         #     lambda event, xhr, options: self._after_ajax_complete(event, xhr, options)
         # )
         window.PhanterPWA = self
+        window.onhashchange = lambda: jQuery(".phanterpwa-component-pseudomodal-container").remove()
         test_bool = __pragma__("js", "{}", "'serviceWorker' in navigator")
         if test_bool:
             caches.js_keys().then(lambda names: self._clear_cache(names))
