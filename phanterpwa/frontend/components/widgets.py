@@ -922,15 +922,16 @@ class Autocomplete(Widget):
         self.identifier = identifier
         self._alias_value = ""
         self._value = parameters.get("value", "")
+        self._editable = parameters.get("editable", False)
         self._data_set(parameters.get("data_set", []))
         self._label = parameters.get("label", None)
         self._placeholder = parameters.get("placeholder", None)
         self._name = parameters.get("name", None)
-        self._editable = parameters.get("editable", False)
         self._icon = parameters.get("icon", None)
         self._message_error = parameters.get("message_error", None)
         self._can_empty = parameters.get("can_empty", False)
         self._ajax_url = parameters.get("ajax_data_set", False)
+        self._on_modal_open = parameters.get("on_menu_open", None)
         self._validator = parameters.get("validators", None)
         self._wear = parameters.get("wear", "material")
         self._form = parameters.get("form", None)
@@ -991,7 +992,7 @@ class Autocomplete(Widget):
             DIV(
                 I(_class="fab fa-sistrix"),
                 _class="phanterpwa-widget-autocomplete-caret"
-            ),
+            ) if self.icon is None else "",
             xml_icon,
             DIV(
                 I(_class="fas fa-check"),
@@ -1053,6 +1054,9 @@ class Autocomplete(Widget):
                     self._alias_value = data[vdata]
             self._data = new_data
             self._data_dict = data
+
+        if self._editable and str(self._value) not in self._data_dict.keys():
+            self._alias_value = self._value
 
     def set_new_data_set(self, data):
         self._data_set(data)
@@ -1177,6 +1181,8 @@ class Autocomplete(Widget):
                 recalc_on_scroll=self._recalc_on_scroll
             )
             self.modal.start()
+            if callable(self._on_modal_open):
+                self._on_modal_open(self)
             self._binds_modal_content()
         else:
             if self.modal is not js_undefined:
@@ -1196,8 +1202,6 @@ class Autocomplete(Widget):
         else:
             p.removeClass("focus")
         self._check_value(el)
-
-
 
     def _remove_focus(self, el):
         el = jQuery(el)
@@ -1349,19 +1353,20 @@ class Autocomplete(Widget):
         code = event.keyCode or event.which
         p = jQuery(el).parent()
         p.addClass("focus")
-        if self._ajax_url is not False:
-            formdata = __new__(FormData())
-            formdata.append(
-                "startswith",
-                self.value()
-            )
-            window.PhanterPWA.POST(
-                self._ajax_url,
-                form_data=formdata,
-                onComplete=lambda data, ajax_status: self._data_set_from_ajax(data, ajax_status, el)
-            )
-        else:
-            setTimeout(lambda: self.open_modal(el), 30)
+        if code not in [9, 38, 13]:
+            if self._ajax_url is not False:
+                formdata = __new__(FormData())
+                formdata.append(
+                    "startswith",
+                    self.value()
+                )
+                window.PhanterPWA.POST(
+                    self._ajax_url,
+                    form_data=formdata,
+                    onComplete=lambda data, ajax_status: self._data_set_from_ajax(data, ajax_status, el)
+                )
+            else:
+                setTimeout(lambda: self.open_modal(el), 30)
 
     def _data_set_from_ajax(self, data, ajax_status, el):
         if ajax_status == "success":
@@ -1379,11 +1384,18 @@ class Autocomplete(Widget):
             self._create_xml_modal(jQuery(el).val())
             if self._first_value == "":
                 if not self._editable:
-                    jQuery(el).val("")
+                    jQuery(el).val("").focus()
             else:
                 jQuery(el).val(self._first_value)
                 if self.modal is not js_undefined:
                     self.modal.close()
+        elif code == 13:
+            if self.modal is not js_undefined:
+                self.modal.close()
+        elif code == 38:
+            self._create_xml_modal(jQuery(el).val())
+            if self.modal is not js_undefined:
+                jQuery("#{0}".format(self.modal._identifier)).find(".phanterpwa-widget-autocomplete-li-option").first().focus()
 
     def set_on_click_new_button(self, value):
         if callable(value):
