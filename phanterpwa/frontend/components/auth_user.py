@@ -2049,6 +2049,7 @@ class LeftBar(left_bar.LeftBar):
             )
         )
 
+
 class MessagesMonitor(application.Component):
     def __init__(self, target_selector, **parameters):
         time = __new__(Date())
@@ -2871,11 +2872,6 @@ class Profile(gatehandler.Handler):
                         }
                     )
                     activity = x.activity
-                    activity = activity.replace(" __", " <strong>").replace("__ ", "</strong> ")
-                    if activity.endswith("__"):
-                        activity = "".join([activity[0:-2], "</strong>"])
-                    if activity.startswith("__"):
-                        activity = "".join(["<strong>", activity[2:]])
                     MyTable.append(
                         TableData(
                             "data_activity_{0}".format(x.id),

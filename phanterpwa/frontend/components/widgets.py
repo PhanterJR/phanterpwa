@@ -2071,8 +2071,8 @@ class ListString(Widget):
         self._placeholder = parameters.get("placeholder", None)
         self._editable = parameters.get("editable", True)
         self._name = parameters.get("name", None)
-        self._value = parameters.get("value", [])
         self._data_set(parameters.get("data_set", []))
+        self._value = parameters.get("value", [])
         self._fixed = parameters.get("fixed", [])
         self._icon = parameters.get("icon", None)
         self._message_error = parameters.get("message_error", None)
@@ -2238,6 +2238,23 @@ class ListString(Widget):
                                     "_data-value": str(x[0]),
                                     "_class": "phanterpwa-widget-list_string-value-content{0}".format(
                                         "" if x[1] not in self._fixed else " widget-liststring-fixed"),
+                                    "_tabindex": "0"
+                                }
+                            )
+                        )
+                    elif x in self._data_dict.keys():
+                        self._input_value.append(x)
+                        self._dict_input_value[str(x)] = self._data_dict[x]
+                        new_value.append([str(x), self._data_dict[x]])
+                        xml.append(
+                            DIV(
+                                self._data_dict[x],
+                                DIV(I(_class="fas fa-times"),
+                                    _class="phanterpwa-widget-list_string-value-icon_close icon_button wave_on_click") if x not in self._fixed else "",
+                                **{
+                                    "_data-value": x,
+                                    "_class": "phanterpwa-widget-list_string-value-content{0}".format(
+                                        "" if x not in self._fixed else " widget-liststring-fixed"),
                                     "_tabindex": "0"
                                 }
                             )

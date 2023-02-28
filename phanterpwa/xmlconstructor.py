@@ -3955,6 +3955,13 @@ class XmlConstructor(object):
         xml = "".join([self.before_xml, xml, self.after_xml])
         return xml
 
+    def __format__(self, spec=None):
+        if spec == "repr":
+            return self.introspect
+        elif spec == "hash":
+            return hash(self.xml())
+        return self.xml()
+
     def __hash__(self):
         return hash(self.xml())
 
