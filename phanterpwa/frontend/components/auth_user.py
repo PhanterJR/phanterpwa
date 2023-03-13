@@ -1668,6 +1668,19 @@ class AlertActivationAccount(top_slide.TopSlide):
             'click.modal_submit_activation_new_code',
             lambda: self.request_new_activation_code_to_send_to_email()
         )
+        jQuery(
+            "#form-activation"
+        ).off(
+            "keydown.form-activation"
+        ).on(
+            "keydown.form-activation",
+            self._on_press_key_enter
+        )
+
+    def _on_press_key_enter(self, event):
+        if event.keyCode == 13:
+            event.preventDefault()
+            self.submit()
 
     def _process_alert_content(self):
         email = window.PhanterPWA.get_auth_user().email
@@ -3223,6 +3236,19 @@ class TwoFactor(gatehandler.Handler):
             "click.confirmation-code_button_save",
             self.submit
         )
+        jQuery(
+            "#form-confirmation-code"
+        ).off(
+            "keydown.form-confirmation-code"
+        ).on(
+            "keydown.form-confirmation-code",
+            self._on_press_key_enter
+        )
+
+    def _on_press_key_enter(self, event):
+        if event.keyCode == 13:
+            event.preventDefault()
+            self.submit()
 
     def reload(self):
         self.start()

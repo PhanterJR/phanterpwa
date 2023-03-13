@@ -406,11 +406,13 @@ def check_url_token(ignore_user_agent=False):
                 if "user_agent" in token_content:
                     if ignore_user_agent:
                         self.phanterpwa_url_token_checked = token_content
+                        q_user = self.DALDatabase(self.DALDatabase.auth_user.id == token_content.get("id_user")).select().first()
+                        self.phanterpwa_current_user = q_user
                     else:
                         if token_content['user_agent'] == self.phanterpwa_user_agent:
+                            q_user = self.DALDatabase(self.DALDatabase.auth_user.id == token_content.get("id_user")).select().first()
+                            self.phanterpwa_current_user = q_user
                             self.phanterpwa_url_token_checked = token_content
-
-
             if self.phanterpwa_url_token_checked:
                 return f(self, *args, **kargs)
             else:
