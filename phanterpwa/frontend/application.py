@@ -787,7 +787,7 @@ class PhanterPWA():
     def get_consolided_way():
         current_way = sessionStorage.getItem("current_way")
         if current_way is None or current_way is js_undefined or current_way is "lock":
-            current_way = "home"
+            current_way = self.default_way
         return current_way
 
     def get_current_way(self):
