@@ -2826,7 +2826,8 @@ class Textarea(Widget):
                     "_placeholder": self._placeholder,
                     "_data-validators": data_validators,
                     "_data-form": self._form
-            }),
+                }
+            ),
             label,
             DIV(
                 I(_class="fas fa-check"),
@@ -2977,6 +2978,7 @@ class Inert(Widget):
         self._value = parameters.get("value", "")
         self._wear = parameters.get("wear", "material")
         self._form = parameters.get("form", None)
+        self._kind = parameters.get("kind", "text")
         wrapper_attr = {
             "_class": "phanterpwa-widget-wrapper its_disabled phanterpwa-widget-wear-{0} {1}".format(
                 self._wear,
@@ -2988,6 +2990,22 @@ class Inert(Widget):
             parameters["_class"] = "{0}{1}".format(parameters["_class"], " phanterpwa-widget-inert")
         else:
             parameters['_class'] = "phanterpwa-widget-inert"
+        n_type = ["date", "datetime", "password", "hidden"]
+        if self._kind in n_type:
+            if self._kind == "datetime":
+                self._type = "text"
+                if self._format is None:
+                    self._format = "yyyy-MM-dd HH:ss:mm"
+                self._mask = masks.date_and_datetime_to_maks(self._format)
+            elif self._kind == "date":
+                self._type = "text"
+                if self._format is None:
+                    self._format = "yyyy-MM-dd"
+                self._mask = masks.date_and_datetime_to_maks(self._format)
+            elif self._kind == "password":
+                self._type = "password"
+            elif self._kind == "hidden":
+                parameters["_class"] = "{0}{1}".format(parameters["_class"], " e-display_hidden")
         label = ""
         if self._label is not None:
             wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " has_label")

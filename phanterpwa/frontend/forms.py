@@ -445,6 +445,17 @@ class FormWidget(helpers.XmlConstructor):
                     disabled=True,
                     form=self.table_name,
                 )
+            elif self._widget_type == "hidden":
+                w = widgets.Inert(
+                    "{0}-{1}".format(self.table_name, self.input_name),
+                    label=self.json_widget['label'],
+                    name=self.input_name,
+                    value=dvalue,
+                    wear="shadows",
+                    _class="data_view",
+                    kind="hidden",
+                    form=self.table_name,
+                )
 
             elif self._widget_type == "image":
 
