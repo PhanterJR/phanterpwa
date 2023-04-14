@@ -3128,8 +3128,7 @@ class Lock(gatehandler.Handler):
                                                 "remember_me",
                                                 **{
                                                     "label": I18N("Remember-me", **{"_pt-br": "Lembre-me"}),
-                                                    "type": "boolean",
-                                                    "default": True
+                                                    "type": "boolean"
                                                 }
                                             ),
                                             _class="input-field p-col w1p100"
