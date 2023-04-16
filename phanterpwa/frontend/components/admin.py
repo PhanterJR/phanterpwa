@@ -549,7 +549,7 @@ class UsersList(helpers.XmlConstructor):
             "click.yes_delete"
         ).on(
             "click.yes_delete",
-            lambda: self._request_temporary_password()
+            lambda: self._request_temporary_password(email)
         )
         jQuery("#phanterpwa-widget-form-form_button-no_delete").off(
             "click.no_delete"
@@ -559,9 +559,13 @@ class UsersList(helpers.XmlConstructor):
         )
         forms.SignForm("#form-auth_user", after_sign=lambda: forms.ValidateForm("#form-auth_user"))
 
-    def _request_temporary_password(self):
+    def _request_temporary_password(self, email):
         form_temporary_password = jQuery("#form-auth_user")[0]
         form_temporary_password = __new__(FormData(form_temporary_password))
+        form_temporary_password.append(
+            "email",
+            email
+        )
         window.PhanterPWA.POST(
             "api",
             "admin",
