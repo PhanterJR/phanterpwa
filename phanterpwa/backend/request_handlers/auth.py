@@ -3383,13 +3383,13 @@ class AuthActivityNoRelational():
     def __init__(self, DALDatabase):
         self.DALDatabase = DALDatabase
 
-    def get_rows_by_user_id(self, id_user):
+    def get_rows_by_user_id(self, id_user, limit=100):
         db = self.DALDatabase
         return db(
             db.auth_activity_no_relational.id_user == int(id_user)
         ).select(
             orderby=~db.auth_activity_no_relational.id,
-            limitby=(0, 100)
+            limitby=(0, limit)
         )
 
     def set_activity(self, id_user, request, activity, date_activity=None):
@@ -3404,6 +3404,11 @@ class AuthActivityNoRelational():
         )
         db.commit()
         self.clean(id_user)
+
+    def get_last_activity(self, id_user):
+        db = self.DALDatabase
+        row = db(db.auth_activity_no_relational.id_user == id_user).select().last()
+        return row
 
     def clean(self, id_user):
         db = self.DALDatabase
