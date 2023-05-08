@@ -1075,7 +1075,17 @@ class FormFromTableDAL():
                             self._verified[key] = resultado
                         else:
                             self._verified[key] = None
-
+                    elif ("type" in w) and (w["type"] == "boolean"):
+                        if self.table[key].validate(new_value)[1] is not None:
+                            self._errors[key] = self.table[key].validate(new_value)[1]
+                        else:
+                            self._ok[key] = dict_args[key]
+                        if dict_args[key]:
+                            self._verified[key] = True
+                        elif dict_args[key] is False:
+                            self._verified[key] = False
+                        else:
+                            self._verified[key] = None
                     else:
                         if self.table[key].validate(new_value)[1] is not None:
                             self._errors[key] = self.table[key].validate(new_value)[1]
@@ -1093,6 +1103,7 @@ class FormFromTableDAL():
     def update_or_insert(self, **dict_args):
         self._changed = {}
         val = self.validate(**dict_args)
+        print(self._verified)
         if val:
             return val
         else:
