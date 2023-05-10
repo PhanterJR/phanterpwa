@@ -96,7 +96,7 @@ class XmlConstructor():
     def insert_to(self, selector, position=0):
         self.xml()
         target = jQuery(selector)
-        last_index = target.children().size()
+        last_index = target.children().lenght
         if position < 0:
             position = max(0, last_index + 1 + position)
         target.append(self.__jquery_object)

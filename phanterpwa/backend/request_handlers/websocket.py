@@ -75,10 +75,14 @@ class EchoWebSocket(websocket.WebSocketHandler):
                                 new_set = set(self._online_users[self.phanterpwa_current_user.id])
                             except KeyError:
                                 new_set = set([self])
+                            else:
+                                new_set.add(self)
+                            to_remove = []
                             for con in new_set:
                                 if not con.ws_connection:
-                                    new_set.remove(con)
-                            new_set.add(self)
+                                    to_remove.append(con)
+                            for con in to_remove:
+                                new_set.remove(con)
                             self._online_users[self.phanterpwa_current_user.id] = new_set
 
                             if msg == "command_online":
