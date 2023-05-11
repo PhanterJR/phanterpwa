@@ -1062,16 +1062,31 @@ class FormFromTableDAL():
                         if dict_args[key]:
                             if t == "datetime":
                                 validator_format = w.get("validator_format", '%Y-%m-%d %H:%M:%S')
-                                tempo = time.strptime(str(dict_args[key]), validator_format)
-                                resultado = time.strftime('%Y-%m-%d %H:%M:%S', tempo)
+                                try:
+                                    tempo = time.strptime(str(dict_args[key]), validator_format)
+                                    resultado = time.strftime('%Y-%m-%d %H:%M:%S', tempo)
+                                    self._ok[key] = resultado
+                                except ValueError:
+                                    resultado = None
+                                    self._errors[key] = self.table[key].validate(new_value)[1]
                             elif t == "date":
                                 validator_format = w.get("validator_format", '%Y-%m-%d')
-                                tempo = time.strptime(str(dict_args[key]), validator_format)
-                                resultado = time.strftime('%Y-%m-%d', tempo)
+                                try:
+                                    tempo = time.strptime(str(dict_args[key]), validator_format)
+                                    resultado = time.strftime('%Y-%m-%d', tempo)
+                                    self._ok[key] = resultado
+                                except ValueError:
+                                    resultado = None
+                                    self._errors[key] = self.table[key].validate(new_value)[1]
                             elif t == "time":
                                 validator_format = w.get("validator_format", '%H:%M:%S')
-                                tempo = time.strptime(str(dict_args[key]), validator_format)
-                                resultado = time.strftime('%H:%M:%S', tempo)
+                                try:
+                                    tempo = time.strptime(str(dict_args[key]), validator_format)
+                                    resultado = time.strftime('%H:%M:%S', tempo)
+                                    self._ok[key] = resultado
+                                except ValueError:
+                                    resultado = None
+                                    self._errors[key] = self.table[key].validate(new_value)[1]
                             self._verified[key] = resultado
                         else:
                             self._verified[key] = None
@@ -1103,7 +1118,6 @@ class FormFromTableDAL():
     def update_or_insert(self, **dict_args):
         self._changed = {}
         val = self.validate(**dict_args)
-        print(self._verified)
         if val:
             return val
         else:
