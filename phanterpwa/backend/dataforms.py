@@ -1163,7 +1163,7 @@ class FormFromTableDAL():
             else:
                 json_widget = WidgetFromFieldDALFromTableDAL(self.table, x, self.record_id, data_view=self._data_view, simple_widget=self.simple_form)
             self._widgets[x] = json_widget.as_dict()
-            if x is not "id" or self.record_id:
+            if x != "id" or self.record_id:
                 if json_widget.section:
                     if json_widget.section in section:
                         section[json_widget.section][1][1].append(["widget", [x, json_widget.as_dict()]])
@@ -1188,7 +1188,7 @@ class FormFromTableDAL():
             json_widget = CustomField(self.table, self._extra_fields[e], self.record_id, self._data_view)
             #WidgetFromFieldDALFromTableDAL(self.table, x, self.record_id, data_view=self._data_view)
             self._widgets[e] = json_widget.as_dict()
-            if x is not "id" or self.record_id:
+            if x != "id" or self.record_id:
                 if json_widget.section:
                     if json_widget.section in section:
                         if json_widget.position or json_widget.position == 0:
