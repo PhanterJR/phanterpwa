@@ -84,6 +84,7 @@ class ApiServer():
         url_vars = self._process_parameters(parameters)
         onComplete = parameters.get("onComplete", lambda: console.info("GET") if window.PhanterPWA.DEBUG else "")
         onError = parameters.get("onError", None)
+        timeout = parameters.get("timeout", None)
         if "headers" in parameters:
             if parameters["headers"] is not None:
                 for x in parameters["headers"]:
@@ -129,8 +130,10 @@ class ApiServer():
             'error': _after_error,
             'datatype': 'json',
             'crossDomain': True,
-            'headers': headers
+            'headers': headers,
         }
+        if timeout is not None:
+            ajax_param["timeout"] = timeout
         if client_token is not None:
             ajax_param['headers']['phanterpwa-client-token'] = client_token
         if authorization is not None and authorization is not js_undefined:
@@ -157,6 +160,7 @@ class ApiServer():
         url_vars = self._process_parameters(parameters)
         onComplete = parameters.get("onComplete", lambda: console.info("DELETE") if window.PhanterPWA.DEBUG else "")
         onError = parameters.get("onError", None)
+        timeout = parameters.get("timeout", None)
         if "headers" in parameters:
             if parameters["headers"] is not None:
                 for x in parameters["headers"]:
@@ -180,6 +184,8 @@ class ApiServer():
             'crossDomain': True,
             'headers': headers
         }
+        if timeout is not None:
+            ajax_param["timeout"] = timeout
         if client_token is not None:
             ajax_param['headers']['phanterpwa-client-token'] = client_token
         if authorization is not None and authorization is not js_undefined:
@@ -207,6 +213,7 @@ class ApiServer():
             form_data = parameters["form_data"]
         onComplete = parameters.get("onComplete", lambda: console.info("POST") if window.PhanterPWA.DEBUG else "")
         onError = parameters.get("onError", None)
+        timeout = parameters.get("timeout", None)
         if "headers" in parameters:
             if parameters["headers"] is not None:
                 for x in parameters["headers"]:
@@ -231,6 +238,8 @@ class ApiServer():
             'crossDomain': True,
             'headers': headers
         }
+        if timeout is not None:
+            ajax_param["timeout"] = timeout
         if client_token is not None:
             ajax_param['headers']['phanterpwa-client-token'] = client_token
         if authorization is not None and authorization is not js_undefined:
@@ -262,6 +271,7 @@ class ApiServer():
             form_data = parameters["form_data"]
         onComplete = parameters.get("onComplete", lambda: console.info("PUT") if window.PhanterPWA.DEBUG else "")
         onError = parameters.get("onError", None)
+        timeout = parameters.get("timeout", None)
         if "headers" in parameters:
             if parameters["headers"] is not None:
                 for x in parameters["headers"]:
@@ -286,6 +296,8 @@ class ApiServer():
             'crossDomain': True,
             'headers': headers
         }
+        if timeout is not None:
+            ajax_param["timeout"] = timeout
         if client_token is not None:
             ajax_param['headers']['phanterpwa-client-token'] = client_token
         if authorization is not None and authorization is not js_undefined:
