@@ -450,7 +450,7 @@ class FormWidget(helpers.XmlConstructor):
                     "{0}-{1}".format(self.table_name, self.input_name),
                     label=self.json_widget['label'],
                     name=self.input_name,
-                    value=dvalue,
+                    value=self._value,
                     wear="shadows",
                     _class="data_view",
                     kind="hidden",

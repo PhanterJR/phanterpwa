@@ -3028,6 +3028,8 @@ class Inert(Widget):
         )
         Widget.__init__(self, identifier, html, **parameters)
 
+    def value(self):
+        return self._value
 
 class CheckBox(Widget):
     def __init__(self, identifier, **parameters):
