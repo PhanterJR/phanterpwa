@@ -3407,7 +3407,7 @@ class AuthActivityNoRelational():
 
     def get_last_activity(self, id_user):
         db = self.DALDatabase
-        row = db(db.auth_activity_no_relational.id_user == id_user).select().last()
+        row = db(db.auth_activity_no_relational.id_user == id_user).select(orderby=~db.auth_activity_no_relational.id, limitby=[0, 1]).last()
         return row
 
     def clean(self, id_user):
