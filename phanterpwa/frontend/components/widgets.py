@@ -304,6 +304,7 @@ class Input(Widget):
 
     def _binds(self):
         target = jQuery(self.target_selector)
+        
         self._add_div_animation(target)
 
         target.find("input").off("focus.phanterpwa-event-input_materialize").on(
@@ -324,9 +325,9 @@ class Input(Widget):
         )
         if self._mask is not "" and self._mask is not None:
             if self._mask == "fone":
-                masks.Mask(target.find("input")["selector"], lambda val: masks.maskFone(val))
+                masks.Mask(target.find("input").select(), lambda val: masks.maskFone(val))
             else:
-                masks.Mask(target.find("input")["selector"], lambda val: masks.baseCustom(val, self._mask))
+                masks.Mask(target.find("input").select(), lambda val: masks.baseCustom(val, self._mask))
 
         if self._icon is not None:
             target.find(".phanterpwa-widget-icon-wrapper").off("click.phanterpwa-widget-icon-wrapper").on(
