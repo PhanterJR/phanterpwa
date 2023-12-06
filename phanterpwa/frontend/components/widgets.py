@@ -4524,6 +4524,7 @@ class GalleryInput():
                 if img_type == "image/png" or\
                         img_type == "image/bmp" or\
                         img_type == "image/gif" or\
+                        img_type == "image/webp" or\
                         img_type == "image/jpeg":
                     def onloadend(reader, img_name, img_type):
                         base64data = reader.result
@@ -4639,7 +4640,7 @@ class GalleryInput():
                 _class="phanterpwa-gallery-upload-image-default"
             ),
             INPUT(
-                _accept="image/png, image/jpeg, image/gif, image/bmp",
+                _accept="image/png, image/jpeg, image/gif, image/webp, image/bmp",
                 _class="phanterpwa-gallery-upload-input-file",
                 _type="file",
                 _id="phanterpwa-gallery-input-file-{0}".format(self.namespace),

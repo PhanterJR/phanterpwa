@@ -98,7 +98,9 @@ class PhanterPWA():
         self.ApiServer.getClientToken()
         self.I18N = i18n.I18NServer()
         self.I18N.get_translations()
-        self.WS = websocket.WebSocketPhanterPWA(self.CONFIG["APP"]["websocket_address"])
+        self.WS = None
+        if parameters.get("use_websockets", False) is True:
+            self.WS = websocket.WebSocketPhanterPWA(self.CONFIG["APP"]["websocket_address"])
         if self.DEBUG:
             self.add_component(Developer_Toolbar())
         self.Valider = validations.Valider
@@ -392,7 +394,8 @@ class PhanterPWA():
                         sessionStorage.setItem("auth_user", JSON.stringify(auth_user))
                         localStorage.removeItem("phanterpwa-authorization")
                         localStorage.removeItem("auth_user")
-                    self.WS.send("command_online")
+                    if self.WS is not None:
+                        self.WS.send("command_online")
                     window.PhanterPWA.set_last_auth_user(auth_user)
                     if callable(self._after_login):
                         self._after_login(self, json)
@@ -433,7 +436,8 @@ class PhanterPWA():
                         sessionStorage.setItem("auth_user", JSON.stringify(auth_user))
                         localStorage.removeItem("phanterpwa-authorization")
                         localStorage.removeItem("auth_user")
-                    self.WS.send("command_online")
+                    if self.WS is not None:
+                        self.WS.send("command_online")
                     window.PhanterPWA.set_last_auth_user(auth_user)
                 window.PhanterPWA.open_way("home")
             elif data.status == 206:
@@ -519,7 +523,8 @@ class PhanterPWA():
                         sessionStorage.setItem("auth_user", JSON.stringify(auth_user))
                         localStorage.removeItem("phanterpwa-authorization")
                         localStorage.removeItem("auth_user")
-                    self.WS.send("command_online")
+                    if self.WS is not None:
+                        self.WS.send("command_online")
                     window.PhanterPWA.set_last_auth_user(auth_user)
                 window.PhanterPWA.open_current_way()
         if self.DEBUG:
@@ -577,7 +582,8 @@ class PhanterPWA():
                     sessionStorage.setItem("auth_user", JSON.stringify(auth_user))
                     localStorage.removeItem("phanterpwa-authorization")
                     localStorage.removeItem("auth_user")
-                self.WS.send("command_online")
+                if self.WS is not None:
+                    self.WS.send("command_online")
                 window.PhanterPWA.set_last_auth_user(auth_user)
         else:
             console.info(data.status)
@@ -730,7 +736,8 @@ class PhanterPWA():
 
     def logout(self, **parameters):
         callback = parameters.get("callback", None)
-        self.WS.send("command_offline")
+        if self.WS is not None:
+            self.WS.send("command_offline")
         sessionStorage.removeItem("phanterpwa-authorization")
         sessionStorage.removeItem("auth_user")
         sessionStorage.removeItem("_phanterpwa-user-try-activation")
@@ -879,7 +886,8 @@ class PhanterPWA():
 
                 return None
         else:
-            window.PhanterPWA.WS.send("command_offline")
+            if window.PhanterPWA.WS is not None:
+                window.PhanterPWA.WS.send("command_offline")
             localStorage.removeItem("phanterpwa-authorization")
             sessionStorage.removeItem("phanterpwa-authorization")
             return None
@@ -959,7 +967,8 @@ class PhanterPWA():
                     else:
                         sessionStorage.setItem("phanterpwa-authorization", authorization)
                         localStorage.removeItem("phanterpwa-authorization")
-                    self.WS.send("command_online")
+                    if self.WS is not None:
+                        self.WS.send("command_online")
                     window.PhanterPWA.set_last_auth_user(auth_user)
         if self.DEBUG:
             console.info(data.status, json.i18n.message)
