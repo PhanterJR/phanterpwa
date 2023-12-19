@@ -3380,8 +3380,9 @@ class SMSGateway(web.RequestHandler):
 
 
 class AuthActivityNoRelational():
-    def __init__(self, DALDatabase):
+    def __init__(self, DALDatabase, limit_clean=2000):
         self.DALDatabase = DALDatabase
+        self.limit_clean = limit_clean
 
     def get_rows_by_user_id(self, id_user, limit=100):
         db = self.DALDatabase
@@ -3403,7 +3404,8 @@ class AuthActivityNoRelational():
             date_activity=date_activity
         )
         db.commit()
-        self.clean(id_user)
+        if self.limit_clean:
+            self.clean(id_user)
 
     def get_last_activity(self, id_user):
         db = self.DALDatabase
@@ -3411,16 +3413,17 @@ class AuthActivityNoRelational():
         return row
 
     def clean(self, id_user):
-        db = self.DALDatabase
-        exedent_records = db(
-            db.auth_activity_no_relational.id_user == int(id_user)
-        )._select(
-            db.auth_activity_no_relational.id,
-            orderby=~db.auth_activity_no_relational.id,
-            limitby=(2000, 3000)
-        )
-        db(db.auth_activity_no_relational.id.belongs(exedent_records)).delete()
-        db.commit()
+        if self.limit_clean:
+            db = self.DALDatabase
+            exedent_records = db(
+                db.auth_activity_no_relational.id_user == int(id_user)
+            )._select(
+                db.auth_activity_no_relational.id,
+                orderby=~db.auth_activity_no_relational.id,
+                limitby=(self.limit_clean, self.limit_clean + 1000)
+            )
+            db(db.auth_activity_no_relational.id.belongs(exedent_records)).delete()
+            db.commit()
 
 
 class AuthUserAutoComplete(web.RequestHandler):

@@ -3032,6 +3032,7 @@ class Inert(Widget):
     def value(self):
         return self._value
 
+
 class CheckBox(Widget):
     def __init__(self, identifier, **parameters):
         self._label = parameters.get("label", None)
@@ -3176,7 +3177,8 @@ class RadioBox(Widget):
     def __init__(self, identifier, **parameters):
         self._label = parameters.get("label", None)
         self._name = parameters.get("name", None)
-        self._value = parameters.get("value", False)
+        self._checked = parameters.get("is_checked", False)
+        self._value =  parameters.get("value", False)
         self._can_empty = parameters.get("can_empty", False)
         self._wear = parameters.get("wear", "material")
         self._form = parameters.get("form", None)
@@ -3196,7 +3198,7 @@ class RadioBox(Widget):
             wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " has_label")
             label = LABEL(self._label, _for="phanterpwa-widget-radio-input-{0}".format(identifier))
         _checked = None
-        if self._value is True or self._Value is "true":
+        if self._checked is True or self._checked is "true":
             _checked = "checked"
             wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " has_true")
 
@@ -3227,23 +3229,20 @@ class RadioBox(Widget):
 
     def _change_xml_radio(self):
         el = jQuery("#phanterpwa-widget-radio-input-{0}".format(self.identifier))
-        value = el.prop("checked")
+        checked = el.prop("checked")
         p = el.parent()
-        
-        if value is True:
+        if checked is True:
             p.addClass("has_true")
-            jQuery("#phanterpwa-widget-radio-input-{0}".format(self.identifier)).val(value)
-            self._value = True
+            self._checked = True
 
         else:
             p.removeClass("has_true")
-            jQuery("#phanterpwa-widget-radio-input-{0}".format(self.identifier)).val(value)
-            self._value = False
+            self._checked = False
 
         self._xml_radio().html_to(jQuery(self.target_selector).find(".phanterpwa-widget-radio-option-container"))
 
     def _xml_radio(self):
-        if self._value is True:
+        if self._checked is True:
             return DIV(
                 I(_class="far fa-dot-circle"),
                 _class="phanterpwa-widget-radio-true"
@@ -3259,8 +3258,8 @@ class RadioBox(Widget):
         p.addClass("has_true")
         jQuery(".phanterpwa-widget-wrapper").removeClass("focus").removeClass("pre_focus")
         p.addClass("focus")
-        self._value = True
-        p.find("input").prop("checked", self._value).val(self._value)
+        self._checked = True
+        p.find("input").prop("checked", self._checked)
         jQuery(".phanterpwa-widget-radio-input").trigger("change")
 
     def _switch_focus(self, el):
@@ -3290,10 +3289,70 @@ class RadioBox(Widget):
             lambda: self._change_xml_radio()
         )
 
+    def get_value(self):
+        return jQuery("input[name='{}']:checked".format(self._name)).val()
 
     def start(self):
         self._binds()
 
+
+class MenuRadioBoxes(Widget):
+    def __init__(self, identifier, name, *radioboxes, default=None, **parameters):
+        self._values = []
+        self._name = name
+        cont = 0
+        tem = __new__(Date().getTime())
+        for x in radioboxes:
+            cont += 1
+            v = None
+            if isinstance(x, RadioBox):
+                x._name = name
+                if x._value == default:
+                    x._checked = True
+                else:
+                    x._checked = False
+                v = x
+            elif isinstance(x, list) and len(x) == 2:
+                if x[0] == default:
+                    _checked = True
+                else:
+                    _checked = False
+                v = RadioBox("rb{0}-{1}".format(tem, cont), name=name, label=x[1], value=x[0], is_checked=_checked)
+            elif isinstance(x, str):
+                if x == default:
+                    _checked = True
+                else:
+                    _checked = False
+                v = RadioBox(
+                    "rb{0}-{1}".format(tem, cont),
+                    name=name,
+                    label=x,
+                    value=x,
+                    is_checked=_checked
+                )
+            else:
+                raise ValueError("Invalid Radiobox, must be RadioBox instance, list[value, label] or str[label].")
+            if v is not None:
+                self._values.append(v)
+        html = DIV(
+            *self._values,
+            _class="phanterpwa-widget-menuradioboxes-radios",
+        )
+        if "_class" in parameters:
+            parameters["_class"] = "{0}{1}".format(parameters["_class"], " phanterpwa-widget-menuradioboxes")
+        else:
+            parameters['_class'] = "phanterpwa-widget-menuradioboxes"
+        Widget.__init__(self, identifier, html, **parameters)
+
+    def get_value(self):
+        return jQuery("input[name='{}']:checked".format(self._name)).val()
+
+    def reload(self):
+        self.start()
+
+    def start(self):
+        for x in self._values:
+            x.start()
 
 class MenuBox(Widget):
     def __init__(self, identifier, button, *options, **parameters):
