@@ -7,6 +7,15 @@ window = jQuery = console = document = localStorage = String = setTimeout =\
     sessionStorage = this = FileReader = JSON = js_undefined = navigator = __new__ = Date = 0
 
 __pragma__('noskip')
+__pragma__('kwargs')
+
+def zfill(number, size):
+    number = int(number)
+    number = str(number)
+    s = number
+    for x in range(size - len(number)):
+        s = "0" + s
+    return s
 
 
 class Mask():
@@ -223,6 +232,257 @@ class Mask():
         )
 
 
+class Currency():
+    def __init__(self, target_selector, reverse=False, apply_on_init=False, casas_decimais=2, separador_decimal=",", separador_milhar=".", icurrency=""):
+        self.target_selector = target_selector
+        self.element_target = jQuery(target_selector)
+        self.reverse = reverse
+        self.casas_decimais = casas_decimais
+        self.apply_on_init = apply_on_init
+        self.separador_milhar = separador_milhar
+        self.separador_decimal = separador_decimal
+        self.icurrency = icurrency
+        self.start()
+
+    def mask_function(self, value):
+        value = self.stringFilter(str(value))
+        if len(value) <= self.casas_decimais:
+            nvalue = "0{}{}".format(self.separador_decimal, zfill(value, 2))
+        else:
+            ivalue = int(value[0: -self.casas_decimais])
+            p_inteiro = str(ivalue).split("").reverse().join("")
+            str_inteiro = ""
+            tamanho_inteiro = len(p_inteiro)
+            adicionar_separador = False
+            if (tamanho_inteiro > 3):
+                for i in range(tamanho_inteiro):
+                    if (((i + 1) % 3) == 0):
+                        str_inteiro += p_inteiro[i]
+                        adicionar_separador = True
+                    else:
+                        if(adicionar_separador):
+                            adicionar_separador = False
+                            str_inteiro += self.separador_milhar + p_inteiro[i]
+                        else:
+                            str_inteiro += p_inteiro[i]
+                str_inteiro = str_inteiro.split("").reverse().join("")
+            else:
+                str_inteiro = str(ivalue)
+            nvalue = "{}{}{}".format(
+                str_inteiro,
+                self.separador_decimal,
+                value[-int(self.casas_decimais):]
+            )
+        if self.icurrency != "":
+            nvalue = "{} {}".format(self.icurrency, nvalue)
+        return [nvalue, len(nvalue)]
+
+    @staticmethod
+    def stringFilter(
+        value,
+        you_want_array=["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]):
+        value = str(value)
+        new_value = ""
+        for x in value:
+            if x in you_want_array:
+                new_value += x
+        return new_value
+
+    def onKeyPress(self, event, el):
+        event.preventDefault()
+        code = event.keyCode or event.which
+        element = jQuery(el)
+        pos = element[0].selectionStart
+        end = element[0].selectionEnd
+        if pos == end:
+            current_value = element.val()
+            v = String.fromCharCode(code)
+            text0 = current_value[0: pos] + v
+            text1 = current_value[pos:]
+            numbers = [str(x) for x in range(10)]
+            if v in numbers:
+                # print(current_value[pos])
+                if current_value[pos] in numbers or current_value[pos] == "_":
+                    pos = pos + 1
+                else:
+                    pos = pos + 2
+        else:
+            current_value = element.val()
+            v = String.fromCharCode(code)
+            text0 = current_value[0: pos] + v
+            text1 = current_value[end:]
+            numbers = [str(x) for x in range(10)]
+            if v in numbers:
+                pos = pos + 1
+        new_value = "{0}{1}".format(text0, text1)
+        pure_value = self.stringFilter(new_value, ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", self.separador_decimal])
+        new_value = self.mask_function(pure_value)[0]
+        if pure_value is not "":
+            element.val(new_value)
+        else:
+            element.val("")
+
+        element[0].selectionStart = self.mask_function(pure_value)[1]
+        element[0].selectionEnd = self.mask_function(pure_value)[1]
+
+    def onKeyUp(self, event, el):
+        element = jQuery(el)
+        new_value = element.val()
+        pure_value = self.stringFilter(new_value)
+        new_value = self.mask_function(pure_value)[0]
+        if pure_value is not "":
+            element.val(new_value)
+        else:
+            element.val("")
+
+        element[0].selectionStart = self.mask_function(pure_value)[1]
+        element[0].selectionEnd = self.mask_function(pure_value)[1]
+        element.focus()
+        element[0].setSelectionRange(self.mask_function(pure_value)[1], self.mask_function(pure_value)[1])
+
+
+    def onNonPrintingKeysIn(self, event, el):
+        noprintkeys = [8, 46]
+        code = event.keyCode or event.which
+        element = jQuery(el)
+        if code in noprintkeys:
+            if code == 8:
+                current_value = element.val()
+                if self.stringFilter(current_value) is not "":
+                    pure_value = self.stringFilter(current_value)
+                    pure_value = pure_value[0:-1]
+                    new_value = self.mask_function(pure_value)[0]
+                    if pure_value is not "":
+                        element.val(new_value)
+                    else:
+                        element.val("")
+                    element[0].selectionStart = self.mask_function(pure_value)[1]
+                    element[0].selectionEnd = self.mask_function(pure_value)[1]
+                else:
+                    element.val("")
+            elif code == 46:
+                current_value = element.val()
+                if self.stringFilter(current_value) is not "":
+                    pos = element[0].selectionStart
+                    end = element[0].selectionEnd
+                    if pos == end:
+                        text0 = current_value[0:pos]
+                        numbers = [str(x) for x in range(10)]
+                        if current_value[pos] in numbers:
+                            text1 = current_value[pos + 1:]
+                        elif current_value[pos] is not "":
+                            text1 = current_value[pos + 2:]
+
+                        new_value = "{0}{1}".format(text0, text1)
+                        element[0].selectionStart = pos
+                        element[0].selectionEnd = pos
+                    else:
+                        text0 = current_value[0: pos]
+                        text1 = current_value[end:]
+                        new_value = "{0}{1}".format(text0, text1)
+                        element[0].selectionStart = pos
+                        element[0].selectionEnd = pos
+                    pure_value = self.stringFilter(new_value)
+                    new_value = self.mask_function(pure_value)[0]
+                    if pure_value is not "":
+                        element.val(new_value)
+                    else:
+                        element.val("")
+                    element[0].selectionStart = pos
+                    element[0].selectionEnd = pos
+                else:
+                    element.val("")
+
+            event.preventDefault()
+
+    def onNonPrintingKeys(self, event, el):
+        event.preventDefault()
+        element = jQuery(el)
+        code = event.keyCode or event.which
+        noprintkeys = [8, 46, 9]
+        if code in noprintkeys:
+            value = element.val()
+            element.val(value + "_")
+            if (self.reverse):
+                if (self.stringFilter(value) != ""):
+                    value = str(int(self.stringFilter(value)))
+            new_value = ""
+
+            pure_value = self.stringFilter(value)
+            if pure_value == "":
+                element.val("")
+            else:
+                new_value = self.mask_function(pure_value)[0]
+                element.attr("phanterpwa-mask-justnumbers", self.stringFilter(new_value))
+                selection_pos = self.mask_function(pure_value)[1]
+                element.val(new_value)
+                if (self.reverse):
+                    element[0].selectionStart = -len(new_value)
+                    element[0].selectionEnd = -len(new_value)
+                else:
+                    element[0].selectionStart = selection_pos
+                    element[0].selectionEnd = selection_pos
+                if(code != 9):
+                    event.preventDefault()
+        else:
+            pure_value = self.stringFilter(element.val())
+            if pure_value == "":
+                element.val("")
+
+    def onFocusOut(self, event, el):
+        element = jQuery(el)
+        new_value = element.val()
+        pure_value = self.stringFilter(new_value)
+        new_value = self.mask_function(pure_value)[0]
+        if pure_value is not "":
+            element.val(new_value)
+        else:
+            element.val("")
+
+
+    def start(self):
+        element = jQuery(self.target_selector)
+        value = element.val()
+        pure_value = self.stringFilter(value)
+        new_value = self.mask_function(pure_value)[0]
+        selection_pos = self.mask_function(pure_value)[1]
+
+        if(self.apply_on_init):
+            element.val(new_value)
+            if(self.reverse):
+                element[0].selectionStart = -len(new_value)
+                element[0].selectionEnd = -len(new_value)
+            else:
+                element[0].selectionStart = selection_pos
+                element[0].selectionEnd = selection_pos
+
+        element.off(
+            "keypress.phanterpwaMask"
+        ).on(
+            "keypress.phanterpwaMask",
+            lambda event: self.onKeyPress(event, this)
+        )
+        element.off(
+            "focusout.phanterpwaMask"
+        ).on(
+            "focusout.phanterpwaMask",
+            lambda event: self.onFocusOut(event, this)
+        )
+        element.off(
+            "keyup.phanterpwaMask2,"
+        ).on(
+            "keyup.phanterpwaMask2,",
+            lambda event: self.onKeyUp(event, this)
+        )
+        element.off(
+            "keydown.phanterpwaMask, focusout.phanterpwaMask"
+        ).on(
+            "keydown.phanterpwaMask, focusout.phanterpwaMask",
+            lambda event: self.onNonPrintingKeysIn(event, this)
+        )
+
+
+
 def date_and_datetime_to_maks(value):
     date_format = ["d", "M", "o", "t", "y", "H", "m", "s"]
     string_mask = ""
@@ -280,6 +540,7 @@ def stringForceToFloatstring(value, force_dot=False, localeBR=True):
     if isNotEmpty(value):
         value = str(value)
         if localeBR:
+            value = value.replace(".", "")
             value = value.replace(",", ".")
         value = stringFilter(value, ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "."])
         value = justSearchedCaracter(value)
@@ -300,7 +561,8 @@ def stringForceToFloatstring(value, force_dot=False, localeBR=True):
 def stringToFloatstringLimitDecimals(value, casas_decimais=2, localeBR=True):
     value = str(value)
     if isNotEmpty(value):
-        if(localeBR):
+        if localeBR:
+            value = value.replace(".", "")
             value = value.replace(",", ".")
         value = stringFilter(value, ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "."])
         value = justSearchedCaracter(value)
@@ -384,7 +646,7 @@ def floatToCurrency(value, casas_decimais=2, separador_decimal=",", separador_mi
     if(isNotEmpty(currency)):
         r = "{0} {1}{2}{3}".format(currency, p_m_inteiro, separador_decimal, p_m_decimal)
     else:
-        r = "{1}{2}{3}".format(p_m_inteiro, separador_decimal, p_m_decimal)
+        r = "{0}{1}{2}".format(p_m_inteiro, separador_decimal, p_m_decimal)
     return r
 
 
@@ -849,3 +1111,5 @@ def phanterpwaMask(mask, parameters, el):
         jQuery(el).addClass("masked_input")
         applyMask(el, lambda v: baseCustom(v, parameters['mask']), reverse, apply_on_init)
     return jQuery(el)
+
+__pragma__('nokwargs')

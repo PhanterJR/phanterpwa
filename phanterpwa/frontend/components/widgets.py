@@ -149,8 +149,10 @@ class Input(Widget):
                 parameters["_class"] = "{0}{1}".format(parameters["_class"], " e-display_hidden")
         else:
             self._type = "text"
-        if self._mask == "fone":
-            self._maks = masks.maskFone(self._value)
+        # if self._mask == "fone":
+        #     self._maks = masks.maskFone(self._value)
+        # elif self._mask == "real":
+        #     self._maks = masks.phanterCurrency()
         label = ""
         if self._label is not None:
             wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " has_label")
@@ -326,6 +328,10 @@ class Input(Widget):
         if self._mask is not "" and self._mask is not None:
             if self._mask == "fone":
                 masks.Mask(target.find("input").select(), lambda val: masks.maskFone(val))
+            elif self._mask == "real":
+                v = masks.Currency(target.find("input").select(), icurrency="R$")
+            elif self._mask == "dolar":
+                masks.Currency(target.find("input").select(), separador_decimal=".", separador_milhar=",", icurrency="$")
             else:
                 masks.Mask(target.find("input").select(), lambda val: masks.baseCustom(val, self._mask))
 
