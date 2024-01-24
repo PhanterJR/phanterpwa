@@ -199,9 +199,9 @@ class AuthUser(application.Component):
                     first_name,
                     last_name
                 )
-            if jQuery("#toggle-cmp-bar_user").lenght == 1:
+            if jQuery("#toggle-cmp-bar_user").length == 1:
                 jQuery("#user_first_and_last_name_login").text(complete_name)
-                jQuery("#user_role_login").html(role)
+                jQuery("#user_role_login").html(role.jquery())
                 src_image = jQuery("#url_image_user").attr("src")
                 if src_image != user_image:
                     jQuery("#url_image_user").attr("src", user_image)
@@ -2770,7 +2770,7 @@ class Profile(gatehandler.Handler):
                 "afterCut": lambda: self.submit()
             }
         )
-        if not jQuery("#phanterpwa-component-left_bar-url-imagem-user").lenght == 0:
+        if not jQuery("#phanterpwa-component-left_bar-url-imagem-user").length == 0:
             jQuery("#phanterpwa-component-left_bar-url-imagem-user").attr(
                 "src", user_image)
         jQuery("#url_image_user").attr("src", user_image)
