@@ -98,6 +98,100 @@
 
     &.phanterpwa-widget-image
         padding: 0
+    &.phanterpwa-widget-integermenu
+        text-align: left
+        overflow: auto
+        .phanterpwa-widget-integermenu-wrapper
+            &> label
+                display: inline-block
+            .phanterpwa-widget-integermenu-buttons_and_input_wrapper
+                display: inline-block
+                position: relative
+                .phanterpwa-widget-integermenu-minusbutton
+                    position: absolute
+                    top: 11px
+                    left: 5px
+                    text-align: center
+                    width: 40px
+                    cursor: pointer
+                    height: 40px
+                    line-height: 36px
+                    background-color: $components
+                    color: $white
+                    border-radius: 25px
+                    font-weight: bold
+                    font-size: 20pt
+                    -webkit-user-select: none 
+                    -ms-user-select: none 
+                    user-select: none
+                .phanterpwa-widget-integermenu-plusbutton
+                    position: absolute
+                    top: 11px
+                    right: 5px
+                    text-align: center
+                    width: 40px
+                    cursor: pointer
+                    height: 40px
+                    line-height: 36px
+                    background-color: $components
+                    color: $white
+                    border-radius: 25px
+                    font-weight: bold
+                    font-size: 20pt
+                    -webkit-user-select: none 
+                    -ms-user-select: none 
+                    user-select: none
+                input
+                    text-align: right
+
+            &.tiny_input_size
+                .phanterpwa-widget-integermenu-buttons_and_input_wrapper
+                    width: 140px
+                    padding: 0 40px 0 40px
+
+            &.phanterpwa-widget-wear-elegant
+                &.tiny_input_size
+                    .phanterpwa-widget-integermenu-buttons_and_input_wrapper
+                        width: 150px
+                        padding: 0 40px 0 40px
+                .phanterpwa-widget-integermenu-buttons_and_input_wrapper
+                    .phanterpwa-widget-integermenu-minusbutton
+                        top: 17px
+                        border-radius: 25px 0 0 25px
+                    .phanterpwa-widget-integermenu-plusbutton
+                        top: 17px
+                        border-radius: 0 25px 25px 0
+                    input
+                        text-align: right
+                        padding-right: 25px
+
+            &.phanterpwa-widget-wear-shadows
+                &.tiny_input_size
+                    .phanterpwa-widget-integermenu-buttons_and_input_wrapper
+                        width: 150px
+                        padding: 0 40px 0 40px
+                .phanterpwa-widget-integermenu-buttons_and_input_wrapper
+                    .phanterpwa-widget-integermenu-minusbutton
+                        top: 10px
+                        border-radius: 25px 0 0 25px
+                        height: 36px
+                        line-height: 30px
+                    .phanterpwa-widget-integermenu-plusbutton
+                        top: 10px
+                        border-radius: 0 25px 25px 0
+                        height: 36px
+                        line-height: 30px
+                    input
+                        text-align: right
+                        padding-right: 25px
+                        border-radius: 0
+
+
+
+
+
+
+
 .phanterpwa-widget
     padding-right: 5px
     input, textarea
@@ -136,6 +230,9 @@
                 text-align: center
                 line-height: 40px
                 border-radius: 29px
+            &.has_disabled
+                .phanterpwa-widget-icon-wrapper
+                    background-color: #d0d0d0
 
         &.has_mask, &.its_numbers
             input
@@ -218,6 +315,16 @@
                     width: 100%
                     text-align: center
                     color: $components
+                    transition: width 0.5s ease, opacity 0.5s ease
+        &.has_none
+            .phanterpwa-widget-checkbox-checkbox
+                .phanterpwa-widget-checkbox-option-container
+                    border: 1px solid $components
+                .phanterpwa-widget-checkbox-true
+                    opacity: 1
+                    width: 100%
+                    text-align: center
+                    color: grey
                     transition: width 0.5s ease, opacity 0.5s ease
         &.has_true
             .phanterpwa-widget-radio-radio
@@ -648,6 +755,9 @@
                     right: 53px
                 .phanterpwa-widget-check
                     right: 70px
+                &.has_disabled
+                    .phanterpwa-widget-icon-wrapper
+                        background-color: #d0d0d0
             input
                 border-radius: 5px
                 line-height: 1.5rem
@@ -762,6 +872,9 @@
                     right: 53px
                 .phanterpwa-widget-check
                     right: 53px
+                &.has_disabled
+                    .phanterpwa-widget-icon-wrapper
+                        background-color: #d0d0d0
             &.has_value
                 label
                     color: $components
@@ -963,6 +1076,9 @@
                     right: 53px
                 .phanterpwa-widget-check
                     right: 70px
+                &.has_disabled
+                    .phanterpwa-widget-icon-wrapper
+                        background-color: #d0d0d0
             input
                 border-radius: 5px
                 line-height: 1.5rem
@@ -1077,6 +1193,9 @@
                     right: 53px
                 .phanterpwa-widget-check
                     right: 53px
+                &.has_disabled
+                    .phanterpwa-widget-icon-wrapper
+                        background-color: #d0d0d0
             &.has_value
                 label
                     color: $components
@@ -1285,6 +1404,9 @@
                     right: 53px
                 .phanterpwa-widget-check
                     right: 70px
+                &.has_disabled
+                    .phanterpwa-widget-icon-wrapper
+                        background-color: #d0d0d0
             &.has_value
                 label
                     color: $components
@@ -1382,6 +1504,9 @@
                     right: 52px
                 .phanterpwa-widget-check
                     right: 52px
+                &.has_disabled
+                    .phanterpwa-widget-icon-wrapper
+                        background-color: #d0d0d0
             &.has_value
                 label
                     color: $components
@@ -2114,3 +2239,44 @@ table
                     background-color: #f4f4f4
                     border: 1px solid #c6c6c6
                     color: black !important
+
+.phanterpwa-widget
+    &.phanterpwa-widget-button
+        button
+            .loading2, .loading1
+                display: none
+                transform: rotate(29deg)
+                width: 25%
+                height: 300%
+                position: absolute
+                opacity: 0.5
+                top: -100%
+                left: -50%
+
+        &.loading
+            button
+                &.btn
+                    background-image: linear-gradient(#9d9d9d, #d0d0d0)
+                    &:hover
+                        background-image: linear-gradient(#9d9d9d, #d0d0d0)
+
+                .loading1
+                    display: block
+
+                    background-color: orange
+                    -webkit-animation: button_loading 1s linear infinite -1.6s 
+                    animation: button_loading 1s linear infinite -1.6s
+
+                .loading2
+                    display: block
+                    background-color: red
+                    -webkit-animation: button_loading 1s linear infinite -1.6s 
+                    animation: button_loading 1s linear infinite -1.6s reverse
+
+@keyframes button_loading
+  0%
+    left: -50%
+  100%
+    left: 110%
+
+

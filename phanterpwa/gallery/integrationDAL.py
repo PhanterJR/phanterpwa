@@ -116,35 +116,48 @@ class PhanterpwaGalleryUpload(object):
         self.db = db
         self.id = _id
 
-    def insert_or_update(self, file, folder, filename, extensao):
+    def insert_or_update(self, file, folder, filename, content_type):
         os.makedirs(folder, exist_ok=True)
         q_image = self.db(self.db.phanterpwagallery.id == self.id).select().first()
         if q_image:
             try:
-                os.remove(os.path.join(folder, "%s.%s" % (q_image.id, q_image.extensao)))
+                os.remove(os.path.join(folder, "{}".format(q_image.alias_name)))
             except OSError:
                 pass
-            q_image.update_record(folder=folder,
+            new_alias_name = self.alias_name(filename, self.id)
+            q_image.update_record(
+                folder=folder,
                 filename=filename,
-                extensao=extensao)
-            with open(
-                os.path.join(folder, "%s.%s" % (q_image.id, extensao)),
-                'wb') as new_image:
+                content_type=content_type,
+                alias_name=new_alias_name
+            )
+
+            with open(os.path.join(folder, "{}".format(new_alias_name)), 'wb') as new_image:
                 new_image.write(file)
             self.db.commit()
         else:
             id_image = self.db.phanterpwagallery.insert(
                 folder=folder,
                 filename=filename,
-                extensao=extensao)
+                content_type=content_type)
             if id_image:
+                new_alias_name = self.alias_name(filename, id_image)
+                self.db(self.db.phanterpwagallery.id == id_image).update(alias_name=new_alias_name)
                 self.db.commit()
                 self.id = id_image
                 with open(
-                        os.path.join(folder, "%s.%s" % (id_image, extensao)),
+                        os.path.join(folder, "{}".format(new_alias_name)),
                         'wb') as new_image:
                     new_image.write(file)
         return self.id
+
+    def alias_name(self, filename, id_image):
+        ext = ""
+        f_name = filename
+        if "." in filename:
+            ext = filename.split(".")[-1]
+        f_name = "{0}.{1}".format(id_image, ext)
+        return f_name
 
     def delete(self):
         q_image = self.db(self.db.phanterpwagallery.id == self.id).select().first()
@@ -210,7 +223,7 @@ class PhanterpwaGalleryImage():
         if id_new_image:
             self.id_image = id_new_image.id
             alias_name = self.alias_name(filename, self.id_image)
-            q_img = db(db.phanterpwagallery.id==self.id_image).select().first()
+            q_img = db(db.phanterpwagallery.id == self.id_image).select().first()
             q_img.update_record(
                 alias_name=alias_name
             )
@@ -230,6 +243,84 @@ class PhanterpwaGalleryImage():
                 self.upload_folder,
                 q_image.folder,
                 q_image.alias_name
+            ))
+            if os.path.exists(file):
+                return file
+
+
+class PhanterpwaGalleryFile():
+
+    def __init__(self, sub_folder, db, projectConfig, id_file=0, appname="api"):
+        self.db = db
+        self.upload_folder = os.path.normpath(
+            os.path.join(projectConfig["PROJECT"]["path"], "backapps", appname, "uploads")
+        )
+        self.projectConfig = projectConfig
+        self.sub_folder = sub_folder
+        self.id_file = id_file
+
+    def alias_name(self, filename, id_file):
+        ext = ""
+        f_name = filename
+        if "." in filename:
+            ext = filename.split(".")[-1]
+        f_name = "{0}.{1}".format(id_file, ext)
+        return f_name
+
+    def set_file(self, filename, file, content_type):
+        db = self.db
+        target_folder = os.path.join(self.upload_folder, self.sub_folder)
+        os.makedirs(target_folder, exist_ok=True)
+        rel_folder = os.path.join(self.sub_folder)
+        if self.id_file:
+            s_file = self.db(
+                (self.db.phanterpwagallery.id == self.id_file)).select().first()
+            if s_file:
+                id_new_file = s_file.update_record(
+                    folder=rel_folder,
+                    filename=filename,
+                    content_type=content_type
+                )
+
+            else:
+                id_new_file = self.db.phanterpwagallery.insert(
+                    folder=rel_folder,
+                    filename=filename,
+                    content_type=content_type
+                )
+
+        else:
+            id_new_file = self.db.phanterpwagallery.insert(
+                folder=rel_folder,
+                filename=filename,
+                content_type=content_type
+            )
+
+        self.db.commit()
+
+        if id_new_file:
+            self.id_file = id_new_file.id
+            alias_name = self.alias_name(filename, self.id_file)
+            q_img = db(db.phanterpwagallery.id == self.id_file).select().first()
+            q_img.update_record(
+                alias_name=alias_name
+            )
+            self.db.commit()
+            with open(
+                    os.path.join(target_folder, alias_name),
+                    'wb') as new_file:
+                new_file.write(file)
+            return self.id_file
+
+    @property
+    def path_file(self):
+        s_file = self.db(
+            (self.db.phanterpwagallery.id == self.id_file)).select().last()
+        if s_file:
+            file = os.path.normpath(os.path.join(
+                self.upload_folder,
+                s_file.folder,
+                s_file.alias_name
             ))
             if os.path.exists(file):
                 return file

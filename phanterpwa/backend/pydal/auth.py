@@ -31,6 +31,7 @@ class AuthTables():
                 'group': 'group1',
                 '_class': 'p-col w1p100 w4p70 e-float_right'
             }),
+            Field('date_created', 'datetime', default=datetime.now(), requires=IS_EMPTY_OR(IS_DATETIME())),
             Field('email_activated', 'boolean', default=False),
             Field('fone_number', 'string', phanterpwa={
                 'out_of_form': True
@@ -82,16 +83,18 @@ class AuthTables():
 
         def delete_upload_folder(s):
             upload_folder = os.path.join(projectConfig["PROJECT"]["path"], "backapps", "api", "uploads")
-            target = os.path.join(upload_folder, "user_{0}".format(s.select().first().id))
-            if os.path.exists(target) and os.path.isdir(target):
-                try:
-                    shutil.rmtree(target)
-                except Exception:
+            row = s.select().first()
+            if row:
+                target = os.path.join(upload_folder, "user_{0}".format(row.id))
+                if os.path.exists(target) and os.path.isdir(target):
+                    try:
+                        shutil.rmtree(target)
+                    except Exception:
+                        if self.logger_api:
+                            self.logger_api.error("Problem on delete folder: \"{0}\"".format(target), exc_info=True)
+                else:
                     if self.logger_api:
-                        self.logger_api.error("Problem on delete folder: \"{0}\"".format(target), exc_info=True)
-            else:
-                if self.logger_api:
-                    self.logger_api.warning("Ther folder \"{0}\" not exists".format(target))
+                        self.logger_api.warning("Ther folder \"{0}\" not exists".format(target))
 
         self.DALDatabase.auth_user._before_delete.append(lambda s: delete_upload_folder(s))
 

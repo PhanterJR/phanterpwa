@@ -677,6 +677,19 @@ def text_normalize(text: str, upper: bool = True) -> str:
         return normalize('NFKD', text).encode('ascii', 'ignore').decode('ascii')
 
 
+def filter_for_a_valid_filename(value):
+    texto = str(value)
+    mini = "ÁÉÍÓÚÀÈÌÒÙÂÊÎÔÛÃÕÄËÏÖÜÇABCDEFGHIJKLMNOPQRSTUVWXYZ áéíóúàèìòùâêîôûãõäëïöüabçcdefghijlmnopqrstuvxzwyk0123456789ªº°[{()}]"
+    novo_texto = ""
+    for x in texto:
+        if x in mini:
+            novo_texto = "".join([novo_texto, x])
+        else:
+            novo_texto = "".join([novo_texto, " "])
+    texto = one_space(novo_texto)
+    return texto
+
+
 def string_escape(value):
     r"""Escapes the <,>, ", 'and & characters of a string, when adding an interactable object such as a list,
     a dictionary, tuples and a set it cycles through the values in search of strings recursively, remembering

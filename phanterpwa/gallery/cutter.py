@@ -5,11 +5,12 @@ from PIL import Image as PILImage, ImageOps
 
 class PhanterpwaGalleryCutter(object):
 
-    def __init__(self, imageName, imageBytes, cutterSizeX, cutterSizeY, force_png=False):
+    def __init__(self, imageName, imageBytes, cutterSizeX, cutterSizeY, force_png=False, trim_transparency_on_cutter=False):
         self.imageBytes = imageBytes
         self.cutterSizeX = cutterSizeX
         self.cutterSizeY = cutterSizeY
         self.force_png = force_png
+        self.trim_transparency_on_cutter = trim_transparency_on_cutter
         if isinstance(imageBytes, bytes):
             self._img = PILImage.open(io.BytesIO(imageBytes))
             self._img = ImageOps.exif_transpose(self._img)
@@ -144,8 +145,12 @@ class PhanterpwaGalleryCutter(object):
         img = img.crop((self.positionX, self.positionY,
                       self.positionX + self.newSizeX,
                       self.positionY + self.newSizeY))
-        img = img.resize((cutterSizeX, cutterSizeY),
-                       PILImage.ANTIALIAS)
+        if self.trim_transparency_on_cutter:
+            img = img.crop(img.getbbox())
+            img = ImageOps.contain(img, (max([cutterSizeX, cutterSizeY]), max([cutterSizeX, cutterSizeY])))
+        else:
+            img = img.resize((cutterSizeX, cutterSizeY),
+                           PILImage.ANTIALIAS)
         img_buffer = io.BytesIO()
         if self._format == "PNG":
             img.save(img_buffer, format=self._format)
@@ -183,8 +188,12 @@ class PhanterpwaGalleryCutter(object):
             elif crop_type == 'bottom':
                 box = (img.size[0] - newSizeX, 0, img.size[0], img.size[1])
             img = img.crop(box)
-        img = img.resize((self.cutterSizeX, self.cutterSizeY),
-                PILImage.ANTIALIAS)
+        if self.trim_transparency_on_cutter:
+            img = img.crop(img.getbbox())
+            img = ImageOps.contain(img, (max([self.cutterSizeX, self.cutterSizeY]), max([self.cutterSizeX, self.cutterSizeX])))
+        else:
+            img = img.resize((self.cutterSizeX, self.cutterSizeY),
+                    PILImage.ANTIALIAS)
 
         img_buffer = io.BytesIO()
         if self._format == "PNG":

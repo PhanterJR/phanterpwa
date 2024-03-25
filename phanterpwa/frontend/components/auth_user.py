@@ -1685,15 +1685,22 @@ class AlertActivationAccount(top_slide.TopSlide):
     def _process_alert_content(self):
         email = window.PhanterPWA.get_auth_user().email
         if str(email).endswith(".mobile@phanterpwa.com"):
+            fone = window.PhanterPWA.get_auth_user().fone_number
             html = CONCATENATE(
                 DIV(
                     I18N(
                         "{0}{1}{2}".format("Your account has not yet been activated,",
                         " when you created it, the activation code was sent by sms to",
-                        " the your mobile number. Add the code received in the field below.")
+                        " the your mobile number. Add the code received in the field below."),
+                        **{"_pt-br": "{0}{1}{2}".format(
+                            "Sua conta ainda não foi ativada, ao criá-la foi enviado",
+                            " um sms com o código de ativação. Adicione o código ",
+                            "recebido no código no campo abaixo."
+                        )}
                     ),
                     _class="phanterpwa-auth_user-activation-text"
                 ),
+                DIV("Your fone: ", STRONG(fone)),
                 FORM(
                     DIV(
                         DIV(
@@ -1745,6 +1752,7 @@ class AlertActivationAccount(top_slide.TopSlide):
                     ),
                     _class="phanterpwa-auth_user-activation-text"
                 ),
+                DIV("Your email: ", STRONG(email)),
                 FORM(
                     DIV(
                         DIV(

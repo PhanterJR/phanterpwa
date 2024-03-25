@@ -443,7 +443,6 @@ class PhanterpwaGalleryImageBytes(object):
         nome_da_imagem = self.nome_da_imagem
         nome_do_arquivo, extensao = os.path.splitext(nome_da_imagem)
         im = PILImage.open(self.imageBytes)
-        print(im.getdata())
         jpeg_image_buffer = io.BytesIO()
         if extensao.lower() == '.png' or self.force_png:
             self.extensao = 'png'

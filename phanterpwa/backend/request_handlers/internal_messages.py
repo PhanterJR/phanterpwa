@@ -131,7 +131,6 @@ class Messages(web.RequestHandler):
             internal_messages = []
             for x in s_messages:
                 dict_send = json.loads(x.as_json())
-                print(dict_send)
                 dict_send['recipients_and_read_status'] = [
                     [
                         "{0} {1} <{2}>".format(

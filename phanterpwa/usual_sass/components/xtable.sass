@@ -6,6 +6,7 @@
         border: solid 1px rgba(51,51,51,0.12)
         border-radius: 10px
         .phanterpwa-widget-table
+
             display: table
             min-width: 100%
             margin: 0
@@ -78,7 +79,13 @@
                     .phanterpwa-widget-table-head-th-sortable
                         &::hover
                             color: $attention
-
+        &.has_checked
+            .phanterpwa-widget-checkbox
+                .phanterpwa-widget-checkbox-wrapper
+                    padding: 0
+                    width: 25px
+                    .phanterpwa-widget-checkbox-checkbox
+                        margin: 0
 
 .phanterpwa-widget-pagination-container
     min-width: 210px

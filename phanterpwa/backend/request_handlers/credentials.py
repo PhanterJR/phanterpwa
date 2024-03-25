@@ -1,3 +1,7 @@
+from datetime import (
+    datetime,
+    timedelta
+)
 from phanterpwa.backend.decorators import (
     check_application,
     check_client_token,
@@ -68,6 +72,22 @@ class SignClient(web.RequestHandler):
 
     @check_application()
     def get(self, *args, **kargs):
+        expire_date = datetime.now() - timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['default_time_client_token_expire'])
+        anonymous_expire_date = datetime.now() - timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['default_time_csrf_token_expire'])
+        deactived_user_expire_date = datetime.now() - timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire_remember_me'])
+        str_expire_date = expire_date.strftime('%Y-%m-%d %H:%M:%S')
+        str_anonymous_expire_date = anonymous_expire_date.strftime('%Y-%m-%d %H:%M:%S')
+        self.DALDatabase(
+            (self.DALDatabase.client.date_created < str_expire_date)
+        ).delete()
+        self.DALDatabase(
+            (self.DALDatabase.client.auth_user == None)
+            & (self.DALDatabase.client.date_created < str_anonymous_expire_date)
+        ).delete()
+        self.DALDatabase(
+            (self.DALDatabase.auth_user.activated == False)
+            & ((self.DALDatabase.auth_user.date_created < deactived_user_expire_date) | (self.DALDatabase.auth_user.date_created == None))
+        ).delete()
         self.phanterpwa_client_token = self.request.headers.get('phanterpwa-client-token')
         self.phanterpwa_authorization = self.request.headers.get('phanterpwa-authorization')
         t_client = Serialize(
@@ -413,8 +433,11 @@ class SignForms(web.RequestHandler):
 
         id_client = int(self.phanterpwa_client_token_checked["id_client"])
         if form_identify in list_forms:
-            self.DALDatabase((self.DALDatabase.csrf.client == id_client) &
-                (self.DALDatabase.csrf.form_identify == form_identify)).delete()
+            expire_date = datetime.now() - timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['default_time_csrf_token_expire'])
+            str_expire_date = expire_date.strftime('%Y-%m-%d %H:%M:%S')
+            self.DALDatabase(
+                (self.DALDatabase.csrf.date_created < str_expire_date)
+            ).delete()
             t = Serialize(
                 "csrf-{0}".format(self.projectConfig['BACKEND'][self.app_name]['secret_key']),
                 self.projectConfig['BACKEND'][self.app_name]['default_time_csrf_token_expire']

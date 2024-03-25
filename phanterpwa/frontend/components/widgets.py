@@ -36,6 +36,7 @@ TR = helpers.XmlConstructor.tagger("tr", False)
 SCRIPT = helpers.XmlConstructor.tagger("script", False)
 TABLE = helpers.XmlConstructor.tagger("table", False)
 STRONG = helpers.XmlConstructor.tagger("strong", False)
+BUTTON = helpers.XmlConstructor.tagger("button", False)
 
 __pragma__('kwargs')
 
@@ -53,6 +54,8 @@ class Widget(helpers.XmlConstructor):
             attributes["_class"] = "{0}{1}".format(attributes["_class"], " phanterpwa-widget")
         else:
             attributes["_class"] = "phanterpwa-widget"
+        self._validator = attributes.get("validators", None)
+        self._message_error = attributes.get("message_error", None)
         window.PhanterPWA._thewidgets[self._identifier] = self
         content.append(SCRIPT("window.PhanterPWA._thewidgets['{0}'].start()".format(self._identifier), _type="text/javascript"))
         helpers.XmlConstructor.__init__(self, 'phanterpwa-widget', False, *content, **attributes)
@@ -80,6 +83,13 @@ class Widget(helpers.XmlConstructor):
         else:
             return ""
 
+    def show_message_error(self):
+        if self._message_error is not None:
+            jQuery(self.target_selector).find(
+                ".phanterpwa-widget-message_error").html(self._message_error)
+            jQuery(self.target_selector).find(
+                ".phanterpwa-widget-wrapper").addClass("has_error")
+
     def set_message_error(self, message_error):
         if message_error is not None:
             jQuery(self.target_selector).find(
@@ -100,6 +110,20 @@ class Widget(helpers.XmlConstructor):
     def start(self):
         if window.PhanterPWA.DEBUG:
             console.info("the start not used")
+
+    def validate(self):
+        if callable(self._validator):
+            error = self._validator(self)
+            if error is None or error is js_undefined:
+                self._message_error = ""
+                jQuery(self.target_selector).find(
+                    ".phanterpwa-widget-wrapper").removeClass("no_pass")
+            else:
+                self._message_error = error
+                jQuery(self.target_selector).find(
+                    ".phanterpwa-widget-wrapper").addClass("no_pass")
+                return self._message_error
+        return None
 
 
 class Input(Widget):
@@ -168,6 +192,8 @@ class Input(Widget):
             wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " has_value")
         if self._mask is not "" and self._mask is not None:
             wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " has_mask")
+        if self._disabled:
+            wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " has_disabled")
 
         checker = ""
         if self._checker:
@@ -226,10 +252,6 @@ class Input(Widget):
     #     jQuery(self.target_selector).find(
     #         ".phanterpwa-widget-wrapper").removeClass("has_error")
 
-    def validate(self):
-        if callable(self._validator):
-            self._validator(self)
-
     def _add_div_animation(self, el):
         wrapper = el.find(".phanterpwa-widget-wrapper")
         if wrapper.hasClass("phanterpwa-widget-wear-material"):
@@ -248,10 +270,12 @@ class Input(Widget):
             p.addClass("has_value").trigger("keyup")
         else:
             p.removeClass("has_value")
+        self.validate()
 
     def _on_click_icon(self, el):
         if callable(self._icon_on_click):
-            self._icon_on_click(el)
+            if not self._disabled:
+                self._icon_on_click(el)
         elif self._kind == "date":
             self._datetimepicker = datetimepicker.Datepickers(
                 self.target_selector,
@@ -306,7 +330,6 @@ class Input(Widget):
 
     def _binds(self):
         target = jQuery(self.target_selector)
-        
         self._add_div_animation(target)
 
         target.find("input").off("focus.phanterpwa-event-input_materialize").on(
@@ -320,6 +343,10 @@ class Input(Widget):
         target.find("input").off("change.phanterpwa-event-input_materialize").on(
             "change.phanterpwa-event-input_materialize",
             lambda: self._check_value(this)
+        )
+        target.find("input").off("keyup.phanterpwa-event-input_materialize").on(
+            "keyup.phanterpwa-event-input_materialize",
+            lambda: self.validate()
         )
         target.find("label").off("click.phanterpwa-event-input_materialize, touchstart.phanterpwa-event-input_materialize").on(
             "click.phanterpwa-event-input_materialize, touchstart.phanterpwa-event-input_materialize",
@@ -342,6 +369,7 @@ class Input(Widget):
             )
         if callable(self._onload):
             self._onload(target)
+        self.validate()
 
     def set_disabled(self):
         jQuery("#phanterpwa-widget-input-input-{0}".format(self.identifier)).attr("disabled", "disabled").prop("disabled")
@@ -350,6 +378,7 @@ class Input(Widget):
             jQuery("#phanterpwa-widget-input-input-{0}".format(self.identifier)).parent().find(
                 ".phanterpwa-widget-check"
             ).html(I(_class="fas fa-lock").jquery())
+        jQuery(self.target_selector).removeClass("has_disabled")
 
     def set_enabled(self):
         jQuery("#phanterpwa-widget-input-input-{0}".format(self.identifier)).removeAttr("disabled")
@@ -358,6 +387,7 @@ class Input(Widget):
             jQuery("#phanterpwa-widget-input-input-{0}".format(self.identifier)).parent().find(
                 ".phanterpwa-widget-check"
             ).html(I(_class="fas fa-check").jquery())
+        jQuery(self.target_selector).addClass("has_disabled")
 
     def start(self):
         self._binds()
@@ -395,6 +425,7 @@ class Select(Widget):
         self._icon_confirm = parameters.get("icon_confirm", I(_class="fas fa-check"))
         self._icon_check = parameters.get("icon_check", I(_class="fas fa-check"))
         self._on_click_new = parameters.get("on_click_new_button", None)
+        self._on_change = parameters.get("on_change", None)
         self.set_z_index(parameters.get("z_index", None))
         self.set_recalc_on_scroll(parameters.get("recalc_on_scroll", True))
         xml_icon = ""
@@ -629,27 +660,6 @@ class Select(Widget):
                     })))
         self._xml_modal = table
 
-    # def get_message_error(self):
-    #     if self._message_error is not None:
-    #         return self._message_error
-    #     else:
-    #         return ""
-
-    # def set_message_error(self, message_error):
-    #     jQuery("#{0}".format(self.identifier)).find(".phanterpwa-widget-message_error").html(message_error)
-    #     jQuery("#{0}".format(self.identifier)).addClass("has_error")
-    #     self._message_error
-
-    # def del_message_error(self):
-    #     self.set_message_error("")
-    #     jQuery("#{0}".format(self.identifier)).removeClass("has_error")
-
-    def validate(self):
-        if callable(self._validator):
-            self._validator(self)
-        self.focus = False
-        self.has_val = None
-
     def _add_div_animation(self, el):
         wrapper = el.find(".phanterpwa-widget-wrapper")
         if wrapper.hasClass("phanterpwa-widget-wear-material"):
@@ -669,6 +679,9 @@ class Select(Widget):
         else:
             p.removeClass("has_value")
         p.find("input").trigger("keyup")
+        self.validate()
+        if callable(self._on_change):
+            self._on_change(self)
 
     def _on_click_label(self, el):
         el = jQuery(el)
@@ -1133,7 +1146,16 @@ class Autocomplete(Widget):
 
     def validate(self):
         if callable(self._validator):
-            self._validator(self)
+            error = self._validator(self)
+            if error is None or error is js_undefined:
+                self._message_error = ""
+                jQuery(self.target_selector).find(
+                    ".phanterpwa-widget-wrapper").removeClass("no_pass")
+            else:
+                self._message_error = error
+                jQuery(self.target_selector).find(
+                    ".phanterpwa-widget-wrapper").addClass("no_pass")
+                return self._message_error
         self.focus = False
         self.has_val = None
 
@@ -1737,7 +1759,16 @@ class MultSelect(Widget):
 
     def validate(self):
         if callable(self._validator):
-            self._validator(self)
+            error = self._validator(self)
+            if error is None or error is js_undefined:
+                self._message_error = ""
+                jQuery(self.target_selector).find(
+                    ".phanterpwa-widget-wrapper").removeClass("no_pass")
+            else:
+                self._message_error = error
+                jQuery(self.target_selector).find(
+                    ".phanterpwa-widget-wrapper").addClass("no_pass")
+                return self._message_error
         self.focus = False
         self.has_val = None
 
@@ -2502,10 +2533,6 @@ class ListString(Widget):
     #     self.set_message_error("")
     #     jQuery("#phanterpwa-widget-{0}".format(self.identifier)).removeClass("has_error")
 
-    def validate(self):
-        if callable(self._validator):
-            self._validator(self)
-
     def add_new_value(self, value):
         if isinstance(value, (list, tuple)):
             if len(value) == 2:
@@ -2864,10 +2891,6 @@ class Textarea(Widget):
     #     self.set_message_error("")
     #     jQuery("#phanterpwa-widget-{0}".format(self.identifier)).removeClass("has_error")
 
-    def validate(self):
-        if callable(self._validator):
-            self._validator(self)
-
     def _add_div_animation(self, el):
         wrapper = el.find(".phanterpwa-widget-wrapper")
         if wrapper.hasClass("phanterpwa-widget-wear-material"):
@@ -3039,17 +3062,150 @@ class Inert(Widget):
         return self._value
 
 
+class IntegerMinusPlus(Widget):
+    def __init__(self, identifier, **parameters):
+        self._label = parameters.get("label", None)
+        self._name = parameters.get("name", None)
+        self._value = masks.stringFilter(parameters.get("value", 0))
+        if self._value == "":
+            self._value = 0
+        else:
+            self._value = int(self._value)
+        self._wear = parameters.get("wear", "material")
+        self._kind = parameters.get("kind", None)
+        self._form = parameters.get("form", None)
+        self._label_position = parameters.get("label_position", "left")
+        self._minuslimit = int(parameters.get("minuslimit", 0))
+        self._pluslimit = int(parameters.get("pluslimit", 99))
+        self._disabled = parameters.get("disabled", False)
+        self._on_change = parameters.get("on_change", None)
+        if self._label_position not in ["left", "right"]:
+            self._label_position = "left"
+
+        _class_label_posisition = "label_on_{}".format(self._label_position)
+        wrapper_attr = {
+            "_class": "phanterpwa-widget-wrapper phanterpwa-widget-integermenu-wrapper phanterpwa-widget-wear-{0}".format(
+                self._wear)
+        }
+        parameters["_id"] = identifier
+        if "_class" in parameters:
+            parameters["_class"] = "{0}{1}".format(parameters["_class"], " phanterpwa-widget-integermenu")
+        else:
+            parameters['_class'] = "phanterpwa-widget-integermenu"
+        input_size = len(str(self._pluslimit))
+        if input_size < 3:
+            _class_input_size = "tiny_input_size"
+        elif input_size < 4:
+            _class_input_size = "default_input_size"
+        elif input_size < 5:
+            _class_input_size = "mid_input_size"
+        else:
+            _class_input_size = "max_input_size"
+
+        self._id_wg_input = window.PhanterPWA.get_id()
+        label = ""
+        if self._label is not None:
+            wrapper_attr["_class"] = "{0} {1} {2}".format(wrapper_attr["_class"], "has_label", _class_label_posisition)
+            label = LABEL(self._label, _for="phanterpwa-widget-integermenu-input-{0}".format(self._id_wg_input))
+        else:
+            _class_label_posisition = ""
+        if self._disabled is True:
+            wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " disabled")
+
+        wrapper_attr["_class"] = "{0} {1}".format(wrapper_attr["_class"], _class_input_size)
+        html = DIV(
+            label if _class_label_posisition == "label_on_left" else "",
+            DIV(
+                DIV("-", _class="phanterpwa-widget-integermenu-minusbutton"),
+                DIV(
+                    Input(
+                        self._id_wg_input,
+                        name=self._name,
+                        value=self._value,
+                        wear=self._wear,
+                        kind=self._kind,
+                        form=self._form,
+                        label=None,
+                        disabeld=self._disabeld,
+                    ),
+                    _class="phanterpwa-widget-integermenu-input-integervalue"
+                ),
+                DIV("+", _class="phanterpwa-widget-integermenu-plusbutton"),
+                _class="phanterpwa-widget-integermenu-buttons_and_input_wrapper"
+            ),
+            label if _class_label_posisition == "label_on_right" else "",
+            **wrapper_attr
+        )
+        Widget.__init__(self, identifier, html, **parameters)
+
+    def set_value(self, value):
+        self._value = masks.stringFilter(value)
+        if self._value == "":
+            self._value = 0
+        else:
+            self._value = int(self._value)
+        window.PhanterPWA.get_widget(self._id_wg_input).set_value(self._value)
+
+    def set_disabled(self):
+        self._disabled = True
+        jQuery(self.target_selector).find(".phanterpwa-widget-integermenu-wrapper").addClass("disabled")
+        window.PhanterPWA.get_widget(self._id_wg_input).set_disabled()
+
+    def set_enabled(self):
+        self._disabled = False
+        jQuery(self.target_selector).find(".phanterpwa-widget-integermenu-wrapper").removeClass("disabled")
+        window.PhanterPWA.get_widget(self._id_wg_input).set_enabled()
+
+    def reload(self):
+        window.PhanterPWA.get_widget(self._id_wg_input).start()
+
+    def value(self):
+        return window.PhanterPWA.get_widget(self._id_wg_input).value()
+
+    def _binds(self):
+        target = jQuery(self.target_selector)
+        target.find(".phanterpwa-widget-integermenu-minusbutton").off("click.phanterpwa-widget-integermenu-minusbutton").on(
+            "click.phanterpwa-widget-integermenu-minusbutton",
+            lambda: self._minus(this)
+        )
+        target.find(".phanterpwa-widget-integermenu-plusbutton").off("click.phanterpwa-widget-integermenu-plusbutton").on(
+            "click.phanterpwa-widget-integermenu-plusbutton",
+            lambda: self._plus(this)
+        )
+
+    def _minus(self):
+        if self._disabled is False:
+            v = self._value
+            v -= 1
+            if v >= self._minuslimit:
+                self.set_value(v)
+
+    def _plus(self):
+        if self._disabled is False:
+            v = self._value
+            v += 1
+            if v <= self._pluslimit:
+                self.set_value(v)
+
+    def start(self):
+        self._binds()
+        window.PhanterPWA.get_widget(self._id_wg_input).start()
+
+
 class CheckBox(Widget):
     def __init__(self, identifier, **parameters):
         self._label = parameters.get("label", None)
         self._name = parameters.get("name", None)
         self._value = parameters.get("value", False)
+        self._alias_value = parameters.get("alias_value", None)
         self._can_empty = parameters.get("can_empty", False)
         self._wear = parameters.get("wear", "material")
         self._kind = parameters.get("kind", None)
         self._form = parameters.get("form", None)
         self._disabled = parameters.get("disabled", False)
         self._on_change = parameters.get("on_change", None)
+        self._three_states = parameters.get("three_states", False)
+
 
         wrapper_attr = {
             "_class": "phanterpwa-widget-wrapper phanterpwa-widget-checkbox-wrapper phanterpwa-widget-wear-{0}".format(
@@ -3067,9 +3223,12 @@ class CheckBox(Widget):
         if self._disabled is True:
             wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " disabled")
         _checked = None
-        if self._value is True or self._Value is "true":
+        if self._value is True or self._value is "true":
             _checked = "checked"
             wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " has_true")
+        elif self._three_states:
+            if self._value is None:
+                wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " has_none")
 
         html = DIV(
             INPUT(**{
@@ -3096,23 +3255,51 @@ class CheckBox(Widget):
         Widget.__init__(self, identifier, html, **parameters)
 
     def set_value(self, value):
+
         if not self._disabled:
-            if value:
-                self._value = True
-                jQuery(self.target_selector).find(".phanterpwa-widget-checkbox-wrapper").addClass("has_true")
+            if self._three_states:
+                if value:
+                    self._value = True
+                    jQuery(self.target_selector).find(".phanterpwa-widget-checkbox-wrapper").addClass("has_true").removeClass("has_none")
+                if value is None:
+                    self._value = None
+                    jQuery(self.target_selector).find(".phanterpwa-widget-checkbox-wrapper").addClass("has_none").removeClass("has_true")
+                else:
+                    self._value = False
+                    jQuery(self.target_selector).find(".phanterpwa-widget-checkbox-wrapper").removeClass("has_true").removeClass("has_none")
+
             else:
-                self._value = False
-                jQuery(self.target_selector).find(".phanterpwa-widget-checkbox-wrapper").removeClass("has_true")
+                if value:
+                    self._value = True
+                    jQuery(self.target_selector).find(".phanterpwa-widget-checkbox-wrapper").addClass("has_true")
+                else:
+                    self._value = False
+                    jQuery(self.target_selector).find(".phanterpwa-widget-checkbox-wrapper").removeClass("has_true")
             jQuery(self.target_selector).find("input").prop("checked", self._value).val(self._value).trigger("change")
 
     def _on_check_change(self, el):
+
         if not self._disabled:
-            if jQuery(el)[0].checked:
-                self._value = True
-                jQuery(self.target_selector).find(".phanterpwa-widget-checkbox-wrapper").addClass("has_true")
+            if self._three_states:
+
+                if jQuery(el)[0].checked:
+                    self._value = True
+                    jQuery(self.target_selector).find(".phanterpwa-widget-checkbox-wrapper").addClass("has_true").removeClass("has_none")
+                else:
+                    if self._value is None:
+                        self._value = None
+                        jQuery(self.target_selector).find(".phanterpwa-widget-checkbox-wrapper").addClass("has_none").removeClass("has_true")
+                    else:
+                        self._value = False
+                        jQuery(self.target_selector).find(".phanterpwa-widget-checkbox-wrapper").removeClass("has_true").removeClass("has_none")
+
             else:
-                self._value = False
-                jQuery(self.target_selector).find(".phanterpwa-widget-checkbox-wrapper").removeClass("has_true")
+                if jQuery(el)[0].checked:
+                    self._value = True
+                    jQuery(self.target_selector).find(".phanterpwa-widget-checkbox-wrapper").addClass("has_true")
+                else:
+                    self._value = False
+                    jQuery(self.target_selector).find(".phanterpwa-widget-checkbox-wrapper").removeClass("has_true")
             if callable(self._on_change):
                 self._on_change(self)
         else:
@@ -3127,16 +3314,31 @@ class CheckBox(Widget):
         jQuery(self.target_selector).find(".phanterpwa-widget-wrapper").removeClass("disabled")
 
     def _switch_value(self, el):
+
         if not self._disabled:
             el = jQuery(el)
             p = el.parent()
-            if p.hasClass("has_true"):
-                p.removeClass("has_true")
-                self._value = False
+            if self._three_states:
+
+                if p.hasClass("has_true"):
+                    p.removeClass("has_true").addClass("has_none")
+                    self._value = None
+                elif p.hasClass("has_none"):
+                    p.removeClass("has_true").removeClass("has_none")
+                    self._value = False
+                else:
+                    p.addClass("has_true").removeClass("has_none")
+                    self._value = True
+
+                p.find("input").prop("checked", self._value).val(self._value).trigger("change")
             else:
-                p.addClass("has_true")
-                self._value = True
-            p.find("input").prop("checked", self._value).val(self._value).trigger("change")
+                if p.hasClass("has_true"):
+                    p.removeClass("has_true")
+                    self._value = False
+                else:
+                    p.addClass("has_true")
+                    self._value = True
+                p.find("input").prop("checked", self._value).val(self._value).trigger("change")
 
     def _switch_focus(self, el):
         el = jQuery(el)
@@ -3172,6 +3374,14 @@ class CheckBox(Widget):
 
     def value(self):
         return self._value
+
+    def alias_value(self):
+        v = self.value()
+        if self._alias_value is None:
+            return v
+        if v:
+            return self._alias_value
+        return None
 
     def start(self):
         self._binds()
@@ -3359,6 +3569,7 @@ class MenuRadioBoxes(Widget):
     def start(self):
         for x in self._values:
             x.start()
+
 
 class MenuBox(Widget):
     def __init__(self, identifier, button, *options, **parameters):
@@ -3985,12 +4196,42 @@ class Table(Widget):
             parameters["_class"] = "{0}{1}".format(parameters["_class"], " phanterpwa-widget-table-container")
         else:
             parameters["_class"] = "phanterpwa-widget-table-container"
+        self._has_checked = False
+        self._checked = None
+        self._checked_list = []
+        self.default_checked_values = dict()
+        if parameters.get("has_checked", False) is True:
+            parameters["_class"] = "{} has_checked".format(parameters["_class"])
+            self._has_checked = True
+            self._checked = parameters.get("checked", None)
+        self.table_check = None
         for c in content:
             if isinstance(c, TableHead):
                 self._head = c
                 c._table = self
+                if self._has_checked:
+                    value = False
+                    if self._checked is True:
+                        value = True
+                    cb = CheckBox("{}-checkbox-head".format(c.identifier), value=value, three_states=True, wear="elegant", on_change=self._on_change_checkbox)
+                    self.table_check = cb
+                    c.insert(0, cb)
             elif isinstance(c, TableData):
                 c._table = self
+                if self._has_checked:
+                    value = False
+                    if self._checked is True:
+                        value = True
+                    elif self._checked is False:
+                        value = False
+                    else:
+                        value = c._checked
+                    alias_value = c.value()
+                    if alias_value is None:
+                        alias_value = c.identifier
+                    cb = CheckBox("{}-checkbox-data".format(c.identifier), value=value, alias_value=alias_value, on_change=self._on_change_checkbox_data, wear="elegant")
+                    self._checked_list.append(cb)
+                    c.insert(0, cb)
             elif isinstance(c, TableFooterPagination):
                 c._table = self
                 if self._head is not None:
@@ -3998,24 +4239,97 @@ class Table(Widget):
                     c._colspan = colspan
                     c._create_footer()
                 self._footer = c
-
+        if self.table_check is None:
+            self.table_check = CheckBox("{}-checkbox-head".format(identifier), value=None, three_states=True, wear="elegant", on_change=self._on_change_checkbox)
         self.__child_html = TABLE(
             *content,
             _class="phanterpwa-widget-table p-row"
         )
         Widget.__init__(self, identifier, self.__child_html, **parameters)
 
+    def _on_change_checkbox(self, wg):
+        if wg.value() is True:
+            self._checked = True
+            for x in self._checked_list:
+                # self.default_checked_values[x.identifier] = [x, x.value()]
+                x._on_change = None
+                x.set_value(True)
+                x._on_change = self._on_change_checkbox_data
+        elif wg.value() is False:
+            self._checked = False
+            for x in self._checked_list:
+                # self.default_checked_values[x.identifier] = [x, x.value()]
+                x._on_change = None
+                x.set_value(False)
+                x._on_change = self._on_change_checkbox_data
+        else:
+            self._checked = None
+            for x in self.default_checked_values.keys():
+                self.default_checked_values[x][0]._on_change = None
+                self.default_checked_values[x][0].set_value(self.default_checked_values[x][1])
+                self.default_checked_values[x][0]._on_change = self._on_change_checkbox_data
+
+    def _on_change_checkbox_data(self, wg):
+        tv = self.table_check.value()
+        if tv in [True, False]:
+            self.table_check._on_change = None
+            self.table_check.set_value(None)
+            self.table_check._on_change = self._on_change_checkbox
+
+        wg._on_change = None
+        self.default_checked_values[wg.identifier] = [wg, wg.value()]
+        wg._on_change = self._on_change_checkbox_data
+        # for x in self.default_checked_values.keys():
+        #     self.default_checked_values[x][0]._on_change = None
+        #     self.default_checked_values[x][0].set_value(self.default_checked_values[x][1])
+        #     self.default_checked_values[x][0]._on_change = self._on_change_checkbox_data
+        for x in self._checked_list:
+            if x.identifier != wg.identifier:
+                x._on_change = None
+                self.default_checked_values[x.identifier] = [x, x.value()]
+                x._on_change = self._on_change_checkbox_data
+
+    def checked_values(self):
+        cv = []
+        for x in self._checked_list:
+            x._on_change = None
+            if x.value() is True:
+                cv.append(x.alias_value())
+            x._on_change = self._on_change_checkbox_data
+        return cv
+
     def append(self, value):
         if isinstance(value, (TableHead, TableData, TableFooterPagination)):
             value._table = self
             if isinstance(value, TableHead):
                 self._head = value
+                if self._has_checked:
+                    ch_v = False
+                    if self._checked is True:
+                        ch_v = True
+                    cb = CheckBox("{}-checkbox-head".format(value.identifier), value=ch_v, three_states=True, wear="elegant", on_change=self._on_change_checkbox)
+                    value.insert(0, cb)
             elif isinstance(value, TableFooterPagination):
                 if self._head is not None:
                     colspan = self._head.len_head()
                     value._colspan = colspan
                     value._create_footer()
                 self._footer = value
+            else:
+                if self._has_checked:
+                    ch_v = False
+                    if self._checked is True:
+                        ch_v = True
+                    elif self._checked is False:
+                        ch_v = False
+                    else:
+                        ch_v = value._checked
+                    alias_value = value.value()
+                    if alias_value is None:
+                        alias_value = value.identifier
+                    cb = CheckBox("{}-checkbox-data".format(value.identifier), value=ch_v, alias_value=alias_value, on_change=self._on_change_checkbox_data, wear="elegant")
+                    self._checked_list.append(cb)
+                    value.insert(0, cb)
         self.__child_html.content.append(value)
 
     def insert(self, pos, value):
@@ -4023,12 +4337,35 @@ class Table(Widget):
             value._table = self
             if isinstance(value, TableHead):
                 self._head = value
+                if self._has_checked:
+                    ch_v = False
+                    if self._checked is True:
+                        ch_v = True
+                    cb = CheckBox("{}-checkbox-head".format(value.identifier), wear="elegant")
+                    self._checked_list.append(cb)
+                    value.insert(0, cb)
             elif isinstance(value, TableFooterPagination):
                 if self._head is not None:
                     colspan = self._head.len_head()
                     value._colspan = colspan
                     value._create_footer()
                 self._footer = value
+            else:
+                if self._has_checked:
+                    ch_v = False
+                    if self._checked is True:
+                        ch_v = True
+                    elif self._checked is False:
+                        ch_v = False
+                    else:
+                        ch_v = value._checked
+                    alias_value = value.value()
+                    if alias_value is None:
+                        alias_value = value.identifier
+                    cb = CheckBox("{}-checkbox-data".format(value.identifier), value=ch_v, alias_value=alias_value, on_change=self._on_change_checkbox_data, wear="elegant")
+                    self._checked_list.append(cb)
+                    value.insert(0, cb)
+
         self.__child_html.content.insert(pos, value)
 
     def sorted_field(self):
@@ -4192,6 +4529,8 @@ class TableData(Widget):
         self.__dropable = parameters.get("drag_and_drop", True)
         self._after_drop = parameters.get("after_drop", None)
         self._drop_if = parameters.get("drop_if", None)
+        self._checked = parameters.get("checked", False)
+        self._value = parameters.get("value", None)
         if self.__dropable:
             parameters["_draggable"] = "true"
         if "_class" in parameters:
@@ -4251,6 +4590,15 @@ class TableData(Widget):
             "dragover.widget-table-dropover",
             lambda ev: ev.preventDefault()
         )
+
+    def append(self, value):
+        self.__child_html.content.append(TD(value, _class="phanterpwa-widget-table-data-td"))
+
+    def insert(self, pos, value):
+        self.__child_html.content.insert(pos, TD(value, _class="phanterpwa-widget-table-data-td"))
+
+    def value(self):
+        return self._value
 
 
 class TableFooterPagination(Widget):
@@ -4485,6 +4833,54 @@ class TableFooterPagination(Widget):
             las.off("click.btn_pagination").on("click.btn_pagination", lambda: self._on_click_buttom_page(this))
 
 
+class File(Widget):
+    def __init__(self, identifier, **parameters):
+        self._name = parameters.get("name", None)
+        self._value = parameters.get("value", None)
+        self._icon = parameters.get("icon", None)
+        self._form = parameters.get("form", None)
+        self._nocache = parameters.get("nocache", False)
+        self._accept_types = parameters.get("accept_types", "application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.oasis.opendocument.text")
+        self.identifier = identifier
+        self.__child_html = DIV(
+            _id="phanterpwa-widget-file-wrapper-{0}".format(identifier),
+            _class="phanterpwa-widget-file-wrapper"
+        )
+        self.iniciate = False
+        if "_class" in parameters:
+            parameters["_class"] = "{0}{1}".format(parameters["_class"], " phanterpwa-widget-file")
+        else:
+            parameters['_class'] = "phanterpwa-widget-file"
+        if self._nocache and (self._value is not "" and self._value is not None):
+            now = __new__(Date().getTime())
+            self._value = "{0}?nocache={1}".format(self._value, now)
+        Widget.__init__(self, identifier, self.__child_html, **parameters)
+
+    def _binds(self):
+        GalleryInput(
+            "#phanterpwa-widget-file-wrapper-{0}".format(self.identifier),
+            **{
+                "name": self._name,
+                "cutter": self._cutter,
+                "current_image": self._value,
+                "img_name": "File_{0}".format(self.identifier),
+                "is_image": False,
+                "width": 150,
+                "height": 150,
+                "data_view": self._data_view,
+                "accept_types": self._accept_types
+            }
+        )
+
+    def reload(self):
+        if not self.iniciate:
+            self.iniciate = True
+            self.start()
+
+    def start(self):
+        self._binds()
+
+
 class Image(Widget):
     def __init__(self, identifier, **parameters):
         self._name = parameters.get("name", None)
@@ -4497,6 +4893,8 @@ class Image(Widget):
         self._height = parameters.get("height", 200)
         self._data_view = parameters.get("data_view", False)
         self._after_cut = parameters.get("after_cut", None)
+        self._z_index = parameters.get("z_index", 1005)
+        self._accept_types = parameters.get("accept_types", "image/png, image/jpeg, image/gif, image/webp, image/bmp")
         self.identifier = identifier
         self.__child_html = DIV(
             _id="phanterpwa-widget-image-wrapper-{0}".format(identifier),
@@ -4523,7 +4921,9 @@ class Image(Widget):
                 "width": self._width,
                 "height": self._height,
                 "data_view": self._data_view,
-                "afterCut": self._after_cut
+                "afterCut": self._after_cut,
+                "z-index": self._z_index,
+                "accept_types": self._accept_types
             }
         )
 
@@ -4546,6 +4946,7 @@ class GalleryInput():
             "button-upload": I(_class="fas fa-cloud-upload-alt").xml(),
             "width": 190,
             "height": 200,
+            "is_image": True,
             "view-width": None,
             "view-height": None,
             "cutter": False,
@@ -4559,7 +4960,8 @@ class GalleryInput():
             "onError": None,
             "beforeCut": None,
             "afterCut": None,
-            "data_view": False
+            "data_view": False,
+            "accept_types": "image/png, image/jpeg, image/gif, image/webp, image/bmp"
         }
         if self.config is js_undefined:
             self.config = dict()
@@ -4608,6 +5010,8 @@ class GalleryInput():
                             ))
                         else:
                             self.simpleView(base64data)
+                        if callable(self.config["afterCut"]):
+                            self.config["afterCut"](self)
 
                     reader = __new__(FileReader())
                     reader.readAsDataURL(blob[0])
@@ -4624,15 +5028,49 @@ class GalleryInput():
             lambda: inputChange(this, self.config)
         )
 
+    def getNewFile(self):
+        def inputChange(el):
+            blob = jQuery(el)[0].files
+            fileslength = blob.length
+            for i in range(fileslength):
+                img_type = blob[i]['type']
+                img_name = blob[i]['name']
+                self.config["img_type"] = img_type
+                self.config["img_name"] = img_name
+                def onloadend(reader, img_name, img_type):
+                    self.fileChoiced()
+                reader = __new__(FileReader())
+                reader.readAsDataURL(blob[0])
+                reader.onloadend = lambda: onloadend(reader, img_name, img_type)
+
+        el_input = jQuery("#phanterpwa-gallery-input-file-{0}".format(self.namespace))
+        el_input.trigger(
+            "click"
+        ).off(
+            "change.phanterpwa_gallery_input_{0}".format(self.namespace)
+        ).on(
+            "change.phanterpwa_gallery_input_{0}".format(self.namespace),
+            lambda: inputChange(this, self.config)
+        )
+
+
     def _afterRead(self):
-        if self.config['current_image'] is not None and self.config['current_image'] is not js_undefined:
-            self.simpleView(self.config['current_image'])
+        if self.config['is_image']:
+            if self.config['current_image'] is not None and self.config['current_image'] is not js_undefined:
+                self.simpleView(self.config['current_image'])
+            else:
+                jQuery(
+                    "#phanterpwa-gallery-upload-image-button-{0}".format(self.namespace)
+                ).on(
+                    "click",
+                    lambda: self.getNewImage()
+                )
         else:
             jQuery(
-                "#phanterpwa-gallery-upload-image-button-{0}".format(self.namespace)
+                "#phanterpwa-gallery-upload-file-button-{0}".format(self.namespace)
             ).on(
                 "click",
-                lambda: self.getNewImage()
+                lambda: self.getNewFile()
             )
 
     def addInputPanel(self):
@@ -4642,104 +5080,213 @@ class GalleryInput():
         x_name = self.config.get('name', None)
         if x_name is not None:
             name = "-{0}".format(str(x_name))
-        if self.config['cutter']:
+        if self.config['is_image']:
+            if self.config['cutter']:
 
-            cutter_vars = [
-                INPUT(
-                    _id='phanterpwa-gallery-input-cutterSizeX{0}'.format(self.namespace),
-                    _name='phanterpwa-gallery-input-cutterSizeX{0}'.format(name),
-                    _value="",
-                    _type="text"
-                ),
-                INPUT(
-                    _id='phanterpwa-gallery-input-cutterSizeY{0}'.format(self.namespace),
-                    _name='phanterpwa-gallery-input-cutterSizeY{0}'.format(name),
-                    _value="",
-                    _type="text"
-                ),
-                INPUT(
-                    _id='phanterpwa-gallery-input-positionX{0}'.format(self.namespace),
-                    _name='phanterpwa-gallery-input-positionX{0}'.format(name),
-                    _value="",
-                    _type="text"
-                ),
-                INPUT(
-                    _id='phanterpwa-gallery-input-positionY{0}'.format(self.namespace),
-                    _name='phanterpwa-gallery-input-positionY{0}'.format(name),
-                    _value="",
-                    _type="text"
-                ),
-                INPUT(
-                    _id='phanterpwa-gallery-input-newSizeX{0}'.format(self.namespace),
-                    _name='phanterpwa-gallery-input-newSizeX{0}'.format(name),
-                    _value="",
-                    _type="text"
-                ),
-                INPUT(
-                    _id='phanterpwa-gallery-input-newSizeY{0}'.format(self.namespace),
-                    _name='phanterpwa-gallery-input-newSizeY{0}'.format(name),
-                    _value="",
-                    _type="text"
-                ),
-                INPUT(
-                    _id='phanterpwa-gallery-input-rotation{0}'.format(self.namespace),
-                    _name='phanterpwa-gallery-input-rotation{0}'.format(name),
-                    _value="",
-                    _type="text"
+                cutter_vars = [
+                    INPUT(
+                        _id='phanterpwa-gallery-input-cutterSizeX{0}'.format(self.namespace),
+                        _name='phanterpwa-gallery-input-cutterSizeX{0}'.format(name),
+                        _value="",
+                        _type="text"
+                    ),
+                    INPUT(
+                        _id='phanterpwa-gallery-input-cutterSizeY{0}'.format(self.namespace),
+                        _name='phanterpwa-gallery-input-cutterSizeY{0}'.format(name),
+                        _value="",
+                        _type="text"
+                    ),
+                    INPUT(
+                        _id='phanterpwa-gallery-input-positionX{0}'.format(self.namespace),
+                        _name='phanterpwa-gallery-input-positionX{0}'.format(name),
+                        _value="",
+                        _type="text"
+                    ),
+                    INPUT(
+                        _id='phanterpwa-gallery-input-positionY{0}'.format(self.namespace),
+                        _name='phanterpwa-gallery-input-positionY{0}'.format(name),
+                        _value="",
+                        _type="text"
+                    ),
+                    INPUT(
+                        _id='phanterpwa-gallery-input-newSizeX{0}'.format(self.namespace),
+                        _name='phanterpwa-gallery-input-newSizeX{0}'.format(name),
+                        _value="",
+                        _type="text"
+                    ),
+                    INPUT(
+                        _id='phanterpwa-gallery-input-newSizeY{0}'.format(self.namespace),
+                        _name='phanterpwa-gallery-input-newSizeY{0}'.format(name),
+                        _value="",
+                        _type="text"
+                    ),
+                    INPUT(
+                        _id='phanterpwa-gallery-input-rotation{0}'.format(self.namespace),
+                        _name='phanterpwa-gallery-input-rotation{0}'.format(name),
+                        _value="",
+                        _type="text"
+                    )
+                ]
+                other_inputs = DIV(
+                    *cutter_vars,
+                    _class="phanterpwa-gallery-inputs-container-{0}".format(self.namespace),
+                    _style="display: none"
                 )
-            ]
-            other_inputs = DIV(
-                *cutter_vars,
-                _class="phanterpwa-gallery-inputs-container-{0}".format(self.namespace),
-                _style="display: none"
-            )
-        input_gallery = DIV(
-            DIV(
-                DIV(
-                    XML(self.config['button-upload']),
-                    _id="phanterpwa-gallery-upload-image-button-{0}".format(self.namespace),
-                    _class="phanterpwa-gallery-upload-image-button link",
-                    _phanterpwa_input="phanterpwa-gallery-input-file-{0}".format(self.namespace)
-                ),
-                _id="phanterpwa-gallery-upload-image-default-{0}".format(self.namespace),
-                _class="phanterpwa-gallery-upload-image-default"
-            ),
-            INPUT(
-                _accept="image/png, image/jpeg, image/gif, image/webp, image/bmp",
-                _class="phanterpwa-gallery-upload-input-file",
-                _type="file",
-                _id="phanterpwa-gallery-input-file-{0}".format(self.namespace),
-                _name="phanterpwa-gallery-file-input{0}".format(name),
-            ),
-            _id="phanterpwa-gallery-input-container-{0}".format(self.namespace),
-            _class="phanterpwa-gallery-input-container"
-        )
-        wrapper_gallery = DIV(
-            input_gallery,
-            other_inputs,
-            _id="phanterpwa-gallery-wrapper-{0}".format(self.namespace),
-            _class="phanterpwa-gallery-wrapper"
-        )
-
-        html = DIV(
-            DIV(
+            input_gallery = DIV(
                 DIV(
                     DIV(
-                        wrapper_gallery,
-                        _class="phanterpwa-centralizer-center"
+                        XML(self.config['button-upload']),
+                        _id="phanterpwa-gallery-upload-image-button-{0}".format(self.namespace),
+                        _class="phanterpwa-gallery-upload-image-button link",
+                        _phanterpwa_input="phanterpwa-gallery-input-file-{0}".format(self.namespace)
                     ),
-                    _class="phanterpwa-centralizer-horizontal"
+                    _id="phanterpwa-gallery-upload-image-default-{0}".format(self.namespace),
+                    _class="phanterpwa-gallery-upload-image-default"
                 ),
-                _class="phanterpwa-centralizer-vertical"
+                INPUT(
+                    _accept=self.config["accept_types"],
+                    _class="phanterpwa-gallery-upload-input-file",
+                    _type="file",
+                    _id="phanterpwa-gallery-input-file-{0}".format(self.namespace),
+                    _name="phanterpwa-gallery-file-input{0}".format(name),
+                ),
+                _id="phanterpwa-gallery-input-container-{0}".format(self.namespace),
+                _class="phanterpwa-gallery-input-container"
+            )
+            wrapper_gallery = DIV(
+                input_gallery,
+                other_inputs,
+                _id="phanterpwa-gallery-wrapper-{0}".format(self.namespace),
+                _class="phanterpwa-gallery-wrapper"
+            )
+
+            html = DIV(
+                DIV(
+                    DIV(
+                        DIV(
+                            wrapper_gallery,
+                            _class="phanterpwa-centralizer-center"
+                        ),
+                        _class="phanterpwa-centralizer-horizontal"
+                    ),
+                    _class="phanterpwa-centralizer-vertical"
+                ),
+                _class="phanterpwa-centralizer-wrapper",
+                _style="width: {0}px; height: {1}px;".format(self.config['view-width'], self.config['view-height'])
+            )
+            jQuery(self.target_selector).html(
+                html.xml()
+            ).promise().then(
+                lambda: self._afterRead()
+            )
+        else:
+            input_gallery = DIV(
+                DIV(
+                    DIV(
+                        XML(self.config['button-upload']),
+                        _id="phanterpwa-gallery-upload-file-button-{0}".format(self.namespace),
+                        _class="phanterpwa-gallery-upload-file-button link",
+                        _phanterpwa_input="phanterpwa-gallery-input-file-{0}".format(self.namespace)
+                    ),
+                    _id="phanterpwa-gallery-upload-file-default-{0}".format(self.namespace),
+                    _class="phanterpwa-gallery-upload-file-default"
+                ),
+                INPUT(
+                    _accept=self.config["accept_types"],
+                    _class="phanterpwa-gallery-upload-input-file",
+                    _type="file",
+                    _id="phanterpwa-gallery-input-file-{0}".format(self.namespace),
+                    _name="phanterpwa-gallery-file-input{0}".format(name),
+                ),
+                _id="phanterpwa-gallery-input-container-{0}".format(self.namespace),
+                _class="phanterpwa-gallery-input-container"
+            )
+            wrapper_gallery = DIV(
+                input_gallery,
+                other_inputs,
+                _id="phanterpwa-gallery-wrapper-{0}".format(self.namespace),
+                _class="phanterpwa-gallery-wrapper"
+            )
+
+            html = DIV(
+                DIV(
+                    DIV(
+                        DIV(
+                            wrapper_gallery,
+                            _class="phanterpwa-centralizer-center"
+                        ),
+                        _class="phanterpwa-centralizer-horizontal"
+                    ),
+                    _class="phanterpwa-centralizer-vertical"
+                ),
+                _class="phanterpwa-centralizer-wrapper",
+                _style="width: {0}px; height: {1}px;".format(self.config['view-width'], self.config['view-height'])
+            )
+            jQuery(self.target_selector).html(
+                html.xml()
+            ).promise().then(
+                lambda: self._afterRead()
+            )
+
+    def fileChoiced(self):
+        namespace = self.config['namespace']
+        img_name = self.config["img_name"]
+        xml_icons_view = ""
+        if not self._data_view:
+            xml_icons_view = DIV(
+                DIV(
+                    I(_class="fas fa-sync"),
+                    _id="phanterpwa-gallery-upload-file-simple-view-button-reload-{0}".format(namespace),
+                    _class="phanterpwa-gallery-upload-file-simple-view-button {0}".format(
+                        "phanterpwa-gallery-upload-file-simple-view-button-reload"
+                    )
+                ),
+                DIV(
+                    I(_class="fas fa-trash-alt"),
+                    _id="phanterpwa-gallery-upload-file-simple-view-button-delete-{0}".format(namespace),
+                    _class="phanterpwa-gallery-upload-file-simple-view-button {0}".format(
+                        "phanterpwa-gallery-upload-file-simple-view-button-delete"
+                    )
+                ),
+                _class="phanterpwa-gallery-upload-file-simple-view-buttons"
+            )
+        html_simple_view = DIV(
+            DIV(
+                DIV(
+                    I(_class="fas fa-file"),
+                    _class="file-icon"
+                ),
+                DIV(img_name, _class="file-name"),
+                _class="phanterpwa-gallery-upload-file-icon_and_name"
             ),
-            _class="phanterpwa-centralizer-wrapper",
-            _style="width: {0}px; height: {1}px;".format(self.config['view-width'], self.config['view-height'])
+            xml_icons_view,
+            _id="phanterpwa-gallery-upload-file-simple-view-{0}".format(namespace),
+            _class="phanterpwa-gallery-upload-file-simple-view",
+            _style="width: 150px; height: 150px; overflow: hidden;"
         )
-        jQuery(self.target_selector).html(
-            html.xml()
-        ).promise().then(
-            lambda: self._afterRead()
+
+        def activeButtonsView():
+            jQuery(
+                "#phanterpwa-gallery-upload-file-simple-view-button-reload-{0}".format(namespace)
+            ).off(
+                "click.button-reload-view"
+            ).on(
+                "click.button-reload-view",
+                lambda: self.getNewFile()
+            )
+            jQuery(
+                "#phanterpwa-gallery-upload-file-simple-view-button-delete-{0}".format(namespace)
+            ).off(
+                "click.button-reload-view"
+            ).on(
+                "click.button-reload-view",
+                lambda: self.resetInputPanel()
+            )
+
+        jQuery("#phanterpwa-gallery-upload-file-default-{0}".format(namespace)).html(html_simple_view.xml()).promise().then(
+            lambda: activeButtonsView()
         )
+
 
     def simpleView(self, url):
         namespace = self.config['namespace']
@@ -5343,5 +5890,100 @@ class GalleryCutter():
             lambda event: self.stopSize(event)
         )
 
+
+class Button(Widget):
+    def __init__(self, identifier, label, **parameters):
+        if "_class" in parameters:
+            parameters['_class'] = "phanterpwa-widget-button {0}".format(parameters['_class'])
+        else:
+            parameters['_class'] = "phanterpwa-widget-button"
+        self._id_button = "phanterpwa-widget-button-button_or_a-{0}".format(identifier)
+        if "_id" in parameters:
+            self._id_button = parameters["_id"]
+            del parameters["_href"]
+        self._disabled = parameters.get("disabled", False)
+        default_disabled = None
+        if self._disabled is True:
+            default_disabled = "disabled"
+        html = BUTTON(
+            label,
+            DIV(_class="loading1"),
+            DIV(_class="loading2"),
+            _class="btn wave_on_click",
+            _id=self._id_button,
+            _disabled=default_disabled
+        )
+        self._has_href = None
+        if "_href" in parameters:
+            self._has_href = parameters["_href"]
+            a_href = parameters["_href"]
+            if self._disabled is True:
+                a_href = "#"
+            html = A(
+                label,
+                DIV(_class="loading1"),
+                DIV(_class="loading2"),
+                _class="btn wave_on_click",
+                _id=self._id_button,
+                _href=a_href
+            )
+            del parameters["_href"]
+        self._one_click = parameters.get("one_click", True)
+        self._on_click = parameters.get("on_click", None)
+        self._total_click = 0
+
+        Widget.__init__(self, identifier, html, **parameters)
+
+    def reload(self):
+        self.start()
+
+    def start(self):
+        self._binds()
+
+    def _binds(self):
+        target = jQuery(self.target_selector)
+        target.find("#{}".format(self._id_button)).off("click.phanterpwa-event-button").on(
+            "click.phanterpwa-event-button",
+            self._on_click_touch
+        )
+
+    def set_loading(self):
+        if self._disabled is False:
+            self._total_click = 10
+            jQuery(self.target_selector).addClass("loading")
+
+    def del_loading(self):
+        self._total_click = 0
+        jQuery(self.target_selector).removeClass("loading")
+
+    def set_disabled(self):
+        self._disabled = True
+        if self._has_href is None:
+            jQuery(self.target_selector).removeClass("loading").find("#{0}".format(self._id_button)).attr("disabled", "disabled")
+        else:
+            jQuery(self.target_selector).removeClass("loading").find("#{0}".format(self._id_button)).attr("disabled", "disabled").attr("href", "#")
+
+    def del_disabled(self):
+        self._disabled = False
+        if self._has_href is None:
+            jQuery(self.target_selector).removeClass("loading").find("#{0}".format(self._id_button)).removeAttr("disabled", "disabled")
+        else:
+            jQuery(self.target_selector).removeClass("loading").find("#{0}".format(self._id_button)).removeAttr("disabled", "disabled").attr("href", self._has_href)
+
+    def set_enabled(self):
+        self.del_disabled()
+
+    def _on_click_touch(self):
+        self._total_click += 1
+        if self._disabled is False:
+            if callable(self._on_click):
+                if self._one_click is True:
+                    if self._total_click < 2:
+                        self.set_loading()
+                        self._on_click(self)
+                else:
+                    self._on_click(self)
+            if self._total_click > 0:
+                self.set_loading()
 
 __pragma__('nokwargs')

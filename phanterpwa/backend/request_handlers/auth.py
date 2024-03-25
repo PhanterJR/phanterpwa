@@ -2333,7 +2333,7 @@ class RequestAccount(web.RequestHandler):
                         'i18n': {'message': message_i18n}
                     })
                 else:
-                    new_password = temporary_password()
+                    new_password = temporary_password(chars="abcdefghijmnpqrstuvxzykABCDEFGHJLMNPQRSTUVXZYK123456789")
                     self.Translator_sms.direct_translation = self.phanterpwa_language
                     keys_formatter = dict(
                         app_name=self.projectConfig['PROJECT']['name'],
@@ -2490,7 +2490,7 @@ class RequestAccount(web.RequestHandler):
                         'i18n': {'message': message_i18n}
                     })
                 else:
-                    new_password = temporary_password()
+                    new_password = temporary_password(chars="abcdefghijmnpqrstuvxzykABCDEFGHJLMNPQRSTUVXZYK123456789")
                     self.Translator_email.direct_translation = self.phanterpwa_language
                     keys_formatter = dict(
                         app_name=self.projectConfig['PROJECT']['name'],
