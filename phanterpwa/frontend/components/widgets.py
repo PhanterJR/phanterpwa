@@ -111,6 +111,10 @@ class Widget(helpers.XmlConstructor):
         if window.PhanterPWA.DEBUG:
             console.info("the start not used")
 
+    def set_value(self, value):
+        self._value = value
+        self.reload()
+
     def validate(self):
         if callable(self._validator):
             error = self._validator(self)
@@ -144,6 +148,7 @@ class Input(Widget):
         self._icon_on_click = parameters.get("icon_on_click", None)
         self._onload = parameters.get("onLoad", None)
         self._checker = parameters.get("checker", True)
+        self._tabindex = parameters.get("_tabindex", True)
         self._disabled = parameters.get("disabled", None)
         self._on_date_datetime_choice = parameters.get("onDateorDatetimeChoice", None)
         wrapper_attr = {
@@ -173,10 +178,9 @@ class Input(Widget):
                 parameters["_class"] = "{0}{1}".format(parameters["_class"], " e-display_hidden")
         else:
             self._type = "text"
-        # if self._mask == "fone":
-        #     self._maks = masks.maskFone(self._value)
-        # elif self._mask == "real":
-        #     self._maks = masks.phanterCurrency()
+        if "_tabindex" in parameters:
+            del parameters["_tabindex"]
+
         label = ""
         if self._label is not None:
             wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " has_label")
@@ -221,6 +225,7 @@ class Input(Widget):
                 "_type": self._type,
                 "_data-validators": data_validators,
                 "_data-form": self._form,
+                "_tabindex": self._tabindex
             }),
             label,
             checker,
@@ -2944,7 +2949,7 @@ class Textarea(Widget):
         text = jQuery(el).val()
         split_ = text.split("\n")
         if text == "":
-            jQuery(el).css("height", 34)
+            jQuery(el).css("height", 31)
         elif len(split_) == 2:
             s = 50
             if jQuery(el).prop("scrollHeight") > s:
@@ -2954,7 +2959,7 @@ class Textarea(Widget):
         elif len(split_) > 2:
             jQuery(el).css("height", "auto").css("height", jQuery(el).prop("scrollHeight"))
         else:
-            jQuery(el).css("height", jQuery(el).prop("scrollHeight"))
+            jQuery(el).css("height", 31)
         # this.style.height = (this.scrollHeight) + 'px';
 
     def _binds(self):
@@ -2982,13 +2987,13 @@ class Textarea(Widget):
             "input.textarea_autoresize",
             lambda: self._autoresize(this)
         )
-        size = target.find("textarea").css("height", 31).prop('scrollHeight')
+        size = target.find("textarea").css("height", 31)
+        target.find("textarea").prop('scrollHeight')
         target.find("textarea").css("height", size)
-        #   this.setAttribute('style', 'height:' + (this.scrollHeight) + 'px;overflow-y:hidden;');
-        # }).on('input', function () {
-        #   this.style.height = 'auto';
-        #   this.style.height = (this.scrollHeight) + 'px';
-        # });
+        self._autoresize(target.find("textarea"))
+
+    def reload(self):
+        self.start()
 
     def start(self):
         self._binds()
@@ -3000,6 +3005,12 @@ class Textarea(Widget):
         self._value = jQuery("#phanterpwa-widget-textarea-textarea-{0}".format(self.identifier)).val()
         return self._value
 
+    def set_value(self, value):
+        el = jQuery("#phanterpwa-widget-textarea-textarea-{0}".format(self.identifier))
+        el.val(value)
+        self._value = value
+        el.css("height", 31).height(31)
+        setTimeout(lambda: (self._check_value(el), self.reload()), 100)
 
 class Inert(Widget):
     def __init__(self, identifier, **parameters):
