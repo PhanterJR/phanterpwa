@@ -13,7 +13,9 @@
         font-size: 1.5rem
 
     &>label
-        border-bottom: 1px solid #c8c8c8
+        border: 1px solid #4e6eaa
+        border-bottom: 2px solid #3f5886
+        border-top: 2px solid #3f5886
         padding: 10px 30px
         font-weight: bold
         font-size: 1.5rem
@@ -21,6 +23,40 @@
         background-color: #4e6eaa
         color: white
         line-height: 1.5rem
+    .phanterpwa-card-panel-control-content
+        padding: 10px
+        background-color: #F7F7F7
+        margin: 0px 5px 20px 5px
+        overflow: auto
+        border: 1px solid #e8e8e8
+    &.has_right_panel_button
+        .phanterpwa-card-panel-control-content
+            margin: 5px 0px 20px 5px
+            padding: 10px
+            background-color: #F0F0F0
+            float: left
+            width: calc(100% - 60px)
+        .phanterpwa-card-panel-control-buttons
+            float: right
+            width: 55px
+            overflow: hidden
+            padding: 5px
+            a
+                .icon_button
+                    display: block
+                    text-decoration: none
+                    color: unset
+            .icon_button
+                margin-left: auto
+                margin-right: auto
+                height: 40px
+                width: 40px
+                border-radius: 5px
+                line-height: 40px
+                text-align: center
+                border-radius: 40px
+                cursor: pointer
+                transition: color 0.3s ease, box-shadow 0.3s ease
 
 
 .p-input-materialize

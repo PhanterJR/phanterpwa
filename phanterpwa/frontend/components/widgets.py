@@ -598,12 +598,15 @@ class Select(Widget):
                         "_class": "phanterpwa-widget-select-li-option empty"
                 })))
             for vdata in self._data:
+                val1 = vdata[1]
+                if isinstance(val1, helpers.XmlConstructor):
+                    val1 = val1.xml()
                 if self._value is not "":
                     if vdata[0] == self._value:
                         table.append(TR(TD(SPAN(vdata[1]),
                             DIV(self._icon_option_selected, _class="phanterpwa-widget-select-li-icon"), **{
                                 "_data-value": vdata[0],
-                                "_data-text": vdata[1],
+                                "_data-text": val1,
                                 "_data-target": "phanterpwa-widget-select-input-{0}".format(self.identifier),
                                 "_class": "phanterpwa-widget-select-li-option selected"
                         })))
@@ -612,7 +615,7 @@ class Select(Widget):
                         table.append(TR(TD(SPAN(vdata[1]),
                             DIV(self._icon_option, _class="phanterpwa-widget-select-li-icon"), **{
                                 "_data-value": vdata[0],
-                                "_data-text": vdata[1],
+                                "_data-text": val1,
                                 "_data-target": "phanterpwa-widget-select-input-{0}".format(self.identifier),
                                 "_class": "phanterpwa-widget-select-li-option"
                         })))
@@ -620,7 +623,7 @@ class Select(Widget):
                     table.append(TR(TD(SPAN(vdata[1]),
                         DIV(self._icon_option, _class="phanterpwa-widget-select-li-icon"), **{
                             "_data-value": vdata[0],
-                            "_data-text": vdata[1],
+                            "_data-text": val1,
                             "_data-target": "phanterpwa-widget-select-input-{0}".format(self.identifier),
                             "_class": "phanterpwa-widget-select-li-option"
                     })))
@@ -3011,6 +3014,7 @@ class Textarea(Widget):
         self._value = value
         el.css("height", 31).height(31)
         setTimeout(lambda: (self._check_value(el), self.reload()), 100)
+
 
 class Inert(Widget):
     def __init__(self, identifier, **parameters):
