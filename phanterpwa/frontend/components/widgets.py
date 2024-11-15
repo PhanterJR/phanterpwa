@@ -3024,6 +3024,8 @@ class Inert(Widget):
         self._wear = parameters.get("wear", "material")
         self._form = parameters.get("form", None)
         self._kind = parameters.get("kind", "text")
+        self._icon = parameters.get("icon", None)
+        self._icon_on_click = parameters.get("icon_on_click", None)
         wrapper_attr = {
             "_class": "phanterpwa-widget-wrapper its_disabled phanterpwa-widget-wear-{0} {1}".format(
                 self._wear,
@@ -3058,6 +3060,10 @@ class Inert(Widget):
         if self._value is not "":
             wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " has_value")
 
+        if self._icon is not None:
+            xml_icon = DIV(self._icon, _class="phanterpwa-widget-icon-wrapper icon_button wave_on_click")
+            wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " has_icon")
+
         html = DIV(
             INPUT(**{
                 "_id": "phanterpwa-widget-inert-input-{0}".format(identifier),
@@ -3069,6 +3075,7 @@ class Inert(Widget):
             }),
             HR(_class="material-widgets-animation-offfocus"),
             label,
+            xml_icon,
             **wrapper_attr
         )
         Widget.__init__(self, identifier, html, **parameters)
