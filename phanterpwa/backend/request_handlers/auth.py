@@ -3,6 +3,7 @@ import base64
 import json
 import re
 from urllib.request import urlopen
+from pydal import DAL
 from passlib.hash import pbkdf2_sha512
 from phanterpwa.backend.decorators import (
     check_client_token,
@@ -3380,12 +3381,39 @@ class SMSGateway(web.RequestHandler):
 
 
 class AuthActivityNoRelational():
-    def __init__(self, DALDatabase, limit_clean=2000):
-        self.DALDatabase = DALDatabase
+    DALs = {}
+
+    def __init__(self, db_folder, limit_clean=2000):
+        self.db_folder = db_folder
         self.limit_clean = limit_clean
 
+    @classmethod
+    def user_activity_database(cls, id_user):
+        try:
+            db_user = cls.DALs[id_user]
+        except KeyError:
+            path = os.path.join(cls.db_folder, id_user)
+            if not os.path.exists(path):
+                os.makedirs(path, True)
+            db_user = DAL(
+                'sqlite://activity.sqlite',
+                pool_size=10,
+                folder=path,
+                migrate_enabled=True,
+                check_reserved=['all']
+            )
+            db_user.define_table(
+                'auth_activity_no_relational',
+                Field('id_user', 'integer'),
+                Field('request', 'text'),
+                Field('activity', 'string'),
+                Field('date_activity', 'datetime', default=datetime.now())
+            )
+            cls.DALs[id_user] = db_user
+        return db_user
+
     def get_rows_by_user_id(self, id_user, limit=100):
-        db = self.DALDatabase
+        db = self.user_activity_database(id_user)
         return db(
             db.auth_activity_no_relational.id_user == int(id_user)
         ).select(
@@ -3394,7 +3422,7 @@ class AuthActivityNoRelational():
         )
 
     def set_activity(self, id_user, request, activity, date_activity=None):
-        db = self.DALDatabase
+        db = self.user_activity_database(id_user)
         if date_activity is None:
             date_activity = datetime.now()
         db.auth_activity_no_relational.insert(
@@ -3408,13 +3436,13 @@ class AuthActivityNoRelational():
             self.clean(id_user)
 
     def get_last_activity(self, id_user):
-        db = self.DALDatabase
+        db = self.user_activity_database(id_user)
         row = db(db.auth_activity_no_relational.id_user == id_user).select(orderby=~db.auth_activity_no_relational.id, limitby=[0, 1]).last()
         return row
 
     def clean(self, id_user):
         if self.limit_clean:
-            db = self.DALDatabase
+            db = self.user_activity_database(id_user)
             exedent_records = db(
                 db.auth_activity_no_relational.id_user == int(id_user)
             )._select(
