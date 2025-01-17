@@ -3388,11 +3388,12 @@ class AuthActivityNoRelational():
         self.limit_clean = limit_clean
 
     @classmethod
-    def user_activity_database(cls, id_user):
+    def user_activity_database(cls, id_user, folder):
+        id_user = int(id_user)
         try:
             db_user = cls.DALs[id_user]
         except KeyError:
-            path = os.path.join(cls.db_folder, id_user)
+            path = os.path.join(folder, "user_{}".format(id_user))
             if not os.path.exists(path):
                 os.makedirs(path, True)
             db_user = DAL(
@@ -3413,7 +3414,7 @@ class AuthActivityNoRelational():
         return db_user
 
     def get_rows_by_user_id(self, id_user, limit=100):
-        db = self.user_activity_database(id_user)
+        db = self.user_activity_database(id_user, self.db_folder)
         return db(
             db.auth_activity_no_relational.id_user == int(id_user)
         ).select(
@@ -3422,7 +3423,7 @@ class AuthActivityNoRelational():
         )
 
     def set_activity(self, id_user, request, activity, date_activity=None):
-        db = self.user_activity_database(id_user)
+        db = self.user_activity_database(id_user, self.db_folder)
         if date_activity is None:
             date_activity = datetime.now()
         db.auth_activity_no_relational.insert(
@@ -3436,13 +3437,13 @@ class AuthActivityNoRelational():
             self.clean(id_user)
 
     def get_last_activity(self, id_user):
-        db = self.user_activity_database(id_user)
+        db = self.user_activity_database(id_user, self.db_folder)
         row = db(db.auth_activity_no_relational.id_user == id_user).select(orderby=~db.auth_activity_no_relational.id, limitby=[0, 1]).last()
         return row
 
     def clean(self, id_user):
         if self.limit_clean:
-            db = self.user_activity_database(id_user)
+            db = self.user_activity_database(id_user, self.db_folder)
             exedent_records = db(
                 db.auth_activity_no_relational.id_user == int(id_user)
             )._select(
