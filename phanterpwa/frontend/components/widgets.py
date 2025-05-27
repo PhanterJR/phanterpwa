@@ -5987,6 +5987,7 @@ class Button(Widget):
 
     def del_disabled(self):
         self._disabled = False
+        self._total_click = 0
         if self._has_href is None:
             jQuery(self.target_selector).removeClass("loading").find("#{0}".format(self._id_button)).removeAttr("disabled", "disabled")
         else:
