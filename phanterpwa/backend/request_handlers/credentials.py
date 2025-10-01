@@ -70,6 +70,24 @@ class SignClient(web.RequestHandler):
     def check_origin(self, origin):
         return True
 
+    def _request_summary(self) -> str:
+        client_ip = self.request.headers.get('X-Real-IP') or\
+            self.request.headers.get('X-Forwarded-For', '').split(',')[0].strip() or\
+            self.request.remote_ip
+        summary = "{0} {1} ({2})".format(
+            self.request.method,
+            self.request.uri,
+            client_ip,
+        )
+        if hasattr(self, "phanterpwa_current_user") and self.phanterpwa_current_user is not None:
+            summary = "{0} {1} ({2} - {3})".format(
+                self.request.method,
+                self.request.uri,
+                client_ip,
+                self.phanterpwa_current_user.email
+            )
+        return summary
+
     @check_application()
     def get(self, *args, **kargs):
         expire_date = datetime.now() - timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['default_time_client_token_expire'])
@@ -423,6 +441,24 @@ class SignForms(web.RequestHandler):
     def check_origin(self, origin):
         return True
 
+    def _request_summary(self) -> str:
+        client_ip = self.request.headers.get('X-Real-IP') or\
+            self.request.headers.get('X-Forwarded-For', '').split(',')[0].strip() or\
+            self.request.remote_ip
+        summary = "{0} {1} ({2})".format(
+            self.request.method,
+            self.request.uri,
+            client_ip,
+        )
+        if hasattr(self, "phanterpwa_current_user") and self.phanterpwa_current_user is not None:
+            summary = "{0} {1} ({2} - {3})".format(
+                self.request.method,
+                self.request.uri,
+                client_ip,
+                self.phanterpwa_current_user.email
+            )
+        return summary
+
     @check_user_token(ignore_activation=True)
     def get(self, *args, **kargs):
         """
@@ -526,6 +562,24 @@ class SignLockForm(web.RequestHandler):
 
     def check_origin(self, origin):
         return True
+
+    def _request_summary(self) -> str:
+        client_ip = self.request.headers.get('X-Real-IP') or\
+            self.request.headers.get('X-Forwarded-For', '').split(',')[0].strip() or\
+            self.request.remote_ip
+        summary = "{0} {1} ({2})".format(
+            self.request.method,
+            self.request.uri,
+            client_ip,
+        )
+        if hasattr(self, "phanterpwa_current_user") and self.phanterpwa_current_user is not None:
+            summary = "{0} {1} ({2} - {3})".format(
+                self.request.method,
+                self.request.uri,
+                client_ip,
+                self.phanterpwa_current_user.email
+            )
+        return summary
 
     @check_client_token()
     def get(self, *args, **kargs):
@@ -635,6 +689,24 @@ class SignCaptchaForms(web.RequestHandler):
 
     def check_origin(self, origin):
         return True
+
+    def _request_summary(self) -> str:
+        client_ip = self.request.headers.get('X-Real-IP') or\
+            self.request.headers.get('X-Forwarded-For', '').split(',')[0].strip() or\
+            self.request.remote_ip
+        summary = "{0} {1} ({2})".format(
+            self.request.method,
+            self.request.uri,
+            client_ip,
+        )
+        if hasattr(self, "phanterpwa_current_user") and self.phanterpwa_current_user is not None:
+            summary = "{0} {1} ({2} - {3})".format(
+                self.request.method,
+                self.request.uri,
+                client_ip,
+                self.phanterpwa_current_user.email
+            )
+        return summary
 
     @check_client_token()
     def get(self, *args, **kargs):
@@ -847,6 +919,24 @@ class ReSing(web.RequestHandler):
 
     def check_origin(self, origin):
         return True
+
+    def _request_summary(self) -> str:
+        client_ip = self.request.headers.get('X-Real-IP') or\
+            self.request.headers.get('X-Forwarded-For', '').split(',')[0].strip() or\
+            self.request.remote_ip
+        summary = "{0} {1} ({2})".format(
+            self.request.method,
+            self.request.uri,
+            client_ip,
+        )
+        if hasattr(self, "phanterpwa_current_user") and self.phanterpwa_current_user is not None:
+            summary = "{0} {1} ({2} - {3})".format(
+                self.request.method,
+                self.request.uri,
+                client_ip,
+                self.phanterpwa_current_user.email
+            )
+        return summary
 
     @check_user_token()
     def get(self, *args, **kargs):

@@ -70,6 +70,24 @@ class Prompt(web.RequestHandler):
     def check_origin(self, origin):
         return True
 
+    def _request_summary(self) -> str:
+        client_ip = self.request.headers.get('X-Real-IP') or\
+            self.request.headers.get('X-Forwarded-For', '').split(',')[0].strip() or\
+            self.request.remote_ip
+        summary = "{0} {1} ({2})".format(
+            self.request.method,
+            self.request.uri,
+            client_ip,
+        )
+        if hasattr(self, "phanterpwa_current_user") and self.phanterpwa_current_user is not None:
+            summary = "{0} {1} ({2} - {3})".format(
+                self.request.method,
+                self.request.uri,
+                client_ip,
+                self.phanterpwa_current_user.email
+            )
+        return summary
+
     def options(self, *args):
         self.set_status(200)
         self.write({"status": "OK"})
@@ -194,6 +212,24 @@ class Redirect(web.RequestHandler):
 
     def check_origin(self, origin):
         return True
+
+    def _request_summary(self) -> str:
+        client_ip = self.request.headers.get('X-Real-IP') or\
+            self.request.headers.get('X-Forwarded-For', '').split(',')[0].strip() or\
+            self.request.remote_ip
+        summary = "{0} {1} ({2})".format(
+            self.request.method,
+            self.request.uri,
+            client_ip,
+        )
+        if hasattr(self, "phanterpwa_current_user") and self.phanterpwa_current_user is not None:
+            summary = "{0} {1} ({2} - {3})".format(
+                self.request.method,
+                self.request.uri,
+                client_ip,
+                self.phanterpwa_current_user.email
+            )
+        return summary
 
     def options(self, *args):
         self.set_status(200)

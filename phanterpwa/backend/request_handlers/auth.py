@@ -43,6 +43,7 @@ from phanterpwa.gallery.integrationDAL import PhanterpwaGalleryUserImage
 from tornado import (
     web
 )
+from tornado.log import access_log
 from phanterpwa.backend.security import (
     Serialize,
     SignatureExpired,
@@ -283,6 +284,7 @@ class Auth(web.RequestHandler):
         self.Translator_email = Translator_email
         self.i18nTranslator = i18nTranslator
         self.SMSSender = SMSSender
+        self.logger_api = access_log
         if logger_api:
             self.logger_api = logger_api
         if i18nTranslator:
@@ -314,6 +316,24 @@ class Auth(web.RequestHandler):
 
     def check_origin(self, origin):
         return True
+
+    def _request_summary(self) -> str:
+        client_ip = self.request.headers.get('X-Real-IP') or\
+            self.request.headers.get('X-Forwarded-For', '').split(',')[0].strip() or\
+            self.request.remote_ip
+        summary = "{0} {1} ({2})".format(
+            self.request.method,
+            self.request.uri,
+            client_ip,
+        )
+        if hasattr(self, "phanterpwa_current_user") and self.phanterpwa_current_user is not None:
+            summary = "{0} {1} ({2} - {3})".format(
+                self.request.method,
+                self.request.uri,
+                client_ip,
+                self.phanterpwa_current_user.email
+            )
+        return summary
 
     def options(self, *args):
         self.set_status(200)
@@ -1139,6 +1159,24 @@ class Activity(web.RequestHandler):
     def check_origin(self, origin):
         return True
 
+    def _request_summary(self) -> str:
+        client_ip = self.request.headers.get('X-Real-IP') or\
+            self.request.headers.get('X-Forwarded-For', '').split(',')[0].strip() or\
+            self.request.remote_ip
+        summary = "{0} {1} ({2})".format(
+            self.request.method,
+            self.request.uri,
+            client_ip,
+        )
+        if hasattr(self, "phanterpwa_current_user") and self.phanterpwa_current_user is not None:
+            summary = "{0} {1} ({2} - {3})".format(
+                self.request.method,
+                self.request.uri,
+                client_ip,
+                self.phanterpwa_current_user.email
+            )
+        return summary
+
     def options(self, *args):
         self.set_status(200)
         self.write({"status": "OK"})
@@ -1205,6 +1243,24 @@ class TwoFactor(web.RequestHandler):
 
     def check_origin(self, origin):
         return True
+
+    def _request_summary(self) -> str:
+        client_ip = self.request.headers.get('X-Real-IP') or\
+            self.request.headers.get('X-Forwarded-For', '').split(',')[0].strip() or\
+            self.request.remote_ip
+        summary = "{0} {1} ({2})".format(
+            self.request.method,
+            self.request.uri,
+            client_ip,
+        )
+        if hasattr(self, "phanterpwa_current_user") and self.phanterpwa_current_user is not None:
+            summary = "{0} {1} ({2} - {3})".format(
+                self.request.method,
+                self.request.uri,
+                client_ip,
+                self.phanterpwa_current_user.email
+            )
+        return summary
 
     def options(self, *args):
         self.set_status(200)
@@ -1440,6 +1496,24 @@ class LockUser(web.RequestHandler):
     def check_origin(self, origin):
         return True
 
+    def _request_summary(self) -> str:
+        client_ip = self.request.headers.get('X-Real-IP') or\
+            self.request.headers.get('X-Forwarded-For', '').split(',')[0].strip() or\
+            self.request.remote_ip
+        summary = "{0} {1} ({2})".format(
+            self.request.method,
+            self.request.uri,
+            client_ip,
+        )
+        if hasattr(self, "phanterpwa_current_user") and self.phanterpwa_current_user is not None:
+            summary = "{0} {1} ({2} - {3})".format(
+                self.request.method,
+                self.request.uri,
+                client_ip,
+                self.phanterpwa_current_user.email
+            )
+        return summary
+
     @check_client_token()
     @check_user_token()
     def get(self):
@@ -1497,6 +1571,24 @@ class ImageUser(web.RequestHandler):
 
     def check_origin(self, origin):
         return True
+
+    def _request_summary(self) -> str:
+        client_ip = self.request.headers.get('X-Real-IP') or\
+            self.request.headers.get('X-Forwarded-For', '').split(',')[0].strip() or\
+            self.request.remote_ip
+        summary = "{0} {1} ({2})".format(
+            self.request.method,
+            self.request.uri,
+            client_ip,
+        )
+        if hasattr(self, "phanterpwa_current_user") and self.phanterpwa_current_user is not None:
+            summary = "{0} {1} ({2} - {3})".format(
+                self.request.method,
+                self.request.uri,
+                client_ip,
+                self.phanterpwa_current_user.email
+            )
+        return summary
 
     @check_url_token(ignore_user_agent=True)
     def get(self, *args, **kargs):
@@ -1600,6 +1692,24 @@ class ChangeAccount(web.RequestHandler):
 
     def check_origin(self, origin):
         return True
+
+    def _request_summary(self) -> str:
+        client_ip = self.request.headers.get('X-Real-IP') or\
+            self.request.headers.get('X-Forwarded-For', '').split(',')[0].strip() or\
+            self.request.remote_ip
+        summary = "{0} {1} ({2})".format(
+            self.request.method,
+            self.request.uri,
+            client_ip,
+        )
+        if hasattr(self, "phanterpwa_current_user") and self.phanterpwa_current_user is not None:
+            summary = "{0} {1} ({2} - {3})".format(
+                self.request.method,
+                self.request.uri,
+                client_ip,
+                self.phanterpwa_current_user.email
+            )
+        return summary
 
     @check_private_csrf_token(form_identify=["phanterpwa-form-profile", "phanterpwa-form-change_account"])
     def put(self, *args, **kargs):
@@ -2012,6 +2122,24 @@ class CreateAccount(web.RequestHandler):
     def check_origin(self, origin):
         return True
 
+    def _request_summary(self) -> str:
+        client_ip = self.request.headers.get('X-Real-IP') or\
+            self.request.headers.get('X-Forwarded-For', '').split(',')[0].strip() or\
+            self.request.remote_ip
+        summary = "{0} {1} ({2})".format(
+            self.request.method,
+            self.request.uri,
+            client_ip,
+        )
+        if hasattr(self, "phanterpwa_current_user") and self.phanterpwa_current_user is not None:
+            summary = "{0} {1} ({2} - {3})".format(
+                self.request.method,
+                self.request.uri,
+                client_ip,
+                self.phanterpwa_current_user.email
+            )
+        return summary
+
     @requires_no_authentication()
     @check_public_csrf_token(form_identify="phanterpwa-form-register")
     def post(self):
@@ -2276,6 +2404,24 @@ class RequestAccount(web.RequestHandler):
 
     def check_origin(self, origin):
         return True
+
+    def _request_summary(self) -> str:
+        client_ip = self.request.headers.get('X-Real-IP') or\
+            self.request.headers.get('X-Forwarded-For', '').split(',')[0].strip() or\
+            self.request.remote_ip
+        summary = "{0} {1} ({2})".format(
+            self.request.method,
+            self.request.uri,
+            client_ip,
+        )
+        if hasattr(self, "phanterpwa_current_user") and self.phanterpwa_current_user is not None:
+            summary = "{0} {1} ({2} - {3})".format(
+                self.request.method,
+                self.request.uri,
+                client_ip,
+                self.phanterpwa_current_user.email
+            )
+        return summary
 
     @requires_no_authentication()
     @check_public_csrf_token(form_identify="phanterpwa-form-request_password")
@@ -2646,6 +2792,24 @@ class ActiveAccount(web.RequestHandler):
 
     def check_origin(self, origin):
         return True
+
+    def _request_summary(self) -> str:
+        client_ip = self.request.headers.get('X-Real-IP') or\
+            self.request.headers.get('X-Forwarded-For', '').split(',')[0].strip() or\
+            self.request.remote_ip
+        summary = "{0} {1} ({2})".format(
+            self.request.method,
+            self.request.uri,
+            client_ip,
+        )
+        if hasattr(self, "phanterpwa_current_user") and self.phanterpwa_current_user is not None:
+            summary = "{0} {1} ({2} - {3})".format(
+                self.request.method,
+                self.request.uri,
+                client_ip,
+                self.phanterpwa_current_user.email
+            )
+        return summary
 
     @check_user_token(ignore_activation=True)
     def get(self, *args, **kargs):
@@ -3140,6 +3304,24 @@ class ChangePassword(web.RequestHandler):
     def check_origin(self, origin):
         return True
 
+    def _request_summary(self) -> str:
+        client_ip = self.request.headers.get('X-Real-IP') or\
+            self.request.headers.get('X-Forwarded-For', '').split(',')[0].strip() or\
+            self.request.remote_ip
+        summary = "{0} {1} ({2})".format(
+            self.request.method,
+            self.request.uri,
+            client_ip,
+        )
+        if hasattr(self, "phanterpwa_current_user") and self.phanterpwa_current_user is not None:
+            summary = "{0} {1} ({2} - {3})".format(
+                self.request.method,
+                self.request.uri,
+                client_ip,
+                self.phanterpwa_current_user.email
+            )
+        return summary
+
     @check_private_csrf_token(form_identify="phanterpwa-form-change_password")
     def post(self):
         dict_arguments = {k: self.request.arguments.get(k)[0].decode('utf-8') for k in self.request.arguments}
@@ -3309,6 +3491,24 @@ class SMSGateway(web.RequestHandler):
 
     def check_origin(self, origin):
         return True
+
+    def _request_summary(self) -> str:
+        client_ip = self.request.headers.get('X-Real-IP') or\
+            self.request.headers.get('X-Forwarded-For', '').split(',')[0].strip() or\
+            self.request.remote_ip
+        summary = "{0} {1} ({2})".format(
+            self.request.method,
+            self.request.uri,
+            client_ip,
+        )
+        if hasattr(self, "phanterpwa_current_user") and self.phanterpwa_current_user is not None:
+            summary = "{0} {1} ({2} - {3})".format(
+                self.request.method,
+                self.request.uri,
+                client_ip,
+                self.phanterpwa_current_user.email
+            )
+        return summary
 
     def options(self, *args):
         self.set_status(200)
@@ -3494,6 +3694,24 @@ class AuthUserAutoComplete(web.RequestHandler):
 
     def check_origin(self, origin):
         return True
+
+    def _request_summary(self) -> str:
+        client_ip = self.request.headers.get('X-Real-IP') or\
+            self.request.headers.get('X-Forwarded-For', '').split(',')[0].strip() or\
+            self.request.remote_ip
+        summary = "{0} {1} ({2})".format(
+            self.request.method,
+            self.request.uri,
+            client_ip,
+        )
+        if hasattr(self, "phanterpwa_current_user") and self.phanterpwa_current_user is not None:
+            summary = "{0} {1} ({2} - {3})".format(
+                self.request.method,
+                self.request.uri,
+                client_ip,
+                self.phanterpwa_current_user.email
+            )
+        return summary
 
     def options(self, *args):
         self.set_status(200)
