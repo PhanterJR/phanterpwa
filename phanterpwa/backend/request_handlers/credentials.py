@@ -1,3 +1,4 @@
+import sqlite3
 from datetime import (
     datetime,
     timedelta
@@ -5,7 +6,8 @@ from datetime import (
 from phanterpwa.backend.decorators import (
     check_application,
     check_client_token,
-    check_user_token
+    check_user_token,
+    async_retry_on_locked
 )
 from phanterpwa.i18n import browser_language
 from phanterpwa.third_parties.xss import xssescape as E
@@ -27,6 +29,7 @@ from datetime import (
     timedelta
 )
 
+CLEANUP_TIME = datetime.now()
 
 class SignClient(web.RequestHandler):
     """
@@ -89,23 +92,8 @@ class SignClient(web.RequestHandler):
         return summary
 
     @check_application()
-    def get(self, *args, **kargs):
-        expire_date = datetime.now() - timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['default_time_client_token_expire'])
-        anonymous_expire_date = datetime.now() - timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['default_time_csrf_token_expire'])
-        deactived_user_expire_date = datetime.now() - timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire_remember_me'])
-        str_expire_date = expire_date.strftime('%Y-%m-%d %H:%M:%S')
-        str_anonymous_expire_date = anonymous_expire_date.strftime('%Y-%m-%d %H:%M:%S')
-        self.DALDatabase(
-            (self.DALDatabase.client.date_created < str_expire_date)
-        ).delete()
-        self.DALDatabase(
-            (self.DALDatabase.client.auth_user == None)
-            & (self.DALDatabase.client.date_created < str_anonymous_expire_date)
-        ).delete()
-        self.DALDatabase(
-            (self.DALDatabase.auth_user.activated == False)
-            & ((self.DALDatabase.auth_user.date_created < deactived_user_expire_date) | (self.DALDatabase.auth_user.date_created == None))
-        ).delete()
+    async def get(self, *args, **kargs):
+        await self._cleanup()
         self.phanterpwa_client_token = self.request.headers.get('phanterpwa-client-token')
         self.phanterpwa_authorization = self.request.headers.get('phanterpwa-authorization')
         t_client = Serialize(
@@ -389,6 +377,28 @@ class SignClient(web.RequestHandler):
     def options(self, *args):
         self.set_status(200)
         return self.write({"status": "OK"})
+
+    @async_retry_on_locked()
+    async def _cleanup(self):
+        global CLEANUP_TIME
+        expire_date = datetime.now() - timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['default_time_client_token_expire'])
+        anonymous_expire_date = datetime.now() - timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['default_time_csrf_token_expire'])
+        deactived_user_expire_date = datetime.now() - timedelta(seconds=self.projectConfig['BACKEND'][self.app_name]['default_time_user_token_expire_remember_me'])
+        str_expire_date = expire_date.strftime('%Y-%m-%d %H:%M:%S')
+        str_anonymous_expire_date = anonymous_expire_date.strftime('%Y-%m-%d %H:%M:%S')
+        if CLEANUP_TIME is None or CLEANUP_TIME > (datetime.now() - timedelta(60 * 60 * 12)):
+            self.DALDatabase(
+                (self.DALDatabase.client.date_created < str_expire_date)
+            ).delete()
+            self.DALDatabase(
+                (self.DALDatabase.client.auth_user == None)
+                & (self.DALDatabase.client.date_created < str_anonymous_expire_date)
+            ).delete()
+            self.DALDatabase(
+                (self.DALDatabase.auth_user.activated == False)
+                & ((self.DALDatabase.auth_user.date_created < deactived_user_expire_date) | (self.DALDatabase.auth_user.date_created == None))
+            ).delete()
+            CLEANUP_TIME = datetime.now()
 
 
 class SignForms(web.RequestHandler):

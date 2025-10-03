@@ -1,3 +1,5 @@
+import asyncio
+import sqlite3
 from functools import wraps
 from .security import (
     Serialize,
@@ -6,6 +8,23 @@ from .security import (
     URLSafeSerializer,
 )
 from inspect import currentframe, getframeinfo, getfile
+
+
+def async_retry_on_locked(max_retries=3, delay=0.1):
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            for attempt in range(max_retries):
+                try:
+                    return await func(*args, **kwargs)
+                except sqlite3.OperationalError as e:
+                    if "locked" in str(e) and attempt < max_retries - 1:
+                        await asyncio.sleep(delay * (2 ** attempt))  # ✅ Async sleep
+                        continue
+                    raise
+            return await func(*args, **kwargs)
+        return wrapper
+    return decorator
 
 
 def check_application():

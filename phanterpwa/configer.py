@@ -244,8 +244,8 @@ class ProjectConfig():
                         else:
                             ports.add(current_port)
                             cfg["BACKEND"][app_name]["port"] = current_port
-                        with open(join(a, "app.ini"), 'w', encoding="utf-8") as configfile:
-                            ini_app.write(configfile)
+                        # with open(join(a, "app.ini"), 'w', encoding="utf-8") as configfile:
+                        #     ini_app.write(configfile)
 
                         self._ini_apps_backend[app_name] = ini_app
 
@@ -259,8 +259,8 @@ class ProjectConfig():
                                     cfg["BACKEND"][app_name][i[0]] = self._dict_value(i[1])
                         else:
                             ini_secret_app["APP"] = {}
-                        with open(join(a, "secret.ini"), 'w', encoding="utf-8") as configfile:
-                            ini_secret_app.write(configfile)
+                        # with open(join(a, "secret.ini"), 'w', encoding="utf-8") as configfile:
+                        #     ini_secret_app.write(configfile)
 
                         self._ini_secret_apps_backend[app_name] = ini_secret_app
                     else:
@@ -335,8 +335,8 @@ class ProjectConfig():
                         else:
                             ports.add(current_port)
                             cfg["FRONTEND"][app_name]["port"] = current_port
-                        with open(join(a, "app.ini"), 'w', encoding="utf-8") as configfile:
-                            ini_app.write(configfile)
+                        # with open(join(a, "app.ini"), 'w', encoding="utf-8") as configfile:
+                        #     ini_app.write(configfile)
 
                         self._ini_apps_frontend[app_name] = ini_app
 
@@ -351,8 +351,8 @@ class ProjectConfig():
                         else:
                             ini_secret_app["APP"] = {}
 
-                        with open(join(a, "secret.ini"), 'w', encoding="utf-8") as configfile:
-                            ini_secret_app.write(configfile)
+                        # with open(join(a, "secret.ini"), 'w', encoding="utf-8") as configfile:
+                        #     ini_secret_app.write(configfile)
 
                         self._ini_secret_apps_frontend[app_name] = ini_secret_app
 
@@ -512,16 +512,16 @@ class ProjectConfig():
                 for y in self.project_ini.items(x):
                     v = str(self._config[x][y[0]])
                     self.project_ini[x][y[0]] = v
-            with open(join(self._config["PROJECT"]["path"], 'project.ini'), 'w', encoding="utf-8") as configfile:
-                self._ini_project.write(configfile)
+            # with open(join(self._config["PROJECT"]["path"], 'project.ini'), 'w', encoding="utf-8") as configfile:
+            #     self._ini_project.write(configfile)
 
         if not os.path.exists(join(self._config["PROJECT"]["path"], 'secret.ini')):
             for x in self.project_secret_ini.sections():
                 for y in self.project_secret_ini.items(x):
                     v = str(self._config[x][y[0]])
                     self.project_secret_ini[x][y[0]] = v
-            with open(join(self._config["PROJECT"]["path"], 'secret.ini'), 'w', encoding="utf-8") as configfile:
-                self._ini_secret.write(configfile)
+            # with open(join(self._config["PROJECT"]["path"], 'secret.ini'), 'w', encoding="utf-8") as configfile:
+            #     self._ini_secret.write(configfile)
 
         for a in self.backend_ini:
             if not os.path.exists(join(self._config["PROJECT"]["path"], "backapps", a, 'app.ini')):
@@ -530,8 +530,8 @@ class ProjectConfig():
                         for y in self.backend_ini[a].items(x):
                             v = str(self._config['BACKEND'][a][y[0]])
                             self.backend_ini[a][x][y[0]] = v
-                with open(join(self._config["PROJECT"]["path"], "backapps", a, 'app.ini'), 'w', encoding="utf-8") as configfile:
-                    self.backend_ini[a].write(configfile)
+                # with open(join(self._config["PROJECT"]["path"], "backapps", a, 'app.ini'), 'w', encoding="utf-8") as configfile:
+                #     self.backend_ini[a].write(configfile)
 
         for a in self.frontend_ini:
             if not os.path.exists(join(self._config["PROJECT"]["path"], "frontapps", a, 'app.ini')):
@@ -540,8 +540,8 @@ class ProjectConfig():
                         for y in self.frontend_ini[a].items(x):
                             v = str(self._config['FRONTEND'][a][y[0]])
                             self.frontend_ini[a][x][y[0]] = v
-                with open(join(self._config["PROJECT"]["path"], "frontapps", a, 'app.ini'), 'w', encoding="utf-8") as configfile:
-                    self.frontend_ini[a].write(configfile)
+                # with open(join(self._config["PROJECT"]["path"], "frontapps", a, 'app.ini'), 'w', encoding="utf-8") as configfile:
+                #     self.frontend_ini[a].write(configfile)
 
 
     def __iter__(self):
