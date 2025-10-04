@@ -41,7 +41,7 @@ class PhanterpwaGalleryUserImage():
         q_image = self.db(
             (self.db.auth_user_phanterpwagallery.auth_user == self.id_user) &
             (self.db.auth_user_phanterpwagallery.subfolder == 'profile') &
-            (self.db.auth_user_phanterpwagallery.phanterpwagallery)).select(
+            (self.db.auth_user_phanterpwagallery.phanterpwagallery == self.db.phanterpwagallery.id)).select(
                 self.db.auth_user_phanterpwagallery.id).last()
         if q_image:
             return q_image.id
