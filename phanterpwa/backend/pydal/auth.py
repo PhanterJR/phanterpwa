@@ -27,12 +27,12 @@ class AuthTables():
                 'group': 'group1',
                 '_class': 'p-col w1p100 w4p70 e-float_right'
             }),
-            Field('email', 'string', notnull=True, unique=True, phanterpwa={
+            Field('email', 'string', notnull=True, unique=True, index=True, phanterpwa={
                 'group': 'group1',
                 '_class': 'p-col w1p100 w4p70 e-float_right'
             }),
-            Field('date_created', 'datetime', default=datetime.now(), requires=IS_EMPTY_OR(IS_DATETIME())),
-            Field('email_activated', 'boolean', default=False),
+            Field('date_created', 'datetime', default=datetime.now(), index=True, requires=IS_EMPTY_OR(IS_DATETIME())),
+            Field('email_activated', 'boolean', index=True, default=False),
             Field('fone_number', 'string', phanterpwa={
                 'out_of_form': True
             }),
@@ -170,7 +170,7 @@ class AuthActivityNoRelationalTable():
         self.DALDatabase = DALDatabase
 
         self.DALDatabase.define_table('auth_activity_no_relational',
-            Field('id_user', 'integer'),
+            Field('id_user', 'integer', index=True),
             Field('request', 'text'),
             Field('activity', 'string'),
             Field('date_activity', 'datetime', default=datetime.now()))

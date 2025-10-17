@@ -180,7 +180,8 @@ class Valider():
             list_options = JSON.parse(validate_name[10:])
             if list_options is not None or list_options is not js_undefined:
                 list_options = JSON.parse(list_options)
-                if list_options.indexOf(value_for_validate) > -1:
+                new_list_options = [str(x[1]) for x in list_options]
+                if new_list_options.indexOf(value_for_validate) > -1:
                     res = True
             validate_test_pass.append(res)
 

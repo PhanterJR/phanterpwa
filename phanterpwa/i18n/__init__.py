@@ -47,8 +47,11 @@ class Translator(object):
                         self.keys = set(json.load(f))
                 else:
                     basename = os.path.basename(g)[0:-5]
-                    with open(g, 'r', encoding='utf-8') as f:
-                        self._languages[basename] = json.load(f)
+                    try:
+                        with open(g, 'r', encoding='utf-8') as f:
+                            self._languages[basename] = json.load(f)
+                    except json.decoder.JSONDecodeError as e:
+                        raise Exception(e, "file: {g}")
             for l in self._languages:
                 for w in self._languages[l]:
                     if w not in self.keys:

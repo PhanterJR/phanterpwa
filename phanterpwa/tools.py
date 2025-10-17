@@ -1058,12 +1058,13 @@ def normalize_names(name, not_captilize=[]):
 
 
 class WatchingFiles():
-    def __init__(self, path_monitoring, path_destiny, ignore_paths=["__pycache__"]):
+    def __init__(self, path_monitoring, path_destiny, ignore_paths=["__pycache__"], exec_after=None):
         self.path_monitoring = path_monitoring
         self.path_destiny = path_destiny
         self.ignore_paths = ignore_paths
         self._dirs = dict()
         self._files = dict()
+        self.exec_after = exec_after
         self._create_mtime_list()
 
     @property
@@ -1136,12 +1137,14 @@ class WatchingFiles():
 
     def monitoring(self):
         print("Starting WatchingFiles...")
+        self._has_change = False
         while True:
             self.sincronize()
 
     def sincronize(self):
         dirs_delete = dict(self._dirs)
         files_delete = dict(self._files)
+        change_local = True
         for x in os.walk(self.path_monitoring):
             p = PurePath(x[0])
             if not set(p.parts).intersection(set(self.ignore_paths)):
@@ -1151,6 +1154,7 @@ class WatchingFiles():
                     del dirs_delete[x[0]]
                 if not os.path.isdir(df):
                     os.makedirs(df, exist_ok=True)
+                    change_local = True
                     print("Creating Destiny Dirs: {0}".format(df))
                 for y in x[2]:
                     f = os.path.normpath(os.path.join(x[0], y))
@@ -1162,6 +1166,7 @@ class WatchingFiles():
                             f
                         ] = [os.path.getmtime(f), d]
                         print("New File: {0}\nCoping {0} to {1}".format(f, d))
+                        change_local = True
                         shutil.copy2(f, d)
                     else:
                         if self._files[f][0] != os.path.getmtime(f):
@@ -1169,8 +1174,10 @@ class WatchingFiles():
                                 f
                             ] = [os.path.getmtime(f), d]
                             print("Was Modify: {0}\nCoping {0} to {1}".format(f, d))
+                            change_local = True
                             shutil.copy2(f, d)
                         elif not os.path.isfile(d):
+                            change_local = True
                             shutil.copy2(f, d)
                             print("Not Found: {1}\nCoping {0} to {1}".format(f, d))
         if dirs_delete:
@@ -1212,4 +1219,7 @@ class WatchingFiles():
                 else:
                     del files_delete[ff]
                     del self._files[ff]
+        if change_local and callable(self.exec_after):
+            self.exec_after(self)
+        change_local = False
         time.sleep(1)

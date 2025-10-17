@@ -253,6 +253,7 @@ class CaptchaContainer(helpers.XmlConstructor):
 class FormButton(helpers.XmlConstructor):
     def __init__(self, name, label, **attributes):
         self.label = label
+        self.name = name
         initial_class = "phanterpwa-widget-form-form_button-container"
         if ["_id"] not in attributes:
             attributes["_id"] = "phanterpwa-widget-form-form_button-{0}".format(name)
@@ -260,9 +261,9 @@ class FormButton(helpers.XmlConstructor):
         if "_class" in self.button_attributes:
             self.button_attributes["_class"] = " ".join([
                 self.button_attributes['_class'].strip(),
-                "btn phanterpwa-widget-form-form_button link"])
+                "phanterpwa-widget-form-form_button"])
         else:
-            self.button_attributes["_class"] = "btn phanterpwa-widget-form-form_button link"
+            self.button_attributes["_class"] = "phanterpwa-widget-form-form_button"
         if "_title" not in self.button_attributes:
             if isinstance(self.label, str):
                 self.button_attributes["_title"] = self.label
@@ -271,10 +272,13 @@ class FormButton(helpers.XmlConstructor):
 
     def _update_content(self):
         attributes = self.button_attributes
+        attributes["use_div_tag"] = True
+        uni = window.PhanterPWA.get_id()
         self.content = [
-            DIV(
-                DIV(self.label, **attributes),
-                _class="button-form")
+            widgets.Button("button_{}".format(uni), self.label, **attributes)
+            # DIV(
+            #     DIV(self.label, **attributes),
+            #     _class="button-form containeeeer")
         ]
 
 
@@ -892,10 +896,9 @@ class ValidateForm():
                 validate_test_pass.append(False)
         if validate_name.startswith("IS_IN_SET:"):
             res = False
-            list_options =  [x[1] for x in widget_instance._data]
-
+            list_options = [str(x[1]) for x in widget_instance._data]
             if list_options is not None or list_options is not js_undefined:
-                if list_options.indexOf(value_for_validate) > -1:
+                if list_options.indexOf(str(value_for_validate)) > -1:
                     res = True
             validate_test_pass.append(res)
 

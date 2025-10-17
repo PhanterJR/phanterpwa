@@ -1,6 +1,8 @@
 import os
+import asyncio
 import sys
 import re
+import time
 import importlib
 import subprocess
 import threading
@@ -76,7 +78,7 @@ class PhanterPWATornado(object):
         print(self.projectPath)
 
         if self.apps_ports:
-            self.cpu_number = int(self.projectConfig["PROJECT"].get('cpu_number', os.cpu_count()))
+            self.cpu_number = int(self.projectConfig["PROJECT"].get('cpu_number', 1))
             if os.name == "nt":
                 self.cpu_number = 1
             needs_fork = self.cpu_number != 1 and self.cpu_number > -1
@@ -91,35 +93,31 @@ class PhanterPWATornado(object):
                     current_port = self.projectConfig['FRONTEND'][x]['port']
                     socket = netutil.bind_sockets(current_port)
                     socs[f'front_{x}'] = socket
-
+                time.sleep(2)
                 process.fork_processes(self.cpu_number)
+                time.sleep(2 * (os.getpid() % self.cpu_number))
                 print(f"After fork - PID: {os.getpid()}")
 
-                for x in self.projectConfig['BACKEND']:
-                    handlers_app = importlib.import_module("backapps.{0}.handlers".format(x))
-                    if isinstance(handlers_app.HANDLER, (list, tuple)):
-                        app = web.Application(
-                            handlers_app.HANDLER,
-                            **handlers_app.SETTINGS
-                        )
-                    else:
-                        app = handlers_app.HANDLER
+                # ADIÇÃO: Função com delay para inicialização de apps
+                async def initialize_apps_with_delay():
+                    delay_between_apps = 1.5  # 200ms entre cada app
 
-                    app_http_server = httpserver.HTTPServer(app)
-                    app_http_server.add_sockets(socs[f'back_{x}'])
+                    # Inicializar BACKEND apps com delay
+                    backend_apps = list(self.projectConfig['BACKEND'].keys())
+                    for i, x in enumerate(backend_apps):
+                        await asyncio.sleep(i * delay_between_apps)
+                        self._initialize_backend_app(x, socs[f'back_{x}'])
+                        print(f"Backend app {x} initialized with delay")
 
-                for x in self.projectConfig['FRONTEND']:
-                    handlers_app = importlib.import_module("frontapps.{0}.handlers".format(x))
-                    if isinstance(handlers_app.HANDLER, (list, tuple)):
-                        app = web.Application(
-                            handlers_app.HANDLER,
-                            **handlers_app.SETTINGS
-                        )
-                    else:
-                        app = handlers_app.HANDLER
+                    # Inicializar FRONTEND apps com delay
+                    frontend_apps = list(self.projectConfig['FRONTEND'].keys())
+                    for i, x in enumerate(frontend_apps):
+                        await asyncio.sleep(i * delay_between_apps)
+                        self._initialize_frontend_app(x, socs[f'front_{x}'])
+                        print(f"Frontend app {x} initialized with delay")
 
-                    app_http_server = httpserver.HTTPServer(app)
-                    app_http_server.add_sockets(socs[f'front_{x}'])
+                # Executar inicialização com delays
+                ioloop.IOLoop.current().add_callback(initialize_apps_with_delay)
             else:
                 for x in self.projectConfig['BACKEND']:
                     current_port = self.projectConfig['BACKEND'][x]['port']
@@ -151,12 +149,55 @@ class PhanterPWATornado(object):
                     app_http_server.listen(current_port)
                     print(id(app_http_server))
 
-
         autoreload.watch(os.path.join(self.projectPath, "config.json"))
         ioloop.IOLoop.current().start()
         print("start stopped")
         ioloop.IOLoop.current().add_callback(lambda: ioloop.IOLoop.current().close(True))
         print("close? Don't know")
+
+    def _initialize_backend_app(self, app_name, socket):
+        """Inicializa uma aplicação backend com tratamento de erro"""
+        try:
+            time.sleep(0.5)
+            handlers_app = importlib.import_module("backapps.{0}.handlers".format(app_name))
+            time.sleep(0.3)
+            if isinstance(handlers_app.HANDLER, (list, tuple)):
+                app = web.Application(
+                    handlers_app.HANDLER,
+                    **handlers_app.SETTINGS
+                )
+            else:
+                app = handlers_app.HANDLER
+            time.sleep(0.3)
+            app_http_server = httpserver.HTTPServer(app)
+            app_http_server.add_sockets(socket)
+            time.sleep(0.2)
+            return True
+        except Exception as e:
+            print(f"Error initializing backend app {app_name}: {e}")
+            return False
+
+    def _initialize_frontend_app(self, app_name, socket):
+        """Inicializa uma aplicação frontend com tratamento de erro"""
+        try:
+            time.sleep(0.5)
+            handlers_app = importlib.import_module("frontapps.{0}.handlers".format(app_name))
+            time.sleep(0.3)
+            if isinstance(handlers_app.HANDLER, (list, tuple)):
+                app = web.Application(
+                    handlers_app.HANDLER,
+                    **handlers_app.SETTINGS
+                )
+            else:
+                app = handlers_app.HANDLER
+            time.sleep(0.5)
+            app_http_server = httpserver.HTTPServer(app)
+            app_http_server.add_sockets(socket)
+            time.sleep(0.2)
+            return True
+        except Exception as e:
+            print(f"Error initializing frontend app {app_name}: {e}")
+            return False
 
     def stop(self):
         ioloop.IOLoop.current().add_callback(

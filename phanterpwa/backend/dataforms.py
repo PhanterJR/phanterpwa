@@ -1361,17 +1361,21 @@ class FieldsDALValidateDictArgs(object):
         else:
             return None
 
-
     def validate_and_insert(self, dbtable, commit=True):
         self.validate()
         if not self.errors and isinstance(dbtable, Table):
             rep = dbtable.validate_and_insert(**self.verified)
-            dbtable._db._adapter.reconnect()
-            if rep.errors:
-                dbtable._db.rollback()
-            elif rep.id and commit:
-                dbtable._db.commit()
-            return rep
+            if isinstance(rep, dict):
+                if rep.get("errors"):
+                    dbtable._db.rollback()
+                elif rep.get("id") and commit:
+                    dbtable._db.commit()
+            else:
+                if rep.errors:
+                    dbtable._db.rollback()
+                elif rep.id and commit:
+                    dbtable._db.commit()
+                return rep
         else:
             if not self.errors:
                 raise "The dbtable must be pydal.DAL.Table instance. given: {0}.".format(type(dbtable))
@@ -1380,12 +1384,17 @@ class FieldsDALValidateDictArgs(object):
         self.validate()
         if not self.errors and isinstance(dbset, Set):
             rep = dbset.validate_and_update(**self.verified)
-            dbset._db._adapter.reconnect()
-            if rep.errors:
-                dbset._db.rollback
-            elif rep.id and commit:
-                dbset._db.commit()
-            return rep
+            if isinstance(rep, dict):
+                if rep.get("errors"):
+                    dbset._db.rollback()
+                elif rep.get("id") and commit:
+                    dbset._db.commit()
+            else:
+                if rep.errors:
+                    dbset._db.rollback()
+                elif rep.id and commit:
+                    dbset._db.commit()
+                return rep
         else:
             if not self.errors:
                 raise "The dbtable must be pydal.Objects.Set instance. given: {0}.".format(type(dbset))

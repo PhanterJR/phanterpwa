@@ -528,13 +528,18 @@ class Select(Widget):
                         self._alias_value = vdata
                     self._data_dict[vdata] = vdata
                     new_data.append([vdata, vdata])
-                elif len(vdata) is not 2:
-                    valid_data = False
-                else:
+                elif isinstance(vdata, int):
+                    if self._value == vdata:
+                        self._alias_value = vdata
+                    self._data_dict[vdata] = vdata
+                    new_data.append([vdata, vdata])
+                elif isinstance(vdata, list) and len(vdata) == 2:
                     if self._value == vdata[0]:
                         self._alias_value = vdata[1]
                     self._data_dict[vdata[0]] = vdata[1]
                     new_data.append([vdata[0], vdata[1]])
+                else:
+                    valid_data = False
             if not valid_data:
                 raise ValueError("The data parameter of widget \"{0}\" is invalid!".format(
                     self.identifier
@@ -5927,14 +5932,24 @@ class Button(Widget):
         default_disabled = None
         if self._disabled is True:
             default_disabled = "disabled"
-        html = BUTTON(
-            label,
-            DIV(_class="loading1"),
-            DIV(_class="loading2"),
-            _class="btn wave_on_click",
-            _id=self._id_button,
-            _disabled=default_disabled
-        )
+        if parameters.get("use_div_tag", None) is not None:
+            html = DIV(
+                label,
+                DIV(_class="loading1"),
+                DIV(_class="loading2"),
+                _class="btn wave_on_click",
+                _id=self._id_button,
+                _disabled=default_disabled
+            )
+        else:
+            html = BUTTON(
+                label,
+                DIV(_class="loading1"),
+                DIV(_class="loading2"),
+                _class="btn wave_on_click",
+                _id=self._id_button,
+                _disabled=default_disabled
+            )
         self._has_href = None
         if "_href" in parameters:
             self._has_href = parameters["_href"]
