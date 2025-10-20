@@ -431,7 +431,7 @@ class Redirect(web.RequestHandler):
                             self.DALDatabase.commit()
                             self.set_status(200)
                             return self.write(
-                                str(HTML(HEAD(), BODY(SCRIPT("window.location = '{0}'".format(redirect))))))
+                                str(HTML(HEAD(), BODY(SCRIPT("setTimeout(function(){window.location = '{0}';}, 10)".format(redirect))))))
                         else:
                             self.logger_api.warning(
                                 'CREATING ACCOUNT AND LOGIN BY OAUTH METHOD\n\tsocial_login: {0}\n\tname: {1}\n\temail: {2}\n\temail_verified: {3}\n\tlocale: {4}'.format(
@@ -552,7 +552,7 @@ class Redirect(web.RequestHandler):
                                 }))
                                 self.DALDatabase.commit()
                                 return self.write(
-                                    str(HTML(HEAD(), BODY(SCRIPT("window.location = '{0}'".format(redirect))))))
+                                    str(HTML(HEAD(), BODY(SCRIPT("setTimeout(function(){window.location = '{0}';}, 10)".format(redirect))))))
         elif social_name == "facebook":
             state = dict_arguments.get("state")
             q_state = self.DALDatabase(
@@ -709,7 +709,7 @@ class Redirect(web.RequestHandler):
                             self.DALDatabase.commit()
                             self.set_status(200)
                             return self.write(
-                                str(HTML(HEAD(), BODY(SCRIPT("window.location = '{0}'".format(redirect))))))
+                                str(HTML(HEAD(), BODY(SCRIPT("setTimeout(function(){window.location = '{0}';}, 10)".format(redirect))))))
                         else:
                             new_password = os.urandom(3).hex()
                             password_hash = pbkdf2_sha512.hash("password{0}{1}".format(
@@ -819,7 +819,7 @@ class Redirect(web.RequestHandler):
                                     }))
                                 self.DALDatabase.commit()
                                 return self.write(
-                                    str(HTML(HEAD(), BODY(SCRIPT("window.location = '{0}'".format(redirect))))))
+                                    str(HTML(HEAD(), BODY(SCRIPT("setTimeout(function(){window.location = '{0}';}, 10)".format(redirect))))))
 
             
         message = "An error occurred while trying to authenticate."

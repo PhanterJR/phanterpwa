@@ -5937,7 +5937,7 @@ class Button(Widget):
                 label,
                 DIV(_class="loading1"),
                 DIV(_class="loading2"),
-                _class="btn wave_on_click",
+                _class="btn wave_on_click link",
                 _id=self._id_button,
                 _disabled=default_disabled
             )

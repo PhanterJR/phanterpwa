@@ -107,6 +107,18 @@ class PhanterPWA():
 
         window.onerror = self.onGlobalError
 
+    def _location_redirect_timeout(self, redirect, timeout=10, callback=None):
+
+        def _location(url):
+            window.location = url
+            if callable(callback):
+                callback()
+
+        setTimeout(
+            lambda: _location(redirect),
+            timeout
+        )
+
     def _clear_cache(self, names):
         for x in names:
             if x != self.versioning:
@@ -198,7 +210,9 @@ class PhanterPWA():
                 localStorage.removeItem("auth_user")
             window.PhanterPWA.set_last_auth_user(auth_user)
         if redirect is not None and redirect is not js_undefined:
-            window.location = redirect
+            self._location_redirect_timeout(
+                redirect
+            )
         if way is not None and way is not js_undefined:
             self.open_way(way)
 
@@ -557,9 +571,12 @@ class PhanterPWA():
     def _after_get_social_login(self, data, ajax_status, callback=None):
         json = data.responseJSON
         if ajax_status == "success":
-            window.location = json.redirect
-        if callable(callback):
-            callback(data, ajax_status)
+            def callback_social_login():
+                return callback(data, ajax_status)
+            self._location_redirect_timeout(
+                json.redirect,
+                callback=callback_social_login if callback is not None else None
+            )
 
     def _after_submit_register(self, data, ajax_status, callback=None):
         json = data.responseJSON
