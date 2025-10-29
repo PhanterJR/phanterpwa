@@ -267,6 +267,9 @@ class FormButton(helpers.XmlConstructor):
         if "_title" not in self.button_attributes:
             if isinstance(self.label, str):
                 self.button_attributes["_title"] = self.label
+        if "on_click_submit_button" in self.button_attributes:
+            self.button_attributes["on_click"] = self.button_attributes["on_click_submit_button"]
+            del self.button_attributes["on_click_submit_button"]
         helpers.XmlConstructor.__init__(self, 'div', False, _class=initial_class)
         self._update_content()
 
@@ -667,6 +670,8 @@ class Form(helpers.XmlConstructor):
             self.show_id = parameters["show_id"]
         if "submit_button" in parameters:
             submit_button = parameters["submit_button"]
+        if "on_click_submit_button" in parameters:
+            on_click_submit_button = parameters["on_click_submit_button"]
         if "has_captcha" in parameters:
             self.has_captcha = parameters["has_captcha"]
         if "preload" in parameters:
@@ -711,7 +716,8 @@ class Form(helpers.XmlConstructor):
                 self._buttons_container = DIV(
                     SubmitButton(
                         self.table_name,
-                        self._label_submit_buttom
+                        self._label_submit_buttom,
+                        on_click_submit_button=on_click_submit_button
                     ),
                     _class='buttons-form-container'
                 )

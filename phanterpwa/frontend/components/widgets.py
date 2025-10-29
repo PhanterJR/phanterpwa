@@ -4458,6 +4458,7 @@ class TableHead(Widget):
 
                         if class_base not in x.attributes['_class']:
                             x.attributes['_class'] = "{0} {1}".format(x.attributes['_class'], class_base)
+                        self.__child_html.append(x)
                     else:
                         x.attributes['_class'] = class_base
                         self.__child_html.append(x)
@@ -5985,7 +5986,7 @@ class Button(Widget):
         )
 
     def set_loading(self):
-        if self._disabled is False:
+        if self.check_disabled() is False:
             self._total_click = 10
             jQuery(self.target_selector).addClass("loading")
 
@@ -6011,9 +6012,17 @@ class Button(Widget):
     def set_enabled(self):
         self.del_disabled()
 
+    def check_disabled(self):
+        v = jQuery(self.target_selector).find("#{0}".format(self._id_button)).attr("disabled")
+        if v is None or v is js_undefined:
+            self._disabled = True
+            return True
+        self._disabled = False
+        return False
+
     def _on_click_touch(self):
-        self._total_click += 1
-        if self._disabled is False:
+        if self.check_disabled() is True:
+            self._total_click += 1
             if callable(self._on_click):
                 if self._one_click is True:
                     if self._total_click < 2:

@@ -167,7 +167,6 @@ def check_client_token(ignore_locked=True):
                     self.projectConfig['BACKEND'][self.app_name]['secret_key'],
                     self.projectConfig['BACKEND'][self.app_name]['default_time_client_token_expire']
                 )
-                self.DALDatabase._adapter.reconnect()
                 q = self.DALDatabase(self.DALDatabase.client.token == self.phanterpwa_client_token).select().first()
                 if q:
                     token_content = None
@@ -316,7 +315,6 @@ def check_cas_token(ignore_locked=True):
                 self.projectConfig['BACKEND'][self.app_name]['secret_key'],
                 self.projectConfig['BACKEND'][self.app_name]['default_time_cas_token_expire']
             )
-            self.DALDatabase._adapter.reconnect()
             q = self.DALDatabase(self.DALDatabase.apps_authorization.authorization == self.phanterpwa_cas_authorization).select().first()
             if q:
                 token_content = None
@@ -415,7 +413,6 @@ def check_url_token(ignore_user_agent=False):
                 self.projectConfig['BACKEND'][self.app_name]['secret_key'],
                 salt="url_secret_key"
             )
-            self.DALDatabase._adapter.reconnect()
             token_content = None
             try:
                 token_content = t.loads(self.phanterpwa_url_token)
@@ -523,7 +520,6 @@ def check_public_csrf_token(form_identify=None, ignore_locked=True):
                 token_content = None
             if token_content:
                 if 'id' in token_content:
-                    self.DALDatabase._adapter.reconnect()
                     q = self.DALDatabase(self.DALDatabase.csrf.id == token_content["id"]).select().first()
                     if q:
                         if (q.token == self.phanterpwa_csrf_token) and\
@@ -783,7 +779,6 @@ def check_user_token(ignore_activation=False):
                         id_user = token_content['id']
                         self.phanterpwa_user_token_checked = token_content
                 if id_user:
-                    self.DALDatabase._adapter.reconnect()
                     q_user = self.DALDatabase(self.DALDatabase.auth_user.id == id_user).select().first()
                     self.phanterpwa_current_user = q_user
                     q_user_groups = self.DALDatabase(
@@ -1056,7 +1051,6 @@ def requires_no_authentication(ids=None, ignore_locked=True):
                     id_user = token_content['id']
                     self.phanterpwa_user_token_checked = token_content
             if id_user:
-                self.DALDatabase._adapter.reconnect()
                 q_user = self.DALDatabase(self.DALDatabase.auth_user.id == id_user).select().first()
                 self.phanterpwa_current_user = q_user
                 q_client = self.DALDatabase(
