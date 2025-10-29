@@ -60,7 +60,8 @@ self.addEventListener('fetch', function(event) {
     };
   };
 });
-""" 
+"""
+
 
 class Compiler():
     """

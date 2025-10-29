@@ -149,8 +149,12 @@ class PhanterpwaGalleryCutter(object):
             img = img.crop(img.getbbox())
             img = ImageOps.contain(img, (max([cutterSizeX, cutterSizeY]), max([cutterSizeX, cutterSizeY])))
         else:
-            img = img.resize((cutterSizeX, cutterSizeY),
-                           PILImage.ANTIALIAS)
+            try:
+                img = img.resize((cutterSizeX, cutterSizeY),
+                               PILImage.LANCZOS)
+            except AttributeError:
+                img = img.resize((cutterSizeX, cutterSizeY),
+                               PILImage.ANTIALIAS)
         img_buffer = io.BytesIO()
         if self._format == "PNG":
             img.save(img_buffer, format=self._format)
@@ -192,7 +196,11 @@ class PhanterpwaGalleryCutter(object):
             img = img.crop(img.getbbox())
             img = ImageOps.contain(img, (max([self.cutterSizeX, self.cutterSizeY]), max([self.cutterSizeX, self.cutterSizeX])))
         else:
-            img = img.resize((self.cutterSizeX, self.cutterSizeY),
+            try:
+                img = img.resize((self.cutterSizeX, self.cutterSizeY),
+                    PILImage.LANCZOS)
+            except AttributeError:
+                img = img.resize((self.cutterSizeX, self.cutterSizeY),
                     PILImage.ANTIALIAS)
 
         img_buffer = io.BytesIO()
