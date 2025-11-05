@@ -98,6 +98,54 @@ android = DIV(
     _class="phanterpwa-components-preloaders-android"
 ).jquery()
 
+discs = DIV(
+    DIV(
+        DIV(
+
+            DIV(_class="phanterpwa_discs_one phanterpwa_discs"),
+            DIV(_class="phanterpwa_discs_two phanterpwa_discs"),
+            DIV(_class="phanterpwa_discs_three phanterpwa_discs"),
+            DIV(_class="phanterpwa_discs_four phanterpwa_discs"),
+            DIV(_class="phanterpwa_discs_five phanterpwa_discs"),
+
+            _class="phanterpwa_discs_container"
+        ),
+        _class="preloader-wrapper enabled"
+    ),
+    _class="phanterpwa-components-preloaders-discs"
+)
+
+explosion = DIV(
+    DIV(_class="left"),
+    DIV(
+        DIV(
+            DIV(_class="phanterpwa_explosion_one phanterpwa_explosion"),
+            DIV(_class="phanterpwa_explosion_two phanterpwa_explosion"),
+            DIV(_class="phanterpwa_explosion_three phanterpwa_explosion"),
+            DIV(_class="phanterpwa_explosion_four phanterpwa_explosion"),
+            DIV(_class="phanterpwa_explosion_five phanterpwa_explosion"),
+            DIV(_class="phanterpwa_explosion_six phanterpwa_explosion"),
+            DIV(_class="phanterpwa_explosion_seven phanterpwa_explosion"),
+            DIV(_class="phanterpwa_explosion_eight phanterpwa_explosion"),
+            DIV(_class="phanterpwa_explosion_big phanterpwa_explosion"),
+            _class="phanterpwa_explosion_container"
+        ),
+        _class="preloader-wrapper enabled"
+    ),
+    DIV(_class="right"),
+    _class="phanterpwa-components-preloaders-explosion"
+)
+
+indefined_text = DIV(
+    DIV(
+        DIV(
+            DIV(_class="indefined_text"),
+            _class="preloader-wrapper enabled"
+        ),
+        _class="phanterpwa-preloader-wrapper"
+    ),
+    _class="phanterpwa-components-preloaders-indefined_text"
+)
 
 run_points = DIV(
     DIV(
@@ -126,13 +174,33 @@ run_points = DIV(
     _class="phanterpwa-components-preloaders-run_points"
 )
 
-indefined_text = DIV(
+
+square = DIV(
     DIV(
         DIV(
-            DIV(_class="indefined_text"),
-            _class="preloader-wrapper enabled"
+            DIV(
+                _class="phanterpwa_square"
+            ),
+            _class="phanterpwa_square_container"
         ),
-        _class="phanterpwa-preloader-wrapper"
+        _class="preloader-wrapper enabled"
     ),
-    _class="phanterpwa-components-preloaders-indefined_text"
+    _class="phanterpwa-components-preloaders-square"
+)
+
+squares = DIV(
+    DIV(_class="left"),
+    DIV(
+        DIV(
+
+            DIV(_class="phanterpwa_squares_one phanterpwa_squares"),
+            DIV(_class="phanterpwa_squares_two phanterpwa_squares"),
+            DIV(_class="phanterpwa_squares_three phanterpwa_squares"),
+
+            _class="phanterpwa_squares_container"
+        ),
+        _class="preloader-wrapper enabled"
+    ),
+    DIV(_class="right"),
+    _class="phanterpwa-components-preloaders-squares"
 )

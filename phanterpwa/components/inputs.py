@@ -302,6 +302,7 @@ class InputSelectAndButton(BASEINPUT):
             )
         ]
 
+
 class InputTextPlus(BASEINPUT):
     def __init__(
         self,

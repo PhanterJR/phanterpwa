@@ -398,9 +398,6 @@ class SignClient(web.RequestHandler):
         return self.write({"status": "OK"})
 
 
-
-
-
 class SignForms(web.RequestHandler):
     """
         url: '/api/signforms/<form_identify>'

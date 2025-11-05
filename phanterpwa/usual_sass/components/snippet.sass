@@ -32,3 +32,167 @@
             font-size: 0.3em
             position: absolute
 
+.phanterpwa-snippet-panel
+    background-color: white
+    box-shadow: 0px 1px 2px grey
+    overflow: auto
+    margin-bottom: 10px
+    h1, h2, h3, h4, h5, h6
+        margin-top: 0
+
+    .phanterpwa-snippet-panel-container-footer
+        min-height: 20px
+        border-top: 1px solid #d5d5d5
+    .phanterpwa-snippet-panel-icon_buttons-preloader
+        display: none
+    .phanterpwa-snippet-panel-icon_button
+        display: block
+    .phanterpwa-snippet-panel-label-preloader
+        display: none
+        width: 70%
+    .phanterpwa-snippet-panel-container-preloader
+        margin: auto
+        width: 200px
+        height: 200px
+        overflow: hidden
+        display: none
+    .phanterpwa-snippet-panel-container-content
+        display: block
+        padding: 10px
+        background-color: #f0f0f0
+        box-shadow: 0px 0px 5px inset
+        border-radius: 5px
+
+    .phanterpwa-snippet-panel-container-header-preloader
+        display: none
+        width: 65px
+        height: 65px
+        margin: auto
+        overflow: hidden
+    .phanterpwa-snippet-panel-container-header-content
+        display: block
+        padding-bottom: 10px
+    .phanterpwa-snippet-panel-container-footer-preloader
+        display: none
+        width: 65px
+        height: 65px
+        margin: auto
+        overflow: hidden
+    .phanterpwa-snippet-panel-container-footer-content
+        display: block
+    .phanterpwa-snippet-panel-label-content
+        display: block
+    .phanterpwa-snippet-panel-label
+        color: $components
+        position: relative
+        padding: 16px
+        border-bottom: 1px solid #d5d5d5
+    .phanterpwa-snippet-panel-menu_button 
+        position: absolute
+        right: 5px
+        top: 5px
+
+    .phanterpwa-snippet-panel-icon_buttons-container
+        position: absolute
+        right: 0
+        padding: 5px 0 0 0
+        width: 0
+        top: 0
+        border-left: 1px solid #d5d5d5
+        height: 100%
+        transition: width 0.3s ease-in-out
+        .preloader-wrapper
+            height: 40px
+            width: 40px
+            margin: auto
+            border-radius: 40px
+            .indefined_text
+                height: 40px
+    .phanterpwa-snippet-panel-icon_buttons-preloader
+        margin: auto
+
+    .phanterpwa-snippet-panel-content
+        position: relative
+        padding: 5px
+        padding-right: 5px
+        transition: padding-right 0.3s ease-in-out
+    .phanterpwa-snippet-panel-menu_button
+        i
+            text-shadow: 1px 1px 7px $alert
+            color: $alert
+        &:hover
+            i
+                text-shadow: 1px 1px 7px $attention
+                color: $attention
+    .phanterpwa-snippet-panel-wrapper
+        &.snippets-panel-has_icon_buttons
+            .phanterpwa-snippet-panel-label
+                padding-right: 50px
+            .phanterpwa-snippet-panel-content
+                padding-right: 55px
+            .phanterpwa-snippet-panel-icon_buttons-container
+                width: 50px
+            .phanterpwa-snippet-panel-menu_button
+                i
+                    text-shadow: 1px 1px 7px $ok
+                    color: $ok
+                &:hover
+                    i
+                        text-shadow: 1px 1px 7px $attention
+                        color: $attention
+        &.snippets-panel-loading
+            .phanterpwa-snippet-panel-icon_buttons-preloader
+                display: block
+            .phanterpwa-snippet-panel-icon_button
+                display: none
+            .phanterpwa-snippet-panel-label-preloader
+                display: block
+            .phanterpwa-snippet-panel-label-content
+                display: none
+            .phanterpwa-snippet-panel-container-footer-preloader
+                display: block
+            .phanterpwa-snippet-panel-container-footer-content
+                display: none
+            .phanterpwa-snippet-panel-container-header-preloader
+                display: block
+            .phanterpwa-snippet-panel-container-header-content
+                display: none
+            .phanterpwa-snippet-panel-container-preloader
+                display: block
+            .phanterpwa-snippet-panel-container-content
+                display: none
+
+
+.phanterpwa-snippet-toggle_panel
+    .phanterpwa-snippet-toggle_panel-wrapper
+        .phanterpwa-snippet-toggle_panel-separador
+            opacity: 1
+            height: 1px
+            margin-top: 5px
+            transition: opacity 0.3s ease-in-out
+            background: linear-gradient(to right, transparent 0%, grey 20%, grey 80%, transparent 100%)
+        .phanterpwa-snippet-toggle_panel-content
+            transform: scaleY(1)
+            max-height: 3000px
+            transform-origin: top
+            overflow: hidden
+            transition: transform 0.3s ease-in-out, max-height 0.3s ease-in-out
+        .phanterpwa-snippet-toggle_panel-icon
+            transform: rotate(0deg)
+            transition: transform 0.3s ease-in-out
+        .phanterpwa-snippet-toggle_panel-toggle_button
+            text-align: center
+            color: $components
+            &:hover
+                color: $attention
+        &.snippet-toggle_panel-hidden
+            .phanterpwa-snippet-toggle_panel-separador
+                opacity: 0
+            .phanterpwa-snippet-toggle_panel-content
+                transform: scaleY(0)
+                max-height: 0
+            .phanterpwa-snippet-toggle_panel-icon
+                transform: rotate(180deg)
+
+
+
