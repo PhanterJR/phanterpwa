@@ -1,8 +1,7 @@
 import asyncio
-import sqlite3
 import json
 from functools import wraps
-from .security import (
+from ..security import (
     Serialize,
     SignatureExpired,
     BadSignature,
@@ -10,28 +9,10 @@ from .security import (
 )
 
 
-def async_retry_on_locked(max_retries=3, delay=0.1):
-    def decorator(func):
-        @wraps(func)
-        async def wrapper(*args, **kwargs):
-            for attempt in range(max_retries):
-                try:
-                    return await func(*args, **kwargs)
-                except sqlite3.OperationalError as e:
-                    if "locked" in str(e) and attempt < max_retries - 1:
-                        await asyncio.sleep(delay * (2 ** attempt))  # ✅ Async sleep
-                        continue
-                    raise
-            return await func(*args, **kwargs)
-        return wrapper
-    return decorator
-
-
 def check_application():
     def decorator(f):
         @wraps(f)
         def check_application_decorator(self, *args, **kargs):
-
             if not hasattr(self, "phanterpwa_client_application_checked"):
                 self.phanterpwa_client_application_checked = None
                 project_name = self.projectConfig['PROJECT']['name']
@@ -52,7 +33,7 @@ def check_application():
                             }
                         }
                         self.set_status(400)
-                        return self.write(dict_response)
+                        return dict_response
                 else:
                     msg = 'The client is not compatible.'
                     dict_response = {
@@ -65,7 +46,7 @@ def check_application():
                         'project_path': self.projectConfig['PROJECT']['path']
                     }
                     self.set_status(400)
-                    return self.write(dict_response)
+                    return dict_response
                 self.phanterpwa_client_application_checked = {
                     'name': self.phanterpwa_application,
                     'version': self.phanterpwa_application_version
@@ -100,7 +81,7 @@ def check_client_token(ignore_locked=True):
                         }
                     }
                     self.set_status(400)
-                    return self.write(dict_response)
+                    return dict_response
                 t = Serialize(
                     self.projectConfig['BACKEND'][self.app_name]['secret_key'],
                     self.projectConfig['BACKEND'][self.app_name]['default_time_client_token_expire']
@@ -152,7 +133,7 @@ def check_client_token(ignore_locked=True):
                             }
                         }
                         self.set_status(401)
-                        return self.write(dict_response)
+                        return dict_response
                     self.phanterpwa_current_client = q
                     return f(self, *args, **kargs)
                 else:
@@ -170,7 +151,7 @@ def check_client_token(ignore_locked=True):
                         }
                     }
                     self.set_status(401)
-                    return self.write(dict_response)
+                    return dict_response
             else:
                 return f(self, *args, **kargs)
         return check_client_token_decorator
@@ -194,7 +175,7 @@ def check_cas_token(ignore_locked=True):
                     }
                 }
                 self.set_status(400)
-                return self.write(dict_response)
+                return dict_response
             t = Serialize(
                 self.projectConfig['BACKEND'][self.app_name]['secret_key'],
                 self.projectConfig['BACKEND'][self.app_name]['default_time_cas_token_expire']
@@ -230,7 +211,7 @@ def check_cas_token(ignore_locked=True):
                     }
                 }
                 self.set_status(401)
-                return self.write(dict_response)
+                return dict_response
 
         return check_cas_token_decorator
     return decorator
@@ -256,7 +237,7 @@ def check_url_token(ignore_user_agent=False):
                     }
                 }
                 self.set_status(400)
-                return self.write(dict_response)
+                return dict_response
             t = URLSafeSerializer(
                 self.projectConfig['BACKEND'][self.app_name]['secret_key'],
                 salt="url_secret_key"
@@ -290,7 +271,7 @@ def check_url_token(ignore_user_agent=False):
                     }
                 }
                 self.set_status(403)
-                return self.write(dict_response)
+                return dict_response
         return check_url_token_decorator
     return decorator
 
@@ -319,7 +300,7 @@ def check_public_csrf_token(form_identify=None, ignore_locked=True):
                     }
                 }
                 self.set_status(400)
-                return self.write(dict_response)
+                return dict_response
             t = Serialize(
                 "csrf-{0}".format(self.projectConfig['BACKEND'][self.app_name]['secret_key']),
                 self.projectConfig['BACKEND'][self.app_name]['default_time_csrf_token_expire']
@@ -341,13 +322,13 @@ def check_public_csrf_token(form_identify=None, ignore_locked=True):
                                 self.phanterpwa_remote_ip == q.ip:
                             self.phanterpwa_csrf_token_content = token_content
                             if form_identify:
-                                def on_finish():
-                                    if hasattr(self, '_final_response_on_success'):
-                                        data = self._final_response_on_success
-                                        self.phanterpwa_csrf_token_record.update_record(
-                                            success_response=json.dumps(data)
-                                        )
-                                        self.DALDatabase.commit() 
+                                def on_finish(handler_instance):
+                                    data = handler_instance._final_response_on_success
+                                    handler_instance.phanterpwa_csrf_token_record.update_record(
+                                        success_response=json.dumps(data)
+                                    )
+                                    handler_instance.DALDatabase.commit()
+
                                 self.phanterpwa_form_identify = token_content["form_identify"]
                                 if isinstance(form_identify, str) and form_identify == self.phanterpwa_form_identify:
                                     if q.status_first_check == "OK" and q.success_response is not None:
@@ -357,7 +338,7 @@ def check_public_csrf_token(form_identify=None, ignore_locked=True):
                                         dict_response['message'] = msg
                                         s_code = dict_response.get("code", 202)
                                         self.set_status(s_code)
-                                        return self.write(dict_response)
+                                        return dict_response
                                     self.on_finish = on_finish
                                     q.update_record(
                                         status_first_check="OK"
@@ -373,7 +354,7 @@ def check_public_csrf_token(form_identify=None, ignore_locked=True):
                                         dict_response['message'] = msg
                                         s_code = dict_response.get("code", 202)
                                         self.set_status(s_code)
-                                        return self.write(dict_response)
+                                        return dict_response
                                     self.on_finish = on_finish
                                     q.update_record(
                                         status_first_check="OK"
@@ -402,7 +383,7 @@ def check_public_csrf_token(form_identify=None, ignore_locked=True):
                                     q.update_record(
                                         status_first_check="INVALID!"
                                     )
-                                    return self.write(dict_response)
+                                    return dict_response
                             q.update_record(
                                 status_first_check="OK"
                             )
@@ -423,7 +404,7 @@ def check_public_csrf_token(form_identify=None, ignore_locked=True):
                                 }
                             }
                             self.set_status(400)
-                            return self.write(dict_response)
+                            return dict_response
             msg = "The crsf token is invalid!"
             dict_response = {
                 'status': 'Bad Request',
@@ -435,7 +416,7 @@ def check_public_csrf_token(form_identify=None, ignore_locked=True):
             }
 
             self.set_status(400)
-            return self.write(dict_response)
+            return dict_response
         return check_csrf_token_decorator
     return decorator
 
@@ -542,7 +523,7 @@ def check_user_token(ignore_activation=False):
                                 }
                             }
                             self.set_status(403)
-                            return self.write(dict_response)
+                            return dict_response
                         else:
 
                             if not q_user.permit_mult_login:
@@ -571,7 +552,7 @@ def check_user_token(ignore_activation=False):
                             }
                         }
                         self.set_status(403)
-                        return self.write(dict_response)
+                        return dict_response
                 else:
                     msg = "The user token is invalid!"
                     dict_response = {
@@ -583,7 +564,7 @@ def check_user_token(ignore_activation=False):
                         }
                     }
                     self.set_status(403)
-                    return self.write(dict_response)
+                    return dict_response
             else:
                 return f(self, *args, **kargs)
         return check_user_token_decorator
@@ -610,7 +591,7 @@ def check_private_csrf_token(form_identify=None, ignore_activation=False):
                 }
             }
             self.set_status(400)
-            return self.write(dict_response)
+            return dict_response
         return check_csrf_token_decorator
     return decorator
 
@@ -663,7 +644,7 @@ def requires_authentication(users_id=None, users_email=None, roles_id=None, role
                     }
                 }
                 self.set_status(403)
-                return self.write(dict_response)
+                return dict_response
             else:
                 return f(self, *args, **kargs)
 
@@ -724,7 +705,7 @@ def requires_no_authentication(ids=None, ignore_locked=True):
                         }
                     }
                     self.set_status(403)
-                    return self.write(dict_response)
+                    return dict_response
                 else:
                     return f(self, *args, **kargs)
             else:

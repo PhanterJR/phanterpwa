@@ -59,7 +59,8 @@ from datetime import (
     datetime,
     timedelta
 )
-
+from . import PhanterPWARequestHandler
+from .decorators import check_user_token as new_check_user_token
 
 compiled_mobilemail = re.compile(r"^[0-9]+\.mobile@phanterpwa\.com$")
 

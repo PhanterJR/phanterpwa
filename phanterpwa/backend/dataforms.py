@@ -508,6 +508,8 @@ class WidgetFromFieldDALFromTableDAL():
                         json_field["widget"] = self.phanterpwa["widget"]
                     if "cutter" in self.phanterpwa:
                         json_field["cutter"] = self.phanterpwa["cutter"]
+                    if "scale-factor" in self.phanterpwa:
+                        json_field["scale-factor"] = self.phanterpwa["scale-factor"]
                     if "width" in self.phanterpwa:
                         json_field["width"] = self.phanterpwa["width"]
                     if "height" in self.phanterpwa:
@@ -886,6 +888,8 @@ class CustomField():
                         json_field["type"] = self.phanterpwa["type"]
                     if "cutter" in self.phanterpwa:
                         json_field["cutter"] = self.phanterpwa["cutter"]
+                    if "scale-factor" in self.phanterpwa:
+                        json_field["scale-factor"] = self.phanterpwa["scale-factor"]
                     if "width" in self.phanterpwa:
                         json_field["width"] = self.phanterpwa["width"]
                     if "height" in self.phanterpwa:

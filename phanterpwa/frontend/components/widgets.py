@@ -4,6 +4,7 @@ from phanterpwa.frontend import (
 from phanterpwa.frontend import fmasks as masks
 # pragmas
 from phanterpwa.frontend.components import datetimepicker as datetimepicker
+from phanterpwa.frontend.components import snippets as snippets
 from org.transcrypt.stubs.browser import __pragma__
 __pragma__('alias', "jQuery", "$")
 __pragma__('skip')
@@ -45,6 +46,7 @@ class Widget(helpers.XmlConstructor):
     def __init__(self, identifier, *content, **attributes):
         self.actived = False
         self.identifier = identifier
+        self._persist = None
         if self.identifier is js_undefined or self.identifier is None:
             raise ValueError("The identifier is invalid!")
         self._identifier = window.PhanterPWA.get_id(identifier)
@@ -63,6 +65,16 @@ class Widget(helpers.XmlConstructor):
             self.identifier
         )
         window.PhanterPWA.Request.add_widget(self)
+
+    def persist_save(self, json):
+        localStorage.setItem("phanterpwa_widget_{}".format(self.identifier), JSON.stringify(json))
+
+    def persist_load(self, json):
+        self._persist = localStorage.getItem("phanterpwa_widget_{}".format(self.identifier))
+        return JSON.parse(self._persist)
+
+    def persist_del(self, json):
+        self._persist = localStorage.removeItem("phanterpwa_widget_{}".format(self.identifier))
 
     def _reload(self):
         if not window.PhanterPWA.check_event_namespace(
@@ -2835,6 +2847,8 @@ class Textarea(Widget):
         self._can_empty = parameters.get("can_empty", False)
         self._validator = parameters.get("validators", None)
         self._wear = parameters.get("wear", "material")
+        self._live_visualization = parameters.get("live_visualization", None)
+        self._has_live_visualization = parameters.get("has_live_visualization", False)
         self._form = parameters.get("form", None)
         self._is_firts_start = False
         wrapper_attr = {
@@ -2853,6 +2867,10 @@ class Textarea(Widget):
 
         if self._message_error is not None:
             wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " has_error")
+
+        if callable(self._live_visualization):
+            wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " has_live_visualization")
+            self._has_live_visualization = True
 
         if self._icon is not None:
             wrapper_attr["_class"] = "{0}{1}".format(wrapper_attr["_class"], " has_icon")
@@ -2884,9 +2902,34 @@ class Textarea(Widget):
                 self.get_message_error(),
                 _class="phanterpwa-widget-message_error phanterpwa-widget-textarea-message_error"
             ),
+            DIV(
+                DIV(
+                    I18N("Realtime visualization", **{'pt-BR': "Visualização em tempo real"}),
+                    _class="phanterpwa-widget-textarea-realtime_visualization-label"
+                ),
+                DIV(_class="phanterpwa-widget-textarea-realtime_visualization-content"),
+                _class="phanterpwa-widget-textarea-realtime_visualization"
+            ),
             **wrapper_attr
         )
         Widget.__init__(self, identifier, html, **parameters)
+
+    def set_realtime_visualization_func(self, tfunc):
+        if callable(tfunc):
+            def realtime():
+                txt_value = jQuery(self.target_selector).find("textarea").val()
+                html_value = tfunc(txt_value)
+                jQuery(self.target_selector).find(".phanterpwa-widget-textarea-realtime_visualization-content").html(html_value)
+            self._live_visualization = tfunc
+            self._has_live_visualization = True
+            target = jQuery(self.target_selector)
+            target.find(".phanterpwa-widget-textarea-wrapper").addClass("has_live_visualization")
+
+            target.find("textarea").off("keyup.phanterpwa-event-textarea-realtime,change.phanterpwa-event-textarea-realtime").on(
+                "keyup.phanterpwa-event-textarea-realtime,change.phanterpwa-event-textarea-realtime",
+                lambda: realtime()
+            )
+            realtime()
 
     # def get_message_error(self):
     #     if self._message_error is not None:
@@ -2999,6 +3042,9 @@ class Textarea(Widget):
         target.find("textarea").prop('scrollHeight')
         target.find("textarea").css("height", size)
         self._autoresize(target.find("textarea"))
+
+        if self._has_live_visualization and callable(self._live_visualization):
+            self.set_realtime_visualization_func(self._live_visualization)
 
     def reload(self):
         self.start()
@@ -3199,6 +3245,14 @@ class IntegerMinusPlus(Widget):
             "click.phanterpwa-widget-integermenu-plusbutton",
             lambda: self._plus(this)
         )
+        target.find(".phanterpwa-widget-input-input").off("keyup.phanterpwa-widget-integermenu-input").on(
+            "keyup.phanterpwa-widget-integermenu-input",
+            lambda: self._filter_value(this)
+        )
+
+    def _filter_value(self, el):
+        self._value = masks.stringFilter(jQuery(el).val())
+        jQuery(el).val(self._value)
 
     def _minus(self):
         if self._disabled is False:
@@ -4917,6 +4971,7 @@ class Image(Widget):
         self._form = parameters.get("form", None)
         self._cutter = parameters.get("cutter", False)
         self._nocache = parameters.get("nocache", False)
+        self._scale_factor = parameters.get("scale_factor", 1.0)
         self._width = parameters.get("width", 190)
         self._height = parameters.get("height", 200)
         self._data_view = parameters.get("data_view", False)
@@ -4951,6 +5006,7 @@ class Image(Widget):
                 "data_view": self._data_view,
                 "afterCut": self._after_cut,
                 "z-index": self._z_index,
+                "scale-factor": self._scale_factor,
                 "accept_types": self._accept_types
             }
         )
@@ -4979,6 +5035,7 @@ class GalleryInput():
             "view-height": None,
             "cutter": False,
             "z-index": 1005,
+            "scale-factor": 1.0,
             "current_image": None,
             "put_in_form": True,
             "img_name": "PhanterpwaGalleryFile",
@@ -5003,6 +5060,7 @@ class GalleryInput():
         if self.config["view-height"] is None or self.config["view-height"] is js_undefined:
             self.config["view-height"] = self.config["height"]
         self._data_view = self.config.get("data_view", False)
+        self.scaleFactor = self.config.get("scale-factor", 1.0)
         self.addInputPanel()
 
     def getNewImage(self):
@@ -5081,7 +5139,6 @@ class GalleryInput():
             lambda: inputChange(this, self.config)
         )
 
-
     def _afterRead(self):
         if self.config['is_image']:
             if self.config['current_image'] is not None and self.config['current_image'] is not js_undefined:
@@ -5108,9 +5165,9 @@ class GalleryInput():
         x_name = self.config.get('name', None)
         if x_name is not None:
             name = "-{0}".format(str(x_name))
+        has_cutter = self.config.get('cutter', False)
         if self.config['is_image']:
-            if self.config['cutter']:
-
+            if has_cutter:
                 cutter_vars = [
                     INPUT(
                         _id='phanterpwa-gallery-input-cutterSizeX{0}'.format(self.namespace),
@@ -5154,6 +5211,34 @@ class GalleryInput():
                         _value="",
                         _type="text"
                     )
+                ]
+                other_inputs = DIV(
+                    *cutter_vars,
+                    _class="phanterpwa-gallery-inputs-container-{0}".format(self.namespace),
+                    _style="display: none"
+                )
+            else:
+                finalWidth = int(self.config["width"] * self.scaleFactor)
+                finalHeight = int(self.config["height"] * self.scaleFactor)
+                cutter_vars = [
+                    INPUT(
+                        _id='phanterpwa-gallery-input-autoCut{0}'.format(self.namespace),
+                        _name='phanterpwa-gallery-input-autoCut{0}'.format(name),
+                        _value=True,
+                        _type="text"
+                    ),
+                    INPUT(
+                        _id='phanterpwa-gallery-input-cutterSizeX{0}'.format(self.namespace),
+                        _name='phanterpwa-gallery-input-cutterSizeX{0}'.format(name),
+                        _value=finalWidth,
+                        _type="text"
+                    ),
+                    INPUT(
+                        _id='phanterpwa-gallery-input-cutterSizeY{0}'.format(self.namespace),
+                        _name='phanterpwa-gallery-input-cutterSizeY{0}'.format(name),
+                        _value=finalHeight,
+                        _type="text"
+                    ),
                 ]
                 other_inputs = DIV(
                     *cutter_vars,
@@ -5315,7 +5400,6 @@ class GalleryInput():
             lambda: activeButtonsView()
         )
 
-
     def simpleView(self, url):
         namespace = self.config['namespace']
         width = self.config["width"]
@@ -5464,6 +5548,7 @@ class GalleryCutter():
         self.namespace = self.galleryinput.namespace
         self.cutterSizeX = self.config['width']
         self.cutterSizeY = self.config['height']
+        self.scaleFactor = self.config.get("scale-factor", 1.0)
         self.originalWidthImg = 0
         self.originalHeightImg = 0
         self.widthImg = 0
@@ -5607,7 +5692,6 @@ class GalleryCutter():
 
     def prepareGestureSize(self, event):
         event.preventDefault()
-        
         inicialPosition = self.positionDefaultZoom
         width = self.widthImg
         height = self.heightImg
@@ -5656,22 +5740,35 @@ class GalleryCutter():
         jQuery('#phanterpwa-gallery-panel-cutter-container-{0}'.format(self.namespace)).removeClass("enable")
         jQuery('#phanterpwa-gallery-panel-cutter-container-{0}'.format(self.namespace)).addClass("close")
         canvas = document.createElement("CANVAS")
-        canvas.width = self.widthCutter
-        canvas.height = self.heightCutter
+        finalWidth = int(self.widthCutter * self.scaleFactor)
+        finalHeight = int(self.heightCutter * self.scaleFactor)
+        canvas.width = finalWidth
+        canvas.height = finalHeight
         ctx = canvas.getContext('2d')
-        ratio = self.originalWidthImg / float(self.widthImgAfterZoom)
-        positionX = self.positionXAfterZoom * (-1) * ratio
-        positionY = self.positionYAfterZoom * (-1) * ratio
-        wX = self.cutterSizeX * ratio
-        wY = self.cutterSizeY * ratio
-        jQuery('#phanterpwa-gallery-input-cutterSizeX{0}'.format(self.namespace)).val(self.widthCutter)
-        jQuery('#phanterpwa-gallery-input-cutterSizeY{0}'.format(self.namespace)).val(self.heightCutter)
+        originalToZoomRatio = self.originalWidthImg / float(self.widthImgAfterZoom)
+        positionXInPreview = self.positionXAfterZoom * (-1)
+        positionYInPreview = self.positionYAfterZoom * (-1)
+        positionX = positionXInPreview * originalToZoomRatio * self.scaleFactor
+        positionY = positionYInPreview * originalToZoomRatio * self.scaleFactor
+        wX = self.cutterSizeX * originalToZoomRatio * self.scaleFactor
+        wY = self.cutterSizeY * originalToZoomRatio * self.scaleFactor
+        if window.PhanterPWA.DEBUG:
+            console.info("=== DEBUG CUT CALCULATIONS WITH SCALE ===")
+            console.info("Preview size:", self.cutterSizeX, "x", self.cutterSizeY)
+            console.info("Scale factor:", self.scaleFactor)
+            console.info("Final size:", finalWidth, "x", finalHeight)
+            console.info("Original to zoom ratio:", originalToZoomRatio)
+            console.info("Position in preview - X:", positionXInPreview, "Y:", positionYInPreview)
+            console.info("Final position - X:", positionX, "Y:", positionY)
+            console.info("Final crop size - X:", wX, "Y:", wY)
+        jQuery('#phanterpwa-gallery-input-cutterSizeX{0}'.format(self.namespace)).val(finalWidth)
+        jQuery('#phanterpwa-gallery-input-cutterSizeY{0}'.format(self.namespace)).val(finalHeight)
         jQuery('#phanterpwa-gallery-input-positionX{0}'.format(self.namespace)).val(positionX)
         jQuery('#phanterpwa-gallery-input-positionY{0}'.format(self.namespace)).val(positionY)
         jQuery('#phanterpwa-gallery-input-newSizeX{0}'.format(self.namespace)).val(wX)
         jQuery('#phanterpwa-gallery-input-newSizeY{0}'.format(self.namespace)).val(wY)
         ctx.clearRect(0, 0, canvas.width, canvas.height)
-        ctx.drawImage(self.img1, positionX, positionY, wX, wY, 0, 0, self.widthCutter, self.heightCutter)
+        ctx.drawImage(self.img1, positionX, positionY, wX, wY, 0, 0, finalWidth, finalHeight)
         self.config["current_image"] = canvas.toDataURL()
         self.galleryinput.config = self.config
         self.galleryinput.simpleView(self.config["current_image"])
@@ -6032,5 +6129,142 @@ class Button(Widget):
                     self._on_click(self)
             if self._total_click > 0:
                 self.set_loading()
+
+
+class Panel(Widget):
+    def __init__(self, identifier, *content, **parameters):
+        self._head = None
+        if "_class" in parameters:
+            parameters["_class"] = "{0}{1}".format(parameters["_class"], " phanterpwa-widget-panel-container")
+        else:
+            parameters["_class"] = "phanterpwa-widget-panel-container"
+        _loading = parameters.get("loading", True)
+        _icons_button = parameters.get("icons_button", [])
+        _label = parameters.get("label", "")
+        _header = parameters.get("header", "")
+        _footer = parameters.get("footer", "")
+        self.target_selector = "#phanterpwa-widget-{0}".format(
+            self.identifier
+        )
+        panel = snippets.Panel(
+            *content,
+            loading=_loading,
+            icons_button=_icons_button,
+            label=_label,
+            header=_header,
+            footer=_footer,
+        )
+        Widget.__init__(self, identifier, panel, **parameters)
+        self._id_panel_buttons = "#{}".format(panel._namespace)
+        per = self.persist_load()
+        tel = jQuery(self._id_panel_buttons)
+        if per is js_undefined or per is None:
+            self.persist_save(True)
+            tel.addClass("snippets-panel-has_icon_buttons")
+        elif per is False:
+            tel.removeClass("snippets-panel-has_icon_buttons")
+        elif per:
+            tel.addClass("snippets-panel-has_icon_buttons")
+
+    def _switch_botoes(self, el):
+        target = jQuery(el).data("target")
+        tel = jQuery("#{}".format(target))
+        has_class = tel.hasClass("snippets-panel-has_icon_buttons")
+        per = self.persist_load()
+
+        if per or has_class:
+            self.persist_save(False)
+            tel.removeClass("snippets-panel-has_icon_buttons")
+        else:
+            self.persist_save(True)
+            tel.addClass("snippets-panel-has_icon_buttons")
+
+    def _binds(self):
+        target = jQuery(self.target_selector)
+        target.find(".phanterpwa-snippet-panel-menu_button").off("click.menu_button_snippet").on(
+            "click.menu_button_snippet",
+            lambda: self._switch_botoes(this)
+        )
+
+    def reload(self):
+        self.start()
+
+    def start(self):
+        per = self.persist_load()
+        tel = jQuery(self._id_panel_buttons)
+        if per is js_undefined or per is None:
+            self.persist_save(True)
+            tel.addClass("snippets-panel-has_icon_buttons")
+        elif per is False:
+            tel.removeClass("snippets-panel-has_icon_buttons")
+        elif per:
+            tel.addClass("snippets-panel-has_icon_buttons")
+        self._binds()
+
+
+
+class TogglePanel(Widget):
+    def __init__(self, identifier, *content, **parameters):
+        self._head = None
+        if "_class" in parameters:
+            parameters["_class"] = "{0}{1}".format(parameters["_class"], " phanterpwa-widget-toggle_panel-container")
+        else:
+            parameters["_class"] = "phanterpwa-widget-toggle_panel-container"
+
+        toggle_show = parameters.get("toggle_show", True)
+        self.toggle_text_show = parameters.get("toggle_text_show", I18N("Show", **{'pt-BR': "Mostrar"}).jquery())
+        self.toggle_text_hidden = parameters.get("toggle_text_hidden", I18N("Hidden", **{'pt-BR': "Esconder"}).jquery())
+
+        toggle_panel = snippets.TogglePanel(
+            *content,
+            toggle_show=toggle_show,
+            toggle_text_show=self.toggle_text_show,
+            toggle_text_hidden=self.toggle_text_hidden,
+        )
+        self._id_toggle_panel = "#{}".format(toggle_panel._namespace)
+        self.target_selector = "#phanterpwa-widget-{0}".format(
+            self.identifier
+        )
+        Widget.__init__(self, identifier, toggle_panel, **parameters)
+
+    def _toggle_botoes(self, el):
+        target = jQuery(el).data("target")
+        tel = jQuery("#{}".format(target))
+        has_class = tel.hasClass("snippet-toggle_panel-hidden")
+        per = self.persist_load()
+        if per or has_class:
+            self.persist_save(False)
+            tel.find(".phanterpwa-snippet-toggle_panel-text").html(self.toggle_text_hidden)
+            tel.removeClass("snippet-toggle_panel-hidden")
+        else:
+            self.persist_save(True)
+            tel.find(".phanterpwa-snippet-toggle_panel-text").html(self.toggle_text_show)
+            tel.addClass("snippet-toggle_panel-hidden")
+
+    def _binds(self):
+        target = jQuery(self.target_selector)
+        target.find(".phanterpwa-snippet-toggle_panel-toggle_button").off("click.toggle_button_snippet").on(
+            "click.toggle_button_snippet",
+            lambda: self._toggle_botoes(this)
+        )
+
+    def reload(self):
+        self.start()
+
+    def start(self):
+        per = self.persist_load()
+        tel = jQuery(self._id_toggle_panel)
+        if per is js_undefined or per is None:
+            self.persist_save(False)
+            tel.find(".phanterpwa-snippet-toggle_panel-text").html(self.toggle_text_hidden)
+            tel.removeClass("snippet-toggle_panel-hidden")
+        elif per is False:
+            tel.find(".phanterpwa-snippet-toggle_panel-text").html(self.toggle_text_hidden)
+            tel.removeClass("snippet-toggle_panel-hidden")
+        elif per:
+            tel.find(".phanterpwa-snippet-toggle_panel-text").html(self.toggle_text_show)
+            tel.addClass("snippet-toggle_panel-hidden")
+        self._binds()
+
 
 __pragma__('nokwargs')

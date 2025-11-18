@@ -377,6 +377,30 @@
                         left: 2px    
 
     .phanterpwa-widget-input-wrapper, .phanterpwa-widget-textarea-wrapper, .phanterpwa-widget-inert-wrapper, .phanterpwa-widget-list_string-wrapper
+
+        .phanterpwa-widget-textarea-realtime_visualization
+            display: none
+            background-color: white
+            margin-top: 5px
+            border: 1px solid gray
+            border-radius: 4px
+            padding: 10px
+            overflow: hidden
+            min-height: 100px
+            position: relative
+            .phanterpwa-widget-textarea-realtime_visualization-label
+                position: absolute
+                top: 0
+                background-color: #bdbdbd
+                width: 100%
+                left: 0
+                padding: 5px
+            .phanterpwa-widget-textarea-realtime_visualization-content
+                padding: 20px 5px 5px 0
+
+        &.has_live_visualization
+            .phanterpwa-widget-textarea-realtime_visualization
+                display: block
         &.phanterpwa-widget-wear-material
             position: relative
             padding-top: 10px

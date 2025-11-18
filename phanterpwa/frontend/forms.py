@@ -341,6 +341,7 @@ class FormWidget(helpers.XmlConstructor):
         self._url = json_widget.get("url", None)
         self._ajax_data_set = json_widget.get("ajax_data_set", False)
         self._nocache = json_widget.get("no-cache", False)
+        self._scale_factor = json_widget.get("scale-factor", 1.0)
         self._width = json_widget.get("width", 190)
         self._height = json_widget.get("height", 200)
         self._disabled = json_widget.get("disabled", None)
@@ -474,6 +475,7 @@ class FormWidget(helpers.XmlConstructor):
                     form=self.table_name,
                     cutter=False,
                     nocache=self._nocache,
+                    scale_factor=self._scale_factor,
                     width=self._width,
                     height=self._height,
                     data_view=True
@@ -604,7 +606,16 @@ class FormWidget(helpers.XmlConstructor):
                     kind="password",
                     icon=self._icon
                 )
-
+            elif self._widget_type == "integer":
+                w = widgets.IntegerMinusPlus(
+                    "{0}-{1}".format(self.table_name, self.input_name),
+                    label=self.json_widget['label'],
+                    name=self.input_name,
+                    value=self._value,
+                    wear=self._wear,
+                    form=self.table_name,
+                    validators=self.validators,
+                )
             elif self._widget_type == "hidden":
                 w = widgets.Input(
                     "{0}-{1}".format(self.table_name, self.input_name),
@@ -631,6 +642,7 @@ class FormWidget(helpers.XmlConstructor):
                     form=self.table_name,
                     cutter=self._cutter,
                     nocache=self._nocache,
+                    scale_factor=self._scale_factor,
                     width=self._width,
                     height=self._height
                 )
