@@ -1279,6 +1279,8 @@ class FieldsDALValidateDictArgs(object):
         self.dict_args = dict_args
         self.fields = fields
         self._errors = {}
+        self._errors_on_insert = {}
+        self._errors_on_update = {}
         self._verified = {}
         self._ignored = {}
 
@@ -1343,11 +1345,18 @@ class FieldsDALValidateDictArgs(object):
                         self._verified[f] = self.dict_args[f]
             if ig:
                 self._ignored[f] = self.dict_args[f]
-
+        if self._errors_on_insert:
+            for x in self._errors_on_insert:
+                self._errors[x] = self._errors_on_insert[x]
+        if self._errors_on_update:
+            for x in self._errors_on_update:
+                self._errors[x] = self._errors_on_update[x]
         if self._errors:
             return self._errors
 
     def insert(self, dbtable, commit=True):
+        self._errors_on_insert = {}
+        self._errors_on_update = {}
         id_record = dbtable.insert(
             **self.dict_args
         )
@@ -1358,6 +1367,8 @@ class FieldsDALValidateDictArgs(object):
             return None
 
     def update(self, dbtable, row_id, commit=True):
+        self._errors_on_update = {}
+        self._errors_on_insert = {}
         id_record = dbtable[row_id].update_record(
             **self.dict_args
         )
@@ -1368,35 +1379,49 @@ class FieldsDALValidateDictArgs(object):
             return None
 
     def validate_and_insert(self, dbtable, commit=True):
+        self._errors_on_insert = {}
+        self._errors_on_update = {}
         self.validate()
         if not self.errors and isinstance(dbtable, Table):
-            rep = dbtable.validate_and_insert(**self.verified)
-            if isinstance(rep, dict):
-                if rep.get("errors"):
-                    dbtable._db.rollback()
-                elif rep.get("id") and commit:
-                    dbtable._db.commit()
-            else:
-                if rep.errors:
-                    dbtable._db.rollback()
-                elif rep.id and commit:
-                    dbtable._db.commit()
-                return rep
+            _local_fields = {}
+            for f in dbtable.fields:
+                veri = self.verified.get(f)
+                if veri:
+                    _local_fields[f] = veri
+            if _local_fields:
+                rep = dbtable.validate_and_insert(**_local_fields)
+                if isinstance(rep, dict):
+                    if rep.get("errors"):
+                        self._errors_on_insert = rep.get("errors")
+                        dbtable._db.rollback()
+                    elif rep.get("id") and commit:
+                        dbtable._db.commit()
+                else:
+                    if rep.errors:
+                        self._errors_on_insert = dict(rep.errors)
+                        dbtable._db.rollback()
+                    elif rep.id and commit:
+                        dbtable._db.commit()
+                    return rep
         else:
             if not self.errors:
                 raise "The dbtable must be pydal.DAL.Table instance. given: {0}.".format(type(dbtable))
 
     def validate_and_update(self, dbset, commit=True):
+        self._errors_on_insert = {}
+        self._errors_on_update = {}
         self.validate()
         if not self.errors and isinstance(dbset, Set):
             rep = dbset.validate_and_update(**self.verified)
             if isinstance(rep, dict):
                 if rep.get("errors"):
+                    self._errors_on_update = rep.get("errors")
                     dbset._db.rollback()
                 elif rep.get("id") and commit:
                     dbset._db.commit()
             else:
                 if rep.errors:
+                    self._errors_on_update = dict(rep.errors)
                     dbset._db.rollback()
                 elif rep.id and commit:
                     dbset._db.commit()

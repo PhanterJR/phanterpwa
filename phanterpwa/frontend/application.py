@@ -453,7 +453,10 @@ class PhanterPWA():
                     if self.WS is not None:
                         self.WS.send("command_online")
                     window.PhanterPWA.set_last_auth_user(auth_user)
-                window.PhanterPWA.open_way("home")
+                setTimeout(
+                    lambda: window.PhanterPWA.open_way("home"),
+                    2000
+                )
             elif data.status == 206:
                 client_token = json.client_token
                 if client_token is not js_undefined:
@@ -466,7 +469,10 @@ class PhanterPWA():
             if json.i18n is not js_undefined and json.i18n is not None:
                 console.info(data.status, json.i18n.message)
         if callable(callback):
-            callback(data, ajax_status)
+            setTimeout(
+                lambda: callback(data, ajax_status),
+                2200
+            )
 
     def login(self, csrf_token, username, password, remember_me, **parameters):
         if remember_me is None or remember_me is js_undefined:

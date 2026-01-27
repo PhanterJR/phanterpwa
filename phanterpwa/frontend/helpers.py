@@ -117,7 +117,8 @@ class I18N(XmlConstructor):
     def __init__(self, *content, **attributes):
         for x in content:
             if not isinstance(x, str):
-                raise ValueError("The I18N content must be string type")
+                console.error("The I18N content must be string type:", x)
+                # raise ValueError()
 
         str_content = "".join(content)
         attributes["_phanterpwa-i18n"] = str_content

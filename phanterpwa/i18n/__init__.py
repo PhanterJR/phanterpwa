@@ -98,7 +98,7 @@ class Translator(object):
 
     def save(self):
         """Save the translations in all dictionaries"""
-        sorted_keys = list(self.keys)
+        sorted_keys = [x for x in self.keys if x]
         sorted_keys.sort()
         t_lang = {}
         for l in self._languages:

@@ -194,7 +194,8 @@ class AuthUser(application.Component):
             if self.auth_user is not None and self.auth_user is not js_undefined:
                 first_name = self.auth_user.first_name
                 last_name = self.auth_user.last_name
-                role = I18N(self.auth_user.role)
+                if self.auth_user.role is not None and self.auth_user.role is not js_undefined:
+                    role = I18N(self.auth_user.role)
                 complete_name = "{0} {1}".format(
                     first_name,
                     last_name
@@ -391,7 +392,8 @@ class ModalLogin(modal.Modal):
             email = self.last_auth_user.email
             fone_number = self.last_auth_user.fone_number if self.last_auth_user.fone_number is not js_undefined else ""
             remember_me = self.last_auth_user.remember_me
-            role = I18N(self.last_auth_user.role)
+            if self.last_auth_user.role is not None and self.last_auth_user.role is not js_undefined:
+                role = I18N(self.last_auth_user.role)
 
         if self.user_mobile_number is None and str(email).endswith(".mobile@phanterpwa.com"):
             self.user_mobile_number = True
@@ -2224,13 +2226,14 @@ class LeftBarAuthUserLogin(left_bar.LeftBarUserMenu):
         )
         self.auth_user = window.PhanterPWA.get_auth_user()
         user_name = "Anonymous"
-        role = I18N("User")
+        # role = I18N("User")
         user_image = window.PhanterPWA.get_auth_user_image()
         if self.auth_user is not None:
             first_name = self.auth_user.first_name
             last_name = self.auth_user.last_name
             user_name = "{0} {1}".format(first_name, last_name)
-            role = I18N(self.auth_user.role)
+            # if self.auth_user.role is not None and self.auth_user.role is not js_undefined:
+            #     role = I18N(self.auth_user.role)
         if element.find("#phanterpwa-component-left_bar-url-imagem-user").attr("src") != user_image:
             element.find("#phanterpwa-component-left_bar-url-imagem-user").attr("src", user_image)
         element.find("#phanterpwa-component-left_bar-name-user").text(user_name)
