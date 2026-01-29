@@ -261,6 +261,7 @@ include phanterpwa/usual_sass/gates/main.sass
 include phanterpwa/usual_sass/phanterpwa.sass
 include phanterpwa/usual_sass/plugins/codemirror.sass
 include phanterpwa/usual_sass/preloaders/android.sass
+include phanterpwa/usual_sass/preloaders/circle_button.sass
 include phanterpwa/usual_sass/preloaders/discs.sass
 include phanterpwa/usual_sass/preloaders/explosion.sass
 include phanterpwa/usual_sass/preloaders/indefined_text.sass

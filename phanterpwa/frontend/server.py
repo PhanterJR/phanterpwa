@@ -392,10 +392,47 @@ class ApiServer():
                 })
 
     def on_ajax_error(self, data, status, onError):
-        json = data.responseJSON
         message = I18N("Unexpected error!", **{"_pt-br": "Erro inesperado!"})
-        reasons = None
+        json = data.responseJSON
+
+        if data.status == 502:
+            message = I18N(
+                "Connection interrupted during the process.",
+                **{"_pt-br": "Conexão interrompida durante o processo."}
+            )
+        elif data.status == 504:
+            message = I18N(
+                "Server busy, please try again later.",
+                **{"_pt-br": "Servidor ocupado, tente mais tarde."}
+            )
+        elif data.status >= 500:
+            message = I18N(
+                "Server error (non-JSON response)",
+                **{"_pt-br": "Erro do servidor (resposta não-JSON)"}
+            )
+        elif data.status == 400:
+            message = I18N(
+                "Bad request",
+                **{"_pt-br": "Requisição inválida"}
+            )
+        elif data.status == 401:
+            message = I18N(
+                "Authentication is required.",
+                **{"_pt-br": "É Necessário autenticar-se."}
+            )
+        elif data.status == 403:
+            message = I18N(
+                "Your credentials don't have enough privileges.",
+                **{"_pt-br": "Sua credencial não tem privilégios suficiente."}
+            )
+        elif data.status == 404:
+            message = I18N(
+                "Resource not found",
+                **{"_pt-br": "Recurso não encontrado"}
+            )
         if json is not None and json is not js_undefined:
+
+            reasons = None
             if json.i18n is not None and json.i18n is not js_undefined:
                 if json.i18n.message is not None and json.i18n is not js_undefined:
                     message = json.i18n.message
@@ -406,21 +443,29 @@ class ApiServer():
                     message = json.message
                 if json.reasons is not None and json.reasons is not js_undefined:
                     reasons = json.reasons
-        if data.status == 401 or data.status == 403:
-            if window.PhanterPWA.logged():
-                if data.status == 401:
-                    if json.specification == "client deleted":
-                        self.getClientToken(callback=lambda: (
-                                window.PhanterPWA.reload_component("auth_user"),
-                                window.PhanterPWA.reload_component("left_bar")
+            if data.status == 401 or data.status == 403:
+                if window.PhanterPWA.logged():
+                    if data.status == 401:
+                        if json.specification == "client deleted":
+                            self.getClientToken(
+                                callback=lambda: (
+                                    window.PhanterPWA.reload_component("auth_user"),
+                                    window.PhanterPWA.reload_component("left_bar")
+                                )
                             )
-                        )
-                window.PhanterPWA.open_code_way(data.status, window.PhanterPWA.Request, window.PhanterPWA.Response, reasons)
-        else:
-            if callable(onError):
-                onError(data, status)
+                    window.PhanterPWA.open_code_way(data.status, window.PhanterPWA.Request, window.PhanterPWA.Response, reasons)
+
+        elif status == "timeout" or data.status == 0:
+            if status == "timeout":
+                message = I18N("Server busy, please try again later..", **{"_pt-br": "Servidor ocupado, tente mais tarde."})
             else:
-                window.PhanterPWA.flash(**{'html': message})
+                message = I18N("Connection problem. Please try again.", **{"_pt-br": "Problema de conexão. Tente novamente."})
+
+        if callable(onError):
+            onError(data, status)
+        elif message is not None:
+            window.PhanterPWA.flash(**{'html': message})
+
 
 
 __pragma__('nokwargs')

@@ -423,8 +423,11 @@ class PhanterPWA():
                     localStorage.removeItem("phanterpwa-authorization")
                     localStorage.removeItem("auth_user")
         if self.DEBUG:
-            if json.i18n is not js_undefined and json.i18n is not None:
-                console.info(data.status, json.i18n.message)
+            if json is not js_undefined:
+                console.info(data.status)
+            else:
+                if json.i18n is not js_undefined and json.i18n is not None:
+                    console.info(data.status, json.i18n.message)
         if callable(callback):
             callback(data, ajax_status)
 
@@ -474,6 +477,27 @@ class PhanterPWA():
                 2200
             )
 
+    def safe_btoa(self, text):
+        """Codifica string para Base64 garantindo UTF-8 antes"""
+        __pragma__('js', '{}', '''
+        function utf8ToBase64(str) {
+            // Método universal que funciona em todos navegadores
+            if (typeof TextEncoder !== 'undefined') {
+                // Navegadores modernos
+                return btoa(new TextEncoder().encode(str).reduce(
+                    (data, byte) => data + String.fromCharCode(byte), ''
+                ));
+            }
+
+            // Fallback para navegadores antigos
+            return btoa(unescape(encodeURIComponent(str)));
+        }
+        ''')
+
+        __pragma__('js', '{}', '''
+        return utf8ToBase64(text);
+        ''')
+
     def login(self, csrf_token, username, password, remember_me, **parameters):
         if remember_me is None or remember_me is js_undefined:
             remember_me = False
@@ -484,8 +508,8 @@ class PhanterPWA():
             csrf_token
         )
         login_password = "{0}:{1}".format(
-            window.btoa(username),
-            window.btoa(password)
+            self.safe_btoa(username),
+            self.safe_btoa(password)
         )
         formdata.append("edata", login_password)
         formdata.append(
@@ -643,8 +667,8 @@ class PhanterPWA():
                 email
             )
         passwords = "{0}:{1}".format(
-            window.btoa(password),
-            window.btoa(password_repeat)
+            self.safe_btoa(password),
+            self.safe_btoa(password_repeat)
         )
         formdata.append(
             "edata",
@@ -745,9 +769,9 @@ class PhanterPWA():
         formdata.append(
             "edata",
             "{0}:{1}:{2}".format(
-                window.btoa(password),
-                window.btoa(new_password),
-                window.btoa(new_password_repeat),
+                self.safe_btoa(password),
+                self.safe_btoa(new_password),
+                self.safe_btoa(new_password_repeat),
             )
         )
         window.PhanterPWA.ApiServer.POST(**{

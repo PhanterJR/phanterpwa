@@ -3029,8 +3029,8 @@ class Lock(gatehandler.Handler):
             jQuery("#form-lock #phanterpwa-widget-input-input-lock-csrf_token").val()
         )
         login_password = "{0}:{1}".format(
-            window.btoa(jQuery("#form-lock #phanterpwa-widget-input-input-lock-email").val()),
-            window.btoa(jQuery("#form-lock #phanterpwa-widget-input-input-lock-password").val())
+            window.PhanterPWA.safe_btoa(jQuery("#form-lock #phanterpwa-widget-input-input-lock-email").val()),
+            window.PhanterPWA.safe_btoa(jQuery("#form-lock #phanterpwa-widget-input-input-lock-password").val())
         )
         formdata.append("edata", login_password)
         remember_me = False

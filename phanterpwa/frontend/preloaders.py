@@ -204,3 +204,11 @@ squares = DIV(
     DIV(_class="right"),
     _class="phanterpwa-components-preloaders-squares"
 )
+
+circle_button = DIV(
+    DIV(
+        DIV(_class="circle_button_animation"),
+        _class="preloader-wrapper enabled"
+    ),
+    _class="phanterpwa-components-preloaders-circle_button"
+)
