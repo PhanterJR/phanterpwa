@@ -1974,6 +1974,7 @@ class MultSelect(Widget):
         self._xml_values.html_to("#phanterpwa-widget-multselect-value-{0}".format(self.identifier))
         self._binds_values_content()
         self._check_value()
+        jQuery(self.target_selector).find(".phanterpwa-widget-multselect-input").trigger("change")
 
     def _binds(self):
         target = jQuery(self.target_selector)
@@ -2071,6 +2072,7 @@ class MultSelect(Widget):
             self._xml_values.html_to("#phanterpwa-widget-multselect-value-{0}".format(self.identifier))
             self._binds_values_content()
             self._check_value()
+        jQuery(self.target_selector).find(".phanterpwa-widget-multselect-input").trigger("change")
 
     def _binds_values_content(self):
         jQuery(self.target_selector).find(
@@ -6027,26 +6029,26 @@ class Button(Widget):
             self._id_button = parameters["_id"]
             del parameters["_href"]
         self._disabled = parameters.get("disabled", False)
-        default_disabled = None
+        default_disabled = ""
         if self._disabled is True:
-            default_disabled = "disabled"
-        if parameters.get("use_div_tag", None) is not None:
+            default_disabled = " disabled"
+        self.use_div_tag = parameters.get("use_div_tag", None)
+        if self.use_div_tag is not None:
             html = DIV(
                 label,
                 DIV(_class="loading1"),
                 DIV(_class="loading2"),
-                _class="btn wave_on_click link",
+                _class="btn wave_on_click link".format(default_disabled),
                 _id=self._id_button,
-                _disabled=default_disabled
             )
         else:
             html = BUTTON(
                 label,
                 DIV(_class="loading1"),
                 DIV(_class="loading2"),
-                _class="btn wave_on_click",
+                _class="btn wave_on_click".format(default_disabled),
                 _id=self._id_button,
-                _disabled=default_disabled
+                _disabled="disabled" if default_disabled == " disabled" else None
             )
         self._has_href = None
         if "_href" in parameters:
@@ -6064,7 +6066,8 @@ class Button(Widget):
             )
             del parameters["_href"]
         self._one_click = parameters.get("one_click", True)
-        self._on_click = parameters.get("on_click", None)
+        self._on_click_enabled = parameters.get("on_click", None)
+        self._on_click_disabled = parameters.get("on_click_disabled", None)
         self._total_click = 0
 
         Widget.__init__(self, identifier, html, **parameters)
@@ -6094,41 +6097,62 @@ class Button(Widget):
     def set_disabled(self):
         self._disabled = True
         if self._has_href is None:
-            jQuery(self.target_selector).removeClass("loading").find("#{0}".format(self._id_button)).attr("disabled", "disabled")
+            if self.use_div_tag is not None:
+                jQuery(self.target_selector).removeClass("loading").find("#{0}".format(self._id_button)).addClass("disabled")
+            else:
+                jQuery(self.target_selector).removeClass("loading").find("#{0}".format(self._id_button)).attr("disabled", "disabled")
         else:
-            jQuery(self.target_selector).removeClass("loading").find("#{0}".format(self._id_button)).attr("disabled", "disabled").attr("href", "#")
+            jQuery(self.target_selector).removeClass("loading").find("#{0}".format(self._id_button)).addClass("disabled").attr("href", "#")
 
     def del_disabled(self):
         self._disabled = False
         self._total_click = 0
         if self._has_href is None:
-            jQuery(self.target_selector).removeClass("loading").find("#{0}".format(self._id_button)).removeAttr("disabled", "disabled")
+            if self.use_div_tag is not None:
+                jQuery(self.target_selector).removeClass("loading").find("#{0}".format(self._id_button)).removeClass("disabled")
+            else:
+                jQuery(self.target_selector).removeClass("loading").find("#{0}".format(self._id_button)).removeAttr("disabled", "disabled")
         else:
-            jQuery(self.target_selector).removeClass("loading").find("#{0}".format(self._id_button)).removeAttr("disabled", "disabled").attr("href", self._has_href)
+            jQuery(self.target_selector).removeClass("loading").find("#{0}".format(self._id_button)).removeClass("disabled").attr("href", self._has_href)
 
     def set_enabled(self):
         self.del_disabled()
 
     def check_disabled(self):
-        v = jQuery(self.target_selector).find("#{0}".format(self._id_button)).attr("disabled")
-        if v is None or v is js_undefined:
-            self._disabled = True
-            return True
-        self._disabled = False
-        return False
+        if self._has_href is not None or self.use_div_tag is not None:
+            v = jQuery(self.target_selector).find("#{0}".format(self._id_button))
+            if v.hasClass("disabled"):
+                self._disabled = True
+                return True
+            self._disabled = False
+            return False
+        else:
+            v = jQuery(self.target_selector).find("#{0}".format(self._id_button)).attr("disabled")
+            if v is None or v is js_undefined:
+                self._disabled = False
+                return False
+            elif v == "disabled":
+                self._disabled = True
+                return True
+            return False
+
 
     def _on_click_touch(self):
-        if self.check_disabled() is True:
+
+        if self.check_disabled() is False:
             self._total_click += 1
-            if callable(self._on_click):
+            if callable(self._on_click_enabled):
                 if self._one_click is True:
                     if self._total_click < 2:
                         self.set_loading()
-                        self._on_click(self)
+                        self._on_click_enabled(self)
                 else:
-                    self._on_click(self)
+                    self._on_click_enabled(self)
             if self._total_click > 0:
                 self.set_loading()
+        else:
+            if callable(self._on_click_disabled):
+                self._on_click_disabled(self)
 
 
 class Panel(Widget):

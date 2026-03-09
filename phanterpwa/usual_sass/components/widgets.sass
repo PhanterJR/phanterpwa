@@ -2266,6 +2266,9 @@ table
 
 .phanterpwa-widget
     &.phanterpwa-widget-button
+        div
+            &.btn
+                display: inline-block
         button, div, a
             .loading2, .loading1
                 display: none
@@ -2276,7 +2279,13 @@ table
                 opacity: 0.5
                 top: -100%
                 left: -50%
+            &.disabled
+                background-color: #939191
+                background-image: linear-gradient(#939191, #afafaf)
 
+                &:hover
+                    background-color: #6e6e6e
+                    background-image: linear-gradient(#6e6e6e, #7e7e7e)
         &.loading
             button, div, a
                 &.btn
@@ -2296,6 +2305,7 @@ table
                     background-color: red
                     -webkit-animation: button_loading 1s linear infinite -1.6s 
                     animation: button_loading 1s linear infinite -1.6s reverse
+
 
 @keyframes button_loading
   0%
