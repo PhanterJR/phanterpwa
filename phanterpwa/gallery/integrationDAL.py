@@ -63,17 +63,21 @@ class PhanterpwaGalleryUserImage():
             (self.db.auth_user_phanterpwagallery.subfolder == 'profile')).select(
                 self.db.auth_user_phanterpwagallery.phanterpwagallery)
         if q_image:
+            del_image = False
             for q in q_image:
-                t = os.path.join(os.path.join(target_folder, q.phanterpwagallery.alias_name))
-                if os.path.exists(t):
-                    try:
-                        os.remove(t)
-                    except OSError as e:
-                        print("Error try delete {0}. Error: {1}".format(t, e))
-                    else:
-                        self.db(
-                            self.db.phanterpwagallery.id == q.phanterpwagallery.id).delete()
-            self.db.commit()
+                if q.phanterpwagallery:
+                    t = os.path.join(os.path.join(target_folder, q.phanterpwagallery.alias_name))
+                    if os.path.exists(t):
+                        try:
+                            os.remove(t)
+                        except OSError as e:
+                            print("Error try delete {0}. Error: {1}".format(t, e))
+                        else:
+                            self.db(
+                                self.db.phanterpwagallery.id == q.phanterpwagallery.id).delete()
+                            del_image = True
+            if del_image:
+                self.db.commit()
         id_new_image = self.db.phanterpwagallery.insert(
             folder=os.path.join("user_%s" % self.id_user, 'profile'),
             filename=filename,
